@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TimeSink — NuCCoL</title>
-<script src="https://unpkg.com/@azure/msal-browser@2.38.3/lib/msal-browser.min.js"></script>
+<script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
 <style>
 /* ================================================================
    CSS VARIABLES & RESET
@@ -430,17 +430,15 @@ const msalApp = new msal.PublicClientApplication({
 async function getToken() {
   const accounts = msalApp.getAllAccounts();
   if (!accounts.length) {
-    const r = await msalApp.loginPopup({ scopes: [CFG.scope] });
-    msalApp.setActiveAccount(r.account);
-    return r.accessToken;
+    await msalApp.loginRedirect({ scopes: [CFG.scope] });
+    return; // page will redirect, execution stops here
   }
   msalApp.setActiveAccount(accounts[0]);
   try {
     const r = await msalApp.acquireTokenSilent({ scopes: [CFG.scope], account: accounts[0] });
     return r.accessToken;
   } catch {
-    const r = await msalApp.acquireTokenPopup({ scopes: [CFG.scope] });
-    return r.accessToken;
+    await msalApp.acquireTokenRedirect({ scopes: [CFG.scope] });
   }
 }
 
@@ -1441,7 +1439,10 @@ async function doSaveExp() {
 async function init() {
   try {
     await msalApp.initialize();
-    await msalApp.handleRedirectPromise();
+    const redirectResult = await msalApp.handleRedirectPromise();
+    if (redirectResult) {
+      msalApp.setActiveAccount(redirectResult.account);
+    }
     await getToken();
     render('<div class="loading"><div class="loading-spinner"></div>Loading data…</div>');
     await Promise.all([loadCurrentUser(), loadRefData()]);
