@@ -393,7 +393,16 @@ select.row-inp { cursor: pointer; }
 
 <body>
 <div id="app">
-  <div class="loading"><div class="loading-spinner"></div>Signing in to Microsoft 365…</div>
+  <div class="loading" id="login-screen">
+    <div style="text-align:center;font-family:'Courier New',monospace;">
+      <div style="font-size:22px;font-weight:bold;color:var(--navy);margin-bottom:8px;">TimeSink — NuCCoL</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:32px;">Sign in with your NuCCoL Microsoft account</div>
+      <button id="login-btn" style="background:var(--blue);color:#fff;border:2px solid var(--navy);font-family:'Courier New',monospace;font-size:14px;font-weight:bold;padding:12px 32px;cursor:pointer;letter-spacing:0.5px;">
+        Sign in with Microsoft
+      </button>
+      <div id="login-error" style="color:var(--red);font-size:12px;margin-top:16px;display:none;"></div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1443,7 +1452,27 @@ async function init() {
     if (redirectResult) {
       msalApp.setActiveAccount(redirectResult.account);
     }
-    await getToken();
+    const accounts = msalApp.getAllAccounts();
+    if (!accounts.length) {
+      // Show login button — wire it up after MSAL is ready
+      const btn = document.getElementById('login-btn');
+      if (btn) {
+        btn.addEventListener('click', async () => {
+          btn.disabled = true;
+          btn.textContent = 'Redirecting…';
+          try {
+            await msalApp.loginRedirect({ scopes: [CFG.scope] });
+          } catch(err) {
+            btn.disabled = false;
+            btn.textContent = 'Sign in with Microsoft';
+            const errDiv = document.getElementById('login-error');
+            if (errDiv) { errDiv.textContent = err.message; errDiv.style.display = 'block'; }
+          }
+        });
+      }
+      return;
+    }
+    msalApp.setActiveAccount(accounts[0]);
     render('<div class="loading"><div class="loading-spinner"></div>Loading data…</div>');
     await Promise.all([loadCurrentUser(), loadRefData()]);
     S.view = 'home';
