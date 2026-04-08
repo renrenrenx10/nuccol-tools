@@ -767,6 +767,18 @@ function syncTsDom() {
     if (h) row.hoursWorked = h.value;
     if (t) row.travelHours = t.value;
     if (n) row.notes = n.value;
+    // Also sync project selects so they survive re-renders
+    const projSel = document.querySelector(`[data-proj-entry="${row.entryId}"]`);
+    if (projSel && projSel.value) {
+      const selOpt = projSel.options[projSel.selectedIndex];
+      if (row.projectType === 'Pipeline Project') {
+        row.pipeId   = projSel.value || null;
+        row.pipeName = selOpt ? selOpt.dataset.label : '';
+      } else {
+        row.projectId = projSel.value || null;
+        row.projName  = selOpt ? selOpt.dataset.label : '';
+      }
+    }
   }
 }
 function syncExpDom() {
@@ -977,7 +989,7 @@ function renderTs() {
       `changeTsType('${row.entryId}',this.value)`
     );
 
-    const projSelect = isPipe
+    const projSelect = (isPipe
       ? buildSelect(
           S.allPipeline.map(p=>({value:p.ID, label:p.ProjectTitle})),
           row.pipeId, '— Pipeline Project —', 'row-inp',
@@ -987,7 +999,7 @@ function renderTs() {
           S.allProjects.map(p=>({value:p.ID, label:p.ProjectTitle0})),
           row.projectId, '— Active Project —', 'row-inp',
           `updateTsProj('${row.entryId}','active',this.value,this.options[this.selectedIndex].dataset.label)`
-        );
+        )).replace('<select ', `<select data-proj-entry="${row.entryId}" `);
 
     const cols = '110px 130px 1fr 72px 72px 1fr 28px 28px';
     return `
