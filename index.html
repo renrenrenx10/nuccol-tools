@@ -510,23 +510,23 @@ textarea.form-control { height: 72px; resize: vertical; }
         <div class="panel-section-title">Build Plan</div>
 
         <div class="form-group">
-          <label class="form-label">Developer</label>
+          <label class="form-label" for="ddDev">Developer</label>
           <select class="form-control" id="ddDev" style="height:36px;"></select>
         </div>
         <div class="form-group">
-          <label class="form-label">Start Date</label>
+          <label class="form-label" for="datStart">Start Date</label>
           <input class="form-control" type="date" id="datStart" />
         </div>
         <div class="form-row">
           <div class="form-col">
             <div class="form-group">
-              <label class="form-label">Concurrent</label>
+              <label class="form-label" for="txtConcurrent">Concurrent</label>
               <input class="form-control" type="number" id="txtConcurrent" value="1" min="1" />
             </div>
           </div>
           <div class="form-col">
             <div class="form-group">
-              <label class="form-label">Consecutive</label>
+              <label class="form-label" for="txtConsecutive">Consecutive</label>
               <input class="form-control" type="number" id="txtConsecutive" value="1" min="1" />
             </div>
           </div>
@@ -683,11 +683,11 @@ textarea.form-control { height: 72px; resize: vertical; }
     <div class="modal-title" id="productModalTitle">Add New Product</div>
     <div class="modal-grid">
       <div class="form-group">
-        <label class="form-label">Product Name *</label>
+        <label class="form-label" for="fProdName">Product Name *</label>
         <input class="form-control" id="fProdName" placeholder="e.g. Steel (structural)" />
       </div>
       <div class="form-group">
-        <label class="form-label">Material Type</label>
+        <label class="form-label" for="fProdMat">Material Type</label>
         <select class="form-control" id="fProdMat" style="height:36px;">
           <option value="">— select —</option>
           <option>Concrete</option><option>Steel reinforcement</option>
@@ -696,7 +696,7 @@ textarea.form-control { height: 72px; resize: vertical; }
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">Resource Type</label>
+        <label class="form-label" for="fProdRes">Resource Type</label>
         <select class="form-control" id="fProdRes" style="height:36px;">
           <option value="">— select —</option>
           <option>Material</option><option>Component</option><option>Service</option><option>Facility</option>
@@ -704,32 +704,32 @@ textarea.form-control { height: 72px; resize: vertical; }
       </div>
       <div class="form-row">
         <div class="form-col form-group">
-          <label class="form-label">Weight</label>
+          <label class="form-label" for="fProdWeight">Weight</label>
           <input class="form-control" id="fProdWeight" type="number" step="0.0001" placeholder="0.0000" />
         </div>
         <div class="form-col form-group">
-          <label class="form-label">Unit</label>
+          <label class="form-label" for="fProdUnit">Unit</label>
           <input class="form-control" id="fProdUnit" placeholder="e.g. tonnes" />
         </div>
       </div>
       <div class="form-row">
         <div class="form-col form-group">
-          <label class="form-label">Lead Time</label>
+          <label class="form-label" for="fProdLeadTime">Lead Time</label>
           <input class="form-control" id="fProdLeadTime" type="number" placeholder="0" />
         </div>
         <div class="form-col form-group">
-          <label class="form-label">Lead Time Unit</label>
+          <label class="form-label" for="fProdLeadUnit">Lead Time Unit</label>
           <select class="form-control" id="fProdLeadUnit" style="height:36px;">
             <option>Months</option><option>Quarters</option><option>Years</option>
           </select>
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">Production Rate</label>
+        <label class="form-label" for="fProdRate">Production Rate</label>
         <input class="form-control" id="fProdRate" type="number" step="0.01" placeholder="0.00" />
       </div>
       <div class="form-group modal-full">
-        <label class="form-label">Assumptions</label>
+        <label class="form-label" for="fProdAssumptions">Assumptions</label>
         <textarea class="form-control" id="fProdAssumptions" placeholder="Any notes or assumptions…"></textarea>
       </div>
     </div>
@@ -750,15 +750,15 @@ textarea.form-control { height: 72px; resize: vertical; }
     <div class="modal-title" id="devModalTitle">Add Developer</div>
     <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:20px;">
       <div class="form-group">
-        <label class="form-label">Developer Name *</label>
+        <label class="form-label" for="fDevName">Developer Name *</label>
         <input class="form-control" id="fDevName" placeholder="e.g. Rolls-Royce SMR" />
       </div>
       <div class="form-group">
-        <label class="form-label">Capacity (MW)</label>
+        <label class="form-label" for="fDevCapacity">Capacity (MW)</label>
         <input class="form-control" id="fDevCapacity" type="number" placeholder="470" />
       </div>
       <div class="form-group">
-        <label class="form-label">Notes</label>
+        <label class="form-label" for="fDevNotes">Notes</label>
         <textarea class="form-control" id="fDevNotes" placeholder="Any notes…"></textarea>
       </div>
     </div>
@@ -776,25 +776,25 @@ textarea.form-control { height: 72px; resize: vertical; }
     <div class="modal-title" id="schedModalTitle">Add Schedule Entry</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px 18px;margin-bottom:20px;">
       <div class="form-group modal-full">
-        <label class="form-label">Developer *</label>
+        <label class="form-label" for="fSchedDev">Developer *</label>
         <select class="form-control" id="fSchedDev" style="height:36px;"></select>
       </div>
       <div class="form-group modal-full">
-        <label class="form-label">Product *</label>
+        <label class="form-label" for="fSchedProd">Product *</label>
         <select class="form-control" id="fSchedProd" style="height:36px;"></select>
       </div>
       <div class="form-group">
-        <label class="form-label">Schedule Year</label>
+        <label class="form-label" for="fSchedYear">Schedule Year</label>
         <input class="form-control" id="fSchedYear" type="number" placeholder="1" min="1" />
       </div>
       <div class="form-group">
-        <label class="form-label">Quarter</label>
+        <label class="form-label" for="fSchedQtr">Quarter</label>
         <select class="form-control" id="fSchedQtr" style="height:36px;">
           <option>Q1</option><option>Q2</option><option>Q3</option><option>Q4</option>
         </select>
       </div>
       <div class="form-group modal-full">
-        <label class="form-label">Amount (Absolute)</label>
+        <label class="form-label" for="fSchedAmt">Amount (Absolute)</label>
         <input class="form-control" id="fSchedAmt" type="number" step="0.01" placeholder="0.00" />
       </div>
     </div>
@@ -993,7 +993,7 @@ async function loadAllData() {
   try {
     const [prods, devs, scheds] = await Promise.all([
       spGet(CONFIG.lists.products,   'Id,Title,MaterialType,ResourceType,Weight,Unit,LeadTime,LeadTimeUnit,ProductionRate,Assumptions', '', 'Title asc'),
-      spGet(CONFIG.lists.developers, 'Id,Title,Capacity,Notes', '', 'Title asc'),
+      spGet(CONFIG.lists.developers, 'Id,Title,Notes', '', 'Title asc'),
       spGet(CONFIG.lists.schedules,  'Id,Developer_ID,Product_ID,ScheduleYear,Quarter,Amount_Absolute', '', 'Developer_ID asc')
     ]);
     store.products   = prods;
