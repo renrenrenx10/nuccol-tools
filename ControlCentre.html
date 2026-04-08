@@ -677,21 +677,58 @@ async function loadAll() {
   S.currentUser = { email: u.Email, displayName: u.Title };
 
   // Load all data in parallel
+  // Step 1: probe Projects fields to find the right internal names
+  const projFields = await spGet(
+    `web/lists/getbytitle('${encodeURIComponent(CFG.lists.projects)}')/fields?$select=InternalName,Title&$filter=Hidden eq false and ReadOnlyField eq false`
+  );
+  const pf = projFields.value.map(f => f.InternalName);
+
+  // Pick whichever project-title field exists
+  const projTitleField = pf.find(f => ['ProjectTitle0','ProjectTitle','ProjectTitle_x0020_'].includes(f)) || 'Title';
+  const displayNameField = pf.includes('DisplayName') ? 'DisplayName' : null;
+  const poValueField = pf.find(f => ['POValue','PO_x0020_Value','POValue0'].includes(f)) || 'POValue';
+  const plannedHoursField = pf.find(f => ['PlannedHours','Planned_x0020_Hours'].includes(f)) || 'PlannedHours';
+
+  // Build safe $select for Projects
+  const projSelect = ['ID','Title','Status','Notes','StartDate','EndDate','ProjectNumber',
+    projTitleField, poValueField, plannedHoursField,
+    ...(displayNameField ? [displayNameField] : [])
+  ].filter((v,i,a) => a.indexOf(v)===i).join(',');
+
+  // Probe TimeEntries to find project lookup field name
+  const teFields = await spGet(
+    `web/lists/getbytitle('${encodeURIComponent(CFG.lists.timeEntries)}')/fields?$select=InternalName,Title&$filter=Hidden eq false`
+  );
+  const tef = teFields.value.map(f => f.InternalName);
+  const teProjField = tef.find(f => ['Project','Projects','ProjectLookup'].includes(f)) || 'Project';
+  const teProjTitleSub = projTitleField; // same field name on the looked-up item
+  const tePipeField = tef.find(f => ['PipelineProject','Pipeline_x0020_Project','PipelineProjects'].includes(f)) || 'PipelineProject';
+
   const [proj, pipe, te, exp] = await Promise.all([
-    spGet(`${listItems(CFG.lists.projects)}?$select=ID,Title,DisplayName,ProjectTitle0,POValue,PlannedHours,StartDate,EndDate,Notes,Status,ProjectNumber&$orderby=DisplayName asc&$top=500`),
-    spGet(`${listItems(CFG.lists.pipelineProjects)}?$select=ID,Title,DisplayName,ProjectTitle,Company,ExpectedValue,Probability,Status,Notes,ExpectedStart,Owner,Category,Contact,ProjectNumber&$orderby=Company asc&$top=500`),
-    spGet(`${listItems(CFG.lists.timeEntries)}?$select=ID,Date,HoursWorked,TravelHours,StaffCost,CommercialCost,StaffRate,CommercialRate,EmployeeName,ProjectType,Notes,Project/Id,Project/ProjectTitle0,PipelineProject/Id,PipelineProject/ProjectTitle&$expand=Project,PipelineProject&$top=5000&$orderby=Date desc`),
+    spGet(`${listItems(CFG.lists.projects)}?$select=${projSelect}&$orderby=Title asc&$top=500`),
+    spGet(`${listItems(CFG.lists.pipelineProjects)}?$select=ID,Title,DisplayName,ProjectTitle,Company,ExpectedValue,Probability,Status,Notes,ExpectedStart,Owner,Category,Contact,ProjectNumber&$orderby=Title asc&$top=500`),
+    spGet(`${listItems(CFG.lists.timeEntries)}?$select=ID,Date,HoursWorked,TravelHours,StaffCost,CommercialCost,StaffRate,CommercialRate,EmployeeName,ProjectType,Notes,${teProjField}/Id,${teProjField}/${teProjTitleSub},${tePipeField}/Id,${tePipeField}/ProjectTitle&$expand=${teProjField},${tePipeField}&$top=5000&$orderby=Date desc`),
     spGet(`${listItems(CFG.lists.expenses)}?$select=ID,Date,Amount,Category,Notes,Project,EmployeeName/DisplayName&$expand=EmployeeName&$top=2000&$orderby=Date desc`)
   ]);
 
+  // Store field name mappings for later use
+  S._projTitleField = projTitleField;
+  S._poValueField = poValueField;
+  S._plannedHoursField = plannedHoursField;
+  S._displayNameField = displayNameField;
+  S._teProjField = teProjField;
+  S._tePipeField = tePipeField;
+
   S.projects = proj.value.map(p => ({
     ...p,
-    ProjectTitle: p.ProjectTitle0 || p.Title || '',
-    DisplayName: p.DisplayName || p.Title || ''
+    ProjectTitle: p[projTitleField] || p.Title || '',
+    DisplayName: (displayNameField && p[displayNameField]) || p[projTitleField] || p.Title || '',
+    POValue: p[poValueField] || p.POValue || 0,
+    PlannedHours: p[plannedHoursField] || p.PlannedHours || 0
   }));
   S.pipeline = pipe.value.map(p => ({
     ...p,
-    DisplayName: p.DisplayName || p.Company || p.ProjectTitle || ''
+    DisplayName: p.DisplayName || p.Company || p.ProjectTitle || p.Title || ''
   }));
   S.timeEntries = te.value;
   S.expenses = exp.value;
@@ -701,10 +738,12 @@ async function loadAll() {
    COMPUTED HELPERS
 ================================================================ */
 function teForProject(projId) {
-  return S.timeEntries.filter(t => t.Project && t.Project.Id === projId);
+  const f = S._teProjField || 'Project';
+  return S.timeEntries.filter(t => t[f] && t[f].Id === projId);
 }
 function teForPipeline(pipeId) {
-  return S.timeEntries.filter(t => t.PipelineProject && t.PipelineProject.Id === pipeId);
+  const f = S._tePipeField || 'PipelineProject';
+  return S.timeEntries.filter(t => t[f] && t[f].Id === pipeId);
 }
 function expForProject(displayName) {
   return S.expenses.filter(e => e.Project === displayName);
@@ -1120,13 +1159,15 @@ function _renderEmployeeEntries() {
   const isPipe = S.drillIsPipeline;
 
   let entries, exps;
+  const _pf = S._teProjField || 'Project';
+  const _ppf = S._tePipeField || 'PipelineProject';
   if (isPipe) {
     entries = S.timeEntries.filter(t =>
-      t.PipelineProject && t.PipelineProject.Id === S.drillProjectId && t.EmployeeName === empName
+      t[_ppf] && t[_ppf].Id === S.drillProjectId && t.EmployeeName === empName
     );
   } else {
     entries = S.timeEntries.filter(t =>
-      t.Project && t.Project.Id === S.drillProjectId && t.EmployeeName === empName
+      t[_pf] && t[_pf].Id === S.drillProjectId && t.EmployeeName === empName
     );
   }
   exps = S.expenses.filter(e =>
@@ -1142,7 +1183,7 @@ function _renderEmployeeEntries() {
   const teRows = entries.length ? entries.map(e => `
     <tr>
       <td class="nowrap">${ukDate(e.Date)}</td>
-      <td>${esc(e.Project?.ProjectTitle0 || e.PipelineProject?.ProjectTitle || '')}</td>
+      <td>${esc((e[_pf] && (e[_pf][S._projTitleField||'Title'] || e[_pf].Title)) || (e[_ppf] && e[_ppf].ProjectTitle) || S.drillProjectDisplayName || '')}</td>
       <td class="ta-center">${num(e.HoursWorked)}</td>
       <td class="ta-center">${num(e.TravelHours)}</td>
       <td class="ta-right">${money(e.StaffCost)}</td>
@@ -1251,7 +1292,7 @@ function _renderPipeline() {
   const rows = S.pipeline.map(p => {
     const st = p.Status?.Value || p.Status || '';
     const bookedHours = S.timeEntries.filter(t =>
-      t.PipelineProject && t.PipelineProject.Id === p.ID
+      t[S._tePipeField||'PipelineProject'] && t[S._tePipeField||'PipelineProject'].Id === p.ID
     ).reduce((a,t) => a + (t.HoursWorked||0) + (t.TravelHours||0), 0);
 
     return `<tr>
