@@ -605,6 +605,20 @@ async function spPatch(path, body) {
 const listItems = n => `web/lists/getbytitle('${encodeURIComponent(n)}')/items`;
 const listItem  = (n,id) => `web/lists/getbytitle('${encodeURIComponent(n)}')/items(${id})`;
 
+// Fetches a list with an expand; if 400, retries without $select to get all fields
+async function spGetSafe(path, selectFields, expandField, top=500) {
+  const url = `${path}?$select=${selectFields},${expandField}/DisplayName&$expand=${expandField}&$top=${top}&$orderby=Date desc`;
+  try {
+    return await spGet(url);
+  } catch(e) {
+    if (e.message.startsWith('GET 400')) {
+      // retry without select
+      return await spGet(`${path}?$expand=${expandField}&$top=${top}&$orderby=Date desc`);
+    }
+    throw e;
+  }
+}
+
 /* ================================================================
    UTILITIES
 ================================================================ */
@@ -677,58 +691,59 @@ async function loadAll() {
   S.currentUser = { email: u.Email, displayName: u.Title };
 
   // Load all data in parallel
-  // Step 1: probe Projects fields to find the right internal names
-  const projFields = await spGet(
-    `web/lists/getbytitle('${encodeURIComponent(CFG.lists.projects)}')/fields?$select=InternalName,Title&$filter=Hidden eq false and ReadOnlyField eq false`
-  );
-  const pf = projFields.value.map(f => f.InternalName);
-
-  // Pick whichever project-title field exists
-  const projTitleField = pf.find(f => ['ProjectTitle0','ProjectTitle','ProjectTitle_x0020_'].includes(f)) || 'Title';
-  const displayNameField = pf.includes('DisplayName') ? 'DisplayName' : null;
-  const poValueField = pf.find(f => ['POValue','PO_x0020_Value','POValue0'].includes(f)) || 'POValue';
-  const plannedHoursField = pf.find(f => ['PlannedHours','Planned_x0020_Hours'].includes(f)) || 'PlannedHours';
-
-  // Build safe $select for Projects
-  const projSelect = ['ID','Title','Status','Notes','StartDate','EndDate','ProjectNumber',
-    projTitleField, poValueField, plannedHoursField,
-    ...(displayNameField ? [displayNameField] : [])
-  ].filter((v,i,a) => a.indexOf(v)===i).join(',');
-
-  // Probe TimeEntries to find project lookup field name
-  const teFields = await spGet(
-    `web/lists/getbytitle('${encodeURIComponent(CFG.lists.timeEntries)}')/fields?$select=InternalName,Title&$filter=Hidden eq false`
-  );
-  const tef = teFields.value.map(f => f.InternalName);
-  const teProjField = tef.find(f => ['Project','Projects','ProjectLookup'].includes(f)) || 'Project';
-  const teProjTitleSub = projTitleField; // same field name on the looked-up item
-  const tePipeField = tef.find(f => ['PipelineProject','Pipeline_x0020_Project','PipelineProjects'].includes(f)) || 'PipelineProject';
-
+  // Fetch all lists without $select to avoid field name guessing.
+  // We fetch full items and normalise field names after.
   const [proj, pipe, te, exp] = await Promise.all([
-    spGet(`${listItems(CFG.lists.projects)}?$select=${projSelect}&$orderby=Title asc&$top=500`),
-    spGet(`${listItems(CFG.lists.pipelineProjects)}?$select=ID,Title,DisplayName,ProjectTitle,Company,ExpectedValue,Probability,Status,Notes,ExpectedStart,Owner,Category,Contact,ProjectNumber&$orderby=Title asc&$top=500`),
-    spGet(`${listItems(CFG.lists.timeEntries)}?$select=ID,Date,HoursWorked,TravelHours,StaffCost,CommercialCost,StaffRate,CommercialRate,EmployeeName,ProjectType,Notes,${teProjField}/Id,${teProjField}/${teProjTitleSub},${tePipeField}/Id,${tePipeField}/ProjectTitle&$expand=${teProjField},${tePipeField}&$top=5000&$orderby=Date desc`),
-    spGet(`${listItems(CFG.lists.expenses)}?$select=ID,Date,Amount,Category,Notes,Project,EmployeeName/DisplayName&$expand=EmployeeName&$top=2000&$orderby=Date desc`)
+    spGet(`${listItems(CFG.lists.projects)}?$top=500&$orderby=Title asc`),
+    spGet(`${listItems(CFG.lists.pipelineProjects)}?$top=500&$orderby=Title asc`),
+    spGet(`${listItems(CFG.lists.timeEntries)}?$expand=Project,PipelineProject&$top=5000&$orderby=Date desc`),
+    spGet(`${listItems(CFG.lists.expenses)}?$expand=EmployeeName&$top=2000&$orderby=Date desc`)
   ]);
 
-  // Store field name mappings for later use
-  S._projTitleField = projTitleField;
-  S._poValueField = poValueField;
+  // Detect field names from first Projects item (or fall back to known defaults)
+  const sampleProj = proj.value[0] || {};
+  const projTitleField    = Object.keys(sampleProj).find(k => ['ProjectTitle0','ProjectTitle'].includes(k)) || 'Title';
+  const displayNameField  = 'DisplayName' in sampleProj ? 'DisplayName' : null;
+  const poValueField      = Object.keys(sampleProj).find(k => k.toLowerCase().includes('povalue') || k === 'POValue') || 'POValue';
+  const plannedHoursField = Object.keys(sampleProj).find(k => k.toLowerCase().includes('plannedhours') || k === 'PlannedHours') || 'PlannedHours';
+
+  // Detect field names from first PipelineProjects item
+  const samplePipe = pipe.value[0] || {};
+  const pipeCompanyField  = Object.keys(samplePipe).find(k => k.toLowerCase().includes('company')) || 'Title';
+  const pipeTitleField    = Object.keys(samplePipe).find(k => ['ProjectTitle','ProjectTitle0'].includes(k)) || null;
+  const pipeDisplayField  = 'DisplayName' in samplePipe ? 'DisplayName' : null;
+  const pipeValueField    = Object.keys(samplePipe).find(k => k.toLowerCase().includes('expectedvalue') || k === 'ExpectedValue') || 'ExpectedValue';
+  const pipeProbField     = 'Probability' in samplePipe ? 'Probability' : Object.keys(samplePipe).find(k => k.toLowerCase().includes('prob')) || 'Probability';
+  const pipeExpStartField = Object.keys(samplePipe).find(k => k.toLowerCase().includes('expectedstart') || k === 'ExpectedStart') || 'ExpectedStart';
+
+  // Detect TimeEntries lookup field names
+  const sampleTE = te.value[0] || {};
+  const teProjField = Object.keys(sampleTE).find(k => ['Project','Projects'].includes(k)) || 'Project';
+  const tePipeField = Object.keys(sampleTE).find(k => ['PipelineProject','PipelineProjects'].includes(k)) || 'PipelineProject';
+
+  // Store for computed helpers
+  S._projTitleField   = projTitleField;
+  S._poValueField     = poValueField;
   S._plannedHoursField = plannedHoursField;
   S._displayNameField = displayNameField;
-  S._teProjField = teProjField;
-  S._tePipeField = tePipeField;
+  S._teProjField      = teProjField;
+  S._tePipeField      = tePipeField;
 
   S.projects = proj.value.map(p => ({
     ...p,
-    ProjectTitle: p[projTitleField] || p.Title || '',
-    DisplayName: (displayNameField && p[displayNameField]) || p[projTitleField] || p.Title || '',
-    POValue: p[poValueField] || p.POValue || 0,
-    PlannedHours: p[plannedHoursField] || p.PlannedHours || 0
+    ProjectTitle:  p[projTitleField]   || p.Title || '',
+    DisplayName:   (displayNameField && p[displayNameField]) || p[projTitleField] || p.Title || '',
+    POValue:       Number(p[poValueField] ?? p.POValue ?? 0),
+    PlannedHours:  Number(p[plannedHoursField] ?? p.PlannedHours ?? 0)
   }));
   S.pipeline = pipe.value.map(p => ({
     ...p,
-    DisplayName: p.DisplayName || p.Company || p.ProjectTitle || p.Title || ''
+    Company:       p[pipeCompanyField]  || p.Title || '',
+    ProjectTitle:  (pipeTitleField && p[pipeTitleField]) || p.Title || '',
+    DisplayName:   (pipeDisplayField && p[pipeDisplayField]) || (pipeTitleField && p[pipeTitleField]) || p[pipeCompanyField] || p.Title || '',
+    ExpectedValue: Number(p[pipeValueField] ?? p.ExpectedValue ?? 0),
+    Probability:   p[pipeProbField] ?? p.Probability ?? null,
+    ExpectedStart: p[pipeExpStartField] || p.ExpectedStart || null
   }));
   S.timeEntries = te.value;
   S.expenses = exp.value;
