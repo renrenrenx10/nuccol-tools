@@ -598,7 +598,7 @@ function toast(msg, type='ok') {
 ================================================================ */
 async function loadRefData() {
   const [proj, pipe] = await Promise.all([
-    spGet(`${listItems(CFG.lists.projects)}?$select=ID,DisplayName&$orderby=DisplayName asc`),
+    spGet(`${listItems(CFG.lists.projects)}?$select=ID,ProjectTitle0&$orderby=ProjectTitle0 asc`),
     spGet(`${listItems(CFG.lists.pipelineProjects)}?$select=ID,ProjectTitle&$orderby=ProjectTitle asc`)
   ]);
   S.allProjects = proj.value;
@@ -621,7 +621,7 @@ async function loadTsWeek(ws) {
   const data = await spGet(
     `${listItems(CFG.lists.timeEntries)}` +
     `?$select=ID,Date,HoursWorked,TravelHours,Notes,StaffRate,CommercialRate,EmployeeName,ProjectType` +
-    `,Employee/EMail,Project/Id,Project/DisplayName,PipelineProject/Id,PipelineProject/ProjectTitle` +
+    `,Employee/EMail,Project/Id,Project/ProjectTitle0,PipelineProject/Id,PipelineProject/ProjectTitle` +
     `&$expand=Employee,Project,PipelineProject` +
     `&$filter=Employee/EMail eq '${encodeURIComponent(S.currentUser.email)}' and ${dateFilter(ws)}` +
     `&$orderby=Date asc`
@@ -640,7 +640,7 @@ async function loadTsWeek(ws) {
       notes       : item.Notes || '',
       projectType : item.ProjectType || 'Active Project',
       projectId   : item.Project       ? item.Project.Id            : null,
-      projName    : item.Project       ? item.Project.DisplayName    : '',
+      projName    : item.Project       ? item.Project.ProjectTitle0    : '',
       pipeId      : item.PipelineProject ? item.PipelineProject.Id   : null,
       pipeName    : item.PipelineProject ? item.PipelineProject.ProjectTitle : '',
       isExisting  : true,
@@ -712,7 +712,7 @@ async function loadSumWeek(ws) {
     spGet(
       `${listItems(CFG.lists.timeEntries)}` +
       `?$select=ID,Date,HoursWorked,TravelHours,Notes,StaffRate,CommercialRate,EmployeeName,ProjectType` +
-      `,Employee/Title,Employee/EMail,Project/DisplayName,PipelineProject/ProjectTitle` +
+      `,Employee/Title,Employee/EMail,Project/ProjectTitle0,PipelineProject/ProjectTitle` +
       `&$expand=Employee,Project,PipelineProject` +
       `&$filter=${dateFilter(ws)}`
     ),
@@ -728,7 +728,7 @@ async function loadSumWeek(ws) {
     ...e,
     _empName    : e.Employee?.Title || e.EmployeeName || '(Unknown)',
     _empEmail   : e.Employee?.EMail || '',
-    _projName   : e.Project?.DisplayName || e.PipelineProject?.ProjectTitle || ''
+    _projName   : e.Project?.ProjectTitle0 || e.PipelineProject?.ProjectTitle || ''
   }));
   S.sumExpenses = ex.value.map(e => ({
     ...e,
@@ -824,7 +824,7 @@ async function saveTs() {
       const proj = S.allProjects.find(p => p.ID === pid);
       let expSum = 0;
       if (proj) {
-        const allExp = await spGet(`${listItems(CFG.lists.expenses)}?$select=Amount&$filter=Project eq '${encodeURIComponent(proj.DisplayName)}'`);
+        const allExp = await spGet(`${listItems(CFG.lists.expenses)}?$select=Amount&$filter=Project eq '${encodeURIComponent(proj.ProjectTitle0)}'`);
         expSum = allExp.value.reduce((s,e) => s + (e.Amount||0), 0);
       }
       await spPatch(listItem(CFG.lists.projects, pid), { TotalCommercialCost: timeSum + expSum });
@@ -984,7 +984,7 @@ function renderTs() {
           `updateTsProj('${row.entryId}','pipe',this.value,this.options[this.selectedIndex].dataset.label)`
         )
       : buildSelect(
-          S.allProjects.map(p=>({value:p.ID, label:p.DisplayName})),
+          S.allProjects.map(p=>({value:p.ID, label:p.ProjectTitle0})),
           row.projectId, '— Active Project —', 'row-inp',
           `updateTsProj('${row.entryId}','active',this.value,this.options[this.selectedIndex].dataset.label)`
         );
@@ -1067,7 +1067,7 @@ function renderExp() {
     const day = new Date(row.date + 'T12:00:00');
 
     const projSelect = buildSelect(
-      S.allProjects.map(p=>({value:p.DisplayName, label:p.DisplayName})),
+      S.allProjects.map(p=>({value:p.ProjectTitle0, label:p.ProjectTitle0})),
       row.project, '— Project —', 'row-inp',
       `updateExpField('${row.entryId}','project',this.value)`
     );
