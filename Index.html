@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DangerMouse — Nuclear Demand Model</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<script src="https://alcdn.msauth.net/browser/2.38.0/js/msal-browser.min.js"></script>
+<style>
+:root {
+  --navy:       #0d3b6e;
+  --navy-deep:  #001270;
+  --navy-mid:   #3860b2;
+  --cyan:       #00a8e8;
+  --cyan-dim:   rgba(0,168,232,0.12);
+  --slate:      #1a1a2e;
+  --bg:         #f0f2f6;
+  --white:      #ffffff;
+  --muted:      #6c757d;
+  --border:     #dde1e7;
+  --green:      #27ae60;
+  --amber:      #e67e22;
+  --purple:     #8e44ad;
+  --red:        #e74c3c;
+  --shadow-sm:  0 1px 4px rgba(0,0,0,0.07);
+  --shadow-md:  0 4px 20px rgba(0,0,0,0.10);
+  --shadow-lg:  0 12px 48px rgba(0,0,0,0.15);
+  --radius:     8px;
+  --font-mono:  'JetBrains Mono', monospace;
+  --font-body:  'DM Sans', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { height: 100%; font-family: var(--font-body); background: var(--bg); color: var(--slate); font-size: 14px; }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #c8cdd6; border-radius: 3px; }
+
+/* ══════════════════════════════════
+   AUTH / LOADING SCREEN
+══════════════════════════════════ */
+#authScreen {
+  position: fixed; inset: 0;
+  background: var(--navy);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 24px; z-index: 1000;
+  transition: opacity 0.4s;
+}
+#authScreen.hidden { opacity: 0; pointer-events: none; }
+
+.auth-logo {
+  font-family: var(--font-mono);
+  font-size: 28px; font-weight: 700;
+  color: white; letter-spacing: -0.02em;
+}
+.auth-logo span { color: var(--cyan); }
+
+.auth-subtitle {
+  font-size: 13px; color: rgba(255,255,255,0.45);
+  font-family: var(--font-mono); letter-spacing: 0.05em;
+}
+
+.btn-signin {
+  background: var(--cyan); color: white;
+  border: none; border-radius: var(--radius);
+  font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+  padding: 12px 32px; cursor: pointer;
+  letter-spacing: 0.03em;
+  transition: opacity 0.15s, transform 0.15s;
+}
+.btn-signin:hover { opacity: 0.88; transform: translateY(-1px); }
+
+#authStatus {
+  font-size: 12px; color: rgba(255,255,255,0.35);
+  font-family: var(--font-mono);
+  min-height: 18px;
+}
+
+/* ══════════════════════════════════
+   APP SHELL
+══════════════════════════════════ */
+#app { display: none; flex-direction: column; height: 100vh; overflow: hidden; }
+#app.visible { display: flex; }
+
+/* ── NAVBAR ── */
+.navbar {
+  background: var(--navy);
+  height: 56px; flex-shrink: 0;
+  display: flex; align-items: center;
+  padding: 0 20px; gap: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+
+.navbar-brand {
+  font-family: var(--font-mono);
+  font-size: 14px; font-weight: 700;
+  color: white; flex: 1;
+  letter-spacing: -0.02em;
+  display: flex; align-items: center; gap: 8px;
+}
+.navbar-brand .icon { color: var(--cyan); font-size: 18px; }
+
+.nav-links { display: flex; gap: 2px; }
+
+.nav-btn {
+  font-family: var(--font-body);
+  font-size: 13px; font-weight: 500;
+  color: rgba(255,255,255,0.7);
+  background: transparent;
+  border: none; padding: 6px 16px;
+  border-radius: 5px; cursor: pointer;
+  height: 34px; transition: all 0.15s;
+  white-space: nowrap;
+}
+.nav-btn:hover { background: rgba(255,255,255,0.1); color: white; }
+.nav-btn.active { background: var(--cyan); color: white; font-weight: 600; }
+
+.nav-user {
+  display: flex; align-items: center; gap: 8px;
+  margin-left: 16px; padding-left: 16px;
+  border-left: 1px solid rgba(255,255,255,0.12);
+}
+.nav-avatar {
+  width: 28px; height: 28px;
+  background: var(--navy-mid);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: white;
+}
+.nav-username { font-size: 12px; color: rgba(255,255,255,0.6); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.btn-signout {
+  background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5);
+  border: none; border-radius: 4px;
+  font-size: 11px; padding: 4px 10px; cursor: pointer;
+  transition: all 0.15s; margin-left: 4px;
+}
+.btn-signout:hover { background: rgba(255,255,255,0.14); color: white; }
+
+/* ── PAGE CONTAINER ── */
+.screen { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+.screen.active { display: flex; }
+
+/* ── PAGE HEADER ── */
+.page-header {
+  background: white;
+  padding: 16px 24px;
+  display: flex; align-items: center; gap: 24px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
+}
+.page-header-text { flex: 1; }
+.page-title { font-size: 20px; font-weight: 700; color: var(--slate); line-height: 1.2; }
+.page-subtitle { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+/* ── KPI ROW ── */
+.kpi-row { display: flex; gap: 10px; }
+.kpi {
+  background: rgba(13,59,110,0.06);
+  border-radius: 8px; padding: 8px 18px;
+  text-align: center; min-width: 120px;
+  border: 1px solid rgba(13,59,110,0.08);
+}
+.kpi-label { font-family: var(--font-mono); font-size: 9px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+.kpi-value { font-family: var(--font-mono); font-size: 18px; font-weight: 700; color: var(--navy); margin-top: 2px; }
+
+/* ── FILTER BAR ── */
+.filter-bar {
+  background: white; padding: 10px 16px;
+  display: flex; align-items: center; gap: 8px;
+  border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.filter-input, .filter-select {
+  font-family: var(--font-body); font-size: 13px;
+  border: 1.5px solid var(--border); border-radius: 6px;
+  padding: 6px 10px; outline: none;
+  background: white; color: var(--slate); height: 34px;
+  transition: border-color 0.15s;
+}
+.filter-input:focus, .filter-select:focus { border-color: var(--navy); }
+.filter-input::placeholder { color: #b0b8c4; }
+.filter-select { cursor: pointer; }
+.filter-spacer { flex: 1; }
+.count-badge { font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
+
+/* ── BUTTONS ── */
+.btn {
+  font-family: var(--font-body); font-size: 13px; font-weight: 600;
+  border: none; border-radius: 6px;
+  padding: 0 16px; cursor: pointer;
+  height: 34px; display: inline-flex; align-items: center; gap: 6px;
+  transition: opacity 0.15s, transform 0.1s; white-space: nowrap;
+}
+.btn:hover { opacity: 0.88; }
+.btn:active { transform: scale(0.98); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-primary   { background: var(--cyan); color: white; }
+.btn-navy      { background: var(--navy); color: white; }
+.btn-ghost     { background: rgba(13,59,110,0.08); color: var(--navy); }
+.btn-danger    { background: rgba(231,76,60,0.1); color: var(--red); border: 1px solid rgba(231,76,60,0.2); }
+.btn-success   { background: rgba(39,174,96,0.1); color: var(--green); border: 1px solid rgba(39,174,96,0.2); }
+.btn-wide      { width: 100%; justify-content: center; height: 40px; border-radius: 7px; }
+.btn-xl        { height: 44px; font-size: 14px; }
+.btn-sm        { height: 28px; font-size: 12px; padding: 0 10px; border-radius: 4px; }
+.btn-icon      { width: 28px; padding: 0; justify-content: center; }
+
+/* ── TABLE ── */
+.table-wrap { flex: 1; overflow-y: auto; }
+.table-header {
+  display: flex; align-items: center;
+  padding: 8px 24px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 2;
+}
+.th {
+  font-size: 10px; font-weight: 700; color: var(--muted);
+  letter-spacing: 0.06em; text-transform: uppercase;
+}
+.table-row {
+  display: flex; align-items: center;
+  padding: 12px 24px;
+  background: white;
+  border-bottom: 1px solid #f0f2f6;
+  transition: background 0.1s;
+  gap: 0;
+}
+.table-row:hover { background: #f8f9fc; }
+.table-row.selected { border-left: 3px solid var(--navy); background: rgba(0,18,107,0.02); }
+
+/* ── BADGES ── */
+.badge {
+  font-size: 11px; font-weight: 600;
+  padding: 3px 9px; border-radius: 20px; display: inline-block;
+  white-space: nowrap;
+}
+.badge-cyan   { background: var(--cyan-dim); color: var(--cyan); }
+.badge-green  { background: rgba(39,174,96,0.1); color: var(--green); }
+.badge-amber  { background: rgba(230,126,34,0.1); color: var(--amber); }
+.badge-purple { background: rgba(142,68,173,0.1); color: var(--purple); }
+.badge-red    { background: rgba(231,76,60,0.1); color: var(--red); }
+.badge-grey   { background: rgba(108,117,125,0.1); color: var(--muted); }
+
+/* ── MONO VALS ── */
+.mono { font-family: var(--font-mono); font-size: 12px; }
+.mono-sm { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+
+/* ══════════════════════════════════
+   MODAL
+══════════════════════════════════ */
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: none; align-items: center; justify-content: center;
+  z-index: 500; padding: 24px;
+  backdrop-filter: blur(2px);
+}
+.modal-backdrop.open { display: flex; }
+.modal {
+  background: white; border-radius: 12px;
+  padding: 28px 32px; width: 100%; max-width: 860px;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  animation: modalIn 0.2s ease;
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+.modal-title { font-size: 17px; font-weight: 700; color: var(--slate); margin-bottom: 22px; }
+.modal-close {
+  position: absolute; top: 16px; right: 16px;
+  background: var(--bg); border: none; border-radius: 4px;
+  width: 30px; height: 30px; cursor: pointer;
+  font-size: 14px; color: var(--muted);
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.modal-close:hover { background: var(--border); }
+.modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 20px; margin-bottom: 20px; }
+.modal-full { grid-column: 1 / -1; }
+.modal-footer { display: flex; gap: 10px; padding-top: 16px; border-top: 1px solid var(--border); }
+
+/* ── FORM CONTROLS ── */
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.form-control {
+  font-family: var(--font-body); font-size: 13px;
+  border: 1.5px solid var(--border); border-radius: 6px;
+  padding: 8px 10px; color: var(--slate); width: 100%;
+  outline: none; height: 36px;
+  transition: border-color 0.15s;
+}
+.form-control:focus { border-color: var(--navy); }
+.form-control::placeholder { color: #b0b8c4; }
+textarea.form-control { height: 72px; resize: vertical; }
+.form-row { display: flex; gap: 12px; }
+.form-col { flex: 1; }
+
+/* ── NOTIFY TOAST ── */
+#toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+  background: var(--slate); color: white;
+  font-size: 13px; font-weight: 500;
+  padding: 10px 20px; border-radius: 8px;
+  box-shadow: var(--shadow-lg); z-index: 9999;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s;
+  opacity: 0; white-space: nowrap;
+  display: flex; align-items: center; gap: 8px;
+}
+#toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+#toast.success { background: var(--green); }
+#toast.error   { background: var(--red); }
+
+/* ── LOADING SPINNER ── */
+.spinner {
+  width: 18px; height: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-row {
+  display: flex; align-items: center; justify-content: center;
+  padding: 48px; gap: 12px;
+  color: var(--muted); font-size: 13px;
+}
+.loading-row .spinner { border-color: rgba(13,59,110,0.2); border-top-color: var(--navy); }
+
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 64px 20px; gap: 8px; text-align: center;
+}
+.empty-icon { font-size: 32px; opacity: 0.25; margin-bottom: 4px; }
+.empty-title { font-size: 14px; font-weight: 600; color: #9aa3af; }
+.empty-sub { font-size: 12px; color: #b8bfc8; }
+
+/* ══════════════════════════════════
+   SCREEN: DEMAND SEARCH
+══════════════════════════════════ */
+#screenDemand .body {
+  display: flex; gap: 14px; padding: 14px; flex: 1; overflow: hidden;
+}
+
+.panel-left {
+  background: white; border-radius: var(--radius);
+  padding: 18px; width: 320px; flex-shrink: 0;
+  display: flex; flex-direction: column; gap: 12px;
+  border: 1px solid var(--border);
+  overflow-y: auto;
+}
+.panel-section-title {
+  font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+  color: var(--navy); letter-spacing: -0.01em;
+  padding-bottom: 8px; border-bottom: 1px solid var(--border);
+}
+
+.plan-list {
+  background: var(--bg); border-radius: 6px;
+  border: 1px solid var(--border); overflow: hidden;
+  min-height: 80px; flex: 1;
+}
+.plan-item {
+  display: flex; align-items: center;
+  padding: 8px 10px; border-bottom: 1px solid var(--border);
+  gap: 8px; background: white;
+}
+.plan-item:last-child { border-bottom: none; }
+.plan-item-text { font-family: var(--font-mono); font-size: 10px; color: var(--slate); flex: 1; line-height: 1.5; }
+.plan-remove {
+  background: rgba(231,76,60,0.08); color: var(--red);
+  border: none; border-radius: 3px;
+  width: 22px; height: 22px; font-size: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: background 0.15s;
+}
+.plan-remove:hover { background: rgba(231,76,60,0.18); }
+
+.panel-right {
+  background: white; border-radius: var(--radius);
+  flex: 1; display: flex; flex-direction: column;
+  overflow: hidden; border: 1px solid var(--border);
+}
+.panel-right-header {
+  padding: 14px 18px 10px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+}
+.results-col-header {
+  display: flex; padding: 7px 18px;
+  background: var(--bg); border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.results-rows { overflow-y: auto; flex: 1; }
+.results-row {
+  display: flex; padding: 10px 18px;
+  border-bottom: 1px solid #f0f2f6;
+  align-items: center; background: white; transition: background 0.1s;
+}
+.results-row:hover { background: #f8f9fc; }
+
+/* col widths */
+.c-dev  { width: 170px; flex-shrink: 0; }
+.c-prod { flex: 1; min-width: 140px; }
+.c-mt   { width: 130px; flex-shrink: 0; }
+.c-year { width: 64px; flex-shrink: 0; text-align: center; }
+.c-qtr  { width: 52px; flex-shrink: 0; text-align: center; }
+.c-amt  { width: 110px; flex-shrink: 0; text-align: right; }
+
+/* products cols */
+.p-name   { width: 220px; flex-shrink: 0; }
+.p-mat    { width: 150px; flex-shrink: 0; }
+.p-res    { width: 130px; flex-shrink: 0; }
+.p-wt     { width: 110px; flex-shrink: 0; text-align: right; }
+.p-lt     { width: 130px; flex-shrink: 0; }
+.p-rate   { width: 120px; flex-shrink: 0; text-align: right; }
+.p-act    { margin-left: auto; display: flex; gap: 6px; }
+
+/* devs cols */
+.d-name   { flex: 1; }
+.d-cap    { width: 140px; flex-shrink: 0; text-align: right; }
+.d-count  { width: 80px; flex-shrink: 0; text-align: center; }
+.d-act    { margin-left: auto; display: flex; gap: 6px; }
+
+/* sched cols */
+.s-dev  { width: 180px; flex-shrink: 0; }
+.s-prod { flex: 1; min-width: 160px; }
+.s-yr   { width: 64px; flex-shrink: 0; text-align: center; }
+.s-qtr  { width: 52px; flex-shrink: 0; text-align: center; }
+.s-abs  { width: 110px; flex-shrink: 0; text-align: right; }
+.s-act  { margin-left: auto; display: flex; gap: 6px; }
+
+/* ══════════════════════════════════
+   CONFIRM DIALOG
+══════════════════════════════════ */
+.confirm-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: none; align-items: center; justify-content: center;
+  z-index: 600;
+}
+.confirm-backdrop.open { display: flex; }
+.confirm-dialog {
+  background: white; border-radius: 10px;
+  padding: 24px 28px; max-width: 400px; width: 100%;
+  box-shadow: var(--shadow-lg);
+}
+.confirm-title { font-size: 16px; font-weight: 700; color: var(--slate); margin-bottom: 8px; }
+.confirm-msg { font-size: 13px; color: var(--muted); margin-bottom: 20px; line-height: 1.5; }
+.confirm-actions { display: flex; gap: 10px; justify-content: flex-end; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════
+     AUTH SCREEN
+══════════════════════════════════ -->
+<div id="authScreen">
+  <div class="auth-logo">☢ <span>DangerMouse</span></div>
+  <div class="auth-subtitle">NUCLEAR DEMAND MODEL</div>
+  <button class="btn-signin" id="btnSignIn">Sign in with Microsoft</button>
+  <div id="authStatus"></div>
+</div>
+
+<!-- ══════════════════════════════════
+     APP
+══════════════════════════════════ -->
+<div id="app">
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-brand"><span class="icon">☢</span> DangerMouse — Nuclear Demand Model</div>
+    <div class="nav-links">
+      <button class="nav-btn active" onclick="navigate('demand')">Search</button>
+      <button class="nav-btn" onclick="navigate('products')">Products</button>
+      <button class="nav-btn" onclick="navigate('developers')">Developers</button>
+      <button class="nav-btn" onclick="navigate('schedules')">Schedules</button>
+    </div>
+    <div class="nav-user">
+      <div class="nav-avatar" id="navAvatar">?</div>
+      <span class="nav-username" id="navUsername">—</span>
+      <button class="btn-signout" onclick="signOut()">Sign out</button>
+    </div>
+  </nav>
+
+  <!-- ══ SCREEN: DEMAND SEARCH ══ -->
+  <div class="screen active" id="screenDemand">
+    <div class="page-header">
+      <div class="page-header-text">
+        <div class="page-title">Demand Search</div>
+        <div class="page-subtitle">Build your plan then generate demand</div>
+      </div>
+      <div class="kpi-row">
+        <div class="kpi"><div class="kpi-label">Total Demand</div><div class="kpi-value" id="kpiTotal">—</div></div>
+        <div class="kpi"><div class="kpi-label">Products</div><div class="kpi-value" id="kpiProducts">—</div></div>
+        <div class="kpi"><div class="kpi-label">Year Span</div><div class="kpi-value" id="kpiYears">—</div></div>
+      </div>
+    </div>
+
+    <div class="body">
+      <!-- Left panel -->
+      <div class="panel-left">
+        <div class="panel-section-title">Build Plan</div>
+
+        <div class="form-group">
+          <label class="form-label">Developer</label>
+          <select class="form-control" id="ddDev" style="height:36px;"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Start Date</label>
+          <input class="form-control" type="date" id="datStart" />
+        </div>
+        <div class="form-row">
+          <div class="form-col">
+            <div class="form-group">
+              <label class="form-label">Concurrent</label>
+              <input class="form-control" type="number" id="txtConcurrent" value="1" min="1" />
+            </div>
+          </div>
+          <div class="form-col">
+            <div class="form-group">
+              <label class="form-label">Consecutive</label>
+              <input class="form-control" type="number" id="txtConsecutive" value="1" min="1" />
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn-navy btn-wide" onclick="addToPlan()">＋ Add to Plan</button>
+
+        <div class="plan-list" id="planList">
+          <div class="empty-state" style="padding:24px;">
+            <div class="empty-icon">📋</div>
+            <div class="empty-sub">No plan items yet</div>
+          </div>
+        </div>
+
+        <hr style="border:none;border-top:1px solid var(--border);" />
+
+        <button class="btn btn-primary btn-wide btn-xl" id="btnGenerate" onclick="generateDemand()">
+          ▶&nbsp; Generate Demand
+        </button>
+        <button class="btn btn-danger btn-wide" onclick="clearAll()">🗑&nbsp; Clear All</button>
+        <button class="btn btn-wide" style="background:#3860b2;color:white;" onclick="viewChart()">📊&nbsp; View Chart</button>
+      </div>
+
+      <!-- Right panel: results -->
+      <div class="panel-right">
+        <div class="panel-right-header">
+          <span style="font-size:14px;font-weight:700;color:var(--slate);">Demand Results</span>
+          <span id="demandNotify" style="font-size:12px;color:var(--green);font-family:var(--font-mono);"></span>
+          <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+            <input class="filter-input" type="text" id="resultsSearch" placeholder="Filter results..." style="width:180px;height:30px;" oninput="renderResults()" />
+          </div>
+        </div>
+        <div class="results-col-header">
+          <span class="th c-dev">Developer</span>
+          <span class="th c-prod">Product</span>
+          <span class="th c-mt">Material Type</span>
+          <span class="th c-year">Year</span>
+          <span class="th c-qtr">Qtr</span>
+          <span class="th c-amt">Amount</span>
+        </div>
+        <div class="results-rows" id="resultsBody">
+          <div class="empty-state">
+            <div class="empty-icon">⚡</div>
+            <div class="empty-title">No results yet</div>
+            <div class="empty-sub">Build a plan and click Generate Demand</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SCREEN: PRODUCTS ══ -->
+  <div class="screen" id="screenProducts">
+    <div class="page-header">
+      <div class="page-header-text">
+        <div class="page-title">Product Catalogue</div>
+        <div class="page-subtitle">Materials, components and services used in SMR builds</div>
+      </div>
+      <button class="btn btn-primary" onclick="openProductForm()">+ Add Product</button>
+    </div>
+    <div class="filter-bar">
+      <input class="filter-input" type="text" id="prodSearch" placeholder="Search products…" style="width:240px;" oninput="renderProducts()" />
+      <select class="filter-select" id="prodMatFilter" onchange="renderProducts()">
+        <option value="">All Types</option>
+        <option>Concrete</option><option>Steel reinforcement</option>
+        <option>Steel</option><option>Copper</option><option>Nickel</option>
+        <option>Component</option><option>Service</option><option>Facility</option><option>Other</option>
+      </select>
+      <select class="filter-select" id="prodResFilter" onchange="renderProducts()">
+        <option value="">All Resources</option>
+        <option>Material</option><option>Component</option><option>Service</option><option>Facility</option>
+      </select>
+      <div class="filter-spacer"></div>
+      <span class="count-badge" id="prodCount">— products</span>
+    </div>
+    <div class="table-header">
+      <span class="th p-name">Product Name</span>
+      <span class="th p-mat">Material Type</span>
+      <span class="th p-res">Resource Type</span>
+      <span class="th p-wt">Weight</span>
+      <span class="th p-lt">Lead Time</span>
+      <span class="th p-rate">Prod. Rate</span>
+    </div>
+    <div class="table-wrap" id="productsBody">
+      <div class="loading-row"><div class="spinner"></div> Loading products…</div>
+    </div>
+  </div>
+
+  <!-- ══ SCREEN: DEVELOPERS ══ -->
+  <div class="screen" id="screenDevelopers">
+    <div class="page-header">
+      <div class="page-header-text">
+        <div class="page-title">Developers</div>
+        <div class="page-subtitle">SMR developers in the demand model</div>
+      </div>
+      <button class="btn btn-primary" onclick="openDevForm()">+ Add Developer</button>
+    </div>
+    <div class="filter-bar">
+      <input class="filter-input" type="text" id="devSearch" placeholder="Search developers…" style="width:240px;" oninput="renderDevelopers()" />
+      <div class="filter-spacer"></div>
+      <span class="count-badge" id="devCount">— developers</span>
+    </div>
+    <div class="table-header">
+      <span class="th d-name">Developer Name</span>
+      <span class="th d-cap">Capacity (MW)</span>
+      <span class="th d-count">Schedules</span>
+    </div>
+    <div class="table-wrap" id="developersBody">
+      <div class="loading-row"><div class="spinner"></div> Loading developers…</div>
+    </div>
+  </div>
+
+  <!-- ══ SCREEN: SCHEDULES ══ -->
+  <div class="screen" id="screenSchedules">
+    <div class="page-header">
+      <div class="page-header-text">
+        <div class="page-title">Dev Schedules</div>
+        <div class="page-subtitle">Product demand schedule per developer build</div>
+      </div>
+      <button class="btn btn-primary" onclick="openSchedForm()">+ Add Entry</button>
+    </div>
+    <div class="filter-bar">
+      <select class="filter-select" id="schedDevFilter" onchange="renderSchedules()" style="width:220px;">
+        <option value="">All Developers</option>
+      </select>
+      <select class="filter-select" id="schedProdFilter" onchange="renderSchedules()" style="width:220px;">
+        <option value="">All Products</option>
+      </select>
+      <div class="filter-spacer"></div>
+      <span class="count-badge" id="schedCount">— entries</span>
+    </div>
+    <div class="table-header">
+      <span class="th s-dev">Developer</span>
+      <span class="th s-prod">Product</span>
+      <span class="th s-yr">Year</span>
+      <span class="th s-qtr">Qtr</span>
+      <span class="th s-abs">Amount</span>
+    </div>
+    <div class="table-wrap" id="schedulesBody">
+      <div class="loading-row"><div class="spinner"></div> Loading schedules…</div>
+    </div>
+  </div>
+
+</div><!-- #app -->
+
+<!-- ══════════════════════════════════
+     MODALS
+══════════════════════════════════ -->
+
+<!-- Product Modal -->
+<div class="modal-backdrop" id="productModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('productModal')">✕</button>
+    <div class="modal-title" id="productModalTitle">Add New Product</div>
+    <div class="modal-grid">
+      <div class="form-group">
+        <label class="form-label">Product Name *</label>
+        <input class="form-control" id="fProdName" placeholder="e.g. Steel (structural)" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Material Type</label>
+        <select class="form-control" id="fProdMat" style="height:36px;">
+          <option value="">— select —</option>
+          <option>Concrete</option><option>Steel reinforcement</option>
+          <option>Steel</option><option>Copper</option><option>Nickel</option>
+          <option>Component</option><option>Service</option><option>Facility</option><option>Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Resource Type</label>
+        <select class="form-control" id="fProdRes" style="height:36px;">
+          <option value="">— select —</option>
+          <option>Material</option><option>Component</option><option>Service</option><option>Facility</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-col form-group">
+          <label class="form-label">Weight</label>
+          <input class="form-control" id="fProdWeight" type="number" step="0.0001" placeholder="0.0000" />
+        </div>
+        <div class="form-col form-group">
+          <label class="form-label">Unit</label>
+          <input class="form-control" id="fProdUnit" placeholder="e.g. tonnes" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-col form-group">
+          <label class="form-label">Lead Time</label>
+          <input class="form-control" id="fProdLeadTime" type="number" placeholder="0" />
+        </div>
+        <div class="form-col form-group">
+          <label class="form-label">Lead Time Unit</label>
+          <select class="form-control" id="fProdLeadUnit" style="height:36px;">
+            <option>Months</option><option>Quarters</option><option>Years</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Production Rate</label>
+        <input class="form-control" id="fProdRate" type="number" step="0.01" placeholder="0.00" />
+      </div>
+      <div class="form-group modal-full">
+        <label class="form-label">Assumptions</label>
+        <textarea class="form-control" id="fProdAssumptions" placeholder="Any notes or assumptions…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary btn-xl" id="btnSaveProduct" onclick="saveProduct()">Save Product</button>
+      <button class="btn btn-ghost btn-xl" onclick="closeModal('productModal')">Cancel</button>
+      <span id="productSaving" style="display:none;align-items:center;gap:8px;font-size:13px;color:var(--muted);">
+        <div class="spinner" style="border-color:rgba(13,59,110,0.2);border-top-color:var(--navy);"></div> Saving…
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- Developer Modal -->
+<div class="modal-backdrop" id="devModal">
+  <div class="modal" style="max-width:520px;">
+    <button class="modal-close" onclick="closeModal('devModal')">✕</button>
+    <div class="modal-title" id="devModalTitle">Add Developer</div>
+    <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:20px;">
+      <div class="form-group">
+        <label class="form-label">Developer Name *</label>
+        <input class="form-control" id="fDevName" placeholder="e.g. Rolls-Royce SMR" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Capacity (MW)</label>
+        <input class="form-control" id="fDevCapacity" type="number" placeholder="470" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <textarea class="form-control" id="fDevNotes" placeholder="Any notes…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary btn-xl" onclick="saveDeveloper()">Save Developer</button>
+      <button class="btn btn-ghost btn-xl" onclick="closeModal('devModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Schedule Modal -->
+<div class="modal-backdrop" id="schedModal">
+  <div class="modal" style="max-width:560px;">
+    <button class="modal-close" onclick="closeModal('schedModal')">✕</button>
+    <div class="modal-title" id="schedModalTitle">Add Schedule Entry</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px 18px;margin-bottom:20px;">
+      <div class="form-group modal-full">
+        <label class="form-label">Developer *</label>
+        <select class="form-control" id="fSchedDev" style="height:36px;"></select>
+      </div>
+      <div class="form-group modal-full">
+        <label class="form-label">Product *</label>
+        <select class="form-control" id="fSchedProd" style="height:36px;"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Schedule Year</label>
+        <input class="form-control" id="fSchedYear" type="number" placeholder="1" min="1" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Quarter</label>
+        <select class="form-control" id="fSchedQtr" style="height:36px;">
+          <option>Q1</option><option>Q2</option><option>Q3</option><option>Q4</option>
+        </select>
+      </div>
+      <div class="form-group modal-full">
+        <label class="form-label">Amount (Absolute)</label>
+        <input class="form-control" id="fSchedAmt" type="number" step="0.01" placeholder="0.00" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary btn-xl" onclick="saveSchedule()">Save Entry</button>
+      <button class="btn btn-ghost btn-xl" onclick="closeModal('schedModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Dialog -->
+<div class="confirm-backdrop" id="confirmDialog">
+  <div class="confirm-dialog">
+    <div class="confirm-title" id="confirmTitle">Are you sure?</div>
+    <div class="confirm-msg" id="confirmMsg">This action cannot be undone.</div>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" onclick="closeConfirm(false)">Cancel</button>
+      <button class="btn btn-danger" onclick="closeConfirm(true)">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════════════
+const CONFIG = {
+  clientId:   'ec0a6806-59e8-4ea9-8ff5-6bdb1ba87baf',
+  tenantId:   'd44192f5-1023-458c-9cb3-9ff7e9c6d4ad',
+  siteUrl:    'https://nuccol.sharepoint.com/sites/DangerMouse',
+  scopes:     ['https://nuccol.sharepoint.com/.default'],
+  lists: {
+    products:   'DM - Products',
+    developers: 'DM - Developers',
+    schedules:  'DM - Dev Schedules',
+    chartCache: 'ChartCache'
+  }
+};
+
+// ══════════════════════════════════════════════════════
+// MSAL SETUP
+// ══════════════════════════════════════════════════════
+const msalConfig = {
+  auth: {
+    clientId: CONFIG.clientId,
+    authority: `https://login.microsoftonline.com/${CONFIG.tenantId}`,
+    redirectUri: window.location.origin + window.location.pathname
+  },
+  cache: { cacheLocation: 'sessionStorage', storeAuthStateInCookie: false }
+};
+
+const msalInstance = new msal.PublicClientApplication(msalConfig);
+let currentAccount = null;
+
+async function initAuth() {
+  await msalInstance.initialize();
+  // Handle redirect
+  try {
+    const resp = await msalInstance.handleRedirectPromise();
+    if (resp) setAccount(resp.account);
+  } catch(e) { setStatus('Auth error: ' + e.message); }
+
+  const accounts = msalInstance.getAllAccounts();
+  if (accounts.length > 0) {
+    setAccount(accounts[0]);
+    showApp();
+  }
+}
+
+function setAccount(account) {
+  currentAccount = account;
+  const name = account.name || account.username;
+  document.getElementById('navUsername').textContent = name;
+  document.getElementById('navAvatar').textContent = (name[0] || '?').toUpperCase();
+}
+
+async function getToken() {
+  try {
+    const resp = await msalInstance.acquireTokenSilent({
+      scopes: CONFIG.scopes, account: currentAccount
+    });
+    return resp.accessToken;
+  } catch(e) {
+    const resp = await msalInstance.acquireTokenPopup({ scopes: CONFIG.scopes });
+    return resp.accessToken;
+  }
+}
+
+document.getElementById('btnSignIn').onclick = async () => {
+  setStatus('Signing in…');
+  try {
+    await msalInstance.loginRedirect({ scopes: CONFIG.scopes });
+  } catch(e) {
+    setStatus('Sign-in failed: ' + e.message);
+  }
+};
+
+function signOut() {
+  msalInstance.logout();
+}
+
+function setStatus(msg) {
+  document.getElementById('authStatus').textContent = msg;
+}
+
+function showApp() {
+  document.getElementById('authScreen').classList.add('hidden');
+  setTimeout(() => { document.getElementById('authScreen').style.display = 'none'; }, 400);
+  document.getElementById('app').classList.add('visible');
+  loadAllData();
+}
+
+// ══════════════════════════════════════════════════════
+// SHAREPOINT REST API
+// ══════════════════════════════════════════════════════
+async function spGet(listName, select = '', filter = '', orderby = '') {
+  const token = await getToken();
+  let url = `${CONFIG.siteUrl}/_api/web/lists/getbytitle('${encodeURIComponent(listName)}')/items?$top=5000`;
+  if (select)  url += `&$select=${select}`;
+  if (filter)  url += `&$filter=${filter}`;
+  if (orderby) url += `&$orderby=${orderby}`;
+  const resp = await fetch(url, {
+    headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json;odata=nometadata' }
+  });
+  if (!resp.ok) throw new Error(`SP GET failed: ${resp.status} ${await resp.text()}`);
+  const data = await resp.json();
+  return data.value;
+}
+
+async function spPost(listName, body) {
+  const token = await getToken();
+  const url = `${CONFIG.siteUrl}/_api/web/lists/getbytitle('${encodeURIComponent(listName)}')/items`;
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Accept': 'application/json;odata=nometadata',
+      'Content-Type': 'application/json;odata=nometadata'
+    },
+    body: JSON.stringify(body)
+  });
+  if (!resp.ok) throw new Error(`SP POST failed: ${resp.status} ${await resp.text()}`);
+  return await resp.json();
+}
+
+async function spPatch(listName, id, body) {
+  const token = await getToken();
+  const url = `${CONFIG.siteUrl}/_api/web/lists/getbytitle('${encodeURIComponent(listName)}')/items(${id})`;
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Accept': 'application/json;odata=nometadata',
+      'Content-Type': 'application/json;odata=nometadata',
+      'X-HTTP-Method': 'MERGE',
+      'If-Match': '*'
+    },
+    body: JSON.stringify(body)
+  });
+  if (!resp.ok) throw new Error(`SP PATCH failed: ${resp.status} ${await resp.text()}`);
+}
+
+async function spDelete(listName, id) {
+  const token = await getToken();
+  const url = `${CONFIG.siteUrl}/_api/web/lists/getbytitle('${encodeURIComponent(listName)}')/items(${id})`;
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Accept': 'application/json;odata=nometadata',
+      'X-HTTP-Method': 'DELETE',
+      'If-Match': '*'
+    }
+  });
+  if (!resp.ok) throw new Error(`SP DELETE failed: ${resp.status} ${await resp.text()}`);
+}
+
+// ══════════════════════════════════════════════════════
+// DATA STORE
+// ══════════════════════════════════════════════════════
+let store = {
+  products:   [],
+  developers: [],
+  schedules:  [],
+  buildPlan:  [],
+  demandResults: [],
+  editingProduct: null,
+  editingDev: null,
+  editingSched: null
+};
+
+async function loadAllData() {
+  try {
+    const [prods, devs, scheds] = await Promise.all([
+      spGet(CONFIG.lists.products,   'Id,Title,MaterialType,ResourceType,Weight,Unit,LeadTime,LeadTimeUnit,ProductionRate,Assumptions', '', 'Title asc'),
+      spGet(CONFIG.lists.developers, 'Id,Title,Capacity,Notes', '', 'Title asc'),
+      spGet(CONFIG.lists.schedules,  'Id,Developer_ID,Product_ID,ScheduleYear,Quarter,Amount_Absolute', '', 'Developer_ID asc')
+    ]);
+    store.products   = prods;
+    store.developers = devs;
+    store.schedules  = scheds;
+    populateDeveloperDropdown();
+    populateSchedFilters();
+    renderProducts();
+    renderDevelopers();
+    renderSchedules();
+  } catch(e) {
+    toast('Failed to load data: ' + e.message, 'error');
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════
+function navigate(screen) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const map = { demand: 'screenDemand', products: 'screenProducts', developers: 'screenDevelopers', schedules: 'screenSchedules' };
+  const btnMap = { demand: 0, products: 1, developers: 2, schedules: 3 };
+  document.getElementById(map[screen]).classList.add('active');
+  document.querySelectorAll('.nav-btn')[btnMap[screen]].classList.add('active');
+}
+
+// ══════════════════════════════════════════════════════
+// DEMAND SEARCH
+// ══════════════════════════════════════════════════════
+function populateDeveloperDropdown() {
+  const dd = document.getElementById('ddDev');
+  dd.innerHTML = store.developers.map(d => `<option value="${esc(d.Title)}">${esc(d.Title)}</option>`).join('');
+}
+
+function addToPlan() {
+  const dev   = document.getElementById('ddDev').value;
+  const start = document.getElementById('datStart').value;
+  const conc  = parseInt(document.getElementById('txtConcurrent').value) || 1;
+  const cons  = parseInt(document.getElementById('txtConsecutive').value) || 1;
+  if (!dev || !start) { toast('Select a developer and start date', 'error'); return; }
+  store.buildPlan.push({ id: Date.now(), Developer: dev, StartDate: start, Concurrent: conc, Consecutive: cons });
+  renderPlan();
+}
+
+function renderPlan() {
+  const el = document.getElementById('planList');
+  if (!store.buildPlan.length) {
+    el.innerHTML = `<div class="empty-state" style="padding:24px;"><div class="empty-icon">📋</div><div class="empty-sub">No plan items yet</div></div>`;
+    return;
+  }
+  el.innerHTML = store.buildPlan.map(p => `
+    <div class="plan-item">
+      <div class="plan-item-text">${esc(p.Developer)}<br>${fmtDate(p.StartDate)} · ${p.Concurrent}x / ${p.Consecutive} consec</div>
+      <button class="plan-remove" onclick="removePlan(${p.id})">×</button>
+    </div>`).join('');
+}
+
+function removePlan(id) {
+  store.buildPlan = store.buildPlan.filter(p => p.id !== id);
+  renderPlan();
+}
+
+async function generateDemand() {
+  if (!store.buildPlan.length) { toast('Add at least one plan entry', 'error'); return; }
+  const btn = document.getElementById('btnGenerate');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Generating…';
+  store.demandResults = [];
+
+  try {
+    for (const planRow of store.buildPlan) {
+      const startYear = new Date(planRow.StartDate).getFullYear();
+      const devScheds = store.schedules.filter(s => s.Developer_ID === planRow.Developer);
+
+      for (let seq = 0; seq < planRow.Consecutive; seq++) {
+        for (const sched of devScheds) {
+          const calYear = startYear + (sched.ScheduleYear - 1) + (seq * 6);
+          const prod = store.products.find(p => p.Title === sched.Product_ID);
+          store.demandResults.push({
+            Developer:    planRow.Developer,
+            Product_ID:   sched.Product_ID,
+            MaterialType: prod ? (prod.MaterialType || '') : '',
+            CalYear:      calYear,
+            Quarter:      sched.Quarter || '',
+            Amount:       (sched.Amount_Absolute || 0) * planRow.Concurrent,
+            IsLeadtime:   false
+          });
+        }
+      }
+    }
+
+    updateKPIs();
+    renderResults();
+    document.getElementById('demandNotify').textContent = `✓ ${store.demandResults.length} rows generated`;
+    toast(`Done — ${store.demandResults.length} rows`, 'success');
+  } catch(e) {
+    toast('Generate failed: ' + e.message, 'error');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '▶&nbsp; Generate Demand';
+}
+
+function updateKPIs() {
+  const rows = store.demandResults.filter(r => r.CalYear > 0);
+  const total = rows.reduce((s, r) => s + (r.Amount || 0), 0);
+  const prods = new Set(rows.map(r => r.Product_ID)).size;
+  const years = new Set(rows.map(r => r.CalYear)).size;
+  document.getElementById('kpiTotal').textContent    = total.toLocaleString('en-GB', {maximumFractionDigits:0});
+  document.getElementById('kpiProducts').textContent = prods;
+  document.getElementById('kpiYears').textContent    = years + ' yrs';
+}
+
+function renderResults() {
+  const q     = (document.getElementById('resultsSearch').value || '').toLowerCase();
+  const rows  = store.demandResults.filter(r => r.CalYear > 0 && (!q || r.Developer.toLowerCase().includes(q) || r.Product_ID.toLowerCase().includes(q)));
+  const el    = document.getElementById('resultsBody');
+
+  if (!rows.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">⚡</div><div class="empty-title">${store.demandResults.length ? 'No matching results' : 'No results yet'}</div><div class="empty-sub">Build a plan and click Generate Demand</div></div>`;
+    return;
+  }
+
+  el.innerHTML = rows.map(r => `
+    <div class="results-row">
+      <span class="c-dev" style="font-size:12px;font-weight:600;">${esc(r.Developer)}</span>
+      <span class="c-prod mono-sm">${esc(r.Product_ID)}</span>
+      <span class="c-mt">${r.MaterialType ? `<span class="badge badge-cyan">${esc(r.MaterialType)}</span>` : '<span style="color:#ccc">—</span>'}</span>
+      <span class="c-year mono" style="color:var(--navy);text-align:center;">${r.CalYear}</span>
+      <span class="c-qtr mono" style="color:var(--cyan);font-weight:700;text-align:center;">${esc(r.Quarter)}</span>
+      <span class="c-amt mono" style="text-align:right;">${r.Amount.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
+    </div>`).join('');
+}
+
+async function viewChart() {
+  if (!store.demandResults.length) { toast('Generate demand first', 'error'); return; }
+  try {
+    const payload = JSON.stringify(store.demandResults.filter(r=>r.CalYear>0).map(r=>({d:r.Developer,p:r.Product_ID,y:r.CalYear,a:r.Amount})));
+    const existing = await spGet(CONFIG.lists.chartCache, 'Id,Title');
+    const cacheRow = existing.find(r => r.Title === 'cache');
+    if (cacheRow) {
+      await spPatch(CONFIG.lists.chartCache, cacheRow.Id, { ChartData: payload });
+    } else {
+      await spPost(CONFIG.lists.chartCache, { Title: 'cache', ChartData: payload });
+    }
+    window.open('https://renrenrenx10.github.io/dangermouse-chart/', '_blank');
+  } catch(e) {
+    toast('Chart export failed: ' + e.message, 'error');
+  }
+}
+
+function clearAll() {
+  store.buildPlan = [];
+  store.demandResults = [];
+  renderPlan();
+  renderResults();
+  document.getElementById('kpiTotal').textContent = '—';
+  document.getElementById('kpiProducts').textContent = '—';
+  document.getElementById('kpiYears').textContent = '—';
+  document.getElementById('demandNotify').textContent = '';
+  toast('Cleared', 'success');
+}
+
+// ══════════════════════════════════════════════════════
+// PRODUCTS
+// ══════════════════════════════════════════════════════
+function renderProducts() {
+  const q   = (document.getElementById('prodSearch').value || '').toLowerCase();
+  const mat = document.getElementById('prodMatFilter').value;
+  const res = document.getElementById('prodResFilter').value;
+  let rows  = store.products.filter(p =>
+    (!q   || p.Title.toLowerCase().includes(q)) &&
+    (!mat || (p.MaterialType||'') === mat) &&
+    (!res || (p.ResourceType||'') === res)
+  );
+  document.getElementById('prodCount').textContent = rows.length + ' products';
+  const el = document.getElementById('productsBody');
+  if (!rows.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📦</div><div class="empty-title">No products found</div></div>`;
+    return;
+  }
+  el.innerHTML = rows.map(p => `
+    <div class="table-row">
+      <span class="p-name" style="font-weight:600;font-size:13px;">${esc(p.Title)}</span>
+      <span class="p-mat">${p.MaterialType ? `<span class="badge badge-cyan">${esc(p.MaterialType)}</span>` : '<span class="badge badge-grey">—</span>'}</span>
+      <span class="p-res">${resBadge(p.ResourceType)}</span>
+      <span class="p-wt mono-sm" style="text-align:right;">${p.Weight != null ? Number(p.Weight).toLocaleString('en-GB',{maximumFractionDigits:4}) : '—'}</span>
+      <span class="p-lt mono-sm">${p.LeadTime != null ? p.LeadTime + ' ' + (p.LeadTimeUnit||'') : '—'}</span>
+      <span class="p-rate mono-sm" style="text-align:right;">${p.ProductionRate != null ? Number(p.ProductionRate).toLocaleString('en-GB',{maximumFractionDigits:2}) : '—'}</span>
+      <div class="p-act">
+        <button class="btn btn-ghost btn-sm" onclick="openProductForm(${p.Id})">Edit</button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteProduct(${p.Id},'${esc(p.Title)}')">🗑</button>
+      </div>
+    </div>`).join('');
+}
+
+function resBadge(v) {
+  const map = { Material:'badge-green', Component:'badge-amber', Service:'badge-purple', Facility:'badge-red' };
+  return v ? `<span class="badge ${map[v]||'badge-grey'}">${esc(v)}</span>` : '<span class="badge badge-grey">—</span>';
+}
+
+function openProductForm(id = null) {
+  store.editingProduct = id ? store.products.find(p => p.Id === id) : null;
+  const p = store.editingProduct;
+  document.getElementById('productModalTitle').textContent = p ? `Edit: ${p.Title}` : 'Add New Product';
+  document.getElementById('fProdName').value        = p ? p.Title            : '';
+  document.getElementById('fProdMat').value         = p ? (p.MaterialType||'') : '';
+  document.getElementById('fProdRes').value         = p ? (p.ResourceType||'') : '';
+  document.getElementById('fProdWeight').value      = p ? (p.Weight ?? '')   : '';
+  document.getElementById('fProdUnit').value        = p ? (p.Unit||'')       : '';
+  document.getElementById('fProdLeadTime').value    = p ? (p.LeadTime ?? '') : '';
+  document.getElementById('fProdLeadUnit').value    = p ? (p.LeadTimeUnit||'Months') : 'Months';
+  document.getElementById('fProdRate').value        = p ? (p.ProductionRate ?? '') : '';
+  document.getElementById('fProdAssumptions').value = p ? (p.Assumptions||'') : '';
+  openModal('productModal');
+}
+
+async function saveProduct() {
+  const name = document.getElementById('fProdName').value.trim();
+  if (!name) { toast('Product name is required', 'error'); return; }
+  const body = {
+    Title:          name,
+    MaterialType:   document.getElementById('fProdMat').value || null,
+    ResourceType:   document.getElementById('fProdRes').value || null,
+    Weight:         parseFloatOrNull(document.getElementById('fProdWeight').value),
+    Unit:           document.getElementById('fProdUnit').value || null,
+    LeadTime:       parseFloatOrNull(document.getElementById('fProdLeadTime').value),
+    LeadTimeUnit:   document.getElementById('fProdLeadUnit').value || null,
+    ProductionRate: parseFloatOrNull(document.getElementById('fProdRate').value),
+    Assumptions:    document.getElementById('fProdAssumptions').value || null
+  };
+
+  const saving = document.getElementById('productSaving');
+  const btn    = document.getElementById('btnSaveProduct');
+  btn.disabled = true; saving.style.display = 'flex';
+
+  try {
+    if (store.editingProduct) {
+      await spPatch(CONFIG.lists.products, store.editingProduct.Id, body);
+      Object.assign(store.editingProduct, body);
+    } else {
+      const created = await spPost(CONFIG.lists.products, body);
+      store.products.push({ ...body, Id: created.Id });
+      store.products.sort((a,b) => a.Title.localeCompare(b.Title));
+    }
+    renderProducts();
+    closeModal('productModal');
+    toast('Product saved', 'success');
+  } catch(e) {
+    toast('Save failed: ' + e.message, 'error');
+  }
+  btn.disabled = false; saving.style.display = 'none';
+}
+
+async function deleteProduct(id, name) {
+  const ok = await confirm(`Delete "${name}"?`, 'This will permanently remove the product.');
+  if (!ok) return;
+  try {
+    await spDelete(CONFIG.lists.products, id);
+    store.products = store.products.filter(p => p.Id !== id);
+    renderProducts();
+    toast('Product deleted', 'success');
+  } catch(e) {
+    toast('Delete failed: ' + e.message, 'error');
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// DEVELOPERS
+// ══════════════════════════════════════════════════════
+function renderDevelopers() {
+  const q    = (document.getElementById('devSearch').value || '').toLowerCase();
+  const rows = store.developers.filter(d => !q || d.Title.toLowerCase().includes(q));
+  document.getElementById('devCount').textContent = rows.length + ' developers';
+  const el = document.getElementById('developersBody');
+  if (!rows.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🏭</div><div class="empty-title">No developers found</div></div>`;
+    return;
+  }
+  el.innerHTML = rows.map(d => {
+    const schedCount = store.schedules.filter(s => s.Developer_ID === d.Title).length;
+    return `
+    <div class="table-row">
+      <span class="d-name" style="font-weight:600;font-size:13px;">${esc(d.Title)}</span>
+      <span class="d-cap mono-sm" style="text-align:right;">${d.Capacity != null ? d.Capacity.toLocaleString('en-GB') + ' MW' : '—'}</span>
+      <span class="d-count" style="text-align:center;"><span class="badge badge-cyan">${schedCount}</span></span>
+      <div class="d-act">
+        <button class="btn btn-ghost btn-sm" onclick="openDevForm(${d.Id})">Edit</button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteDeveloper(${d.Id},'${esc(d.Title)}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openDevForm(id = null) {
+  store.editingDev = id ? store.developers.find(d => d.Id === id) : null;
+  const d = store.editingDev;
+  document.getElementById('devModalTitle').textContent = d ? `Edit: ${d.Title}` : 'Add Developer';
+  document.getElementById('fDevName').value     = d ? d.Title        : '';
+  document.getElementById('fDevCapacity').value = d ? (d.Capacity ?? '') : '';
+  document.getElementById('fDevNotes').value    = d ? (d.Notes||'')  : '';
+  openModal('devModal');
+}
+
+async function saveDeveloper() {
+  const name = document.getElementById('fDevName').value.trim();
+  if (!name) { toast('Developer name is required', 'error'); return; }
+  const body = {
+    Title:    name,
+    Capacity: parseFloatOrNull(document.getElementById('fDevCapacity').value),
+    Notes:    document.getElementById('fDevNotes').value || null
+  };
+  try {
+    if (store.editingDev) {
+      await spPatch(CONFIG.lists.developers, store.editingDev.Id, body);
+      Object.assign(store.editingDev, body);
+    } else {
+      const created = await spPost(CONFIG.lists.developers, body);
+      store.developers.push({ ...body, Id: created.Id });
+      store.developers.sort((a,b) => a.Title.localeCompare(b.Title));
+    }
+    populateDeveloperDropdown();
+    renderDevelopers();
+    closeModal('devModal');
+    toast('Developer saved', 'success');
+  } catch(e) {
+    toast('Save failed: ' + e.message, 'error');
+  }
+}
+
+async function deleteDeveloper(id, name) {
+  const ok = await confirm(`Delete "${name}"?`, 'This will permanently remove the developer.');
+  if (!ok) return;
+  try {
+    await spDelete(CONFIG.lists.developers, id);
+    store.developers = store.developers.filter(d => d.Id !== id);
+    populateDeveloperDropdown();
+    renderDevelopers();
+    toast('Developer deleted', 'success');
+  } catch(e) {
+    toast('Delete failed: ' + e.message, 'error');
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// SCHEDULES
+// ══════════════════════════════════════════════════════
+function populateSchedFilters() {
+  const devSel  = document.getElementById('schedDevFilter');
+  const prodSel = document.getElementById('schedProdFilter');
+  const fDev    = document.getElementById('fSchedDev');
+  const fProd   = document.getElementById('fSchedProd');
+
+  const devOpts  = store.developers.map(d => `<option value="${esc(d.Title)}">${esc(d.Title)}</option>`).join('');
+  const prodOpts = store.products.map(p => `<option value="${esc(p.Title)}">${esc(p.Title)}</option>`).join('');
+
+  devSel.innerHTML  = `<option value="">All Developers</option>` + devOpts;
+  prodSel.innerHTML = `<option value="">All Products</option>` + prodOpts;
+  fDev.innerHTML    = devOpts;
+  fProd.innerHTML   = prodOpts;
+}
+
+function renderSchedules() {
+  const devF  = document.getElementById('schedDevFilter').value;
+  const prodF = document.getElementById('schedProdFilter').value;
+  const rows  = store.schedules.filter(s =>
+    (!devF  || s.Developer_ID === devF) &&
+    (!prodF || s.Product_ID   === prodF)
+  );
+  document.getElementById('schedCount').textContent = rows.length + ' entries';
+  const el = document.getElementById('schedulesBody');
+  if (!rows.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📅</div><div class="empty-title">No schedule entries found</div></div>`;
+    return;
+  }
+  el.innerHTML = rows.map(s => `
+    <div class="table-row">
+      <span class="s-dev" style="font-size:12px;font-weight:600;">${esc(s.Developer_ID)}</span>
+      <span class="s-prod mono-sm">${esc(s.Product_ID)}</span>
+      <span class="s-yr mono" style="text-align:center;color:var(--navy);">${s.ScheduleYear}</span>
+      <span class="s-qtr mono" style="text-align:center;color:var(--cyan);font-weight:700;">${esc(s.Quarter||'')}</span>
+      <span class="s-abs mono" style="text-align:right;">${(s.Amount_Absolute||0).toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
+      <div class="s-act">
+        <button class="btn btn-ghost btn-sm" onclick="openSchedForm(${s.Id})">Edit</button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteSchedule(${s.Id})">🗑</button>
+      </div>
+    </div>`).join('');
+}
+
+function openSchedForm(id = null) {
+  store.editingSched = id ? store.schedules.find(s => s.Id === id) : null;
+  const s = store.editingSched;
+  document.getElementById('schedModalTitle').textContent = s ? 'Edit Schedule Entry' : 'Add Schedule Entry';
+  document.getElementById('fSchedDev').value  = s ? (s.Developer_ID||'') : '';
+  document.getElementById('fSchedProd').value = s ? (s.Product_ID||'')   : '';
+  document.getElementById('fSchedYear').value = s ? (s.ScheduleYear??'') : '';
+  document.getElementById('fSchedQtr').value  = s ? (s.Quarter||'Q1')    : 'Q1';
+  document.getElementById('fSchedAmt').value  = s ? (s.Amount_Absolute??'') : '';
+  openModal('schedModal');
+}
+
+async function saveSchedule() {
+  const dev  = document.getElementById('fSchedDev').value;
+  const prod = document.getElementById('fSchedProd').value;
+  const yr   = parseInt(document.getElementById('fSchedYear').value);
+  const amt  = parseFloat(document.getElementById('fSchedAmt').value);
+  if (!dev || !prod || !yr) { toast('Developer, product and year are required', 'error'); return; }
+  const body = {
+    Developer_ID:      dev,
+    Product_ID:        prod,
+    ScheduleYear:      yr,
+    Quarter:           document.getElementById('fSchedQtr').value,
+    Amount_Absolute:   isNaN(amt) ? null : amt
+  };
+  try {
+    if (store.editingSched) {
+      await spPatch(CONFIG.lists.schedules, store.editingSched.Id, body);
+      Object.assign(store.editingSched, body);
+    } else {
+      const created = await spPost(CONFIG.lists.schedules, body);
+      store.schedules.push({ ...body, Id: created.Id });
+    }
+    renderSchedules();
+    closeModal('schedModal');
+    toast('Schedule entry saved', 'success');
+  } catch(e) {
+    toast('Save failed: ' + e.message, 'error');
+  }
+}
+
+async function deleteSchedule(id) {
+  const ok = await confirm('Delete this schedule entry?', 'This cannot be undone.');
+  if (!ok) return;
+  try {
+    await spDelete(CONFIG.lists.schedules, id);
+    store.schedules = store.schedules.filter(s => s.Id !== id);
+    renderSchedules();
+    toast('Entry deleted', 'success');
+  } catch(e) {
+    toast('Delete failed: ' + e.message, 'error');
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// UI HELPERS
+// ══════════════════════════════════════════════════════
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+let _confirmResolve = null;
+function confirm(title, msg) {
+  return new Promise(resolve => {
+    _confirmResolve = resolve;
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmMsg').textContent   = msg;
+    document.getElementById('confirmDialog').classList.add('open');
+  });
+}
+function closeConfirm(result) {
+  document.getElementById('confirmDialog').classList.remove('open');
+  if (_confirmResolve) { _confirmResolve(result); _confirmResolve = null; }
+}
+
+let _toastTimer;
+function toast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show' + (type ? ' ' + type : '');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => { el.classList.remove('show'); }, 3200);
+}
+
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function parseFloatOrNull(v) {
+  const n = parseFloat(v);
+  return isNaN(n) ? null : n;
+}
+
+function fmtDate(d) {
+  if (!d) return '—';
+  const dt = new Date(d);
+  return dt.toLocaleDateString('en-GB', { month:'short', year:'numeric' });
+}
+
+// ══════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════
+initAuth();
+</script>
+</body>
+</html>
