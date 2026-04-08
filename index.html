@@ -406,8 +406,89 @@ textarea.form-control { height: 72px; resize: vertical; }
 }
 .results-row:hover { background: #f8f9fc; }
 
-/* col widths */
-.c-dev  { width: 170px; flex-shrink: 0; }
+/* ── SCHEDULE GRID ── */
+.sched-grid-wrap { overflow: auto; }
+.sched-grid {
+  border-collapse: collapse;
+  font-size: 12px;
+  white-space: nowrap;
+  min-width: 100%;
+}
+.sched-grid th, .sched-grid td {
+  border: 1px solid var(--border);
+  padding: 0;
+}
+.sched-grid thead th {
+  background: var(--navy);
+  color: white;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 6px 10px;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  white-space: nowrap;
+}
+.sched-grid thead th.yr-header {
+  background: var(--navy-mid);
+  font-size: 11px;
+}
+.sched-grid thead th.product-col-header {
+  background: var(--slate);
+  text-align: left;
+  width: 160px;
+  min-width: 160px;
+  position: sticky;
+  left: 0;
+  z-index: 4;
+}
+.sched-grid tbody td.product-col {
+  background: white;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--slate);
+  padding: 0 12px;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  border-right: 2px solid var(--navy);
+  min-width: 160px;
+  max-width: 160px;
+}
+.sched-grid tbody tr:hover td.product-col { background: #f0f4f8; }
+.sched-grid tbody tr:nth-child(even) td.product-col { background: #f8f9fc; }
+.sched-grid tbody tr:nth-child(even):hover td.product-col { background: #edf1f7; }
+.sched-grid tbody tr:nth-child(even) td { background: #f8f9fc; }
+.sched-grid tbody tr:hover td { background: #f0f4f8; }
+
+.sched-cell-input {
+  width: 80px;
+  min-width: 80px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--slate);
+  text-align: right;
+  padding: 0 8px;
+  outline: none;
+  display: block;
+}
+.sched-cell-input:focus {
+  background: #fff8e1;
+  color: var(--slate);
+  box-shadow: inset 0 0 0 2px var(--cyan);
+}
+.sched-cell-input.changed {
+  color: var(--navy);
+  font-weight: 700;
+}
+.sched-cell-input.saving { opacity: 0.5; }
+.sched-yr-divider { border-left: 2px solid var(--navy-mid) !important; }
 .c-prod { flex: 1; min-width: 140px; }
 .c-mt   { width: 130px; flex-shrink: 0; }
 .c-year { width: 64px; flex-shrink: 0; text-align: center; }
@@ -647,29 +728,24 @@ textarea.form-control { height: 72px; resize: vertical; }
     <div class="page-header">
       <div class="page-header-text">
         <div class="page-title">Dev Schedules</div>
-        <div class="page-subtitle">Product demand schedule per developer build</div>
+        <div class="page-subtitle">Amount per product per quarter — edit cells to update demand</div>
       </div>
-      <button class="btn btn-primary" onclick="openSchedForm()">+ Add Entry</button>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span id="schedSaveStatus" style="font-size:12px;color:var(--green);font-family:var(--font-mono);"></span>
+      </div>
     </div>
     <div class="filter-bar">
       <select class="filter-select" id="schedDevFilter" onchange="renderSchedules()" style="width:220px;">
-        <option value="">All Developers</option>
-      </select>
-      <select class="filter-select" id="schedProdFilter" onchange="renderSchedules()" style="width:220px;">
-        <option value="">All Products</option>
+        <option value="">— Select Developer —</option>
       </select>
       <div class="filter-spacer"></div>
-      <span class="count-badge" id="schedCount">— entries</span>
+      <span class="count-badge" id="schedCount"></span>
     </div>
-    <div class="table-header">
-      <span class="th s-dev">Developer</span>
-      <span class="th s-prod">Product</span>
-      <span class="th s-yr">Year</span>
-      <span class="th s-qtr">Qtr</span>
-      <span class="th s-abs">Amount</span>
-    </div>
-    <div class="table-wrap" id="schedulesBody">
-      <div class="loading-row"><div class="spinner"></div> Loading schedules…</div>
+    <div style="flex:1;overflow:auto;padding:0;" id="schedGridWrap">
+      <div class="empty-state" style="padding:64px;">
+        <div class="empty-icon">📅</div>
+        <div class="empty-title">Select a developer to view their schedule</div>
+      </div>
     </div>
   </div>
 
@@ -799,42 +875,6 @@ textarea.form-control { height: 72px; resize: vertical; }
     <div class="modal-footer">
       <button class="btn btn-primary btn-xl" onclick="saveDeveloper()">Save Developer</button>
       <button class="btn btn-ghost btn-xl" onclick="closeModal('devModal')">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<!-- Schedule Modal -->
-<div class="modal-backdrop" id="schedModal">
-  <div class="modal" style="max-width:560px;">
-    <button class="modal-close" onclick="closeModal('schedModal')">✕</button>
-    <div class="modal-title" id="schedModalTitle">Add Schedule Entry</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px 18px;margin-bottom:20px;">
-      <div class="form-group modal-full">
-        <label class="form-label" for="fSchedDev">Developer *</label>
-        <select class="form-control" id="fSchedDev" style="height:36px;"></select>
-      </div>
-      <div class="form-group modal-full">
-        <label class="form-label" for="fSchedProd">Product *</label>
-        <select class="form-control" id="fSchedProd" style="height:36px;"></select>
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="fSchedYear">Schedule Year</label>
-        <input class="form-control" id="fSchedYear" type="number" placeholder="1" min="1" />
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="fSchedQtr">Quarter</label>
-        <select class="form-control" id="fSchedQtr" style="height:36px;">
-          <option>Q1</option><option>Q2</option><option>Q3</option><option>Q4</option>
-        </select>
-      </div>
-      <div class="form-group modal-full">
-        <label class="form-label" for="fSchedAmt">Amount (Absolute)</label>
-        <input class="form-control" id="fSchedAmt" type="number" step="0.01" placeholder="0.00" />
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-primary btn-xl" onclick="saveSchedule()">Save Entry</button>
-      <button class="btn btn-ghost btn-xl" onclick="closeModal('schedModal')">Cancel</button>
     </div>
   </div>
 </div>
@@ -1105,15 +1145,17 @@ async function generateDemand() {
 
       for (let seq = 0; seq < planRow.Consecutive; seq++) {
         for (const sched of devScheds) {
-          const calYear = startYear + (sched.ScheduleYear - 1) + (seq * 6);
-          const prod = store.products.find(p => p.Title === sched.Product_ID);
+          const schedYear = parseInt(sched.ScheduleYear) || 1;
+          const amount    = parseFloat(sched.Amount_Absolute) || 0;
+          const calYear   = startYear + (schedYear - 1) + (seq * 6);
+          const prod      = store.products.find(p => p.Title === sched.Product_ID);
           store.demandResults.push({
             Developer:    planRow.Developer,
             Product_ID:   sched.Product_ID,
             MaterialType: prod ? (prod.MaterialType || '') : '',
             CalYear:      calYear,
             Quarter:      sched.Quarter || '',
-            Amount:       (sched.Amount_Absolute || 0) * planRow.Concurrent,
+            Amount:       amount * planRow.Concurrent,
             IsLeadtime:   false
           });
         }
@@ -1383,101 +1425,152 @@ async function deleteDeveloper(id, name) {
 }
 
 // ══════════════════════════════════════════════════════
-// SCHEDULES
+// SCHEDULES — PIVOT GRID
 // ══════════════════════════════════════════════════════
+const YEARS = [1,2,3,4,5,6,7];
+const QUARTERS = ['Q1','Q2','Q3','Q4'];
+
 function populateSchedFilters() {
-  const devSel  = document.getElementById('schedDevFilter');
-  const prodSel = document.getElementById('schedProdFilter');
-  const fDev    = document.getElementById('fSchedDev');
-  const fProd   = document.getElementById('fSchedProd');
+  const devSel = document.getElementById('schedDevFilter');
+  devSel.innerHTML = `<option value="">— Select Developer —</option>` +
+    store.developers.map(d => `<option value="${esc(d.Title)}">${esc(d.Title)}</option>`).join('');
 
-  const devOpts  = store.developers.map(d => `<option value="${esc(d.Title)}">${esc(d.Title)}</option>`).join('');
-  const prodOpts = store.products.map(p => `<option value="${esc(p.Title)}">${esc(p.Title)}</option>`).join('');
-
-  devSel.innerHTML  = `<option value="">All Developers</option>` + devOpts;
-  prodSel.innerHTML = `<option value="">All Products</option>` + prodOpts;
-  fDev.innerHTML    = devOpts;
-  fProd.innerHTML   = prodOpts;
+  // Also populate the sched modal dev/prod dropdowns
+  const fDev  = document.getElementById('fSchedDev');
+  const fProd = document.getElementById('fSchedProd');
+  if (fDev)  fDev.innerHTML  = store.developers.map(d => `<option value="${esc(d.Title)}">${esc(d.Title)}</option>`).join('');
+  if (fProd) fProd.innerHTML = store.products.map(p => `<option value="${esc(p.Title)}">${esc(p.Title)}</option>`).join('');
 }
 
 function renderSchedules() {
-  const devF  = document.getElementById('schedDevFilter').value;
-  const prodF = document.getElementById('schedProdFilter').value;
-  const rows  = store.schedules.filter(s =>
-    (!devF  || s.Developer_ID === devF) &&
-    (!prodF || s.Product_ID   === prodF)
-  );
-  document.getElementById('schedCount').textContent = rows.length + ' entries';
-  const el = document.getElementById('schedulesBody');
-  if (!rows.length) {
-    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📅</div><div class="empty-title">No schedule entries found</div></div>`;
+  const dev  = document.getElementById('schedDevFilter').value;
+  const wrap = document.getElementById('schedGridWrap');
+
+  if (!dev) {
+    wrap.innerHTML = `<div class="empty-state" style="padding:64px;"><div class="empty-icon">📅</div><div class="empty-title">Select a developer to view their schedule</div></div>`;
+    document.getElementById('schedCount').textContent = '';
     return;
   }
-  el.innerHTML = rows.map(s => `
-    <div class="table-row">
-      <span class="s-dev" style="font-size:12px;font-weight:600;">${esc(s.Developer_ID)}</span>
-      <span class="s-prod mono-sm">${esc(s.Product_ID)}</span>
-      <span class="s-yr mono" style="text-align:center;color:var(--navy);">${s.ScheduleYear}</span>
-      <span class="s-qtr mono" style="text-align:center;color:var(--cyan);font-weight:700;">${esc(s.Quarter||'')}</span>
-      <span class="s-abs mono" style="text-align:right;">${(s.Amount_Absolute||0).toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
-      <div class="s-act">
-        <button class="btn btn-ghost btn-sm" onclick="openSchedForm(${s.Id})">Edit</button>
-        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteSchedule(${s.Id})">🗑</button>
-      </div>
-    </div>`).join('');
+
+  const rows = store.schedules.filter(s => s.Developer_ID === dev);
+  document.getElementById('schedCount').textContent = rows.length + ' entries';
+
+  // Build lookup: product → year → quarter → {id, amount}
+  const lookup = {};
+  for (const s of rows) {
+    const yr  = parseInt(s.ScheduleYear) || 1;
+    const qtr = s.Quarter || 'Q1';
+    const key = s.Product_ID;
+    if (!lookup[key]) lookup[key] = {};
+    if (!lookup[key][yr]) lookup[key][yr] = {};
+    lookup[key][yr][qtr] = { id: s.Id, amount: parseFloat(s.Amount_Absolute) || 0 };
+  }
+
+  // Unique products for this developer, sorted
+  const products = [...new Set(rows.map(s => s.Product_ID))].sort();
+
+  if (!products.length) {
+    wrap.innerHTML = `<div class="empty-state" style="padding:64px;"><div class="empty-icon">📅</div><div class="empty-title">No schedule entries for ${esc(dev)}</div></div>`;
+    return;
+  }
+
+  // Build column headers: Year header row + Q header row
+  let yrHeaders = `<th class="product-col-header" rowspan="2">Product</th>`;
+  let qtrHeaders = '';
+  for (const yr of YEARS) {
+    yrHeaders += `<th class="yr-header" colspan="4">Year ${yr}</th>`;
+    for (const q of QUARTERS) {
+      const isFirst = q === 'Q1';
+      qtrHeaders += `<th${isFirst ? ' class="sched-yr-divider"' : ''}>${q}</th>`;
+    }
+  }
+
+  // Build rows
+  let bodyRows = '';
+  for (const prod of products) {
+    let cells = '';
+    for (const yr of YEARS) {
+      for (const q of QUARTERS) {
+        const cell    = lookup[prod]?.[yr]?.[q];
+        const val     = cell ? cell.amount : '';
+        const id      = cell ? cell.id : '';
+        const isFirst = q === 'Q1';
+        cells += `<td${isFirst ? ' class="sched-yr-divider"' : ''}>
+          <input class="sched-cell-input"
+            type="number" step="0.01"
+            value="${val}"
+            data-dev="${esc(dev)}"
+            data-prod="${esc(prod)}"
+            data-yr="${yr}"
+            data-qtr="${q}"
+            data-id="${id}"
+            onchange="schedCellChanged(this)"
+            placeholder="—"
+          />
+        </td>`;
+      }
+    }
+    bodyRows += `<tr><td class="product-col">${esc(prod)}</td>${cells}</tr>`;
+  }
+
+  wrap.innerHTML = `
+    <div class="sched-grid-wrap">
+      <table class="sched-grid">
+        <thead>
+          <tr>${yrHeaders}</tr>
+          <tr>${qtrHeaders}</tr>
+        </thead>
+        <tbody>${bodyRows}</tbody>
+      </table>
+    </div>`;
 }
 
-function openSchedForm(id = null) {
-  store.editingSched = id ? store.schedules.find(s => s.Id === id) : null;
-  const s = store.editingSched;
-  document.getElementById('schedModalTitle').textContent = s ? 'Edit Schedule Entry' : 'Add Schedule Entry';
-  document.getElementById('fSchedDev').value  = s ? (s.Developer_ID||'') : '';
-  document.getElementById('fSchedProd').value = s ? (s.Product_ID||'')   : '';
-  document.getElementById('fSchedYear').value = s ? (s.ScheduleYear??'') : '';
-  document.getElementById('fSchedQtr').value  = s ? (s.Quarter||'Q1')    : 'Q1';
-  document.getElementById('fSchedAmt').value  = s ? (s.Amount_Absolute??'') : '';
-  openModal('schedModal');
-}
+let _schedSaveTimer = null;
+async function schedCellChanged(input) {
+  const dev  = input.dataset.dev;
+  const prod = input.dataset.prod;
+  const yr   = parseInt(input.dataset.yr);
+  const qtr  = input.dataset.qtr;
+  const id   = input.dataset.id ? parseInt(input.dataset.id) : null;
+  const val  = parseFloat(input.value);
 
-async function saveSchedule() {
-  const dev  = document.getElementById('fSchedDev').value;
-  const prod = document.getElementById('fSchedProd').value;
-  const yr   = parseInt(document.getElementById('fSchedYear').value);
-  const amt  = parseFloat(document.getElementById('fSchedAmt').value);
-  if (!dev || !prod || !yr) { toast('Developer, product and year are required', 'error'); return; }
-  const body = {
-    Developer_ID:      dev,
-    Product_ID:        prod,
-    ScheduleYear:      yr,
-    Quarter:           document.getElementById('fSchedQtr').value,
-    Amount_Absolute:   isNaN(amt) ? null : amt
-  };
+  input.classList.add('changed');
+  input.classList.add('saving');
+
+  const status = document.getElementById('schedSaveStatus');
+  clearTimeout(_schedSaveTimer);
+
   try {
-    if (store.editingSched) {
-      await spPatch(CONFIG.lists.schedules, store.editingSched.Id, body);
-      Object.assign(store.editingSched, body);
+    const body = {
+      Developer_ID:    dev,
+      Product_ID:      prod,
+      ScheduleYear:    yr,
+      Quarter:         qtr,
+      Amount_Absolute: isNaN(val) ? null : val
+    };
+
+    if (id) {
+      await spPatch(CONFIG.lists.schedules, id, body);
+      // Update store
+      const existing = store.schedules.find(s => s.Id === id);
+      if (existing) existing.Amount_Absolute = isNaN(val) ? null : val;
     } else {
+      // New entry — create it
+      body.Title = `${dev.substring(0,3)}_${prod.substring(0,8)}_Y${yr}_${qtr}`.replace(/\s/g,'');
       const created = await spPost(CONFIG.lists.schedules, body);
       store.schedules.push({ ...body, Id: created.Id });
+      input.dataset.id = created.Id;
     }
-    renderSchedules();
-    closeModal('schedModal');
-    toast('Schedule entry saved', 'success');
-  } catch(e) {
-    toast('Save failed: ' + e.message, 'error');
-  }
-}
 
-async function deleteSchedule(id) {
-  const ok = await confirm('Delete this schedule entry?', 'This cannot be undone.');
-  if (!ok) return;
-  try {
-    await spDelete(CONFIG.lists.schedules, id);
-    store.schedules = store.schedules.filter(s => s.Id !== id);
-    renderSchedules();
-    toast('Entry deleted', 'success');
+    input.classList.remove('saving');
+    status.textContent = '✓ Saved';
+    _schedSaveTimer = setTimeout(() => { status.textContent = ''; }, 2000);
+
   } catch(e) {
-    toast('Delete failed: ' + e.message, 'error');
+    input.classList.remove('saving');
+    input.classList.add('error');
+    status.textContent = '✗ Save failed';
+    toast('Save failed: ' + e.message, 'error');
   }
 }
 
