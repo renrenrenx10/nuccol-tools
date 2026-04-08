@@ -591,9 +591,9 @@ textarea.form-control { height: 72px; resize: vertical; }
       <input class="filter-input" type="text" id="prodSearch" placeholder="Search products…" style="width:240px;" oninput="renderProducts()" />
       <select class="filter-select" id="prodMatFilter" onchange="renderProducts()">
         <option value="">All Types</option>
-        <option>Concrete</option><option>Steel reinforcement</option>
-        <option>Steel</option><option>Copper</option><option>Nickel</option>
-        <option>Component</option><option>Service</option><option>Facility</option><option>Other</option>
+        <option>Alloy Steel</option><option>Carbon Steel</option>
+        <option>Stainless Steel</option><option>Copper</option><option>Specialty Steels</option>
+        <option>Titanium</option><option>Concrete</option><option>Other</option>
       </select>
       <select class="filter-select" id="prodResFilter" onchange="renderProducts()">
         <option value="">All Resources</option>
@@ -631,7 +631,10 @@ textarea.form-control { height: 72px; resize: vertical; }
     </div>
     <div class="table-header">
       <span class="th d-name">Developer Name</span>
-      <span class="th d-cap">Capacity (MW)</span>
+      <span class="th" style="width:120px;flex-shrink:0;">Type</span>
+      <span class="th" style="width:180px;flex-shrink:0;">Plant Name</span>
+      <span class="th" style="width:100px;flex-shrink:0;">Country</span>
+      <span class="th" style="width:140px;flex-shrink:0;">Status</span>
       <span class="th d-count">Schedules</span>
     </div>
     <div class="table-wrap" id="developersBody">
@@ -690,9 +693,9 @@ textarea.form-control { height: 72px; resize: vertical; }
         <label class="form-label" for="fProdMat">Material Type</label>
         <select class="form-control" id="fProdMat" style="height:36px;">
           <option value="">— select —</option>
-          <option>Concrete</option><option>Steel reinforcement</option>
-          <option>Steel</option><option>Copper</option><option>Nickel</option>
-          <option>Component</option><option>Service</option><option>Facility</option><option>Other</option>
+          <option>Alloy Steel</option><option>Carbon Steel</option>
+          <option>Stainless Steel</option><option>Copper</option><option>Specialty Steels</option>
+          <option>Titanium</option><option>Concrete</option><option>Other</option>
         </select>
       </div>
       <div class="form-group">
@@ -753,13 +756,44 @@ textarea.form-control { height: 72px; resize: vertical; }
         <label class="form-label" for="fDevName">Developer Name *</label>
         <input class="form-control" id="fDevName" placeholder="e.g. Rolls-Royce SMR" />
       </div>
-      <div class="form-group">
-        <label class="form-label" for="fDevCapacity">Capacity (MW)</label>
-        <input class="form-control" id="fDevCapacity" type="number" placeholder="470" />
+      <div class="form-row">
+        <div class="form-col form-group">
+          <label class="form-label" for="fDevType">Type of Plant</label>
+          <select class="form-control" id="fDevType" style="height:36px;">
+            <option value="">— select —</option>
+            <option>SMR</option><option>AMR</option><option>Large Reactor</option><option>Other</option>
+          </select>
+        </div>
+        <div class="form-col form-group">
+          <label class="form-label" for="fDevPlantName">Name of Plant</label>
+          <input class="form-control" id="fDevPlantName" placeholder="e.g. VOYGR" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-col form-group">
+          <label class="form-label" for="fDevCountry">Country</label>
+          <input class="form-control" id="fDevCountry" placeholder="e.g. United Kingdom" />
+        </div>
+        <div class="form-col form-group">
+          <label class="form-label" for="fDevStatus">Status</label>
+          <select class="form-control" id="fDevStatus" style="height:36px;">
+            <option value="">— select —</option>
+            <option>Conceptual Design</option><option>Design Development</option>
+            <option>Vendor Review</option><option>Pre-licensing</option>
+            <option>Licensed</option><option>Under Construction</option>
+            <option>Prototype Development</option><option>Operational</option><option>Cancelled</option>
+          </select>
+        </div>
       </div>
       <div class="form-group">
-        <label class="form-label" for="fDevNotes">Notes</label>
-        <textarea class="form-control" id="fDevNotes" placeholder="Any notes…"></textarea>
+        <label class="form-label" for="fDevTech">Technology</label>
+        <select class="form-control" id="fDevTech" style="height:36px;">
+          <option value="">— select —</option>
+          <option>Pressurized Water Reactor</option><option>Boiling Water Reactor</option>
+          <option>Molten Salt Reactor</option><option>Sodium-cooled Fast Reactor</option>
+          <option>Lead-cooled Fast Reactor</option><option>Gas-cooled Reactor</option>
+          <option>High Temperature Gas Reactor</option><option>Other</option>
+        </select>
       </div>
     </div>
     <div class="modal-footer">
@@ -992,8 +1026,8 @@ let store = {
 async function loadAllData() {
   try {
     const [prods, devs, scheds] = await Promise.all([
-      spGet(CONFIG.lists.products,   'Id,Title,MaterialType,ResourceType,Weight,Unit,LeadTime,LeadTimeUnit,ProductionRate,Assumptions', '', 'Title asc'),
-      spGet(CONFIG.lists.developers, 'Id,Title,Notes', '', 'Title asc'),
+      spGet(CONFIG.lists.products,   'Id,Title,MaterialType,ResourceType,Weight,Unit,LeadTime,LeadTimeUnit,ProductionRate', '', 'Title asc'),
+      spGet(CONFIG.lists.developers, 'Id,Title,Type_of_Plant,Name_of_Plant,Technology,Country,Status', '', 'Title asc'),
       spGet(CONFIG.lists.schedules,  'Id,Developer_ID,Product_ID,ScheduleYear,Quarter,Amount_Absolute', '', 'Developer_ID asc')
     ]);
     store.products   = prods;
@@ -1223,8 +1257,7 @@ async function saveProduct() {
     Unit:           document.getElementById('fProdUnit').value || null,
     LeadTime:       parseFloatOrNull(document.getElementById('fProdLeadTime').value),
     LeadTimeUnit:   document.getElementById('fProdLeadUnit').value || null,
-    ProductionRate: parseFloatOrNull(document.getElementById('fProdRate').value),
-    Assumptions:    document.getElementById('fProdAssumptions').value || null
+    ProductionRate: parseFloatOrNull(document.getElementById('fProdRate').value)
   };
 
   const saving = document.getElementById('productSaving');
@@ -1276,10 +1309,14 @@ function renderDevelopers() {
   }
   el.innerHTML = rows.map(d => {
     const schedCount = store.schedules.filter(s => s.Developer_ID === d.Title).length;
+    const statusColour = { Licensed:'badge-green', 'Under Construction':'badge-amber', Operational:'badge-cyan', Cancelled:'badge-red' };
     return `
     <div class="table-row">
       <span class="d-name" style="font-weight:600;font-size:13px;">${esc(d.Title)}</span>
-      <span class="d-cap mono-sm" style="text-align:right;">${d.Capacity != null ? d.Capacity.toLocaleString('en-GB') + ' MW' : '—'}</span>
+      <span style="width:120px;flex-shrink:0;">${d.Type_of_Plant ? `<span class="badge badge-grey">${esc(d.Type_of_Plant)}</span>` : '—'}</span>
+      <span style="width:180px;flex-shrink:0;font-size:12px;color:var(--muted);">${esc(d.Name_of_Plant||'—')}</span>
+      <span style="width:100px;flex-shrink:0;font-size:12px;">${esc(d.Country||'—')}</span>
+      <span style="width:140px;flex-shrink:0;">${d.Status ? `<span class="badge ${statusColour[d.Status]||'badge-grey'}">${esc(d.Status)}</span>` : '—'}</span>
       <span class="d-count" style="text-align:center;"><span class="badge badge-cyan">${schedCount}</span></span>
       <div class="d-act">
         <button class="btn btn-ghost btn-sm" onclick="openDevForm(${d.Id})">Edit</button>
@@ -1293,9 +1330,12 @@ function openDevForm(id = null) {
   store.editingDev = id ? store.developers.find(d => d.Id === id) : null;
   const d = store.editingDev;
   document.getElementById('devModalTitle').textContent = d ? `Edit: ${d.Title}` : 'Add Developer';
-  document.getElementById('fDevName').value     = d ? d.Title        : '';
-  document.getElementById('fDevCapacity').value = d ? (d.Capacity ?? '') : '';
-  document.getElementById('fDevNotes').value    = d ? (d.Notes||'')  : '';
+  document.getElementById('fDevName').value      = d ? d.Title              : '';
+  document.getElementById('fDevType').value      = d ? (d.Type_of_Plant||'') : '';
+  document.getElementById('fDevPlantName').value = d ? (d.Name_of_Plant||'') : '';
+  document.getElementById('fDevCountry').value   = d ? (d.Country||'')      : '';
+  document.getElementById('fDevStatus').value    = d ? (d.Status||'')       : '';
+  document.getElementById('fDevTech').value      = d ? (d.Technology||'')   : '';
   openModal('devModal');
 }
 
@@ -1303,9 +1343,12 @@ async function saveDeveloper() {
   const name = document.getElementById('fDevName').value.trim();
   if (!name) { toast('Developer name is required', 'error'); return; }
   const body = {
-    Title:    name,
-    Capacity: parseFloatOrNull(document.getElementById('fDevCapacity').value),
-    Notes:    document.getElementById('fDevNotes').value || null
+    Title:          name,
+    Type_of_Plant:  document.getElementById('fDevType').value      || null,
+    Name_of_Plant:  document.getElementById('fDevPlantName').value || null,
+    Country:        document.getElementById('fDevCountry').value   || null,
+    Status:         document.getElementById('fDevStatus').value    || null,
+    Technology:     document.getElementById('fDevTech').value      || null
   };
   try {
     if (store.editingDev) {
