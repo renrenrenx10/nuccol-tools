@@ -676,14 +676,18 @@ async function loadExpWeek(ws) {
   S.expWeekStart = ws;
   const data = await spGet(
     `${listItems(CFG.lists.expenses)}` +
-    `?$select=ID,Date,Category,Amount,Notes,Project,EmployeeName/EMail` +
+    `?$select=ID,Date,Category,Amount,Notes,Project,EmployeeName/EMail,EmployeeName/Title` +
     `&$expand=EmployeeName` +
-    `&$filter=EmployeeName/EMail eq '${encodeURIComponent(S.currentUser.email)}' and ${dateFilter(ws)}` +
+    `&$filter=${dateFilter(ws)}` +
     `&$orderby=Date asc`
   );
 
   const byDate = {};
+  const myEmail = S.currentUser.email.toLowerCase();
   for (const item of data.value) {
+    // Filter to current user only
+    const itemEmail = (item.EmployeeName?.EMail || '').toLowerCase();
+    if (itemEmail && itemEmail !== myEmail) continue;
     const dk = item.Date.split('T')[0];
     if (!byDate[dk]) byDate[dk] = [];
     byDate[dk].push({
@@ -1409,7 +1413,26 @@ function updateExpField(entryId, field, val) {
 }
 
 function addTsRow(dk) {
-  syncTsDom();
+  // Sync only the inputs for this specific date's rows to avoid contaminating other rows
+  for (const row of S.tsRows.filter(r => r.date === dk)) {
+    const h = document.getElementById(`ts-h-${row.entryId}`);
+    const t = document.getElementById(`ts-t-${row.entryId}`);
+    const n = document.getElementById(`ts-n-${row.entryId}`);
+    if (h) row.hoursWorked = h.value;
+    if (t) row.travelHours = t.value;
+    if (n) row.notes = n.value;
+    const projSel = document.querySelector(`[data-proj-entry="${row.entryId}"]`);
+    if (projSel && projSel.value) {
+      const selOpt = projSel.options[projSel.selectedIndex];
+      if (row.projectType === 'Pipeline Project') {
+        row.pipeId   = projSel.value || null;
+        row.pipeName = selOpt ? selOpt.dataset.label : '';
+      } else {
+        row.projectId = projSel.value || null;
+        row.projName  = selOpt ? selOpt.dataset.label : '';
+      }
+    }
+  }
   const newRow = newTsRow(dk);
   let lastIdx = -1;
   S.tsRows.forEach((r,i) => { if (r.date===dk) lastIdx=i; });
