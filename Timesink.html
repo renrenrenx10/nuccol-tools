@@ -1456,19 +1456,25 @@ async function init() {
     if (!accounts.length) {
       // Show login button — wire it up after MSAL is ready
       const btn = document.getElementById('login-btn');
+      console.log('Login button found:', btn);
       if (btn) {
         btn.addEventListener('click', async () => {
+          console.log('Button clicked');
           btn.disabled = true;
           btn.textContent = 'Redirecting…';
           try {
+            console.log('Calling loginRedirect with scope:', CFG.scope);
             await msalApp.loginRedirect({ scopes: [CFG.scope] });
           } catch(err) {
+            console.error('loginRedirect error:', err);
             btn.disabled = false;
             btn.textContent = 'Sign in with Microsoft';
             const errDiv = document.getElementById('login-error');
             if (errDiv) { errDiv.textContent = err.message; errDiv.style.display = 'block'; }
           }
         });
+      } else {
+        console.error('Login button NOT found in DOM');
       }
       return;
     }
