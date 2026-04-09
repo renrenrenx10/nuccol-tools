@@ -1078,6 +1078,53 @@ textarea { resize: vertical; min-height: 60px; }
 'use strict';
 
 /* ──────────────────────────────────────────────────────────────────────────
+   SCRL FIELD NAME MAP
+   SharePoint internal names differ from display names for the SCRLs list.
+   SCRL_FIELD_MAP: internal → friendly  (used when reading SP data)
+   SCRL_FIELD_MAP_REV: friendly → internal (used when writing to SP)
+   ────────────────────────────────────────────────────────────────────────── */
+const SCRL_FIELD_MAP = {
+  field_1:  'Client',
+  field_2:  'ClientContact',
+  field_3:  'ClientEmail',
+  field_4:  'Status',
+  field_5:  'StartDate',
+  field_6:  'EndDate',
+  field_7:  'HoursAllocated',
+  field_8:  'POValue',
+  field_9:  'ProjectManager',
+  field_10: 'TechLead',
+  field_11: 'SupportedBy',
+  field_12: 'RAGStatus',
+  field_13: 'Overview',
+  field_14: 'Observation',
+  // AssessmentDate and Version1 keep their own names
+};
+const SCRL_FIELD_MAP_REV = Object.fromEntries(
+  Object.entries(SCRL_FIELD_MAP).map(([k, v]) => [v, k])
+);
+
+/** Map SP internal field names → friendly names on a raw SP item */
+function normalizeSCRL(s) {
+  if (!s) return s;
+  const out = { ...s };
+  for (const [internal, friendly] of Object.entries(SCRL_FIELD_MAP)) {
+    if (internal in out) out[friendly] = out[internal];
+  }
+  return out;
+}
+
+/** Convert a body object with friendly names → internal SP field names */
+function denormalizeSCRL(body) {
+  const out = {};
+  for (const [k, v] of Object.entries(body)) {
+    out[SCRL_FIELD_MAP_REV[k] ?? k] = v;
+  }
+  return out;
+}
+
+
+/* ──────────────────────────────────────────────────────────────────────────
    CONFIG — fill these in before deploying
    ────────────────────────────────────────────────────────────────────────── */
 const CONFIG = {
@@ -1339,14 +1386,14 @@ async function loadLookupData() {
       spGetAll('Accreditations','ID,Title','', 2000),
       spGetAll('Markets',      'ID,Title', '', 2000),
       spGetAll('Companies',    'ID,Title,City,County,Postcode,RAGStatus,QuickDescription,CompanyID', '', 5000),
-      spGetAll('SCRLs',        'ID,Title,Client,ProjectManager,TechLead,Status,RAGStatus,StartDate', '', 2000),
+      spGetAll('SCRLs',        'ID,Title,field_1,field_9,field_10,field_4,field_12,field_5', '', 2000),
     ]);
     state.capabilities  = caps.sort((a,b)=>a.Title.localeCompare(b.Title));
     state.commodities   = coms.sort((a,b)=>a.Title.localeCompare(b.Title));
     state.accreditations= acreds.sort((a,b)=>a.Title.localeCompare(b.Title));
     state.markets       = mkts.sort((a,b)=>a.Title.localeCompare(b.Title));
     state.companies     = companies.sort((a,b)=>a.Title.localeCompare(b.Title));
-    state.scrls         = scrls.sort((a,b)=>a.Title.localeCompare(b.Title));
+    state.scrls         = scrls.map(normalizeSCRL).sort((a,b)=>a.Title.localeCompare(b.Title));
     state.counties      = [...new Set(companies.map(c=>c.County).filter(Boolean))].sort();
     populateSearchFilters();
     populateCompanyDropdowns();
@@ -1746,7 +1793,7 @@ async function addCompanyToSCRL() {
 async function goToSCRL(scrlId) {
   showLoading(true);
   try {
-    const data = await spFetch(`web/lists/getbytitle('SCRLs')/items(${scrlId})`);
+    const data = normalizeSCRL(await spFetch(`web/lists/getbytitle('SCRLs')/items(${scrlId})`));
     state.selectedSCRL = data;
     navigate('scrlDetail', { scrl: data });
   } catch (e) { toast('Failed to load SCRL: ' + e.message, 'error'); }
@@ -1837,7 +1884,7 @@ async function viewLastScrape() {
 async function renderScrlListScreen() {
   showLoading(true);
   try {
-    state.scrls = await spGetAll('SCRLs', 'ID,Title,Client,ProjectManager,TechLead,Status,RAGStatus,StartDate', '', 2000);
+    state.scrls = (await spGetAll('SCRLs', 'ID,Title,field_1,field_9,field_10,field_4,field_12,field_5', '', 2000)).map(normalizeSCRL);
     state.scrls.sort((a,b) => a.Title.localeCompare(b.Title));
     renderScrlList();
   } catch (e) { toast('Error: ' + e.message, 'error'); }
@@ -1878,7 +1925,7 @@ async function renderScrlList() {
 async function openSCRL(id) {
   showLoading(true);
   try {
-    const data = await spFetch(`web/lists/getbytitle('SCRLs')/items(${id})`);
+    const data = normalizeSCRL(await spFetch(`web/lists/getbytitle('SCRLs')/items(${id})`));
     state.selectedSCRL = data;
     navigate('scrlDetail', { scrl: data });
   } catch (e) { toast('Failed to load SCRL: ' + e.message, 'error'); }
@@ -1947,14 +1994,15 @@ async function saveSCRL() {
   const end   = getVal('sd-end');   if (end)   body.EndDate   = end;
   const ad    = getVal('sd-assessdate'); if (ad) body.AssessmentDate = ad;
 
+  const spBody = denormalizeSCRL(body);
   try {
     let saved;
     if (state.selectedSCRL?.ID) {
-      await spPatch('SCRLs', state.selectedSCRL.ID, body);
+      await spPatch('SCRLs', state.selectedSCRL.ID, spBody);
       saved = { ...state.selectedSCRL, ...body };
       toast('SCRL saved', 'success');
     } else {
-      saved = await spPost('SCRLs', body);
+      saved = normalizeSCRL(await spPost('SCRLs', spBody));
       toast('SCRL created', 'success');
     }
     state.selectedSCRL = saved;
