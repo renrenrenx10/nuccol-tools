@@ -612,8 +612,25 @@ async function spGetSafe(path, selectFields, expandField, top=500) {
     return await spGet(url);
   } catch(e) {
     if (e.message.startsWith('GET 400')) {
-      // retry without select
       return await spGet(`${path}?$expand=${expandField}&$top=${top}&$orderby=Date desc`);
+    }
+    throw e;
+  }
+}
+
+// Fetch a list with specific fields; if 400 (field doesn't exist), retry without $select
+async function spGetWithFallback(listName, fields, top=500, orderBy='Title') {
+  const base = listItems(listName);
+  try {
+    return await spGet(`${base}?$select=${fields}&$top=${top}&$orderby=${orderBy} asc`);
+  } catch(e) {
+    if (e.message.startsWith('GET 400')) {
+      // Some fields may not exist — fall back to no $select
+      try {
+        return await spGet(`${base}?$top=${top}&$orderby=Title asc`);
+      } catch(e2) {
+        return await spGet(`${base}?$top=${top}`);
+      }
     }
     throw e;
   }
@@ -693,10 +710,14 @@ async function loadAll() {
   // Load all data in parallel
   // Fetch all lists without $select to avoid field name guessing.
   // We fetch full items and normalise field names after.
-  // Load Projects and Pipeline first so we can build lookup maps
+  // Load Projects and Pipeline first — request DisplayName explicitly, fall back gracefully
   const [proj, pipe] = await Promise.all([
-    spGet(`${listItems(CFG.lists.projects)}?$top=500&$orderby=Title asc`),
-    spGet(`${listItems(CFG.lists.pipelineProjects)}?$top=500&$orderby=Title asc`)
+    spGetWithFallback(CFG.lists.projects,
+      'ID,Title,DisplayName,ProjectTitle,Company,POValue,PlannedHours,StartDate,EndDate,Notes,Status,ProjectNumber',
+      500, 'DisplayName'),
+    spGetWithFallback(CFG.lists.pipelineProjects,
+      'ID,Title,DisplayName,ProjectTitle,Company,ExpectedValue,Probability,Status,Notes,ExpectedStart,Owner,Category,Contact,ProjectNumber',
+      500, 'DisplayName')
   ]);
 
   // Try TimeEntries with expand; if 400 (lookup column name wrong), fall back to no expand
@@ -1362,8 +1383,7 @@ function _renderPipeline() {
 
     return `<tr>
       <td class="clickable" onclick="viewPipelineDetail(${p.ID})" style="cursor:pointer;">
-        <div style="font-weight:600;font-size:12px;">${esc(p.Company||p.DisplayName)}</div>
-        <div style="font-size:11px;color:var(--muted);">${esc(p.ProjectTitle||'')}</div>
+        <div style="font-weight:600;font-size:12px;">${esc(p.DisplayName)}</div>
       </td>
       <td>
         <select class="inline-select" onchange="updatePipelineStatus(${p.ID},this.value)">
