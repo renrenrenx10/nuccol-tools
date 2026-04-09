@@ -2358,16 +2358,26 @@ function clearFirmFilter() {
    SCRAPE REVIEW SCREEN
    ────────────────────────────────────────────────────────────────────────── */
 const REVIEW_FIELDS = [
-  { label: 'Company Name', accept: 'name',     current: () => state.selectedCompany?.Title        || '', scraped: () => state.varScrapeRow?.Name     || '' },
-  { label: 'Website',      accept: 'website',  current: () => state.selectedCompany?.Website      || '', scraped: () => state.varScrapeRow?.Website  || '' },
-  { label: 'CH Number',    accept: 'ch',       current: () => state.selectedCompany?.RegisteredNumber||'', scraped: () => state.varScrapeRow?.CHNumber || '' },
-  { label: 'Address',      accept: 'city',     current: () => state.selectedCompany?.City         || '', scraped: () => state.varScrapeRow?.Address  || '' },
-  { label: 'Postcode',     accept: 'postcode', current: () => state.selectedCompany?.Postcode     || '', scraped: () => state.varScrapeRow?.Postcode || '' },
-  { label: 'Description',  accept: 'desc',     current: () => state.selectedCompany?.QuickDescription||'', scraped: () => state.varScrapeRow?.Overview || '', multiline: true },
+  { label: 'Company Name',    accept: 'name',     current: () => state.selectedCompany?.Title || '', 
+    scraped: () => state.varScrapeRow?.Name || '' },
+
+  { label: 'Website',         accept: 'website',  current: () => state.selectedCompany?.Website || '', 
+    scraped: () => state.varScrapeRow?.Website || '' },
+
+  { label: 'CH Number',       accept: 'ch',       current: () => state.selectedCompany?.RegisteredNumber || state.selectedCompany?.CHNumber || '', 
+    scraped: () => state.varScrapeRow?.CHNumber || '' },
+
+  { label: 'Address',         accept: 'address',  current: () => state.selectedCompany?.Address || '', 
+    scraped: () => state.varScrapeRow?.Address || '' },
+
+  { label: 'Postcode',        accept: 'postcode', current: () => state.selectedCompany?.Postcode || '', 
+    scraped: () => state.varScrapeRow?.Postcode || '' },
+
+  { label: 'Description',     accept: 'desc',     current: () => state.selectedCompany?.QuickDescription || state.selectedCompany?.Overview || '', 
+    scraped: () => state.varScrapeRow?.Overview || '', multiline: true },
 ];
 
 function renderScrapeReview() {
-  // Reset accept flags
   state.scrapeAccept = {};
   REVIEW_FIELDS.forEach(f => state.scrapeAccept[f.accept] = false);
 
@@ -2375,13 +2385,17 @@ function renderScrapeReview() {
   rows.innerHTML = REVIEW_FIELDS.map(f => `
     <div class="review-row" id="review-row-${f.accept}">
       <div class="review-cell field">${f.label}</div>
-      <div class="review-cell current" style="${f.multiline?'align-items:flex-start;padding-top:10px':''}">${esc(f.current())}</div>
+      <div class="review-cell current" style="${f.multiline?'align-items:flex-start;padding-top:10px':''}">
+        ${esc(f.current())}
+      </div>
       <div class="review-cell scraped ${!f.scraped()?'empty':''}" style="${f.multiline?'align-items:flex-start;padding-top:10px':''}">
         ${f.scraped() ? esc(f.scraped()) : '—'}
       </div>
       <div class="review-cell accept">
         <label class="toggle">
-          <input type="checkbox" id="accept-${f.accept}" onchange="toggleAccept('${f.accept}',this.checked)" ${!f.scraped()?'disabled':''}>
+          <input type="checkbox" id="accept-${f.accept}" 
+                 onchange="toggleAccept('${f.accept}',this.checked)" 
+                 ${!f.scraped()?'disabled':''}>
           <span class="toggle-slider"></span>
           <span class="toggle-label-off">NO</span>
           <span class="toggle-label-on">YES</span>
@@ -2390,13 +2404,14 @@ function renderScrapeReview() {
     </div>
   `).join('');
 
+  // Free-form fields
   const r = state.varScrapeRow || {};
   const ff = document.getElementById('review-freeform');
   ff.innerHTML = [
-    { title: 'Capabilities',            val: r.Capabilities },
-    { title: 'Markets',                 val: r.Markets },
-    { title: 'Accreditations / Certs',  val: r.Certifications },
-    { title: 'Manufacturing Capacity',  val: r.ManufacturingCapacity },
+    { title: 'Capabilities',           val: r.Capabilities },
+    { title: 'Markets',                val: r.Markets },
+    { title: 'Accreditations / Certs', val: r.Certifications },
+    { title: 'Manufacturing Capacity', val: r.ManufacturingCapacity },
   ].map(col => `
     <div class="free-form-col">
       <h4>${col.title}</h4>
@@ -2405,34 +2420,41 @@ function renderScrapeReview() {
   `).join('');
 }
 
-function toggleAccept(key, val) {
-  state.scrapeAccept[key] = val;
-  const row = document.getElementById('review-row-' + key);
-  if (row) row.classList.toggle('accepted', val);
-}
-
 async function applyScrapedData() {
-  if (!state.selectedCompany?.ID) return;
+  if (!state.selectedCompany?.ID) {
+    toast('No company selected', 'error');
+    return;
+  }
+
   const r = state.varScrapeRow || {};
   const a = state.scrapeAccept;
   const c = state.selectedCompany;
+
   const body = {
-    Title:            a.name     ? r.Name     : c.Title,
-    Website:          a.website  ? r.Website  : c.Website,
-    RegisteredNumber: a.ch       ? r.CHNumber : c.RegisteredNumber,
-    City:             a.city     ? r.Address  : c.City,
-    Postcode:         a.postcode ? r.Postcode : c.Postcode,
-    QuickDescription: a.desc     ? r.Overview : c.QuickDescription,
+    Title:               a.name     ? r.Name          : c.Title,
+    Website:             a.website  ? r.Website       : c.Website,
+    RegisteredNumber:    a.ch       ? r.CHNumber      : (c.RegisteredNumber || c.CHNumber),
+    Address:             a.address  ? r.Address       : c.Address,           // ← Fixed
+    Postcode:            a.postcode ? r.Postcode      : c.Postcode,
+    QuickDescription:    a.desc     ? r.Overview      : (c.QuickDescription || c.Overview),
+    // Add more fields here if you want to merge Capabilities/Markets etc. later
   };
+
   showLoading(true);
   try {
-    await spPatch('Companies', c.ID, body);
+    await spPatch('Companies', c.ID, body);   // Make sure your list is actually called "Companies"
+
+    // Update local state
     Object.assign(state.selectedCompany, body);
     const idx = state.companies.findIndex(x => x.ID === c.ID);
     if (idx >= 0) Object.assign(state.companies[idx], body);
-    toast('Changes applied', 'success');
+
+    toast('Scraped data applied successfully', 'success');
     navigate('company', { company: state.selectedCompany });
-  } catch (e) { toast('Error: ' + e.message, 'error'); }
+  } catch (e) {
+    console.error(e);
+    toast('Error applying data: ' + e.message, 'error');
+  }
   showLoading(false);
 }
 
