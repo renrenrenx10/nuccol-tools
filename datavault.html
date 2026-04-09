@@ -1101,10 +1101,20 @@ const msalConfig = {
 const msalClient = new msal.PublicClientApplication(msalConfig);
 
 let currentUser = null;
+let msalReady = false;
+
+// Initialise MSAL once and then attempt auto-login
+(async () => {
+  await msalClient.initialize();
+  msalReady = true;
+  await msalClient.handleRedirectPromise();
+  const accounts = msalClient.getAllAccounts();
+  if (accounts.length) { currentUser = accounts[0]; onSignedIn(); }
+})();
 
 async function signIn() {
   try {
-    await msalClient.handleRedirectPromise();
+    if (!msalReady) await msalClient.initialize();
     const result = await msalClient.loginPopup({ scopes: CONFIG.scopes });
     currentUser = result.account;
     onSignedIn();
@@ -1143,13 +1153,6 @@ async function onSignedIn() {
   await loadLookupData();
   navigate('dashboard');
 }
-
-// Auto-login if session exists
-(async () => {
-  await msalClient.handleRedirectPromise();
-  const accounts = msalClient.getAllAccounts();
-  if (accounts.length) { currentUser = accounts[0]; onSignedIn(); }
-})();
 
 /* ──────────────────────────────────────────────────────────────────────────
    SHAREPOINT REST API
