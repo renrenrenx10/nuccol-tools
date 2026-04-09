@@ -687,20 +687,34 @@ function newExpRow(dk) {
 
 async function loadExpWeek(ws) {
   S.expWeekStart = ws;
-  const data = await spGet(
-    `${listItems(CFG.lists.expenses)}` +
-    `?$select=ID,Date,Category,Amount,Notes,Project,EmployeeName/EMail,EmployeeName/Title` +
-    `&$expand=EmployeeName` +
-    `&$filter=${dateFilter(ws)}` +
-    `&$orderby=Date asc`
-  );
+  let data;
+  try {
+    data = await spGet(
+      `${listItems(CFG.lists.expenses)}` +
+      `?$select=ID,Date,Category,Amount,Notes,Project,EmployeeName/EMail,EmployeeName/Title` +
+      `&$expand=EmployeeName` +
+      `&$filter=${dateFilter(ws)}` +
+      `&$orderby=Date asc`
+    );
+  } catch(e) {
+    // EmployeeName may be a plain text field, not a User lookup — try without expand
+    data = await spGet(
+      `${listItems(CFG.lists.expenses)}` +
+      `?$select=ID,Date,Category,Amount,Notes,Project,EmployeeName` +
+      `&$filter=${dateFilter(ws)}` +
+      `&$orderby=Date asc`
+    );
+  }
 
   const byDate = {};
   const myEmail = S.currentUser.email.toLowerCase();
   for (const item of data.value) {
-    // Filter to current user only
+    // Filter to current user — works for both User lookup and plain text
     const itemEmail = (item.EmployeeName?.EMail || '').toLowerCase();
+    const itemName = (item.EmployeeName?.Title || item.EmployeeName || '').toLowerCase();
+    const myName = S.currentUser.displayName.toLowerCase();
     if (itemEmail && itemEmail !== myEmail) continue;
+    if (!itemEmail && itemName && itemName !== myName) continue;
     const dk = item.Date.split('T')[0];
     if (!byDate[dk]) byDate[dk] = [];
     byDate[dk].push({
@@ -738,6 +752,12 @@ async function loadSumWeek(ws) {
       `?$select=ID,Date,Category,Amount,Notes,Project,EmployeeName/Title,EmployeeName/EMail` +
       `&$expand=EmployeeName` +
       `&$filter=${dateFilter(ws)}`
+    ).catch(() =>
+      spGet(
+        `${listItems(CFG.lists.expenses)}` +
+        `?$select=ID,Date,Category,Amount,Notes,Project,EmployeeName` +
+        `&$filter=${dateFilter(ws)}`
+      )
     )
   ]);
 
@@ -753,7 +773,7 @@ async function loadSumWeek(ws) {
   }));
   S.sumExpenses = ex.value.map(e => ({
     ...e,
-    _empName  : e.EmployeeName?.Title || '(Unknown)',
+    _empName  : e.EmployeeName?.Title || (typeof e.EmployeeName === 'string' ? e.EmployeeName : '') || '(Unknown)',
     _empEmail : e.EmployeeName?.EMail || ''
   }));
 
@@ -1408,10 +1428,12 @@ function updateTsField(entryId, field, val) {
 }
 
 function changeTsType(entryId, type) {
-  syncTsDom();
+  // Set projectType BEFORE syncTsDom so it reads the project select into the right bucket
   const row = S.tsRows.find(r => r.entryId===entryId);
   if (!row) return;
   row.projectType = type;
+  syncTsDom();
+  // Clear both project fields since type just changed
   row.projectId = null; row.projName = '';
   row.pipeId    = null; row.pipeName = '';
   go();
