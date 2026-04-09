@@ -710,14 +710,10 @@ async function loadAll() {
   // Load all data in parallel
   // Fetch all lists without $select to avoid field name guessing.
   // We fetch full items and normalise field names after.
-  // Load Projects and Pipeline first — request DisplayName explicitly, fall back gracefully
+  // Load Projects and Pipeline with exact field names confirmed from list schema
   const [proj, pipe] = await Promise.all([
-    spGetWithFallback(CFG.lists.projects,
-      'ID,Title,DisplayName,ProjectTitle,Company,POValue,PlannedHours,StartDate,EndDate,Notes,Status,ProjectNumber',
-      500, 'DisplayName'),
-    spGetWithFallback(CFG.lists.pipelineProjects,
-      'ID,Title,DisplayName,ProjectTitle,Company,ExpectedValue,Probability,Status,Notes,ExpectedStart,Owner,Category,Contact,ProjectNumber',
-      500, 'DisplayName')
+    spGet(`${listItems(CFG.lists.projects)}?$select=ID,Title,Company,ProjectTitle0,DisplayName,POValue,PlannedHours,StartDate,EndDate,Notes,Status&$top=500&$orderby=DisplayName asc`),
+    spGet(`${listItems(CFG.lists.pipelineProjects)}?$select=ID,Title,Company_x002f_ProjectName,ProjectTitle,DisplayName,Status,ExpectedValue,Probability,ExpectedStart,Notes,Owner_x002f_PM,Category,ProjectNumber,Contact&$top=500&$orderby=DisplayName asc`)
   ]);
 
   // Try TimeEntries with expand; if 400 (lookup column name wrong), fall back to no expand
@@ -748,23 +744,28 @@ async function loadAll() {
   const te = teRaw;
   const exp = expRaw;
 
-  // Detect field names from first Projects item
-  const sampleProj = proj.value[0] || {};
-  const projTitleField    = Object.keys(sampleProj).find(k => ['ProjectTitle0','ProjectTitle'].includes(k)) || 'Title';
-  const poValueField      = Object.keys(sampleProj).find(k => k.toLowerCase() === 'povalue') || 'POValue';
-  const plannedHoursField = Object.keys(sampleProj).find(k => k.toLowerCase() === 'plannedhours') || 'PlannedHours';
+  // Field names confirmed from list schema — use directly, no detection needed
+  // Projects: ProjectTitle internal name is ProjectTitle0, Company is Company
+  // PipelineProjects: Company internal name is Company_x002f_ProjectName, Owner/PM is Owner_x002f_PM
 
-  // Detect field names from first PipelineProjects item
-  const samplePipe = pipe.value[0] || {};
-  const pipeCompanyField  = Object.keys(samplePipe).find(k => k.toLowerCase() === 'company') || 'Title';
-  const pipeTitleField    = Object.keys(samplePipe).find(k => ['ProjectTitle','ProjectTitle0'].includes(k)) || null;
-  const pipeValueField    = Object.keys(samplePipe).find(k => k.toLowerCase() === 'expectedvalue') || 'ExpectedValue';
-  const pipeProbField     = Object.keys(samplePipe).find(k => k.toLowerCase() === 'probability') || 'Probability';
-  const pipeExpStartField = Object.keys(samplePipe).find(k => k.toLowerCase() === 'expectedstart') || 'ExpectedStart';
+  S.projects = proj.value.map(p => ({
+    ...p,
+    ProjectTitle:  p.ProjectTitle0 || p.Title || '',
+    DisplayName:   p.DisplayName || p.ProjectTitle0 || p.Title || '',
+    POValue:       Number(p.POValue ?? 0),
+    PlannedHours:  Number(p.PlannedHours ?? 0)
+  }));
 
-  // Log what we got back so debugging is easy
-  console.log('[ControlCentre] Projects sample keys:', Object.keys(sampleProj).join(', '));
-  console.log('[ControlCentre] Pipeline sample keys:', Object.keys(samplePipe).join(', '));
+  S.pipeline = pipe.value.map(p => ({
+    ...p,
+    Company:       p.Company_x002f_ProjectName || p.Title || '',
+    ProjectTitle:  p.ProjectTitle || p.Title || '',
+    DisplayName:   p.DisplayName || p.ProjectTitle || p.Company_x002f_ProjectName || p.Title || '',
+    ExpectedValue: Number(p.ExpectedValue ?? 0),
+    Probability:   p.Probability ?? null,
+    ExpectedStart: p.ExpectedStart || null,
+    Owner:         p.Owner_x002f_PM || ''
+  }));
 
   // Detect TimeEntries lookup field names from returned data
   const sampleTE = te.value[0] || {};
@@ -779,32 +780,10 @@ async function loadAll() {
     S._tePipeIdField  = Object.keys(sampleTE).find(k => /pipeline.*id$/i.test(k)) || 'PipelineProjectId';
   }
 
-  // Store for computed helpers
-  S._projTitleField    = projTitleField;
-  S._poValueField      = poValueField;
-  S._plannedHoursField = plannedHoursField;
-  S._teProjField       = teProjField;
-  S._tePipeField       = tePipeField;
+  // Store TE field names for computed helpers
+  S._teProjField = teProjField;
+  S._tePipeField = tePipeField;
 
-  S.projects = proj.value.map(p => ({
-    ...p,
-    ProjectTitle:  p[projTitleField] || p.Title || '',
-    // DisplayName is confirmed to exist on the Projects list - use it directly
-    // Fall back chain: DisplayName -> ProjectTitle field -> Title
-    DisplayName:   (p.DisplayName && p.DisplayName.trim()) || p[projTitleField] || p.Title || '',
-    POValue:       Number(p[poValueField] ?? 0),
-    PlannedHours:  Number(p[plannedHoursField] ?? 0)
-  }));
-  S.pipeline = pipe.value.map(p => ({
-    ...p,
-    Company:       p[pipeCompanyField] || p.Title || '',
-    ProjectTitle:  (pipeTitleField && p[pipeTitleField]) || p.Title || '',
-    // DisplayName is confirmed to exist on the PipelineProjects list - use it directly
-    DisplayName:   (p.DisplayName && p.DisplayName.trim()) || (pipeTitleField && p[pipeTitleField]) || p[pipeCompanyField] || p.Title || '',
-    ExpectedValue: Number(p[pipeValueField] ?? 0),
-    Probability:   p[pipeProbField] ?? null,
-    ExpectedStart: p[pipeExpStartField] || null
-  }));
   S.timeEntries = te.value;
   S.expenses = exp.value;
 }
@@ -1391,7 +1370,7 @@ function _renderPipeline() {
         </select>
       </td>
       <td class="ta-right nowrap">${money(p.ExpectedValue)}</td>
-      <td class="ta-center">${esc(p.Owner?.DisplayName || p.Owner || '—')}</td>
+      <td class="ta-center">${esc(p.Owner || '—')}</td>
       <td class="ta-center">${p.Probability != null ? p.Probability + '%' : '—'}</td>
       <td class="ta-center">${num(bookedHours)}</td>
       <td style="font-size:11px;color:var(--muted);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(p.Notes||'')}">${esc(p.Notes||'')}</td>
