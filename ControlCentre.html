@@ -693,12 +693,39 @@ async function loadAll() {
   // Load all data in parallel
   // Fetch all lists without $select to avoid field name guessing.
   // We fetch full items and normalise field names after.
-  const [proj, pipe, te, exp] = await Promise.all([
+  // Load Projects and Pipeline first so we can build lookup maps
+  const [proj, pipe] = await Promise.all([
     spGet(`${listItems(CFG.lists.projects)}?$top=500&$orderby=Title asc`),
-    spGet(`${listItems(CFG.lists.pipelineProjects)}?$top=500&$orderby=Title asc`),
-    spGet(`${listItems(CFG.lists.timeEntries)}?$expand=Project,PipelineProject&$top=5000&$orderby=Date desc`),
-    spGet(`${listItems(CFG.lists.expenses)}?$expand=EmployeeName&$top=2000&$orderby=Date desc`)
+    spGet(`${listItems(CFG.lists.pipelineProjects)}?$top=500&$orderby=Title asc`)
   ]);
+
+  // Try TimeEntries with expand; if 400 (lookup column name wrong), fall back to no expand
+  let teRaw;
+  try {
+    teRaw = await spGet(`${listItems(CFG.lists.timeEntries)}?$expand=Project,PipelineProject&$top=5000&$orderby=Date desc`);
+    S._teHasExpand = true;
+  } catch(e1) {
+    try {
+      // Try common alternative names
+      teRaw = await spGet(`${listItems(CFG.lists.timeEntries)}?$expand=ProjectLookup,PipelineProjectLookup&$top=5000&$orderby=Date desc`);
+      S._teHasExpand = true;
+    } catch(e2) {
+      // Fall back: no expand at all — we'll match via *Id integer fields
+      teRaw = await spGet(`${listItems(CFG.lists.timeEntries)}?$top=5000&$orderby=Date desc`);
+      S._teHasExpand = false;
+    }
+  }
+
+  // Try Expenses with expand; fall back to no expand
+  let expRaw;
+  try {
+    expRaw = await spGet(`${listItems(CFG.lists.expenses)}?$expand=EmployeeName&$top=2000&$orderby=Date desc`);
+  } catch(e) {
+    expRaw = await spGet(`${listItems(CFG.lists.expenses)}?$top=2000&$orderby=Date desc`);
+  }
+
+  const te = teRaw;
+  const exp = expRaw;
 
   // Detect field names from first Projects item (or fall back to known defaults)
   const sampleProj = proj.value[0] || {};
@@ -716,18 +743,30 @@ async function loadAll() {
   const pipeProbField     = 'Probability' in samplePipe ? 'Probability' : Object.keys(samplePipe).find(k => k.toLowerCase().includes('prob')) || 'Probability';
   const pipeExpStartField = Object.keys(samplePipe).find(k => k.toLowerCase().includes('expectedstart') || k === 'ExpectedStart') || 'ExpectedStart';
 
-  // Detect TimeEntries lookup field names
+  // Detect TimeEntries lookup field names from returned data
   const sampleTE = te.value[0] || {};
-  const teProjField = Object.keys(sampleTE).find(k => ['Project','Projects'].includes(k)) || 'Project';
-  const tePipeField = Object.keys(sampleTE).find(k => ['PipelineProject','PipelineProjects'].includes(k)) || 'PipelineProject';
+  // With expand: look for object-type fields containing an Id property
+  // Without expand: look for *Id integer fields (e.g. ProjectId, PipelineProjectId)
+  let teProjField, tePipeField;
+  if (S._teHasExpand) {
+    teProjField = Object.keys(sampleTE).find(k => !k.endsWith('Id') && sampleTE[k] && typeof sampleTE[k] === 'object' && 'Id' in sampleTE[k] && k.toLowerCase().includes('project') && !k.toLowerCase().includes('pipeline')) || 'Project';
+    tePipeField = Object.keys(sampleTE).find(k => !k.endsWith('Id') && sampleTE[k] && typeof sampleTE[k] === 'object' && 'Id' in sampleTE[k] && k.toLowerCase().includes('pipeline')) || 'PipelineProject';
+  } else {
+    // No expand — we'll use the *Id integer columns to match
+    teProjField = null;
+    tePipeField = null;
+    // Find the integer ID lookup fields
+    S._teProjIdField  = Object.keys(sampleTE).find(k => /^project.*id$/i.test(k) && !k.toLowerCase().includes('pipeline')) || 'ProjectId';
+    S._tePipeIdField  = Object.keys(sampleTE).find(k => /pipeline.*id$/i.test(k)) || 'PipelineProjectId';
+  }
 
   // Store for computed helpers
-  S._projTitleField   = projTitleField;
-  S._poValueField     = poValueField;
+  S._projTitleField    = projTitleField;
+  S._poValueField      = poValueField;
   S._plannedHoursField = plannedHoursField;
-  S._displayNameField = displayNameField;
-  S._teProjField      = teProjField;
-  S._tePipeField      = tePipeField;
+  S._displayNameField  = displayNameField;
+  S._teProjField       = teProjField;
+  S._tePipeField       = tePipeField;
 
   S.projects = proj.value.map(p => ({
     ...p,
@@ -753,12 +792,21 @@ async function loadAll() {
    COMPUTED HELPERS
 ================================================================ */
 function teForProject(projId) {
-  const f = S._teProjField || 'Project';
-  return S.timeEntries.filter(t => t[f] && t[f].Id === projId);
+  if (S._teHasExpand && S._teProjField) {
+    const f = S._teProjField;
+    return S.timeEntries.filter(t => t[f] && t[f].Id === projId);
+  }
+  // No expand — match via integer Id field
+  const f = S._teProjIdField || 'ProjectId';
+  return S.timeEntries.filter(t => t[f] === projId);
 }
 function teForPipeline(pipeId) {
-  const f = S._tePipeField || 'PipelineProject';
-  return S.timeEntries.filter(t => t[f] && t[f].Id === pipeId);
+  if (S._teHasExpand && S._tePipeField) {
+    const f = S._tePipeField;
+    return S.timeEntries.filter(t => t[f] && t[f].Id === pipeId);
+  }
+  const f = S._tePipeIdField || 'PipelineProjectId';
+  return S.timeEntries.filter(t => t[f] === pipeId);
 }
 function expForProject(displayName) {
   return S.expenses.filter(e => e.Project === displayName);
@@ -1174,15 +1222,19 @@ function _renderEmployeeEntries() {
   const isPipe = S.drillIsPipeline;
 
   let entries, exps;
-  const _pf = S._teProjField || 'Project';
-  const _ppf = S._tePipeField || 'PipelineProject';
+  const _pf = S._teHasExpand && S._teProjField ? S._teProjField : null;
+  const _ppf = S._teHasExpand && S._tePipeField ? S._tePipeField : null;
+  const _pfId = S._teProjIdField || 'ProjectId';
+  const _ppfId = S._tePipeIdField || 'PipelineProjectId';
   if (isPipe) {
     entries = S.timeEntries.filter(t =>
-      t[_ppf] && t[_ppf].Id === S.drillProjectId && t.EmployeeName === empName
+      (_ppf ? (t[_ppf] && t[_ppf].Id === S.drillProjectId) : t[_ppfId] === S.drillProjectId)
+      && t.EmployeeName === empName
     );
   } else {
     entries = S.timeEntries.filter(t =>
-      t[_pf] && t[_pf].Id === S.drillProjectId && t.EmployeeName === empName
+      (_pf ? (t[_pf] && t[_pf].Id === S.drillProjectId) : t[_pfId] === S.drillProjectId)
+      && t.EmployeeName === empName
     );
   }
   exps = S.expenses.filter(e =>
@@ -1306,9 +1358,7 @@ function _renderPipeline() {
 
   const rows = S.pipeline.map(p => {
     const st = p.Status?.Value || p.Status || '';
-    const bookedHours = S.timeEntries.filter(t =>
-      t[S._tePipeField||'PipelineProject'] && t[S._tePipeField||'PipelineProject'].Id === p.ID
-    ).reduce((a,t) => a + (t.HoursWorked||0) + (t.TravelHours||0), 0);
+    const bookedHours = sumHours(teForPipeline(p.ID));
 
     return `<tr>
       <td class="clickable" onclick="viewPipelineDetail(${p.ID})" style="cursor:pointer;">
