@@ -26,7 +26,13 @@
     .nl-row.unselected { border-left: 3px solid #52525b; }
     #login-screen { display: flex; }
     .spinner { border: 3px solid #334155; border-top: 3px solid #3b82f6; border-radius: 50%; width: 20px; height: 20px; animation: spin 0.8s linear infinite; display: inline-block; }
+    .spinner-lg { border: 4px solid #334155; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; display: inline-block; }
     @keyframes spin { to { transform: rotate(360deg); } }
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: flex; align-items: center; justify-content: center; z-index: 100; }
+    .overlay.hidden { display: none; }
+    .overlay-card { background: #1e293b; border: 1px solid #3b82f6; border-radius: 1rem; padding: 2.5rem 3rem; text-align: center; max-width: 480px; }
+    .be-tab { border-bottom: 3px solid transparent; padding-bottom: 4px; }
+    .be-tab.active { border-color: #3b82f6; color: white; }
   </style>
 </head>
 <body class="h-full bg-zinc-950 text-zinc-100">
@@ -43,10 +49,8 @@
         <div class="text-blue-400 text-sm -mt-1">NUCCOL — Nuclear Intelligence Platform</div>
       </div>
     </div>
-
     <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-10 mt-8">
       <p class="text-zinc-400 text-sm mb-8">Sign in with your NuCCoL Microsoft 365 account to continue.</p>
-
       <button id="btn-login"
         class="w-full flex items-center justify-center gap-3 px-6 py-4 bg-white hover:bg-zinc-100 text-zinc-900 font-semibold rounded-2xl transition-all text-base">
         <svg width="20" height="20" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
@@ -57,10 +61,8 @@
         </svg>
         Sign in with Microsoft
       </button>
-
       <div id="login-status" class="mt-6 text-sm text-zinc-500 min-h-[1.5rem]"></div>
     </div>
-
     <div class="mt-6 text-xs text-zinc-600">
       Access restricted to authorised NuCCoL staff.<br>
       Data connected to SharePoint. Hosted on GitHub Pages.
@@ -74,7 +76,7 @@
 <div id="app" class="flex h-screen overflow-hidden" style="display:none!important">
 
   <!-- Sidebar -->
-  <div class="w-72 bg-zinc-900 border-r border-zinc-800 flex flex-col">
+  <div class="w-72 bg-zinc-900 border-r border-zinc-800 flex flex-col flex-shrink-0">
     <div class="p-6 border-b border-zinc-800">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 bg-blue-600 rounded flex items-center justify-center text-white font-bold text-2xl title-font">C</div>
@@ -86,7 +88,7 @@
     </div>
     <div class="flex-1 p-4 space-y-1 overflow-auto">
       <div onclick="navigateTo('dashboard')" class="nav-item flex items-center gap-3 px-4 py-3 hover:bg-zinc-800 rounded-2xl cursor-pointer active"><i class="fa-solid fa-gauge-high w-5"></i><span>Dashboard</span></div>
-      <div onclick="navigateTo('newsletter')" class="nav-item flex items-center gap-3 px-4 py-3 hover:bg-zinc-800 rounded-2xl cursor-pointer"><i class="fa-solid fa-newspaper w-5"></i><span>Newsletter Review</span></div>
+      <div onclick="navigateTo('newsletter')" class="nav-item flex items-center gap-3 px-4 py-3 hover:bg-zinc-800 rounded-2xl cursor-pointer"><i class="fa-solid fa-newspaper w-5"></i><span>Newsletter</span></div>
       <div onclick="navigateTo('ap')" class="nav-item flex items-center gap-3 px-4 py-3 hover:bg-zinc-800 rounded-2xl cursor-pointer"><i class="fa-solid fa-person w-5"></i><span>AP Feedback</span></div>
       <div onclick="navigateTo('be')" class="nav-item flex items-center gap-3 px-4 py-3 hover:bg-zinc-800 rounded-2xl cursor-pointer"><i class="fa-solid fa-file-lines w-5"></i><span>BE Report</span></div>
       <div onclick="navigateTo('ss')" class="nav-item flex items-center gap-3 px-4 py-3 hover:bg-zinc-800 rounded-2xl cursor-pointer"><i class="fa-solid fa-industry w-5"></i><span>Sector Specific</span></div>
@@ -109,7 +111,7 @@
   <!-- Main Content -->
   <div class="flex-1 overflow-auto">
 
-    <!-- DASHBOARD -->
+    <!-- ══════════════════════════════════════ DASHBOARD -->
     <div id="dashboard" class="screen active p-8">
       <div class="max-w-7xl mx-auto">
         <div class="flex justify-between items-end mb-10">
@@ -147,6 +149,7 @@
           </div>
         </div>
 
+        <!-- Stats bar -->
         <div class="bg-zinc-900 border border-zinc-700 rounded-3xl p-8 grid grid-cols-4 gap-8">
           <div class="text-center"><div class="text-5xl font-mono font-bold text-blue-400" id="stat-articles">—</div><div class="text-zinc-400 text-sm mt-1">News Articles</div></div>
           <div class="text-center"><div class="text-5xl font-mono font-bold text-blue-400" id="stat-events">—</div><div class="text-zinc-400 text-sm mt-1">Events</div></div>
@@ -156,135 +159,268 @@
       </div>
     </div>
 
-    <!-- NEWSLETTER -->
+    <!-- ══════════════════════════════════════ NEWSLETTER -->
     <div id="newsletter" class="screen p-8">
       <div class="max-w-7xl mx-auto">
-        <div class="flex justify-between items-center mb-8">
+        <div class="flex justify-between items-center mb-6">
           <div>
-            <h1 class="text-4xl font-bold title-font">News & Events Aggregator</h1>
+            <h1 class="text-4xl font-bold title-font">News &amp; Events Aggregator</h1>
             <p class="text-blue-400 text-sm mt-1">Connected to SharePoint · <span id="nl-sync-status">Loading...</span></p>
           </div>
-          <div class="flex gap-3">
-            <button onclick="refreshAllLists()" class="px-6 py-3 bg-zinc-700 hover:bg-zinc-600 rounded-2xl flex items-center gap-2 font-medium">
-              <i class="fa-solid fa-rotate-right"></i> Refresh
+        </div>
+
+        <!-- Scrape action buttons row -->
+        <div class="flex flex-wrap gap-3 mb-6">
+          <button onclick="nlScrape('News')" id="btn-scrape-news"
+            class="px-5 py-3 bg-blue-700 hover:bg-blue-600 rounded-2xl flex items-center gap-2 text-sm font-medium transition-colors">
+            📰 Scrape News
+          </button>
+          <button onclick="nlScrape('Events')" id="btn-scrape-events"
+            class="px-5 py-3 bg-blue-700 hover:bg-blue-600 rounded-2xl flex items-center gap-2 text-sm font-medium transition-colors">
+            📅 Scrape Events
+          </button>
+          <button onclick="nlScrape('Contracts')" id="btn-scrape-contracts"
+            class="px-5 py-3 bg-blue-700 hover:bg-blue-600 rounded-2xl flex items-center gap-2 text-sm font-medium transition-colors">
+            📋 Scrape Contracts
+          </button>
+          <button onclick="nlScrape('All')" id="btn-scrape-all"
+            class="px-5 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-2xl flex items-center gap-2 text-sm font-medium transition-colors">
+            🚀 Scrape All
+          </button>
+          <button onclick="refreshAllLists()" id="btn-refresh"
+            class="px-5 py-3 bg-zinc-700 hover:bg-zinc-600 rounded-2xl flex items-center gap-2 text-sm font-medium transition-colors">
+            🔄 Refresh
+          </button>
+          <button onclick="nlClearAll()" id="btn-clear"
+            class="px-5 py-3 bg-zinc-700 hover:bg-zinc-600 rounded-2xl flex items-center gap-2 text-sm font-medium transition-colors">
+            🗑️ Clear All
+          </button>
+
+          <!-- Right-aligned generate/send buttons -->
+          <div class="ml-auto flex gap-3 flex-wrap justify-end">
+            <button onclick="generateNewsletter()" id="btn-nl-generate"
+              class="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-2xl flex items-center gap-2 text-sm font-medium transition-colors">
+              📧 Generate Newsletter
             </button>
-            <button onclick="generateNewsletter()" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-2xl flex items-center gap-2 font-medium">
-              <i class="fa-solid fa-envelope"></i> Generate Newsletter
+            <button onclick="openOutlookDraft()" id="btn-nl-outlook" disabled
+              class="px-5 py-3 bg-zinc-700 rounded-2xl flex items-center gap-2 text-sm font-medium opacity-50 cursor-not-allowed transition-colors">
+              📨 Send to Outlook
+            </button>
+            <button onclick="openWordPress()" id="btn-nl-wp" disabled
+              class="px-5 py-3 bg-zinc-700 rounded-2xl flex items-center gap-2 text-sm font-medium opacity-50 cursor-not-allowed transition-colors">
+              🌐 Open WordPress HTML
             </button>
           </div>
         </div>
 
+        <!-- Generate status line -->
+        <div id="nl-gen-status" class="text-sm text-zinc-500 mb-4 min-h-[1.25rem]">Select items then click Generate Newsletter</div>
+
+        <!-- Tabs -->
         <div class="flex border-b border-zinc-800 mb-6">
-          <button onclick="switchNLTab(1)" id="tab1" class="tab-btn px-8 py-4 border-b-4 border-blue-500 text-white font-medium">📰 News</button>
-          <button onclick="switchNLTab(2)" id="tab2" class="tab-btn px-8 py-4 text-zinc-400 hover:text-zinc-200">📅 Events</button>
-          <button onclick="switchNLTab(3)" id="tab3" class="tab-btn px-8 py-4 text-zinc-400 hover:text-zinc-200">📋 Tenders</button>
-          <button onclick="switchNLTab(4)" id="tab4" class="tab-btn px-8 py-4 text-zinc-400 hover:text-zinc-200">🏢 NucCol</button>
+          <button onclick="switchNLTab(1)" id="tab1" class="tab-btn px-8 py-4 border-b-4 border-blue-500 text-white font-medium">📰 News <span id="tab-count-1" class="text-xs text-zinc-400 ml-1"></span></button>
+          <button onclick="switchNLTab(2)" id="tab2" class="tab-btn px-8 py-4 text-zinc-400 hover:text-zinc-200">📅 Events <span id="tab-count-2" class="text-xs text-zinc-400 ml-1"></span></button>
+          <button onclick="switchNLTab(3)" id="tab3" class="tab-btn px-8 py-4 text-zinc-400 hover:text-zinc-200">📋 Tenders <span id="tab-count-3" class="text-xs text-zinc-400 ml-1"></span></button>
+          <button onclick="switchNLTab(4)" id="tab4" class="tab-btn px-8 py-4 text-zinc-400 hover:text-zinc-200">🏢 NucCol <span id="tab-count-4" class="text-xs text-zinc-400 ml-1"></span></button>
         </div>
-        <div id="nl-content" class="space-y-3 max-h-[calc(100vh-280px)] overflow-auto pr-4"></div>
+        <div id="nl-content" class="space-y-3 max-h-[calc(100vh-360px)] overflow-auto pr-4"></div>
       </div>
     </div>
 
-    <!-- AP GENERATOR -->
+    <!-- ══════════════════════════════════════ AP GENERATOR -->
     <div id="ap" class="screen p-8">
       <div class="max-w-5xl mx-auto bg-zinc-900 rounded-3xl p-10">
         <h1 class="text-4xl font-bold title-font mb-2">Action Plan Feedback Generator</h1>
-        <p class="text-zinc-400 mb-8">AI-powered account plan review</p>
-        <div class="mb-6">
-          <label class="block text-sm text-zinc-400 mb-2">Select Company</label>
-          <select id="ap-company" class="w-full bg-zinc-800 border border-zinc-700 rounded-2xl px-6 py-4 text-lg">
-            <option>Select Firm...</option>
-          </select>
+        <p class="text-zinc-400 mb-6">AI-powered account plan review</p>
+
+        <div class="flex gap-4 mb-8 items-end">
+          <div class="flex-1">
+            <label class="block text-sm text-zinc-400 mb-2">Select Company</label>
+            <select id="ap-company" class="w-full bg-zinc-800 border border-zinc-700 rounded-2xl px-6 py-4 text-base">
+              <option value="">Select Firm...</option>
+            </select>
+          </div>
+          <div class="flex gap-3">
+            <button onclick="generateAP()"
+              class="px-8 py-4 bg-blue-600 hover:bg-blue-700 rounded-2xl font-semibold text-base transition-colors">
+              Generate
+            </button>
+            <button onclick="viewLastAP()"
+              class="px-6 py-4 border border-zinc-700 hover:bg-zinc-800 rounded-2xl text-sm transition-colors">
+              View Last Report
+            </button>
+          </div>
         </div>
+
         <div class="grid grid-cols-2 gap-8">
           <div>
-            <label class="block text-sm text-zinc-400 mb-2">Human Input — Action Plan Notes</label>
-            <textarea id="ap-input" rows="12" class="terminal-input w-full rounded-3xl p-6">Enter your action plan notes here...</textarea>
+            <label class="block text-xs text-zinc-400 mb-2 title-font">ACTION PLAN FEEDBACK</label>
+            <textarea id="ap-input" rows="14" placeholder="Enter feedback notes...." class="terminal-input w-full rounded-3xl p-6"></textarea>
           </div>
           <div>
-            <label class="block text-sm text-zinc-400 mb-2">AI Action Plan Feedback</label>
+            <label class="block text-xs text-zinc-400 mb-2 title-font">AI_ACTION PLAN FEEDBACK</label>
             <div class="relative">
-              <textarea id="ap-ai" rows="12" readonly class="terminal-input w-full rounded-3xl p-6 pr-12">Awaiting generation...</textarea>
+              <textarea id="ap-ai" rows="14" readonly placeholder="Awaiting human input..." class="terminal-input w-full rounded-3xl p-6 pr-12"></textarea>
               <button onclick="expandText('AI Action Plan Feedback', document.getElementById('ap-ai').value)" class="absolute top-4 right-4 text-blue-400 hover:text-blue-300 text-2xl">⤢</button>
             </div>
           </div>
         </div>
-        <div class="flex gap-4 mt-8">
-          <button onclick="generateAP()" class="flex-1 py-6 bg-blue-600 hover:bg-blue-700 rounded-3xl text-xl font-semibold">GENERATE AI FEEDBACK</button>
-          <button onclick="viewLastAP()" class="px-10 py-6 border border-zinc-700 hover:bg-zinc-800 rounded-3xl">View Last Report</button>
-        </div>
       </div>
     </div>
 
-    <!-- BE GENERATOR -->
+    <!-- ══════════════════════════════════════ BE GENERATOR -->
     <div id="be" class="screen p-8">
-      <div class="max-w-6xl mx-auto bg-zinc-900 rounded-3xl p-10">
-        <h1 class="text-4xl font-bold title-font mb-1">Business Excellence Generator</h1>
-        <div class="flex gap-8 mb-8 border-b border-zinc-800 pb-4">
-          <button onclick="setBETab(1)" id="be-tab1" class="be-tab font-medium text-lg border-b-4 border-blue-500 pb-1">OVERVIEWS</button>
-          <button onclick="setBETab(2)" id="be-tab2" class="be-tab font-medium text-lg text-zinc-400">BE SECTIONS</button>
+      <div class="max-w-7xl mx-auto bg-zinc-900 rounded-3xl p-10">
+        <div class="flex items-center justify-between mb-1">
+          <h1 class="text-4xl font-bold title-font">Business Excellence Generator</h1>
         </div>
+
+        <!-- Company select + controls row -->
+        <div class="flex gap-4 items-end mt-4 mb-6 border-b border-zinc-800 pb-6">
+          <div class="w-80">
+            <label class="block text-sm text-zinc-400 mb-2">Select Company</label>
+            <select id="be-company" class="w-full bg-zinc-800 border border-zinc-700 rounded-2xl px-5 py-3 text-base">
+              <option value="">Select Firm...</option>
+            </select>
+          </div>
+          <button onclick="generateBE()"
+            class="px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-2xl font-semibold transition-colors">
+            Generate
+          </button>
+          <button onclick="viewLastBE()"
+            class="px-6 py-3 border border-zinc-700 hover:bg-zinc-800 rounded-2xl text-sm transition-colors">
+            View Last Report
+          </button>
+          <!-- Tabs -->
+          <div class="ml-auto flex gap-6 border-b-0">
+            <button onclick="setBETab(1)" id="be-tab1" class="be-tab active font-medium text-base pb-1">OVERVIEWS</button>
+            <button onclick="setBETab(2)" id="be-tab2" class="be-tab font-medium text-base text-zinc-400 pb-1">BE SECTIONS</button>
+          </div>
+        </div>
+
+        <!-- Tab 1: Overviews -->
         <div id="be-tab-content-1">
           <div class="grid grid-cols-2 gap-8">
-            <div><label class="block text-xs text-zinc-400 mb-1">COMPANY BACKGROUND</label><textarea id="be-corp" rows="5" class="terminal-input w-full rounded-3xl p-6">Enter company background...</textarea></div>
-            <div><label class="block text-xs text-zinc-400 mb-1">AI COMPANY BACKGROUND</label><div class="relative"><textarea id="be-ai-corp" rows="5" readonly class="terminal-input w-full rounded-3xl p-6 pr-12"></textarea><button onclick="expandText('AI COMPANY BACKGROUND', document.getElementById('be-ai-corp').value)" class="absolute top-4 right-4 text-blue-400 hover:text-blue-300 text-2xl">⤢</button></div></div>
+            <div>
+              <label class="block text-xs text-zinc-400 mb-1 title-font">COMPANY BACKGROUND</label>
+              <textarea id="be-corp" rows="5" class="terminal-input w-full rounded-3xl p-6"></textarea>
+            </div>
+            <div>
+              <label class="block text-xs text-zinc-400 mb-1 title-font">AI COMPANY BACKGROUND</label>
+              <div class="relative">
+                <textarea id="be-ai-corp" rows="5" readonly class="terminal-input w-full rounded-3xl p-6 pr-12"></textarea>
+                <button onclick="expandText('AI COMPANY BACKGROUND', document.getElementById('be-ai-corp').value)" class="absolute top-4 right-4 text-blue-400 hover:text-blue-300 text-2xl">⤢</button>
+              </div>
+            </div>
           </div>
-          <div class="grid grid-cols-2 gap-8 mt-8">
-            <div><label class="block text-xs text-zinc-400 mb-1">HEALTH & SAFETY OVERVIEW</label><textarea id="be-hs" rows="5" class="terminal-input w-full rounded-3xl p-6"></textarea></div>
-            <div><label class="block text-xs text-zinc-400 mb-1">AI HEALTH & SAFETY OVERVIEW</label><div class="relative"><textarea id="be-ai-hs" rows="5" readonly class="terminal-input w-full rounded-3xl p-6 pr-12"></textarea><button onclick="expandText('AI HEALTH & SAFETY OVERVIEW', document.getElementById('be-ai-hs').value)" class="absolute top-4 right-4 text-blue-400 hover:text-blue-300 text-2xl">⤢</button></div></div>
+          <div class="grid grid-cols-2 gap-8 mt-6">
+            <div>
+              <label class="block text-xs text-zinc-400 mb-1 title-font">HEALTH &amp; SAFETY OVERVIEW</label>
+              <textarea id="be-hs" rows="5" class="terminal-input w-full rounded-3xl p-6"></textarea>
+            </div>
+            <div>
+              <label class="block text-xs text-zinc-400 mb-1 title-font">AI HEALTH &amp; SAFETY OVERVIEW</label>
+              <div class="relative">
+                <textarea id="be-ai-hs" rows="5" readonly class="terminal-input w-full rounded-3xl p-6 pr-12"></textarea>
+                <button onclick="expandText('AI HEALTH & SAFETY OVERVIEW', document.getElementById('be-ai-hs').value)" class="absolute top-4 right-4 text-blue-400 hover:text-blue-300 text-2xl">⤢</button>
+              </div>
+            </div>
           </div>
-          <div class="mt-8"><label class="block text-xs text-zinc-400 mb-1">EXECUTIVE SUMMARY</label><textarea id="be-exec" rows="5" class="terminal-input w-full rounded-3xl p-6"></textarea></div>
-          <div class="mt-4"><label class="block text-xs text-zinc-400 mb-1">AI EXECUTIVE SUMMARY</label><div class="relative"><textarea id="be-ai-exec" rows="5" readonly class="terminal-input w-full rounded-3xl p-6 pr-12"></textarea><button onclick="expandText('AI EXECUTIVE SUMMARY', document.getElementById('be-ai-exec').value)" class="absolute top-4 right-4 text-blue-400 hover:text-blue-300 text-2xl">⤢</button></div></div>
+          <div class="grid grid-cols-2 gap-8 mt-6">
+            <div>
+              <label class="block text-xs text-zinc-400 mb-1 title-font">EXECUTIVE SUMMARY</label>
+              <textarea id="be-exec" rows="5" class="terminal-input w-full rounded-3xl p-6"></textarea>
+            </div>
+            <div>
+              <label class="block text-xs text-zinc-400 mb-1 title-font">AI EXECUTIVE SUMMARY</label>
+              <div class="relative">
+                <textarea id="be-ai-exec" rows="5" readonly class="terminal-input w-full rounded-3xl p-6 pr-12"></textarea>
+                <button onclick="expandText('AI EXECUTIVE SUMMARY', document.getElementById('be-ai-exec').value)" class="absolute top-4 right-4 text-blue-400 hover:text-blue-300 text-2xl">⤢</button>
+              </div>
+            </div>
+          </div>
         </div>
+
+        <!-- Tab 2: BE Sections -->
         <div id="be-tab-content-2" class="hidden">
           <div class="grid grid-cols-2 gap-8">
-            <div class="space-y-6">
-              <div><label class="block text-xs text-zinc-400 mb-1">STRATEGY & LEADERSHIP</label><textarea id="be-strat" rows="3" class="terminal-input w-full rounded-3xl p-6"></textarea></div>
-              <div><label class="block text-xs text-zinc-400 mb-1">DESIGN & PM</label><textarea id="be-design" rows="3" class="terminal-input w-full rounded-3xl p-6"></textarea></div>
-              <div><label class="block text-xs text-zinc-400 mb-1">PEOPLE EXCELLENCE</label><textarea id="be-people" rows="3" class="terminal-input w-full rounded-3xl p-6"></textarea></div>
-              <div><label class="block text-xs text-zinc-400 mb-1">PROCESS EXCELLENCE</label><textarea id="be-process" rows="3" class="terminal-input w-full rounded-3xl p-6"></textarea></div>
-              <div><label class="block text-xs text-zinc-400 mb-1">QHSE</label><textarea id="be-qhse" rows="3" class="terminal-input w-full rounded-3xl p-6"></textarea></div>
-              <div><label class="block text-xs text-zinc-400 mb-1">SUPPLY CHAIN & SOCIAL VALUES</label><textarea id="be-scsv" rows="3" class="terminal-input w-full rounded-3xl p-6"></textarea></div>
+            <div class="space-y-5">
+              <div><label class="block text-xs text-zinc-400 mb-1 title-font">STRATEGY &amp; LEADERSHIP</label><textarea id="be-strat" rows="3" class="terminal-input w-full rounded-3xl p-5"></textarea></div>
+              <div><label class="block text-xs text-zinc-400 mb-1 title-font">DESIGN &amp; PM</label><textarea id="be-design" rows="3" class="terminal-input w-full rounded-3xl p-5"></textarea></div>
+              <div><label class="block text-xs text-zinc-400 mb-1 title-font">PEOPLE EXCELLENCE</label><textarea id="be-people" rows="3" class="terminal-input w-full rounded-3xl p-5"></textarea></div>
+              <div><label class="block text-xs text-zinc-400 mb-1 title-font">PROCESS EXCELLENCE</label><textarea id="be-process" rows="3" class="terminal-input w-full rounded-3xl p-5"></textarea></div>
+              <div><label class="block text-xs text-zinc-400 mb-1 title-font">QHSE</label><textarea id="be-qhse" rows="3" class="terminal-input w-full rounded-3xl p-5"></textarea></div>
+              <div><label class="block text-xs text-zinc-400 mb-1 title-font">SUPPLY CHAIN &amp; SOCIAL VALUES</label><textarea id="be-scsv" rows="3" class="terminal-input w-full rounded-3xl p-5"></textarea></div>
             </div>
-            <div class="space-y-6">
-              <div><label class="block text-xs text-zinc-400 mb-1">AI STRATEGY & LEADERSHIP</label><div class="relative"><textarea id="be-ai-strat" rows="3" readonly class="terminal-input w-full rounded-3xl p-6 pr-12"></textarea><button onclick="expandText('AI STRATEGY & LEADERSHIP', document.getElementById('be-ai-strat').value)" class="absolute top-4 right-4 text-blue-400 hover:text-blue-300 text-2xl">⤢</button></div></div>
-              <div><label class="block text-xs text-zinc-400 mb-1">AI DESIGN & PM</label><div class="relative"><textarea id="be-ai-design" rows="3" readonly class="terminal-input w-full rounded-3xl p-6 pr-12"></textarea><button onclick="expandText('AI DESIGN & PM', document.getElementById('be-ai-design').value)" class="absolute top-4 right-4 text-blue-400 hover:text-blue-300 text-2xl">⤢</button></div></div>
-              <div><label class="block text-xs text-zinc-400 mb-1">AI PEOPLE EXCELLENCE</label><div class="relative"><textarea id="be-ai-people" rows="3" readonly class="terminal-input w-full rounded-3xl p-6 pr-12"></textarea><button onclick="expandText('AI PEOPLE EXCELLENCE', document.getElementById('be-ai-people').value)" class="absolute top-4 right-4 text-blue-400 hover:text-blue-300 text-2xl">⤢</button></div></div>
-              <div><label class="block text-xs text-zinc-400 mb-1">AI PROCESS EXCELLENCE</label><div class="relative"><textarea id="be-ai-process" rows="3" readonly class="terminal-input w-full rounded-3xl p-6 pr-12"></textarea><button onclick="expandText('AI PROCESS EXCELLENCE', document.getElementById('be-ai-process').value)" class="absolute top-4 right-4 text-blue-400 hover:text-blue-300 text-2xl">⤢</button></div></div>
-              <div><label class="block text-xs text-zinc-400 mb-1">AI QHSE</label><div class="relative"><textarea id="be-ai-qhse" rows="3" readonly class="terminal-input w-full rounded-3xl p-6 pr-12"></textarea><button onclick="expandText('AI QHSE', document.getElementById('be-ai-qhse').value)" class="absolute top-4 right-4 text-blue-400 hover:text-blue-300 text-2xl">⤢</button></div></div>
-              <div><label class="block text-xs text-zinc-400 mb-1">AI SUPPLY CHAIN & SOCIAL VALUES</label><div class="relative"><textarea id="be-ai-scsv" rows="3" readonly class="terminal-input w-full rounded-3xl p-6 pr-12"></textarea><button onclick="expandText('AI SUPPLY CHAIN & SOCIAL VALUES', document.getElementById('be-ai-scsv').value)" class="absolute top-4 right-4 text-blue-400 hover:text-blue-300 text-2xl">⤢</button></div></div>
+            <div class="space-y-5">
+              <div><label class="block text-xs text-zinc-400 mb-1 title-font">AI STRATEGY &amp; LEADERSHIP</label><div class="relative"><textarea id="be-ai-strat" rows="3" readonly class="terminal-input w-full rounded-3xl p-5 pr-12"></textarea><button onclick="expandText('AI STRATEGY & LEADERSHIP', document.getElementById('be-ai-strat').value)" class="absolute top-3 right-3 text-blue-400 hover:text-blue-300 text-2xl">⤢</button></div></div>
+              <div><label class="block text-xs text-zinc-400 mb-1 title-font">AI DESIGN &amp; PM</label><div class="relative"><textarea id="be-ai-design" rows="3" readonly class="terminal-input w-full rounded-3xl p-5 pr-12"></textarea><button onclick="expandText('AI DESIGN & PM', document.getElementById('be-ai-design').value)" class="absolute top-3 right-3 text-blue-400 hover:text-blue-300 text-2xl">⤢</button></div></div>
+              <div><label class="block text-xs text-zinc-400 mb-1 title-font">AI PEOPLE EXCELLENCE</label><div class="relative"><textarea id="be-ai-people" rows="3" readonly class="terminal-input w-full rounded-3xl p-5 pr-12"></textarea><button onclick="expandText('AI PEOPLE EXCELLENCE', document.getElementById('be-ai-people').value)" class="absolute top-3 right-3 text-blue-400 hover:text-blue-300 text-2xl">⤢</button></div></div>
+              <div><label class="block text-xs text-zinc-400 mb-1 title-font">AI PROCESS EXCELLENCE</label><div class="relative"><textarea id="be-ai-process" rows="3" readonly class="terminal-input w-full rounded-3xl p-5 pr-12"></textarea><button onclick="expandText('AI PROCESS EXCELLENCE', document.getElementById('be-ai-process').value)" class="absolute top-3 right-3 text-blue-400 hover:text-blue-300 text-2xl">⤢</button></div></div>
+              <div><label class="block text-xs text-zinc-400 mb-1 title-font">AI QHSE</label><div class="relative"><textarea id="be-ai-qhse" rows="3" readonly class="terminal-input w-full rounded-3xl p-5 pr-12"></textarea><button onclick="expandText('AI QHSE', document.getElementById('be-ai-qhse').value)" class="absolute top-3 right-3 text-blue-400 hover:text-blue-300 text-2xl">⤢</button></div></div>
+              <div><label class="block text-xs text-zinc-400 mb-1 title-font">AI SUPPLY CHAIN &amp; SOCIAL VALUES</label><div class="relative"><textarea id="be-ai-scsv" rows="3" readonly class="terminal-input w-full rounded-3xl p-5 pr-12"></textarea><button onclick="expandText('AI SUPPLY CHAIN & SOCIAL VALUES', document.getElementById('be-ai-scsv').value)" class="absolute top-3 right-3 text-blue-400 hover:text-blue-300 text-2xl">⤢</button></div></div>
             </div>
           </div>
         </div>
-        <button onclick="generateBE()" class="mt-10 w-full py-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl text-2xl font-bold">GENERATE FULL BE REPORT</button>
       </div>
     </div>
 
-    <!-- SECTOR SPECIFIC -->
+    <!-- ══════════════════════════════════════ SECTOR SPECIFIC -->
     <div id="ss" class="screen p-8">
       <div class="max-w-5xl mx-auto bg-zinc-900 rounded-3xl p-10">
-        <h1 class="text-4xl font-bold title-font mb-8">Sector Specific Feedback Generator</h1>
-        <div class="mb-6">
-          <label class="block text-sm text-zinc-400 mb-2">Company</label>
-          <select id="ss-company" class="w-full bg-zinc-800 border border-zinc-700 rounded-2xl px-6 py-4">
-            <option>Select Firm...</option>
-          </select>
+        <h1 class="text-4xl font-bold title-font mb-6">Sector Specific Feedback Generator</h1>
+
+        <!-- Company + controls -->
+        <div class="flex gap-4 items-end mb-8">
+          <div class="flex-1">
+            <label class="block text-sm text-zinc-400 mb-2">Company</label>
+            <select id="ss-company" class="w-full bg-zinc-800 border border-zinc-700 rounded-2xl px-6 py-4">
+              <option value="">Select Firm...</option>
+            </select>
+          </div>
+          <button onclick="generateSS()"
+            class="px-8 py-4 bg-emerald-600 hover:bg-emerald-700 rounded-2xl font-semibold transition-colors">
+            Generate SS Report
+          </button>
+          <button onclick="viewLastSS()"
+            class="px-6 py-4 border border-zinc-700 hover:bg-zinc-800 rounded-2xl text-sm transition-colors">
+            View Last Report
+          </button>
         </div>
+
         <div class="grid grid-cols-2 gap-8">
-          <div><label class="block text-sm text-zinc-400 mb-2">Executive Summary</label><textarea id="ss-exec" rows="8" class="terminal-input w-full rounded-3xl p-6">Enter executive summary notes...</textarea></div>
-          <div><label class="block text-sm text-zinc-400 mb-2">AI Executive Summary</label><div class="relative"><textarea id="ss-ai-exec" rows="8" readonly class="terminal-input w-full rounded-3xl p-6 pr-12"></textarea><button onclick="expandText('AI Executive Summary', document.getElementById('ss-ai-exec').value)" class="absolute top-4 right-4 text-blue-400 hover:text-blue-300 text-2xl">⤢</button></div></div>
+          <div>
+            <label class="block text-sm text-zinc-400 mb-2 title-font">EXECUTIVE SUMMARY</label>
+            <textarea id="ss-exec" rows="8" placeholder="Enter executive summary notes from the assessment..." class="terminal-input w-full rounded-3xl p-6"></textarea>
+          </div>
+          <div>
+            <label class="block text-sm text-zinc-400 mb-2 title-font">AI EXECUTIVE SUMMARY</label>
+            <div class="relative">
+              <textarea id="ss-ai-exec" rows="8" readonly class="terminal-input w-full rounded-3xl p-6 pr-12"></textarea>
+              <button onclick="expandText('AI Executive Summary', document.getElementById('ss-ai-exec').value)" class="absolute top-4 right-4 text-blue-400 hover:text-blue-300 text-2xl">⤢</button>
+            </div>
+          </div>
         </div>
         <div class="grid grid-cols-2 gap-8 mt-8">
-          <div><label class="block text-sm text-zinc-400 mb-2">Additional Guidance</label><textarea id="ss-guidance" rows="8" class="terminal-input w-full rounded-3xl p-6">Enter additional guidance notes...</textarea></div>
-          <div><label class="block text-sm text-zinc-400 mb-2">AI Additional Guidance</label><div class="relative"><textarea id="ss-ai-guidance" rows="8" readonly class="terminal-input w-full rounded-3xl p-6 pr-12"></textarea><button onclick="expandText('AI Additional Guidance', document.getElementById('ss-ai-guidance').value)" class="absolute top-4 right-4 text-blue-400 hover:text-blue-300 text-2xl">⤢</button></div></div>
+          <div>
+            <label class="block text-sm text-zinc-400 mb-2 title-font">ADDITIONAL GUIDANCE</label>
+            <textarea id="ss-guidance" rows="8" placeholder="Enter additional guidance notes..." class="terminal-input w-full rounded-3xl p-6"></textarea>
+          </div>
+          <div>
+            <label class="block text-sm text-zinc-400 mb-2 title-font">AI ADDITIONAL GUIDANCE</label>
+            <div class="relative">
+              <textarea id="ss-ai-guidance" rows="8" readonly class="terminal-input w-full rounded-3xl p-6 pr-12"></textarea>
+              <button onclick="expandText('AI Additional Guidance', document.getElementById('ss-ai-guidance').value)" class="absolute top-4 right-4 text-blue-400 hover:text-blue-300 text-2xl">⤢</button>
+            </div>
+          </div>
         </div>
-        <button onclick="generateSS()" class="mt-10 w-full py-7 bg-emerald-600 hover:bg-emerald-700 rounded-3xl text-xl font-semibold">GENERATE SS REPORT</button>
       </div>
     </div>
 
-  </div>
-</div>
+  </div><!-- end main content -->
+</div><!-- end app -->
 
-<!-- Edit Item Modal -->
+<!-- ══════════════════════════════════════ EDIT MODAL -->
 <div id="editModal" class="modal fixed inset-0 bg-black/80 items-center justify-center z-50">
   <div class="bg-zinc-900 w-full max-w-2xl mx-4 rounded-3xl overflow-hidden">
     <div class="bg-zinc-800 p-6 flex justify-between items-center">
@@ -330,7 +466,7 @@
   </div>
 </div>
 
-<!-- Expand Modal -->
+<!-- ══════════════════════════════════════ EXPAND MODAL -->
 <div id="expandModal" class="modal fixed inset-0 bg-black/80 items-center justify-center z-50">
   <div class="bg-zinc-900 w-full max-w-5xl mx-4 rounded-3xl overflow-hidden">
     <div class="bg-zinc-800 p-6 flex justify-between items-center">
@@ -344,25 +480,39 @@
   </div>
 </div>
 
-<!-- Toast -->
+<!-- ══════════════════════════════════════ PROCESSING OVERLAY (shared) -->
+<div id="processing-overlay" class="overlay hidden">
+  <div class="overlay-card">
+    <div class="spinner-lg mx-auto mb-6"></div>
+    <div id="processing-title" class="text-xl font-semibold title-font mb-2">Processing...</div>
+    <div id="processing-msg" class="text-zinc-400 text-sm">Please wait — this may take up to 3 minutes.</div>
+    <div id="processing-poll" class="text-zinc-600 text-xs mt-4">Poll 0 / 18</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ TOAST -->
 <div id="toast" class="hidden fixed bottom-8 right-8 bg-zinc-900 border border-emerald-500 text-emerald-400 px-8 py-4 rounded-2xl flex items-center gap-3 shadow-2xl z-50">
   <i class="fa-solid fa-circle-check"></i><span id="toast-text"></span>
 </div>
 
 <script>
 // ═══════════════════════════════════════════════════════════
-// CONFIG — replace these with your actual values
+// CONFIG — set your actual values here
 // ═══════════════════════════════════════════════════════════
 const CONFIG = {
-  clientId:   "ec0a6806-59e8-4ea9-8ff5-6bdb1ba87baf",           // Azure App Registration → Application (client) ID
-  tenantId:   "d44192f5-1023-458c-9cb3-9ff7e9c6d4ad",           // Azure AD → Overview → Tenant ID
-  spSiteUrl:  "https://nuccol.sharepoint.com/sites/CHEATMODE", // your SharePoint site URL
-  // SharePoint list names (must match exactly)
+  clientId:  "ec0a6806-59e8-4ea9-8ff5-6bdb1ba87baf",
+  tenantId:  "d44192f5-1023-458c-9cb3-9ff7e9c6d4ad",
+  spSiteUrl: "https://nuccol.sharepoint.com/sites/CHEATMODE",
   lists: {
-    news:     "NewsletterNews",
-    events:   "NewsletterEvents",
-    tenders:  "NewsletterContracts",
-    nucCol:   "NewsletterNucColNews"
+    news:             "NewsletterNews",
+    events:           "NewsletterEvents",
+    tenders:          "NewsletterContracts",
+    nucCol:           "NewsletterNucColNews",
+    newsletterCtrl:   "NewsletterControl",
+    companies:        "Companies",
+    apGenerator:      "APGenerator",
+    beGenerator:      "BEGenerator",
+    ssGenerator:      "SSGenerator"
   }
 };
 
@@ -378,13 +528,19 @@ const msalConfig = {
   cache: { cacheLocation: "sessionStorage" }
 };
 
-let msalInstance = null;
-const spScopes = [`${CONFIG.spSiteUrl.split('/sites/')[0]}/.default`];
-
+let msalInstance  = null;
+const spScopes    = [`${CONFIG.spSiteUrl.split('/sites/')[0]}/.default`];
 let currentAccount = null;
-let nlCurrentTab = 1;
-let nlData = { news: [], events: [], tenders: [], nucCol: [] };
-let editState = {};   // holds item being edited
+
+// App state
+let nlCurrentTab  = 1;
+let nlData        = { news: [], events: [], tenders: [], nucCol: [] };
+let editState     = {};
+let nlDraftURL    = '';
+let nlWordPressURL = '';
+let nlPollTimer   = null;
+let genPollTimer  = null;
+let pollCount     = 0;
 
 // ═══════════════════════════════════════════════════════════
 // AUTH
@@ -398,46 +554,27 @@ async function initAuth() {
     return;
   }
 
-  // Wire sign-in button now that MSAL is ready
-  const btnLogin = document.getElementById('btn-login');
-  if (btnLogin) {
-    btnLogin.addEventListener('click', signIn);
-  }
+  document.getElementById('btn-login').addEventListener('click', signIn);
 
-  // Handle redirect response (after Microsoft login redirect back)
   try {
     const response = await msalInstance.handleRedirectPromise();
-    if (response) {
-      currentAccount = response.account;
-      onSignedIn();
-      return;
-    }
+    if (response) { currentAccount = response.account; onSignedIn(); return; }
   } catch(e) {
-    setLoginStatus("⚠️ Auth error: " + e.message, true);
-    return;
+    setLoginStatus("⚠️ Auth error: " + e.message, true); return;
   }
 
-  // Check if already signed in
   const accounts = msalInstance.getAllAccounts();
-  if (accounts.length > 0) {
-    currentAccount = accounts[0];
-    onSignedIn();
-  }
+  if (accounts.length > 0) { currentAccount = accounts[0]; onSignedIn(); }
 }
 
 async function signIn() {
   setLoginStatus('<span class="spinner"></span> Connecting to Microsoft...');
   try {
-    // Try popup first, fall back to redirect
-    const response = await msalInstance.loginPopup({
-      scopes: spScopes,
-      prompt: "select_account"
-    });
+    const response = await msalInstance.loginPopup({ scopes: spScopes, prompt: "select_account" });
     currentAccount = response.account;
     onSignedIn();
   } catch(e) {
     if (e.errorCode === "popup_window_error" || e.errorCode === "empty_window_error") {
-      // Popup blocked — use redirect
       msalInstance.loginRedirect({ scopes: spScopes });
     } else {
       setLoginStatus("⚠️ Sign in failed: " + e.message, true);
@@ -452,32 +589,26 @@ function signOut() {
 }
 
 function onSignedIn() {
-  // Hide login screen, show app
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.removeProperty('display');
-
-  // Populate user info in sidebar
-  const name = currentAccount.name || currentAccount.username;
+  const name  = currentAccount.name || currentAccount.username;
   const email = currentAccount.username;
-  document.getElementById('user-name').textContent = name;
+  document.getElementById('user-name').textContent  = name;
   document.getElementById('user-email').textContent = email;
   document.getElementById('user-avatar').textContent = name.charAt(0).toUpperCase();
-
-  // Set date
   document.getElementById('dash-date').textContent = new Date().toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
-
-  // Load data
   loadAllData();
+  loadCompanies();
 }
 
 async function getToken() {
   const request = { scopes: spScopes, account: currentAccount };
   try {
-    const response = await msalInstance.acquireTokenSilent(request);
-    return response.accessToken;
+    const r = await msalInstance.acquireTokenSilent(request);
+    return r.accessToken;
   } catch(e) {
-    const response = await msalInstance.acquireTokenPopup(request);
-    return response.accessToken;
+    const r = await msalInstance.acquireTokenPopup(request);
+    return r.accessToken;
   }
 }
 
@@ -490,15 +621,13 @@ function setLoginStatus(html, isError = false) {
 // ═══════════════════════════════════════════════════════════
 // SHAREPOINT REST API
 // ═══════════════════════════════════════════════════════════
-async function spGet(listName, select = "*", filter = "") {
+async function spGet(listName, select = "*", filter = "", orderBy = "") {
   const token = await getToken();
-  let url = `${CONFIG.spSiteUrl}/_api/web/lists/getbytitle('${listName}')/items?$select=${select}&$top=500`;
-  if (filter) url += `&$filter=${encodeURIComponent(filter)}`;
+  let url = `${CONFIG.spSiteUrl}/_api/web/lists/getbytitle('${encodeURIComponent(listName)}')/items?$select=${select}&$top=500`;
+  if (filter)  url += `&$filter=${encodeURIComponent(filter)}`;
+  if (orderBy) url += `&$orderby=${encodeURIComponent(orderBy)}`;
   const res = await fetch(url, {
-    headers: {
-      "Authorization": "Bearer " + token,
-      "Accept": "application/json;odata=nometadata"
-    }
+    headers: { "Authorization": "Bearer " + token, "Accept": "application/json;odata=nometadata" }
   });
   if (!res.ok) throw new Error(`GET ${listName}: ${res.status} ${res.statusText}`);
   const data = await res.json();
@@ -507,7 +636,7 @@ async function spGet(listName, select = "*", filter = "") {
 
 async function spPatch(listName, itemId, fields) {
   const token = await getToken();
-  const url = `${CONFIG.spSiteUrl}/_api/web/lists/getbytitle('${listName}')/items(${itemId})`;
+  const url = `${CONFIG.spSiteUrl}/_api/web/lists/getbytitle('${encodeURIComponent(listName)}')/items(${itemId})`;
   const res = await fetch(url, {
     method: "POST",
     headers: {
@@ -522,9 +651,25 @@ async function spPatch(listName, itemId, fields) {
   if (!res.ok) throw new Error(`PATCH ${listName} #${itemId}: ${res.status} ${res.statusText}`);
 }
 
+async function spPost(listName, fields) {
+  const token = await getToken();
+  const url = `${CONFIG.spSiteUrl}/_api/web/lists/getbytitle('${encodeURIComponent(listName)}')/items`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer " + token,
+      "Accept": "application/json;odata=nometadata",
+      "Content-Type": "application/json;odata=nometadata"
+    },
+    body: JSON.stringify(fields)
+  });
+  if (!res.ok) throw new Error(`POST ${listName}: ${res.status} ${res.statusText}`);
+  return await res.json();
+}
+
 async function spDelete(listName, itemId) {
   const token = await getToken();
-  const url = `${CONFIG.spSiteUrl}/_api/web/lists/getbytitle('${listName}')/items(${itemId})`;
+  const url = `${CONFIG.spSiteUrl}/_api/web/lists/getbytitle('${encodeURIComponent(listName)}')/items(${itemId})`;
   const res = await fetch(url, {
     method: "POST",
     headers: {
@@ -535,6 +680,16 @@ async function spDelete(listName, itemId) {
     }
   });
   if (!res.ok) throw new Error(`DELETE ${listName} #${itemId}: ${res.status} ${res.statusText}`);
+}
+
+async function spDeleteByFilter(listName, filter) {
+  // Delete all items matching filter (used to clear old generator rows)
+  try {
+    const items = await spGet(listName, "ID", filter);
+    for (const item of items) {
+      await spDelete(listName, item.ID);
+    }
+  } catch(e) { /* ok to fail silently */ }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -550,27 +705,51 @@ async function loadAllData() {
       spGet(CONFIG.lists.tenders, "ID,Title,Summary,URL,Organisation,ClosingDate,Selected"),
       spGet(CONFIG.lists.nucCol,  "ID,Title,Description,URL,DatePublished,Selected")
     ]);
-
     nlData.news    = news;
     nlData.events  = events;
     nlData.tenders = tenders;
     nlData.nucCol  = nucCol;
-
-    // Update stats
-    document.getElementById('stat-articles').textContent = news.length;
-    document.getElementById('stat-events').textContent   = events.length;
-    document.getElementById('stat-tenders').textContent  = tenders.length;
-    document.getElementById('stat-nucol').textContent    = nucCol.length;
-    document.getElementById('stat-news').textContent     = news.length;
-
+    updateStats();
     document.getElementById('sp-status').innerHTML = '<span class="text-emerald-400">✓ SharePoint connected</span>';
     document.getElementById('nl-sync-status').textContent = `${news.length + events.length + tenders.length + nucCol.length} items loaded`;
-
     renderNL();
   } catch(e) {
     document.getElementById('sp-status').innerHTML = `<span class="text-red-400">⚠️ ${e.message}</span>`;
     document.getElementById('nl-sync-status').textContent = 'Error loading data';
-    showToast("⚠️ SharePoint error: " + e.message);
+    showToast("⚠️ SharePoint error: " + e.message, 'error');
+  }
+}
+
+function updateStats() {
+  const n = nlData.news.length, ev = nlData.events.length, t = nlData.tenders.length, nc = nlData.nucCol.length;
+  document.getElementById('stat-articles').textContent = n;
+  document.getElementById('stat-events').textContent   = ev;
+  document.getElementById('stat-tenders').textContent  = t;
+  document.getElementById('stat-nucol').textContent    = nc;
+  document.getElementById('stat-news').textContent     = n;
+  document.getElementById('tab-count-1').textContent = `(${n})`;
+  document.getElementById('tab-count-2').textContent = `(${ev})`;
+  document.getElementById('tab-count-3').textContent = `(${t})`;
+  document.getElementById('tab-count-4').textContent = `(${nc})`;
+}
+
+async function loadCompanies() {
+  try {
+    const companies = await spGet(CONFIG.lists.companies, "ID,Title,CompanyID", "", "Title asc");
+    const selects = ['ap-company', 'be-company', 'ss-company'];
+    selects.forEach(selId => {
+      const sel = document.getElementById(selId);
+      sel.innerHTML = '<option value="">Select Firm...</option>';
+      companies.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.CompanyID || c.ID;
+        opt.dataset.name = c.Title;
+        opt.textContent = c.Title;
+        sel.appendChild(opt);
+      });
+    });
+  } catch(e) {
+    showToast("⚠️ Could not load companies: " + e.message, 'error');
   }
 }
 
@@ -581,6 +760,449 @@ async function refreshAllLists() {
 }
 
 // ═══════════════════════════════════════════════════════════
+// NEWSLETTER — SCRAPING
+// ═══════════════════════════════════════════════════════════
+async function nlScrape(scrapeType) {
+  setScrapeButtonsDisabled(true);
+  showProcessingOverlay(`⏳ Scraping ${scrapeType}...`, 'Triggering scrape via SharePoint. This may take 1–3 minutes.');
+
+  try {
+    // Patch or create the control row
+    const existing = await spGet(CONFIG.lists.newsletterCtrl, "ID", "Title eq 'NLControl'");
+    if (existing.length > 0) {
+      await spPatch(CONFIG.lists.newsletterCtrl, existing[0].ID, {
+        Title: "NLControl", Status: "Pending", ScrapeType: scrapeType
+      });
+    } else {
+      await spPost(CONFIG.lists.newsletterCtrl, {
+        Title: "NLControl", Status: "Pending", ScrapeType: scrapeType
+      });
+    }
+  } catch(e) {
+    hideProcessingOverlay();
+    setScrapeButtonsDisabled(false);
+    showToast("⚠️ Could not trigger scrape: " + e.message, 'error');
+    return;
+  }
+
+  pollCount = 0;
+  clearInterval(nlPollTimer);
+  nlPollTimer = setInterval(() => pollNLScrape(scrapeType), 15000);
+}
+
+async function pollNLScrape(scrapeType) {
+  pollCount++;
+  updatePollCount(pollCount, 36);
+  try {
+    const rows = await spGet(CONFIG.lists.newsletterCtrl, "ID,Title,Status,ScrapeType", "Status eq 'Complete' or Status eq 'Error'");
+    if (rows.length > 0) {
+      clearInterval(nlPollTimer);
+      hideProcessingOverlay();
+      setScrapeButtonsDisabled(false);
+      if (rows[0].Status === 'Complete') {
+        await loadAllData();
+        showToast(`✅ Scrape complete: ${rows[0].ScrapeType}`);
+      } else {
+        showToast("⚠️ Scrape returned an error. Check Azure Function logs.", 'error');
+      }
+      return;
+    }
+  } catch(e) { /* keep polling */ }
+
+  if (pollCount >= 36) {
+    clearInterval(nlPollTimer);
+    hideProcessingOverlay();
+    setScrapeButtonsDisabled(false);
+    showToast("⏰ Scrape timed out after 9 minutes.", 'error');
+  }
+}
+
+function setScrapeButtonsDisabled(disabled) {
+  ['btn-scrape-news','btn-scrape-events','btn-scrape-contracts','btn-scrape-all','btn-refresh','btn-clear'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) { btn.disabled = disabled; btn.classList.toggle('opacity-50', disabled); btn.classList.toggle('cursor-not-allowed', disabled); }
+  });
+}
+
+async function nlClearAll() {
+  if (!confirm('Clear all newsletter items from SharePoint? This cannot be undone.')) return;
+  showToast("Clearing...");
+  try {
+    const allItems = [
+      ...nlData.news.map(i => ({list: CONFIG.lists.news, id: i.ID})),
+      ...nlData.events.map(i => ({list: CONFIG.lists.events, id: i.ID})),
+      ...nlData.tenders.map(i => ({list: CONFIG.lists.tenders, id: i.ID})),
+      ...nlData.nucCol.map(i => ({list: CONFIG.lists.nucCol, id: i.ID}))
+    ];
+    for (const item of allItems) {
+      await spDelete(item.list, item.id);
+    }
+    nlData = { news: [], events: [], tenders: [], nucCol: [] };
+    updateStats();
+    renderNL();
+    showToast("✅ All lists cleared");
+  } catch(e) {
+    showToast("⚠️ Clear failed: " + e.message, 'error');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// NEWSLETTER — GENERATE
+// ═══════════════════════════════════════════════════════════
+async function generateNewsletter() {
+  const selectedCount =
+    nlData.news.filter(i => i.Selected).length +
+    nlData.events.filter(i => i.Selected).length +
+    nlData.tenders.filter(i => i.Selected).length +
+    nlData.nucCol.filter(i => i.Selected).length;
+
+  if (selectedCount === 0) {
+    showToast("⚠️ Please select at least one item before generating.", 'warn');
+    return;
+  }
+
+  document.getElementById('nl-gen-status').textContent = `⏳ Generating... (0 polls)`;
+  document.getElementById('btn-nl-generate').disabled = true;
+  showProcessingOverlay('📧 Generating Newsletter...', `Creating Outlook draft from ${selectedCount} selected items. This may take up to 2 minutes.`);
+
+  const tsKey = `NL-Generate-${Date.now()}`;
+  try {
+    await spPost(CONFIG.lists.newsletterCtrl, {
+      Title: tsKey, Status: "Pending", ScrapeType: "GenerateNewsletter"
+    });
+  } catch(e) {
+    hideProcessingOverlay();
+    document.getElementById('btn-nl-generate').disabled = false;
+    showToast("⚠️ Could not trigger generation: " + e.message, 'error');
+    return;
+  }
+
+  pollCount = 0;
+  nlDraftURL = '';
+  nlWordPressURL = '';
+  clearInterval(genPollTimer);
+  genPollTimer = setInterval(() => pollNLGenerate(tsKey), 10000);
+}
+
+async function pollNLGenerate(tsKey) {
+  pollCount++;
+  document.getElementById('nl-gen-status').textContent = `⏳ Generating... (${pollCount} polls)`;
+  updatePollCount(pollCount, 18);
+
+  try {
+    const rows = await spGet(
+      CONFIG.lists.newsletterCtrl,
+      "ID,Title,Status,DraftURL,WordPressURL",
+      `Title eq '${tsKey}' and (Status eq 'Complete' or Status eq 'Error')`
+    );
+    if (rows.length > 0) {
+      clearInterval(genPollTimer);
+      hideProcessingOverlay();
+      document.getElementById('btn-nl-generate').disabled = false;
+
+      if (rows[0].Status === 'Complete') {
+        nlDraftURL      = rows[0].DraftURL      || rows[0][' DraftURL'] || '';
+        nlWordPressURL  = rows[0].WordPressURL   || '';
+
+        const outlookBtn = document.getElementById('btn-nl-outlook');
+        const wpBtn      = document.getElementById('btn-nl-wp');
+        if (nlDraftURL) {
+          outlookBtn.disabled = false;
+          outlookBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+        if (nlWordPressURL) {
+          wpBtn.disabled = false;
+          wpBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+
+        const selCount = nlData.news.filter(i=>i.Selected).length + nlData.events.filter(i=>i.Selected).length +
+                         nlData.tenders.filter(i=>i.Selected).length + nlData.nucCol.filter(i=>i.Selected).length;
+        document.getElementById('nl-gen-status').innerHTML = `<span class="text-emerald-400">✅ Draft ready — ${selCount} items</span>`;
+        showToast("✅ Newsletter generated! Draft is ready.");
+      } else {
+        document.getElementById('nl-gen-status').innerHTML = `<span class="text-red-400">❌ Generation failed</span>`;
+        showToast("❌ Newsletter generation failed. Check Azure Function logs.", 'error');
+      }
+      return;
+    }
+  } catch(e) { /* keep polling */ }
+
+  if (pollCount >= 18) {
+    clearInterval(genPollTimer);
+    hideProcessingOverlay();
+    document.getElementById('btn-nl-generate').disabled = false;
+    document.getElementById('nl-gen-status').innerHTML = `<span class="text-amber-400">⏰ Timed out</span>`;
+    showToast("⏰ Timed out waiting for newsletter generation.", 'warn');
+  }
+}
+
+function openOutlookDraft()  { if (nlDraftURL)     window.open(nlDraftURL, '_blank'); }
+function openWordPress()     { if (nlWordPressURL)  window.open(nlWordPressURL, '_blank'); }
+
+// ═══════════════════════════════════════════════════════════
+// AP GENERATOR
+// ═══════════════════════════════════════════════════════════
+async function generateAP() {
+  const companyId = document.getElementById('ap-company').value;
+  const companyName = document.getElementById('ap-company').selectedOptions[0]?.dataset.name || '';
+  if (!companyId) { showToast("⚠️ Please select a company.", 'warn'); return; }
+
+  const input = document.getElementById('ap-input').value;
+  document.getElementById('ap-ai').value = '';
+
+  showProcessingOverlay('⏳ Generating AP Feedback...', 'AI is analysing the action plan. Please wait.');
+
+  try {
+    // Delete existing rows for this company
+    await spDeleteByFilter(CONFIG.lists.apGenerator, `Title eq '${companyId}'`);
+    // Create new pending row
+    await spPost(CONFIG.lists.apGenerator, {
+      Title: String(companyId),
+      CompanyName: companyName,
+      Status: "Pending",
+      APFeedback: input.substring(0, 4000)
+    });
+  } catch(e) {
+    hideProcessingOverlay();
+    showToast("⚠️ Could not start AP generation: " + e.message, 'error');
+    return;
+  }
+
+  pollCount = 0;
+  clearInterval(genPollTimer);
+  genPollTimer = setInterval(() => pollAPGenerate(companyId), 10000);
+}
+
+async function pollAPGenerate(companyId) {
+  pollCount++;
+  updatePollCount(pollCount, 18);
+  try {
+    const rows = await spGet(
+      CONFIG.lists.apGenerator,
+      "ID,Title,Status,AI_APFeedback",
+      `Title eq '${companyId}' and Status eq 'Complete'`
+    );
+    if (rows.length > 0) {
+      clearInterval(genPollTimer);
+      hideProcessingOverlay();
+      document.getElementById('ap-ai').value = rows[0].AI_APFeedback || '';
+      showToast("✅ Action Plan feedback generated successfully.");
+      return;
+    }
+    // Check for error
+    const errRows = await spGet(CONFIG.lists.apGenerator, "ID,Status", `Title eq '${companyId}' and Status eq 'Error'`);
+    if (errRows.length > 0 || pollCount >= 18) {
+      clearInterval(genPollTimer);
+      hideProcessingOverlay();
+      showToast(pollCount >= 18 ? "⏰ AP generation timed out." : "❌ AP generation failed.", 'error');
+    }
+  } catch(e) { /* keep polling */ }
+}
+
+async function viewLastAP() {
+  const companyId = document.getElementById('ap-company').value;
+  if (!companyId) { showToast("⚠️ Please select a company first.", 'warn'); return; }
+  try {
+    const rows = await spGet(
+      CONFIG.lists.apGenerator,
+      "ID,AI_APFeedback",
+      `Title eq '${companyId}' and Status eq 'Complete'`,
+      "ID desc"
+    );
+    if (!rows.length) { showToast("No completed report found for this company.", 'warn'); return; }
+    document.getElementById('ap-ai').value = rows[0].AI_APFeedback || '';
+    showToast("✅ Last report loaded.");
+  } catch(e) {
+    showToast("⚠️ Could not load last report: " + e.message, 'error');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// BE GENERATOR
+// ═══════════════════════════════════════════════════════════
+async function generateBE() {
+  const companyId   = document.getElementById('be-company').value;
+  const companyName = document.getElementById('be-company').selectedOptions[0]?.dataset.name || '';
+  if (!companyId) { showToast("⚠️ Please select a company.", 'warn'); return; }
+
+  // Clear AI outputs
+  ['be-ai-corp','be-ai-hs','be-ai-exec','be-ai-strat','be-ai-design','be-ai-people','be-ai-process','be-ai-qhse','be-ai-scsv'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+
+  showProcessingOverlay('⏳ Generating BE Report...', 'AI is generating all sections. This may take up to 3 minutes.');
+
+  const fields = {
+    Title:       String(companyId),
+    CompanyName: companyName,
+    field_2:     "Pending",
+    field_3:     document.getElementById('be-strat').value,
+    field_4:     document.getElementById('be-design').value,
+    field_5:     document.getElementById('be-people').value,
+    field_6:     document.getElementById('be-process').value,
+    field_7:     document.getElementById('be-qhse').value,
+    field_8:     document.getElementById('be-scsv').value,
+    field_9:     document.getElementById('be-corp').value,
+    field_10:    document.getElementById('be-hs').value,
+    field_11:    document.getElementById('be-exec').value
+  };
+
+  try {
+    await spDeleteByFilter(CONFIG.lists.beGenerator, `Title eq '${companyId}'`);
+    await spPost(CONFIG.lists.beGenerator, fields);
+  } catch(e) {
+    hideProcessingOverlay();
+    showToast("⚠️ Could not start BE generation: " + e.message, 'error');
+    return;
+  }
+
+  pollCount = 0;
+  clearInterval(genPollTimer);
+  genPollTimer = setInterval(() => pollBEGenerate(companyId), 10000);
+}
+
+async function pollBEGenerate(companyId) {
+  pollCount++;
+  updatePollCount(pollCount, 18);
+  try {
+    const rows = await spGet(
+      CONFIG.lists.beGenerator,
+      "ID,field_2,field_12,field_13,field_14,field_15,field_16,field_17,field_18,field_19,field_20",
+      `Title eq '${companyId}' and field_2 eq 'Complete'`
+    );
+    if (rows.length > 0) {
+      clearInterval(genPollTimer);
+      hideProcessingOverlay();
+      const r = rows[0];
+      document.getElementById('be-ai-strat').value  = r.field_12 || '';
+      document.getElementById('be-ai-design').value = r.field_13 || '';
+      document.getElementById('be-ai-people').value = r.field_14 || '';
+      document.getElementById('be-ai-process').value = r.field_15 || '';
+      document.getElementById('be-ai-qhse').value   = r.field_16 || '';
+      document.getElementById('be-ai-scsv').value   = r.field_17 || '';
+      document.getElementById('be-ai-corp').value   = r.field_18 || '';
+      document.getElementById('be-ai-hs').value     = r.field_19 || '';
+      document.getElementById('be-ai-exec').value   = r.field_20 || '';
+      showToast("✅ BE Report generated successfully.");
+      return;
+    }
+    const errRows = await spGet(CONFIG.lists.beGenerator, "ID,field_2", `Title eq '${companyId}' and field_2 eq 'Error'`);
+    if (errRows.length > 0 || pollCount >= 18) {
+      clearInterval(genPollTimer);
+      hideProcessingOverlay();
+      showToast(pollCount >= 18 ? "⏰ BE generation timed out." : "❌ BE generation failed.", 'error');
+    }
+  } catch(e) { /* keep polling */ }
+}
+
+async function viewLastBE() {
+  const companyId = document.getElementById('be-company').value;
+  if (!companyId) { showToast("⚠️ Please select a company first.", 'warn'); return; }
+  try {
+    const rows = await spGet(
+      CONFIG.lists.beGenerator,
+      "ID,field_2,field_12,field_13,field_14,field_15,field_16,field_17,field_18,field_19,field_20",
+      `Title eq '${companyId}' and field_2 eq 'Complete'`,
+      "ID desc"
+    );
+    if (!rows.length) { showToast("No completed report found for this company.", 'warn'); return; }
+    const r = rows[0];
+    document.getElementById('be-ai-strat').value  = r.field_12 || '';
+    document.getElementById('be-ai-design').value = r.field_13 || '';
+    document.getElementById('be-ai-people').value = r.field_14 || '';
+    document.getElementById('be-ai-process').value = r.field_15 || '';
+    document.getElementById('be-ai-qhse').value   = r.field_16 || '';
+    document.getElementById('be-ai-scsv').value   = r.field_17 || '';
+    document.getElementById('be-ai-corp').value   = r.field_18 || '';
+    document.getElementById('be-ai-hs').value     = r.field_19 || '';
+    document.getElementById('be-ai-exec').value   = r.field_20 || '';
+    showToast("✅ Last report loaded.");
+  } catch(e) {
+    showToast("⚠️ Could not load last report: " + e.message, 'error');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// SS GENERATOR
+// ═══════════════════════════════════════════════════════════
+async function generateSS() {
+  const companyId   = document.getElementById('ss-company').value;
+  const companyName = document.getElementById('ss-company').selectedOptions[0]?.dataset.name || '';
+  if (!companyId) { showToast("⚠️ Please select a company.", 'warn'); return; }
+
+  document.getElementById('ss-ai-exec').value    = '';
+  document.getElementById('ss-ai-guidance').value = '';
+
+  showProcessingOverlay('⏳ Generating SS Report...', 'AI is generating sector-specific feedback. Please wait.');
+
+  const fields = {
+    Title:            String(companyId),
+    CompanyName:      companyName,
+    Status:           "Pending",
+    ExecutiveSummary: document.getElementById('ss-exec').value.substring(0, 4000),
+    AdditionalGuidance: document.getElementById('ss-guidance').value.substring(0, 4000)
+  };
+
+  try {
+    await spDeleteByFilter(CONFIG.lists.ssGenerator, `Title eq '${companyId}'`);
+    await spPost(CONFIG.lists.ssGenerator, fields);
+  } catch(e) {
+    hideProcessingOverlay();
+    showToast("⚠️ Could not start SS generation: " + e.message, 'error');
+    return;
+  }
+
+  pollCount = 0;
+  clearInterval(genPollTimer);
+  genPollTimer = setInterval(() => pollSSGenerate(companyId), 10000);
+}
+
+async function pollSSGenerate(companyId) {
+  pollCount++;
+  updatePollCount(pollCount, 18);
+  try {
+    const rows = await spGet(
+      CONFIG.lists.ssGenerator,
+      "ID,Status,AI_ExecutiveSummary,AI_AdditionalGuidance",
+      `Title eq '${companyId}' and Status eq 'Complete'`
+    );
+    if (rows.length > 0) {
+      clearInterval(genPollTimer);
+      hideProcessingOverlay();
+      document.getElementById('ss-ai-exec').value     = rows[0].AI_ExecutiveSummary    || '';
+      document.getElementById('ss-ai-guidance').value  = rows[0].AI_AdditionalGuidance  || '';
+      showToast("✅ SS Report generated successfully.");
+      return;
+    }
+    const errRows = await spGet(CONFIG.lists.ssGenerator, "ID,Status", `Title eq '${companyId}' and Status eq 'Error'`);
+    if (errRows.length > 0 || pollCount >= 18) {
+      clearInterval(genPollTimer);
+      hideProcessingOverlay();
+      showToast(pollCount >= 18 ? "⏰ SS generation timed out." : "❌ SS generation failed.", 'error');
+    }
+  } catch(e) { /* keep polling */ }
+}
+
+async function viewLastSS() {
+  const companyId = document.getElementById('ss-company').value;
+  if (!companyId) { showToast("⚠️ Please select a company first.", 'warn'); return; }
+  try {
+    const rows = await spGet(
+      CONFIG.lists.ssGenerator,
+      "ID,AI_ExecutiveSummary,AI_AdditionalGuidance",
+      `Title eq '${companyId}' and Status eq 'Complete'`,
+      "ID desc"
+    );
+    if (!rows.length) { showToast("No completed report found for this company.", 'warn'); return; }
+    document.getElementById('ss-ai-exec').value     = rows[0].AI_ExecutiveSummary    || '';
+    document.getElementById('ss-ai-guidance').value  = rows[0].AI_AdditionalGuidance  || '';
+    showToast("✅ Last report loaded.");
+  } catch(e) {
+    showToast("⚠️ Could not load last report: " + e.message, 'error');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
 // NEWSLETTER RENDERING
 // ═══════════════════════════════════════════════════════════
 function renderNL() {
@@ -588,16 +1210,16 @@ function renderNL() {
   const container = document.getElementById('nl-content');
 
   if (!tabData || tabData.length === 0) {
-    container.innerHTML = `<div class="text-center py-16 text-zinc-500"><i class="fa-solid fa-inbox text-4xl mb-4 block"></i>No items found</div>`;
+    container.innerHTML = `<div class="text-center py-16 text-zinc-500"><i class="fa-solid fa-inbox text-4xl mb-4 block"></i>No items — run a scrape or refresh.</div>`;
     return;
   }
 
   container.innerHTML = tabData.map(item => {
-    const selected = item.Selected;
-    const dateField = item.EventDate || item.ClosingDate || item.DatePublished;
+    const selected   = item.Selected;
+    const dateField  = item.EventDate || item.ClosingDate || item.DatePublished;
     const sourceField = item.OrganiserName || item.Organisation || item.Source || '';
-    const summary = item.Summary || item.Description || '';
-    const dateStr = dateField ? new Date(dateField).toLocaleDateString('en-GB') : '—';
+    const summary    = item.Summary || item.Description || '';
+    const dateStr    = dateField ? new Date(dateField).toLocaleDateString('en-GB') : '—';
     return `
       <div class="nl-row ${selected ? 'selected' : 'unselected'} bg-zinc-900 border border-zinc-800 rounded-2xl p-5 cursor-pointer flex items-start gap-4"
            onclick="openEditModal(${nlCurrentTab}, ${item.ID})">
@@ -634,33 +1256,26 @@ function switchNLTab(n) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// EDIT MODAL (inline edit + save to SharePoint)
+// EDIT MODAL
 // ═══════════════════════════════════════════════════════════
 function openEditModal(tab, itemId) {
   const tabData = [null, nlData.news, nlData.events, nlData.tenders, nlData.nucCol][tab];
   const item = tabData.find(i => i.ID === itemId);
   if (!item) return;
-
   const tabLabels = ['', 'News', 'Events', 'Tenders', 'NucCol'];
   editState = { tab, item, selected: !!item.Selected };
-
   document.getElementById('editModalTitle').textContent = `Edit — ${tabLabels[tab]}`;
   document.getElementById('edit-title').value   = item.Title || '';
   document.getElementById('edit-summary').value = item.Summary || item.Description || '';
   document.getElementById('edit-url').value     = item.URL || '';
-
-  // Source field varies by type
-  const sourceVal = item.OrganiserName || item.Organisation || item.Source || '';
+  const sourceVal   = item.OrganiserName || item.Organisation || item.Source || '';
   const sourceLabel = tab === 2 ? 'ORGANISER' : tab === 3 ? 'ORGANISATION' : 'SOURCE';
   document.getElementById('edit-source-label').textContent = sourceLabel;
   document.getElementById('edit-source').value = sourceVal;
-
-  // Date field varies by type
-  const dateRaw = item.EventDate || item.ClosingDate || item.DatePublished;
+  const dateRaw  = item.EventDate || item.ClosingDate || item.DatePublished;
   const dateLabel = tab === 2 ? 'EVENT DATE' : tab === 3 ? 'CLOSING DATE' : 'DATE PUBLISHED';
   document.getElementById('edit-date-label').textContent = dateLabel;
   document.getElementById('edit-date').value = dateRaw ? dateRaw.substring(0, 10) : '';
-
   updateSelectedBtn();
   document.getElementById('editModal').classList.add('active');
 }
@@ -676,15 +1291,8 @@ function updateSelectedBtn() {
   }
 }
 
-function toggleEditSelected() {
-  editState.selected = !editState.selected;
-  updateSelectedBtn();
-}
-
-function closeEditModal() {
-  document.getElementById('editModal').classList.remove('active');
-  editState = {};
-}
+function toggleEditSelected() { editState.selected = !editState.selected; updateSelectedBtn(); }
+function closeEditModal() { document.getElementById('editModal').classList.remove('active'); editState = {}; }
 
 async function saveEditItem() {
   const { tab, item } = editState;
@@ -694,27 +1302,23 @@ async function saveEditItem() {
   const url     = document.getElementById('edit-url').value;
   const source  = document.getElementById('edit-source').value;
   const date    = document.getElementById('edit-date').value;
-
-  // Build fields object matching SharePoint column names
-  let fields = { Title: title, URL: url, Selected: editState.selected };
+  let fields    = { Title: title, URL: url, Selected: editState.selected };
   if (tab === 1) { fields.Summary = summary; fields.Source = source; fields.DatePublished = date || null; }
   if (tab === 2) { fields.Summary = summary; fields.OrganiserName = source; fields.EventDate = date || null; }
   if (tab === 3) { fields.Summary = summary; fields.Organisation = source; fields.ClosingDate = date || null; }
   if (tab === 4) { fields.Description = summary; fields.DatePublished = date || null; }
-
   try {
     showToast('<span class="spinner"></span> Saving...');
     await spPatch(listName, item.ID, fields);
-
-    // Update local cache
-    const idx = nlData[['','news','events','tenders','nucCol'][tab]].findIndex(i => i.ID === item.ID);
-    if (idx > -1) Object.assign(nlData[['','news','events','tenders','nucCol'][tab]][idx], fields);
-
+    const dataKey = ['','news','events','tenders','nucCol'][tab];
+    const idx = nlData[dataKey].findIndex(i => i.ID === item.ID);
+    if (idx > -1) Object.assign(nlData[dataKey][idx], fields);
     closeEditModal();
+    updateStats();
     renderNL();
     showToast("✅ Saved to SharePoint");
   } catch(e) {
-    showToast("⚠️ Save failed: " + e.message);
+    showToast("⚠️ Save failed: " + e.message, 'error');
   }
 }
 
@@ -727,10 +1331,11 @@ async function deleteEditItem() {
     await spDelete(listName, item.ID);
     nlData[dataKey] = nlData[dataKey].filter(i => i.ID !== item.ID);
     closeEditModal();
+    updateStats();
     renderNL();
     showToast("🗑️ Deleted from SharePoint");
   } catch(e) {
-    showToast("⚠️ Delete failed: " + e.message);
+    showToast("⚠️ Delete failed: " + e.message, 'error');
   }
 }
 
@@ -756,25 +1361,37 @@ function closeExpandModal() { document.getElementById('expandModal').classList.r
 function setBETab(n) {
   document.getElementById('be-tab-content-1').classList.toggle('hidden', n !== 1);
   document.getElementById('be-tab-content-2').classList.toggle('hidden', n !== 2);
-  document.getElementById('be-tab1').classList.toggle('border-b-4', n === 1);
-  document.getElementById('be-tab1').classList.toggle('border-blue-500', n === 1);
-  document.getElementById('be-tab2').classList.toggle('border-b-4', n === 2);
-  document.getElementById('be-tab2').classList.toggle('border-blue-500', n === 2);
+  document.getElementById('be-tab1').classList.toggle('active', n === 1);
+  document.getElementById('be-tab1').classList.toggle('text-zinc-400', n !== 1);
+  document.getElementById('be-tab1').classList.remove(n === 1 ? 'text-zinc-400' : '');
+  document.getElementById('be-tab2').classList.toggle('active', n === 2);
+  document.getElementById('be-tab2').classList.toggle('text-zinc-400', n !== 2);
 }
 
-function showToast(message) {
+function showProcessingOverlay(title, msg) {
+  document.getElementById('processing-title').textContent = title;
+  document.getElementById('processing-msg').textContent   = msg;
+  document.getElementById('processing-poll').textContent  = 'Poll 0 / 18';
+  document.getElementById('processing-overlay').classList.remove('hidden');
+}
+
+function hideProcessingOverlay() {
+  document.getElementById('processing-overlay').classList.add('hidden');
+}
+
+function updatePollCount(current, max) {
+  document.getElementById('processing-poll').textContent = `Poll ${current} / ${max}`;
+}
+
+function showToast(message, type = 'success') {
   const toast = document.getElementById('toast');
   document.getElementById('toast-text').innerHTML = message;
+  const colours = { success: 'border-emerald-500 text-emerald-400', error: 'border-red-500 text-red-400', warn: 'border-amber-500 text-amber-400' };
+  toast.className = `fixed bottom-8 right-8 bg-zinc-900 border px-8 py-4 rounded-2xl flex items-center gap-3 shadow-2xl z-50 ${colours[type] || colours.success}`;
   toast.classList.remove('hidden');
   clearTimeout(window._toastTimer);
-  window._toastTimer = setTimeout(() => toast.classList.add('hidden'), 3800);
+  window._toastTimer = setTimeout(() => toast.classList.add('hidden'), 4000);
 }
-
-function generateAP()  { showToast("AP generation not yet wired — add your AI call here"); }
-function generateBE()  { showToast("BE generation not yet wired — add your AI call here"); }
-function generateSS()  { showToast("SS generation not yet wired — add your AI call here"); }
-function generateNewsletter() { showToast("Newsletter generation not yet wired"); }
-function viewLastAP()  { showToast("No previous report in session"); }
 
 // ═══════════════════════════════════════════════════════════
 // BOOT
