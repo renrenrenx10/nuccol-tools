@@ -7,7 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" rel="stylesheet">
   <!-- MSAL (Microsoft Auth Library) -->
-  <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.38.3/lib/msal-browser.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Open+Sans:wght@400;600;700&display=swap');
     body { font-family: 'Open Sans', system-ui, sans-serif; }
@@ -47,7 +47,7 @@
     <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-10 mt-8">
       <p class="text-zinc-400 text-sm mb-8">Sign in with your NuCCoL Microsoft 365 account to continue.</p>
 
-      <button id="btn-login" onclick="signIn()"
+      <button id="btn-login"
         class="w-full flex items-center justify-center gap-3 px-6 py-4 bg-white hover:bg-zinc-100 text-zinc-900 font-semibold rounded-2xl transition-all text-base">
         <svg width="20" height="20" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
           <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
@@ -378,7 +378,7 @@ const msalConfig = {
   cache: { cacheLocation: "sessionStorage" }
 };
 
-const msalInstance = new msal.PublicClientApplication(msalConfig);
+let msalInstance = null;
 const spScopes = [`${CONFIG.spSiteUrl.split('/sites/')[0]}/.default`];
 
 let currentAccount = null;
@@ -390,7 +390,19 @@ let editState = {};   // holds item being edited
 // AUTH
 // ═══════════════════════════════════════════════════════════
 async function initAuth() {
-  await msalInstance.initialize();
+  try {
+    msalInstance = new msal.PublicClientApplication(msalConfig);
+    await msalInstance.initialize();
+  } catch(e) {
+    setLoginStatus("⚠️ MSAL failed to initialise: " + e.message, true);
+    return;
+  }
+
+  // Wire sign-in button now that MSAL is ready
+  const btnLogin = document.getElementById('btn-login');
+  if (btnLogin) {
+    btnLogin.addEventListener('click', signIn);
+  }
 
   // Handle redirect response (after Microsoft login redirect back)
   try {
