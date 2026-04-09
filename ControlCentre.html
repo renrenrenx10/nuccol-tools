@@ -712,7 +712,7 @@ async function loadAll() {
   // We fetch full items and normalise field names after.
   // Load Projects and Pipeline with exact field names confirmed from list schema
   const [proj, pipe] = await Promise.all([
-    spGet(`${listItems(CFG.lists.projects)}?$select=ID,Title,Company,ProjectTitle0,DisplayName,POValue,PlannedHours,StartDate,EndDate,Notes,Status&$top=500&$orderby=Title asc`),
+    spGet(`${listItems(CFG.lists.projects)}?$select=ID,Title,Company,ProjectTitle0,POValue,PlannedHours,StartDate,EndDate,Notes,Status&$top=500&$orderby=Title asc`),
     spGet(`${listItems(CFG.lists.pipelineProjects)}?$select=ID,Title,Company_x002f_ProjectName,ProjectTitle,Status,ExpectedValue,Probability,ExpectedStart,Notes,Owner_x002f_PM,Category,ProjectNumber,Contact,Owner/Title&$expand=Owner&$top=500&$orderby=Title asc`)
   ]);
 
@@ -751,7 +751,7 @@ async function loadAll() {
   S.projects = proj.value.map(p => ({
     ...p,
     ProjectTitle:  p.ProjectTitle0 || p.Title || '',
-    DisplayName:   p.DisplayName || p.ProjectTitle0 || p.Company || p.Title || '',
+    DisplayName:   p.Company ? (p.ProjectTitle0 ? `${p.Company}-${p.ProjectTitle0}` : p.Company) : (p.ProjectTitle0 || p.Title || ''),
     POValue:       Number(p.POValue ?? 0),
     PlannedHours:  Number(p.PlannedHours ?? 0)
   }));
