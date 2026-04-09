@@ -1184,8 +1184,8 @@ async function getToken() {
     const res = await msalClient.acquireTokenSilent({ scopes: CONFIG.scopes, account: accounts[0] });
     return res.accessToken;
   } catch {
-    const res = await msalClient.acquireTokenPopup({ scopes: CONFIG.scopes });
-    return res.accessToken;
+    await msalClient.acquireTokenRedirect({ scopes: CONFIG.scopes, account: accounts[0] });
+    return null;
   }
 }
 
