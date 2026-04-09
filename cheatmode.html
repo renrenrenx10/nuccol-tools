@@ -503,6 +503,7 @@ const CONFIG = {
   clientId:  "ec0a6806-59e8-4ea9-8ff5-6bdb1ba87baf",
   tenantId:  "d44192f5-1023-458c-9cb3-9ff7e9c6d4ad",
   spSiteUrl: "https://nuccol.sharepoint.com/sites/CHEATMODE",
+  spScrldUrl: "https://nuccol.sharepoint.com/sites/SCRLDatabase",
   lists: {
     news:             "NewsletterNews",
     events:           "NewsletterEvents",
@@ -634,6 +635,19 @@ async function spGet(listName, select = "*", filter = "", orderBy = "") {
   return data.value;
 }
 
+async function spGetScrl(listName, select = "*", filter = "", orderBy = "") {
+  const token = await getToken();
+  let url = `${CONFIG.spScrldUrl}/_api/web/lists/getbytitle('${encodeURIComponent(listName)}')/items?$select=${select}&$top=500`;
+  if (filter)  url += `&$filter=${encodeURIComponent(filter)}`;
+  if (orderBy) url += `&$orderby=${encodeURIComponent(orderBy)}`;
+  const res = await fetch(url, {
+    headers: { "Authorization": "Bearer " + token, "Accept": "application/json;odata=nometadata" }
+  });
+  if (!res.ok) throw new Error(`GET ${listName}: ${res.status} ${res.statusText}`);
+  const data = await res.json();
+  return data.value;
+}
+
 async function spPatch(listName, itemId, fields) {
   const token = await getToken();
   const url = `${CONFIG.spSiteUrl}/_api/web/lists/getbytitle('${encodeURIComponent(listName)}')/items(${itemId})`;
@@ -701,8 +715,8 @@ async function loadAllData() {
   try {
     const [news, events, tenders, nucCol] = await Promise.all([
       spGet(CONFIG.lists.news,    "ID,Title,Summary,URL,Source,DatePublished,Selected"),
-      spGet(CONFIG.lists.events,  "ID,Title,Summary,URL,OrganiserName,EventDate,Selected"),
-      spGet(CONFIG.lists.tenders, "ID,Title,Summary,URL,Organisation,ClosingDate,Selected"),
+      spGet(CONFIG.lists.events,  "ID,Title,Description,URL,OrganiserName,EventDate,Selected"),
+      spGet(CONFIG.lists.tenders, "ID,Title,Description,URL,Organisation,ClosingDate,Selected"),
       spGet(CONFIG.lists.nucCol,  "ID,Title,Description,URL,DatePublished,Selected")
     ]);
     nlData.news    = news;
@@ -735,7 +749,7 @@ function updateStats() {
 
 async function loadCompanies() {
   try {
-    const companies = await spGet(CONFIG.lists.companies, "ID,Title,CompanyID", "", "Title asc");
+    const companies = await spGetScrl(CONFIG.lists.companies, "ID,Title,CompanyID", "", "Title asc");
     const selects = ['ap-company', 'be-company', 'ss-company'];
     selects.forEach(selId => {
       const sel = document.getElementById(selId);
@@ -1304,8 +1318,8 @@ async function saveEditItem() {
   const date    = document.getElementById('edit-date').value;
   let fields    = { Title: title, URL: url, Selected: editState.selected };
   if (tab === 1) { fields.Summary = summary; fields.Source = source; fields.DatePublished = date || null; }
-  if (tab === 2) { fields.Summary = summary; fields.OrganiserName = source; fields.EventDate = date || null; }
-  if (tab === 3) { fields.Summary = summary; fields.Organisation = source; fields.ClosingDate = date || null; }
+  if (tab === 2) { fields.Description = summary; fields.OrganiserName = source; fields.EventDate = date || null; }
+  if (tab === 3) { fields.Description = summary; fields.Organisation = source; fields.ClosingDate = date || null; }
   if (tab === 4) { fields.Description = summary; fields.DatePublished = date || null; }
   try {
     showToast('<span class="spinner"></span> Saving...');
