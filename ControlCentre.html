@@ -713,7 +713,7 @@ async function loadAll() {
   // Load Projects and Pipeline with exact field names confirmed from list schema
   const [proj, pipe] = await Promise.all([
     spGet(`${listItems(CFG.lists.projects)}?$select=ID,Title,Company,ProjectTitle0,DisplayName,POValue,PlannedHours,StartDate,EndDate,Notes,Status&$top=500&$orderby=DisplayName asc`),
-    spGet(`${listItems(CFG.lists.pipelineProjects)}?$select=ID,Title,Company_x002f_ProjectName,ProjectTitle,Status,ExpectedValue,Probability,ExpectedStart,Notes,Owner_x002f_PM,Category,ProjectNumber,Contact&$expand=Owner&$top=500&$orderby=Title asc`)
+    spGet(`${listItems(CFG.lists.pipelineProjects)}?$select=ID,Title,Company_x002f_ProjectName,ProjectTitle,Status,ExpectedValue,Probability,ExpectedStart,Notes,Owner_x002f_PM,Category,ProjectNumber,Contact,Owner/Title&$expand=Owner&$top=500&$orderby=Title asc`)
   ]);
 
   // Try TimeEntries with expand; if 400 (lookup column name wrong), fall back to no expand
