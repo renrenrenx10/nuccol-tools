@@ -598,11 +598,24 @@ function toast(msg, type='ok') {
 ================================================================ */
 async function loadRefData() {
   const [proj, pipe] = await Promise.all([
-    spGet(`${listItems(CFG.lists.projects)}?$select=ID,ProjectTitle0&$orderby=ProjectTitle0 asc`),
-    spGet(`${listItems(CFG.lists.pipelineProjects)}?$select=ID,ProjectTitle&$orderby=ProjectTitle asc`)
+    spGet(`${listItems(CFG.lists.projects)}?$select=ID,Title,Company,ProjectTitle0&$orderby=Title asc`),
+    spGet(`${listItems(CFG.lists.pipelineProjects)}?$select=ID,Title,Company_x002f_ProjectName,ProjectTitle&$orderby=Title asc`)
   ]);
-  S.allProjects = proj.value;
-  S.allPipeline = pipe.value;
+  // Build DisplayName client-side (calculated columns not returned by REST API)
+  S.allProjects = proj.value.map(p => ({
+    ...p,
+    ProjectTitle0: p.ProjectTitle0 || p.Title || '',
+    DisplayName: p.Company
+      ? (p.ProjectTitle0 ? `${p.Company}-${p.ProjectTitle0}` : p.Company)
+      : (p.ProjectTitle0 || p.Title || '')
+  }));
+  S.allPipeline = pipe.value.map(p => ({
+    ...p,
+    ProjectTitle: p.ProjectTitle || p.Title || '',
+    DisplayName: p.Company_x002f_ProjectName
+      ? (p.ProjectTitle ? `${p.Company_x002f_ProjectName} — ${p.ProjectTitle}` : p.Company_x002f_ProjectName)
+      : (p.ProjectTitle || p.Title || '')
+  }));
 }
 
 async function loadCurrentUser() {
@@ -640,9 +653,9 @@ async function loadTsWeek(ws) {
       notes       : item.Notes || '',
       projectType : item.ProjectType || 'Active Project',
       projectId   : item.Project       ? item.Project.Id            : null,
-      projName    : item.Project       ? item.Project.ProjectTitle0    : '',
+      projName    : item.Project ? (() => { const p = S.allProjects.find(x => x.ID === item.Project.Id); return p ? p.DisplayName : (item.Project.ProjectTitle0 || ''); })() : '',
       pipeId      : item.PipelineProject ? item.PipelineProject.Id   : null,
-      pipeName    : item.PipelineProject ? item.PipelineProject.ProjectTitle : '',
+      pipeName    : item.PipelineProject ? (() => { const p = S.allPipeline.find(x => x.ID === item.PipelineProject.Id); return p ? p.DisplayName : (item.PipelineProject.ProjectTitle || ''); })() : '',
       isExisting  : true,
       spId        : item.ID
     });
@@ -732,7 +745,11 @@ async function loadSumWeek(ws) {
     ...e,
     _empName    : e.Employee?.Title || e.EmployeeName || '(Unknown)',
     _empEmail   : e.Employee?.EMail || '',
-    _projName   : e.Project?.ProjectTitle0 || e.PipelineProject?.ProjectTitle || ''
+    _projName   : (() => {
+      if (e.Project?.Id) { const p = S.allProjects.find(x => x.ID === e.Project.Id); if (p) return p.DisplayName; }
+      if (e.PipelineProject?.Id) { const p = S.allPipeline.find(x => x.ID === e.PipelineProject.Id); if (p) return p.DisplayName; }
+      return e.Project?.ProjectTitle0 || e.PipelineProject?.ProjectTitle || '';
+    })()
   }));
   S.sumExpenses = ex.value.map(e => ({
     ...e,
@@ -995,12 +1012,12 @@ function renderTs() {
 
     const projSelect = (isPipe
       ? buildSelect(
-          S.allPipeline.map(p=>({value:p.ID, label:p.ProjectTitle})),
+          S.allPipeline.map(p=>({value:p.ID, label:p.DisplayName})),
           row.pipeId, '— Pipeline Project —', 'row-inp',
           `updateTsProj('${row.entryId}','pipe',this.value,this.options[this.selectedIndex].dataset.label)`
         )
       : buildSelect(
-          S.allProjects.map(p=>({value:p.ID, label:p.ProjectTitle0})),
+          S.allProjects.map(p=>({value:p.ID, label:p.DisplayName})),
           row.projectId, '— Active Project —', 'row-inp',
           `updateTsProj('${row.entryId}','active',this.value,this.options[this.selectedIndex].dataset.label)`
         )).replace('<select ', `<select data-proj-entry="${row.entryId}" `);
@@ -1083,7 +1100,7 @@ function renderExp() {
     const day = new Date(row.date + 'T12:00:00');
 
     const projSelect = buildSelect(
-      S.allProjects.map(p=>({value:p.ProjectTitle0, label:p.ProjectTitle0})),
+      S.allProjects.map(p=>({value:p.ProjectTitle0, label:p.DisplayName})),
       row.project, '— Project —', 'row-inp',
       `updateExpField('${row.entryId}','project',this.value)`
     );
