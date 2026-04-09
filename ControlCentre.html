@@ -748,35 +748,33 @@ async function loadAll() {
   const te = teRaw;
   const exp = expRaw;
 
-  // Detect field names from first Projects item (or fall back to known defaults)
+  // Detect field names from first Projects item
   const sampleProj = proj.value[0] || {};
   const projTitleField    = Object.keys(sampleProj).find(k => ['ProjectTitle0','ProjectTitle'].includes(k)) || 'Title';
-  const displayNameField  = 'DisplayName' in sampleProj ? 'DisplayName' : null;
-  const poValueField      = Object.keys(sampleProj).find(k => k.toLowerCase().includes('povalue') || k === 'POValue') || 'POValue';
-  const plannedHoursField = Object.keys(sampleProj).find(k => k.toLowerCase().includes('plannedhours') || k === 'PlannedHours') || 'PlannedHours';
+  const poValueField      = Object.keys(sampleProj).find(k => k.toLowerCase() === 'povalue') || 'POValue';
+  const plannedHoursField = Object.keys(sampleProj).find(k => k.toLowerCase() === 'plannedhours') || 'PlannedHours';
 
   // Detect field names from first PipelineProjects item
   const samplePipe = pipe.value[0] || {};
-  const pipeCompanyField  = Object.keys(samplePipe).find(k => k.toLowerCase().includes('company')) || 'Title';
+  const pipeCompanyField  = Object.keys(samplePipe).find(k => k.toLowerCase() === 'company') || 'Title';
   const pipeTitleField    = Object.keys(samplePipe).find(k => ['ProjectTitle','ProjectTitle0'].includes(k)) || null;
-  const pipeDisplayField  = 'DisplayName' in samplePipe ? 'DisplayName' : null;
-  const pipeValueField    = Object.keys(samplePipe).find(k => k.toLowerCase().includes('expectedvalue') || k === 'ExpectedValue') || 'ExpectedValue';
-  const pipeProbField     = 'Probability' in samplePipe ? 'Probability' : Object.keys(samplePipe).find(k => k.toLowerCase().includes('prob')) || 'Probability';
-  const pipeExpStartField = Object.keys(samplePipe).find(k => k.toLowerCase().includes('expectedstart') || k === 'ExpectedStart') || 'ExpectedStart';
+  const pipeValueField    = Object.keys(samplePipe).find(k => k.toLowerCase() === 'expectedvalue') || 'ExpectedValue';
+  const pipeProbField     = Object.keys(samplePipe).find(k => k.toLowerCase() === 'probability') || 'Probability';
+  const pipeExpStartField = Object.keys(samplePipe).find(k => k.toLowerCase() === 'expectedstart') || 'ExpectedStart';
+
+  // Log what we got back so debugging is easy
+  console.log('[ControlCentre] Projects sample keys:', Object.keys(sampleProj).join(', '));
+  console.log('[ControlCentre] Pipeline sample keys:', Object.keys(samplePipe).join(', '));
 
   // Detect TimeEntries lookup field names from returned data
   const sampleTE = te.value[0] || {};
-  // With expand: look for object-type fields containing an Id property
-  // Without expand: look for *Id integer fields (e.g. ProjectId, PipelineProjectId)
   let teProjField, tePipeField;
   if (S._teHasExpand) {
     teProjField = Object.keys(sampleTE).find(k => !k.endsWith('Id') && sampleTE[k] && typeof sampleTE[k] === 'object' && 'Id' in sampleTE[k] && k.toLowerCase().includes('project') && !k.toLowerCase().includes('pipeline')) || 'Project';
     tePipeField = Object.keys(sampleTE).find(k => !k.endsWith('Id') && sampleTE[k] && typeof sampleTE[k] === 'object' && 'Id' in sampleTE[k] && k.toLowerCase().includes('pipeline')) || 'PipelineProject';
   } else {
-    // No expand — we'll use the *Id integer columns to match
     teProjField = null;
     tePipeField = null;
-    // Find the integer ID lookup fields
     S._teProjIdField  = Object.keys(sampleTE).find(k => /^project.*id$/i.test(k) && !k.toLowerCase().includes('pipeline')) || 'ProjectId';
     S._tePipeIdField  = Object.keys(sampleTE).find(k => /pipeline.*id$/i.test(k)) || 'PipelineProjectId';
   }
@@ -785,25 +783,27 @@ async function loadAll() {
   S._projTitleField    = projTitleField;
   S._poValueField      = poValueField;
   S._plannedHoursField = plannedHoursField;
-  S._displayNameField  = displayNameField;
   S._teProjField       = teProjField;
   S._tePipeField       = tePipeField;
 
   S.projects = proj.value.map(p => ({
     ...p,
-    ProjectTitle:  p[projTitleField]   || p.Title || '',
-    DisplayName:   (displayNameField && p[displayNameField]) || p[projTitleField] || p.Title || '',
-    POValue:       Number(p[poValueField] ?? p.POValue ?? 0),
-    PlannedHours:  Number(p[plannedHoursField] ?? p.PlannedHours ?? 0)
+    ProjectTitle:  p[projTitleField] || p.Title || '',
+    // DisplayName is confirmed to exist on the Projects list - use it directly
+    // Fall back chain: DisplayName -> ProjectTitle field -> Title
+    DisplayName:   (p.DisplayName && p.DisplayName.trim()) || p[projTitleField] || p.Title || '',
+    POValue:       Number(p[poValueField] ?? 0),
+    PlannedHours:  Number(p[plannedHoursField] ?? 0)
   }));
   S.pipeline = pipe.value.map(p => ({
     ...p,
-    Company:       p[pipeCompanyField]  || p.Title || '',
+    Company:       p[pipeCompanyField] || p.Title || '',
     ProjectTitle:  (pipeTitleField && p[pipeTitleField]) || p.Title || '',
-    DisplayName:   (pipeDisplayField && p[pipeDisplayField]) || (pipeTitleField && p[pipeTitleField]) || p[pipeCompanyField] || p.Title || '',
-    ExpectedValue: Number(p[pipeValueField] ?? p.ExpectedValue ?? 0),
-    Probability:   p[pipeProbField] ?? p.Probability ?? null,
-    ExpectedStart: p[pipeExpStartField] || p.ExpectedStart || null
+    // DisplayName is confirmed to exist on the PipelineProjects list - use it directly
+    DisplayName:   (p.DisplayName && p.DisplayName.trim()) || (pipeTitleField && p[pipeTitleField]) || p[pipeCompanyField] || p.Title || '',
+    ExpectedValue: Number(p[pipeValueField] ?? 0),
+    Probability:   p[pipeProbField] ?? null,
+    ExpectedStart: p[pipeExpStartField] || null
   }));
   S.timeEntries = te.value;
   S.expenses = exp.value;
