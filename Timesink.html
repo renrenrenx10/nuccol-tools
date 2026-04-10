@@ -847,9 +847,13 @@ async function saveTs() {
     if (row.isExisting && row.spId) {
       await spPatch(listItem(CFG.lists.timeEntries, row.spId), payload);
     } else {
-      const created = await spPost(listItems(CFG.lists.timeEntries), payload);
-      row.isExisting = true;
-      row.spId = created.ID;
+      try {
+        const created = await spPost(listItems(CFG.lists.timeEntries), payload);
+        row.isExisting = true;
+        row.spId = created.ID;
+      } catch(e) {
+        throw new Error(`Failed to save entry for ${row.date}: ${e.message}`);
+      }
     }
   }
 
@@ -1413,7 +1417,7 @@ function updateTsField(entryId, field, val) {
 function changeTsType(entryId, type) {
   const row = S.tsRows.find(r => r.entryId===entryId);
   if (!row) return;
-  // Sync all OTHER rows' inputs before re-render so their values aren't lost
+  // Sync ALL other rows' inputs AND project selects before re-render so values aren't lost
   for (const r of S.tsRows) {
     if (r.entryId === entryId) continue;
     const h = document.getElementById(`ts-h-${r.entryId}`);
@@ -1422,8 +1426,20 @@ function changeTsType(entryId, type) {
     if (h) r.hoursWorked = h.value;
     if (t) r.travelHours = t.value;
     if (n) r.notes = n.value;
+    // Also sync project select so it survives the re-render
+    const projSel = document.querySelector(`[data-proj-entry="${r.entryId}"]`);
+    if (projSel && projSel.value) {
+      const selOpt = projSel.options[projSel.selectedIndex];
+      if (r.projectType === 'Pipeline Project') {
+        r.pipeId   = projSel.value || null;
+        r.pipeName = selOpt ? selOpt.dataset.label : '';
+      } else {
+        r.projectId = projSel.value || null;
+        r.projName  = selOpt ? selOpt.dataset.label : '';
+      }
+    }
   }
-  // Update type and clear project — dropdown will re-render with the correct list
+  // Update type and clear project — dropdown re-renders with the correct list
   row.projectType = type;
   row.projectId = null; row.projName = '';
   row.pipeId    = null; row.pipeName = '';
