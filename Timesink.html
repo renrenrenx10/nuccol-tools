@@ -622,23 +622,21 @@ async function loadCurrentUser() {
   const u = await spGet('web/currentuser');
   S.currentUser = { email: u.Email, displayName: u.Title, spId: u.Id };
   const emp = await spGet(
-    `${listItems(CFG.lists.employees)}` +
-    `?$select=ID,StaffDayRate,CommercialDayRate` +
-    `&$filter=Email eq '${u.Email}'`
+    `${listItems(CFG.lists.employees)}?$expand=StaffName` +
+    `&$select=ID,StaffDayRate,CommercialDayRate,StaffName/EMail` +
+    `&$filter=StaffName/EMail eq '${encodeURIComponent(u.Email)}'`
   );
   S.employeeRecord = emp.value[0] || null;
 }
 
 async function loadTsWeek(ws) {
   S.tsWeekStart = ws;
-  // Filter by numeric EmployeeId to avoid OData issues with @ in email addresses
-  const empFilter = S.currentUser.spId
-    ? `EmployeeId eq ${S.currentUser.spId}`
-    : `EmployeeName eq '${S.currentUser.displayName}'`;
   const data = await spGet(
     `${listItems(CFG.lists.timeEntries)}` +
-    `?$select=ID,Date,HoursWorked,TravelHours,Notes,StaffRate,CommercialRate,EmployeeName,ProjectType,Project,PipelineProject` +
-    `&$filter=${empFilter} and ${dateFilter(ws)}` +
+    `?$select=ID,Date,HoursWorked,TravelHours,Notes,StaffRate,CommercialRate,EmployeeName,ProjectType` +
+    `,Employee/EMail,Project/Id,Project/ProjectTitle0,PipelineProject/Id,PipelineProject/ProjectTitle` +
+    `&$expand=Employee,Project,PipelineProject` +
+    `&$filter=Employee/EMail eq '${encodeURIComponent(S.currentUser.email)}' and ${dateFilter(ws)}` +
     `&$orderby=Date asc`
   );
 
@@ -647,12 +645,6 @@ async function loadTsWeek(ws) {
   for (const item of data.value) {
     const dk = item.Date.split('T')[0];
     if (!byDate[dk]) byDate[dk] = [];
-    // Project and PipelineProject are plain text display name fields
-    const projText = item.Project || '';
-    const pipeText = item.PipelineProject || '';
-    // Match back to our project lists to get the ID (needed for the dropdown selected state)
-    const matchedProj = S.allProjects.find(p => p.DisplayName === projText || p.ProjectTitle0 === projText);
-    const matchedPipe = S.allPipeline.find(p => p.DisplayName === pipeText);
     byDate[dk].push({
       entryId     : uid(),
       date        : dk,
@@ -660,10 +652,10 @@ async function loadTsWeek(ws) {
       travelHours : item.TravelHours  != null ? String(item.TravelHours)  : '',
       notes       : item.Notes || '',
       projectType : item.ProjectType || 'Active Project',
-      projectId   : matchedProj ? matchedProj.ID : null,
-      projName    : projText,
-      pipeId      : matchedPipe ? matchedPipe.ID : null,
-      pipeName    : pipeText,
+      projectId   : item.Project       ? item.Project.Id            : null,
+      projName    : item.Project ? (() => { const p = S.allProjects.find(x => x.ID === item.Project.Id); return p ? p.DisplayName : (item.Project.ProjectTitle0 || ''); })() : '',
+      pipeId      : item.PipelineProject ? item.PipelineProject.Id   : null,
+      pipeName    : item.PipelineProject ? (() => { const p = S.allPipeline.find(x => x.ID === item.PipelineProject.Id); return p ? p.DisplayName : (item.PipelineProject.ProjectTitle || ''); })() : '',
       isExisting  : true,
       spId        : item.ID
     });
@@ -695,26 +687,40 @@ function newExpRow(dk) {
 
 async function loadExpWeek(ws) {
   S.expWeekStart = ws;
-  // Filter server-side by current user's SP ID — avoids needing to expand EmployeeName
-  // This is more efficient and works regardless of the User field's expand behaviour
-  const userFilter = S.currentUser.spId
-    ? ` and EmployeeId eq ${S.currentUser.spId}`
-    : '';
-  const data = await spGet(
-    `${listItems(CFG.lists.expenses)}` +
-    `?$select=ID,Date,Category0,Amount,Notes,Project` +
-    `&$filter=${dateFilter(ws)}${userFilter}` +
-    `&$orderby=Date asc`
-  );
+  let data;
+  try {
+    data = await spGet(
+      `${listItems(CFG.lists.expenses)}` +
+      `?$select=ID,Date,Category,Amount,Notes,Project,EmployeeName/EMail,EmployeeName/Title` +
+      `&$expand=EmployeeName` +
+      `&$filter=${dateFilter(ws)}` +
+      `&$orderby=Date asc`
+    );
+  } catch(e) {
+    // EmployeeName may be a plain text field, not a User lookup — try without expand
+    data = await spGet(
+      `${listItems(CFG.lists.expenses)}` +
+      `?$select=ID,Date,Category,Amount,Notes,Project,EmployeeName` +
+      `&$filter=${dateFilter(ws)}` +
+      `&$orderby=Date asc`
+    );
+  }
 
   const byDate = {};
+  const myEmail = S.currentUser.email.toLowerCase();
   for (const item of data.value) {
+    // Filter to current user — works for both User lookup and plain text
+    const itemEmail = (item.EmployeeName?.EMail || '').toLowerCase();
+    const itemName = (item.EmployeeName?.Title || item.EmployeeName || '').toLowerCase();
+    const myName = S.currentUser.displayName.toLowerCase();
+    if (itemEmail && itemEmail !== myEmail) continue;
+    if (!itemEmail && itemName && itemName !== myName) continue;
     const dk = item.Date.split('T')[0];
     if (!byDate[dk]) byDate[dk] = [];
     byDate[dk].push({
       entryId   : uid(),
       date      : dk,
-      category  : item.Category0 || '',
+      category  : item.Category || '',
       amount    : item.Amount != null ? String(item.Amount) : '',
       notes     : item.Notes || '',
       project   : item.Project || '',
@@ -736,27 +742,39 @@ async function loadSumWeek(ws) {
   const [te, ex] = await Promise.all([
     spGet(
       `${listItems(CFG.lists.timeEntries)}` +
-      `?$select=ID,Date,HoursWorked,TravelHours,Notes,StaffRate,CommercialRate,EmployeeName,ProjectType,Project,PipelineProject` +
+      `?$select=ID,Date,HoursWorked,TravelHours,Notes,StaffRate,CommercialRate,EmployeeName,ProjectType` +
+      `,Employee/Title,Employee/EMail,Project/ProjectTitle0,PipelineProject/ProjectTitle` +
+      `&$expand=Employee,Project,PipelineProject` +
       `&$filter=${dateFilter(ws)}`
     ),
     spGet(
       `${listItems(CFG.lists.expenses)}` +
-      `?$select=ID,Date,Category0,Amount,Notes,Project,Employee/Id,Employee/Title,Employee/EMail` +
-      `&$expand=Employee` +
+      `?$select=ID,Date,Category,Amount,Notes,Project,EmployeeName/Title,EmployeeName/EMail` +
+      `&$expand=EmployeeName` +
       `&$filter=${dateFilter(ws)}`
+    ).catch(() =>
+      spGet(
+        `${listItems(CFG.lists.expenses)}` +
+        `?$select=ID,Date,Category,Amount,Notes,Project,EmployeeName` +
+        `&$filter=${dateFilter(ws)}`
+      )
     )
   ]);
 
   S.sumEntries = te.value.map(e => ({
     ...e,
-    _empName    : e.EmployeeName || '(Unknown)',
-    _empEmail   : '',
-    _projName   : e.Project || e.PipelineProject || ''
+    _empName    : e.Employee?.Title || e.EmployeeName || '(Unknown)',
+    _empEmail   : e.Employee?.EMail || '',
+    _projName   : (() => {
+      if (e.Project?.Id) { const p = S.allProjects.find(x => x.ID === e.Project.Id); if (p) return p.DisplayName; }
+      if (e.PipelineProject?.Id) { const p = S.allPipeline.find(x => x.ID === e.PipelineProject.Id); if (p) return p.DisplayName; }
+      return e.Project?.ProjectTitle0 || e.PipelineProject?.ProjectTitle || '';
+    })()
   }));
   S.sumExpenses = ex.value.map(e => ({
     ...e,
-    _empName  : e.Employee?.Title || '(Unknown)',
-    _empEmail : e.Employee?.EMail || ''
+    _empName  : e.EmployeeName?.Title || (typeof e.EmployeeName === 'string' ? e.EmployeeName : '') || '(Unknown)',
+    _empEmail : e.EmployeeName?.EMail || ''
   }));
 
   // Aggregate by employee
@@ -827,9 +845,6 @@ async function saveTs() {
   const commercialRate = S.employeeRecord?.CommercialDayRate  || 0;
 
   for (const row of toSave) {
-    // Project and PipelineProject are plain Text fields storing the display name string
-    const projDisplayName = row.projectId ? row.projName : '';
-    const pipeDisplayName = row.pipeId    ? row.pipeName : '';
     const payload = {
       Title            : `Time Entry - ${row.date}`,
       Date             : `${row.date}T00:00:00Z`,
@@ -840,35 +855,33 @@ async function saveTs() {
       CommercialRate   : commercialRate,
       EmployeeName     : S.currentUser.displayName,
       EmployeeId       : S.currentUser.spId,
-      Project          : projDisplayName,
-      PipelineProject  : pipeDisplayName,
+      ProjectId        : row.projectId ? parseInt(row.projectId) : null,
+      PipelineProjectId: row.pipeId    ? parseInt(row.pipeId)    : null,
       ProjectType      : row.projectId ? 'Active Project' : (row.pipeId ? 'Pipeline Project' : null)
     };
     if (row.isExisting && row.spId) {
       await spPatch(listItem(CFG.lists.timeEntries, row.spId), payload);
     } else {
-      try {
-        const created = await spPost(listItems(CFG.lists.timeEntries), payload);
-        row.isExisting = true;
-        row.spId = created.ID;
-      } catch(e) {
-        throw new Error(`Failed to save entry for ${row.date}: ${e.message}`);
-      }
+      const created = await spPost(listItems(CFG.lists.timeEntries), payload);
+      row.isExisting = true;
+      row.spId = created.ID;
     }
   }
 
   // Update TotalCommercialCost on affected active projects
-  const affectedProjNames = [...new Set(toSave.filter(r => r.projectId && r.projName).map(r => r.projName))];
-  for (const projName of affectedProjNames) {
+  const affectedIds = [...new Set(toSave.filter(r => r.projectId).map(r => parseInt(r.projectId)))];
+  for (const pid of affectedIds) {
     try {
-      const proj = S.allProjects.find(p => p.DisplayName === projName || p.ProjectTitle0 === projName);
-      if (!proj) continue;
-      const allTe  = await spGet(`${listItems(CFG.lists.timeEntries)}?$select=HoursWorked,CommercialRate&$filter=Project eq '${projName}'`);
+      const allTe  = await spGet(`${listItems(CFG.lists.timeEntries)}?$select=HoursWorked,CommercialRate&$filter=ProjectId eq ${pid}`);
       const timeSum = allTe.value.reduce((s,e) => s + ((e.HoursWorked||0) * (e.CommercialRate||0) / 7), 0);
-      const allExp = await spGet(`${listItems(CFG.lists.expenses)}?$select=Amount&$filter=Project eq '${projName}'`);
-      const expSum = allExp.value.reduce((s,e) => s + (e.Amount||0), 0);
-      await spPatch(listItem(CFG.lists.projects, proj.ID), { TotalCommercialCost: timeSum + expSum });
-    } catch(e) { console.warn('TotalCommercialCost update failed for project', projName, e); }
+      const proj = S.allProjects.find(p => p.ID === pid);
+      let expSum = 0;
+      if (proj) {
+        const allExp = await spGet(`${listItems(CFG.lists.expenses)}?$select=Amount&$filter=Project eq '${encodeURIComponent(proj.ProjectTitle0)}'`);
+        expSum = allExp.value.reduce((s,e) => s + (e.Amount||0), 0);
+      }
+      await spPatch(listItem(CFG.lists.projects, pid), { TotalCommercialCost: timeSum + expSum });
+    } catch(e) { console.warn('TotalCommercialCost update failed for project', pid, e); }
   }
 
   toast('All entries saved successfully');
@@ -881,11 +894,11 @@ async function saveExp() {
     const payload = {
       Title           : `Expense - ${row.date}`,
       Date            : `${row.date}T00:00:00Z`,
-      Category0       : row.category || '',
+      Category        : row.category || '',
       Amount          : row.amount !== '' ? parseFloat(row.amount) : null,
       Notes           : row.notes || '',
       Project         : row.project || '',
-      EmployeeId      : S.currentUser.spId
+      EmployeeNameId  : S.currentUser.spId
     };
     if (row.isExisting && row.spId) {
       await spPatch(listItem(CFG.lists.expenses, row.spId), payload);
@@ -1285,7 +1298,7 @@ function renderDetail() {
     ? exps.map(e => `<tr>
         <td class="nowrap">${ukDate(e.Date)}</td>
         <td>${esc(e.Project||'')}</td>
-        <td class="ta-center">${esc(e.Category0||'')}</td>
+        <td class="ta-center">${esc(e.Category||'')}</td>
         <td class="ta-right">${money(e.Amount)}</td>
         <td>${esc(e.Notes||'')}</td>
       </tr>`).join('')
@@ -1415,32 +1428,12 @@ function updateTsField(entryId, field, val) {
 }
 
 function changeTsType(entryId, type) {
+  // Set projectType BEFORE syncTsDom so it reads the project select into the right bucket
   const row = S.tsRows.find(r => r.entryId===entryId);
   if (!row) return;
-  // Sync ALL other rows' inputs AND project selects before re-render so values aren't lost
-  for (const r of S.tsRows) {
-    if (r.entryId === entryId) continue;
-    const h = document.getElementById(`ts-h-${r.entryId}`);
-    const t = document.getElementById(`ts-t-${r.entryId}`);
-    const n = document.getElementById(`ts-n-${r.entryId}`);
-    if (h) r.hoursWorked = h.value;
-    if (t) r.travelHours = t.value;
-    if (n) r.notes = n.value;
-    // Also sync project select so it survives the re-render
-    const projSel = document.querySelector(`[data-proj-entry="${r.entryId}"]`);
-    if (projSel && projSel.value) {
-      const selOpt = projSel.options[projSel.selectedIndex];
-      if (r.projectType === 'Pipeline Project') {
-        r.pipeId   = projSel.value || null;
-        r.pipeName = selOpt ? selOpt.dataset.label : '';
-      } else {
-        r.projectId = projSel.value || null;
-        r.projName  = selOpt ? selOpt.dataset.label : '';
-      }
-    }
-  }
-  // Update type and clear project — dropdown re-renders with the correct list
   row.projectType = type;
+  syncTsDom();
+  // Clear both project fields since type just changed
   row.projectId = null; row.projName = '';
   row.pipeId    = null; row.pipeName = '';
   go();
