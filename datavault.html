@@ -1315,7 +1315,10 @@ let msalReady = false;
 (async () => {
   await msalClient.initialize();
   msalReady = true;
-  await msalClient.handleRedirectPromise();
+  // Only handle redirect promise when running in the main window, not inside a popup
+  if (window.opener == null) {
+    await msalClient.handleRedirectPromise();
+  }
   const accounts = msalClient.getAllAccounts();
   if (accounts.length) { currentUser = accounts[0]; onSignedIn(); }
 })();
@@ -1345,8 +1348,9 @@ async function getToken() {
     const res = await msalClient.acquireTokenSilent({ scopes: CONFIG.scopes, account: accounts[0] });
     return res.accessToken;
   } catch {
-    await msalClient.acquireTokenRedirect({ scopes: CONFIG.scopes, account: accounts[0] });
-    return null;
+    // Use acquireTokenPopup instead of redirect — redirect is blocked inside a popup context
+    const res = await msalClient.acquireTokenPopup({ scopes: CONFIG.scopes, account: accounts[0] });
+    return res.accessToken;
   }
 }
 
