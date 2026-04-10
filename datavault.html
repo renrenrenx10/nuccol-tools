@@ -1123,6 +1123,167 @@ function denormalizeSCRL(body) {
   return out;
 }
 
+/* ──────────────────────────────────────────────────────────────────────────
+   COMPANIES FIELD NAME MAP
+   The Companies list uses generic internal names (field_1 … field_40).
+   COMPANY_FIELD_MAP: friendly → internal  (used when writing to SP)
+   COMPANY_FIELD_MAP_REV: internal → friendly (used when reading from SP)
+   ────────────────────────────────────────────────────────────────────────── */
+const COMPANY_FIELD_MAP = {
+  CompanyID:           'field_1',
+  City:                'field_2',
+  County:              'field_3',
+  Postcode:            'field_4',
+  OtherAddresses:      'field_5',
+  Website:             'field_6',
+  Email:               'field_7',
+  RegisteredNumber:    'field_8',
+  RegionalIA:          'field_9',
+  QuickDescription:    'field_10',
+  MainCommodityGroup:  'field_11',
+  DataConfidenceLevel: 'field_12',
+  RAGStatus:           'field_13',
+  Turnover:            'field_14',
+  Employees:           'field_15',
+  Size:                'field_16',
+  Flag:                'field_17',
+  FlagComment:         'field_18',
+  F4NCandidate:        'field_19',
+  F4H2Candidate:       'field_20',
+  DataComplete:        'field_21',
+  DateAdded:           'field_22',
+  LastUpdated:         'field_23',
+  UpdatedBy:           'field_24',
+  Address:             'field_25',
+  RegAddress:          'field_26',
+  RegCity:             'field_27',
+  RegCounty:           'field_28',
+  RegPostcode:         'field_29',
+  Notes:               'field_30',
+  NuclearReference:    'field_31',
+  NuclearRefDate:      'field_32',
+  NuclearRefURL:       'field_33',
+  Customer1:           'field_34',
+  Customer2:           'field_35',
+  Customer3:           'field_36',
+  Supplier1:           'field_37',
+  Supplier2:           'field_38',
+  Supplier3:           'field_39',
+  MarketNotes:         'field_40',
+};
+const COMPANY_FIELD_MAP_REV = Object.fromEntries(
+  Object.entries(COMPANY_FIELD_MAP).map(([k, v]) => [v, k])
+);
+
+/** Translate a comma-separated select of friendly names → internal names */
+function companySelectMap(select) {
+  if (!select) return select;
+  return select.split(',').map(s => {
+    const t = s.trim();
+    return COMPANY_FIELD_MAP[t] ?? t;
+  }).join(',');
+}
+
+/** Map SP internal field names → friendly names on a raw SP company item */
+function normalizeCompany(item) {
+  if (!item) return item;
+  const out = {};
+  for (const [key, val] of Object.entries(item)) {
+    out[COMPANY_FIELD_MAP_REV[key] ?? key] = val;
+  }
+  return out;
+}
+
+/** Convert a body object with friendly names → internal SP field names */
+function denormalizeCompany(body) {
+  const out = {};
+  for (const [k, v] of Object.entries(body)) {
+    out[COMPANY_FIELD_MAP[k] ?? k] = v;
+  }
+  return out;
+}
+
+/** Wrapper: GET all Companies with friendly-name select, returns normalized items */
+async function spGetAllCompanies(select = '', filter = '', top = 5000) {
+  const rows = await spGetAll('Companies', companySelectMap(select), filter, top);
+  return rows.map(normalizeCompany);
+}
+
+/** Wrapper: GET single company item by ID, returns normalized item */
+async function spGetCompany(id) {
+  const data = await spFetch(`web/lists/getbytitle('Companies')/items(${id})`);
+  return normalizeCompany(data);
+}
+
+/** Wrapper: PATCH a company with friendly-name body */
+async function spPatchCompany(id, body) {
+  return spPatch('Companies', id, denormalizeCompany(body));
+}
+
+/** Wrapper: POST a new company with friendly-name body, returns normalized item */
+async function spPostCompany(body) {
+  const result = await spPost('Companies', denormalizeCompany(body));
+  return normalizeCompany(result);
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   SCRL_COMPANIES FIELD NAME MAP
+   SCRL_Companies also uses field_1…field_9 for its columns.
+   ────────────────────────────────────────────────────────────────────────── */
+const SCRL_COMPANIES_FIELD_MAP = {
+  SCRL_ID_Ref:     'field_1',
+  CompanyID_Ref:   'field_2',
+  SCRLName_Ref:    'field_3',
+  CompanyName_Ref: 'field_4',
+  DateAdded:       'field_5',
+  AddedBy:         'field_6',
+  RAGStatus:       'field_7',
+  Notes:           'field_8',
+  SCRLLevel:       'field_9',
+};
+const SCRL_COMPANIES_FIELD_MAP_REV = Object.fromEntries(
+  Object.entries(SCRL_COMPANIES_FIELD_MAP).map(([k, v]) => [v, k])
+);
+
+function normalizeSCRLCompany(item) {
+  if (!item) return item;
+  const out = {};
+  for (const [key, val] of Object.entries(item)) {
+    out[SCRL_COMPANIES_FIELD_MAP_REV[key] ?? key] = val;
+  }
+  return out;
+}
+
+function denormalizeSCRLCompany(body) {
+  const out = {};
+  for (const [k, v] of Object.entries(body)) {
+    out[SCRL_COMPANIES_FIELD_MAP[k] ?? k] = v;
+  }
+  return out;
+}
+
+function scrlCompaniesSelectMap(select) {
+  if (!select) return select;
+  return select.split(',').map(s => {
+    const t = s.trim();
+    return SCRL_COMPANIES_FIELD_MAP[t] ?? t;
+  }).join(',');
+}
+
+async function spGetAllSCRLCompanies(select = '', filter = '', top = 5000) {
+  const rows = await spGetAll('SCRL_Companies', scrlCompaniesSelectMap(select), filter, top);
+  return rows.map(normalizeSCRLCompany);
+}
+
+async function spPostSCRLCompany(body) {
+  const result = await spPost('SCRL_Companies', denormalizeSCRLCompany(body));
+  return normalizeSCRLCompany(result);
+}
+
+async function spPatchSCRLCompany(id, body) {
+  return spPatch('SCRL_Companies', id, denormalizeSCRLCompany(body));
+}
+
 
 /* ──────────────────────────────────────────────────────────────────────────
    CONFIG — fill these in before deploying
@@ -1385,7 +1546,7 @@ async function loadLookupData() {
       spGetAll('Commodities',  'ID,Title', '', 2000),
       spGetAll('Accreditations','ID,Title','', 2000),
       spGetAll('Markets',      'ID,Title', '', 2000),
-      spGetAll('Companies',    'ID,Title,City,County,Postcode,RAGStatus,QuickDescription,CompanyID', '', 5000),
+      spGetAllCompanies('ID,Title,City,County,Postcode,RAGStatus,QuickDescription,CompanyID', '', 5000),
       spGetAll('SCRLs',        'ID,Title,field_1,field_9,field_10,field_4,field_12,field_5', '', 2000),
     ]);
     state.capabilities  = caps.sort((a,b)=>a.Title.localeCompare(b.Title));
@@ -1528,7 +1689,7 @@ function clearSearchFilters() {
 async function openCompany(id) {
   showLoading(true);
   try {
-    const data = await spFetch(`web/lists/getbytitle('Companies')/items(${id})`);
+    const data = await spGetCompany(id);
     state.selectedCompany = data;
     navigate('company', { company: data });
   } catch (e) { toast('Failed to load company: ' + e.message, 'error'); }
@@ -1624,11 +1785,11 @@ async function saveCompany() {
   try {
     let saved;
     if (state.selectedCompany && state.selectedCompany.ID) {
-      await spPatch('Companies', state.selectedCompany.ID, body);
+      await spPatchCompany(state.selectedCompany.ID, body);
       saved = { ...state.selectedCompany, ...body };
       toast('Company saved', 'success');
     } else {
-      saved = await spPost('Companies', body);
+      saved = await spPostCompany(body);
       toast('Company created', 'success');
     }
     state.selectedCompany = saved;
@@ -1738,7 +1899,7 @@ async function loadCompanySCRLs() {
   showLoading(true);
   try {
     const id = state.selectedCompany.ID;
-    const rows = await spGetAll('SCRL_Companies', 'ID,SCRL_ID_Ref,SCRLName_Ref,SCRLLevel,RAGStatus,CompanyID_Ref', `CompanyID_Ref eq ${id}`);
+    const rows = await spGetAllSCRLCompanies('ID,SCRL_ID_Ref,SCRLName_Ref,SCRLLevel,RAGStatus,CompanyID_Ref', `CompanyID_Ref eq ${id}`);
     const compRows = await spGetAll('SCRL_Company_Components', 'ID,SCRL_ID_Ref,ComponentName_Ref,RAG_Status', `CompanyID_Ref eq ${id}`);
     const list = document.getElementById('c-scrls-list');
     if (!rows.length) { list.innerHTML = '<div class="empty-state">No SCRLs</div>'; showLoading(false); return; }
@@ -1771,9 +1932,9 @@ async function addCompanyToSCRL() {
   if (!scrl) return;
   showLoading(true);
   try {
-    const existing = await spGetAll('SCRL_Companies', 'ID', `SCRL_ID_Ref eq ${scrlId} and CompanyID_Ref eq ${state.selectedCompany.ID}`);
+    const existing = await spGetAllSCRLCompanies('ID', `SCRL_ID_Ref eq ${scrlId} and CompanyID_Ref eq ${state.selectedCompany.ID}`);
     if (existing.length) { toast('Already in that SCRL', 'warning'); showLoading(false); return; }
-    await spPost('SCRL_Companies', {
+    await spPostSCRLCompany({
       Title: `${scrl.Title}-${state.selectedCompany.Title}`,
       SCRL_ID_Ref: scrlId,
       CompanyID_Ref: state.selectedCompany.ID,
@@ -2152,7 +2313,7 @@ async function loadSCRLFirms() {
   showLoading(true);
   try {
     const [firms, compComps] = await Promise.all([
-      spGetAll('SCRL_Companies', 'ID,SCRL_ID_Ref,CompanyID_Ref,CompanyName_Ref,SCRLLevel,RAGStatus,AddedBy,Notes,CapabilityNotes,CitationURL',
+      spGetAllSCRLCompanies('ID,SCRL_ID_Ref,CompanyID_Ref,CompanyName_Ref,SCRLLevel,RAGStatus,AddedBy,Notes,CapabilityNotes,CitationURL',
         `SCRL_ID_Ref eq ${state.selectedSCRL.ID}`),
       spGetAll('SCRL_Company_Components', 'ID,SCRL_ID_Ref,CompanyID_Ref,CompanyName_Ref,ComponentID_Ref,ComponentName_Ref,RAG_Status,CapabilityNotes,CitationURL',
         `SCRL_ID_Ref eq ${state.selectedSCRL.ID}`),
@@ -2238,10 +2399,10 @@ async function addFirmToSCRL() {
   const citation = getVal('sd-firm-citation');
   showLoading(true);
   try {
-    const existing = await spGetAll('SCRL_Companies','ID',
+    const existing = await spGetAllSCRLCompanies('ID',
       `SCRL_ID_Ref eq ${state.selectedSCRL.ID} and CompanyID_Ref eq ${firmId}`);
     if (existing.length) { toast('Already linked', 'warning'); showLoading(false); return; }
-    await spPost('SCRL_Companies', {
+    await spPostSCRLCompany({
       Title: `${state.selectedSCRL.Title}-${firm.Title}`,
       SCRL_ID_Ref: state.selectedSCRL.ID,
       CompanyID_Ref: firmId,
@@ -2462,7 +2623,7 @@ async function applyScrapedData() {
 
   showLoading(true);
   try {
-    await spPatch('Companies', c.ID, body);
+    await spPatchCompany(c.ID, body);
 
     // Update local state
     Object.assign(state.selectedCompany, body);
