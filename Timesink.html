@@ -622,21 +622,23 @@ async function loadCurrentUser() {
   const u = await spGet('web/currentuser');
   S.currentUser = { email: u.Email, displayName: u.Title, spId: u.Id };
   const emp = await spGet(
-    `${listItems(CFG.lists.employees)}?$expand=StaffName` +
-    `&$select=ID,StaffDayRate,CommercialDayRate,StaffName/EMail` +
-    `&$filter=StaffName/EMail eq '${u.Email}'`
+    `${listItems(CFG.lists.employees)}` +
+    `?$select=ID,StaffDayRate,CommercialDayRate` +
+    `&$filter=Email eq '${u.Email}'`
   );
   S.employeeRecord = emp.value[0] || null;
 }
 
 async function loadTsWeek(ws) {
   S.tsWeekStart = ws;
+  // Filter by numeric EmployeeId to avoid OData issues with @ in email addresses
+  const empFilter = S.currentUser.spId
+    ? `EmployeeId eq ${S.currentUser.spId}`
+    : `EmployeeName eq '${S.currentUser.displayName}'`;
   const data = await spGet(
     `${listItems(CFG.lists.timeEntries)}` +
     `?$select=ID,Date,HoursWorked,TravelHours,Notes,StaffRate,CommercialRate,EmployeeName,ProjectType,Project,PipelineProject` +
-    `,Employee/EMail` +
-    `&$expand=Employee` +
-    `&$filter=Employee/EMail eq '${S.currentUser.email}' and ${dateFilter(ws)}` +
+    `&$filter=${empFilter} and ${dateFilter(ws)}` +
     `&$orderby=Date asc`
   );
 
@@ -735,8 +737,6 @@ async function loadSumWeek(ws) {
     spGet(
       `${listItems(CFG.lists.timeEntries)}` +
       `?$select=ID,Date,HoursWorked,TravelHours,Notes,StaffRate,CommercialRate,EmployeeName,ProjectType,Project,PipelineProject` +
-      `,Employee/Title,Employee/EMail` +
-      `&$expand=Employee` +
       `&$filter=${dateFilter(ws)}`
     ),
     spGet(
@@ -749,8 +749,8 @@ async function loadSumWeek(ws) {
 
   S.sumEntries = te.value.map(e => ({
     ...e,
-    _empName    : e.Employee?.Title || e.EmployeeName || '(Unknown)',
-    _empEmail   : e.Employee?.EMail || '',
+    _empName    : e.EmployeeName || '(Unknown)',
+    _empEmail   : '',
     _projName   : e.Project || e.PipelineProject || ''
   }));
   S.sumExpenses = ex.value.map(e => ({
