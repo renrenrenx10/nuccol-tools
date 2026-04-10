@@ -687,24 +687,14 @@ function newExpRow(dk) {
 
 async function loadExpWeek(ws) {
   S.expWeekStart = ws;
-  let data;
-  try {
-    data = await spGet(
-      `${listItems(CFG.lists.expenses)}` +
-      `?$select=ID,Date,Category,Amount,Notes,Project,EmployeeName/EMail,EmployeeName/Title` +
-      `&$expand=EmployeeName` +
-      `&$filter=${dateFilter(ws)}` +
-      `&$orderby=Date asc`
-    );
-  } catch(e) {
-    // EmployeeName may be a plain text field, not a User lookup — try without expand
-    data = await spGet(
-      `${listItems(CFG.lists.expenses)}` +
-      `?$select=ID,Date,Category,Amount,Notes,Project,EmployeeName` +
-      `&$filter=${dateFilter(ws)}` +
-      `&$orderby=Date asc`
-    );
-  }
+  // EmployeeName is a User lookup field — must use $expand with /EMail and /Title sub-properties
+  const data = await spGet(
+    `${listItems(CFG.lists.expenses)}` +
+    `?$select=ID,Date,Category,Amount,Notes,Project,EmployeeName/EMail,EmployeeName/Title` +
+    `&$expand=EmployeeName` +
+    `&$filter=${dateFilter(ws)}` +
+    `&$orderby=Date asc`
+  );
 
   const byDate = {};
   const myEmail = S.currentUser.email.toLowerCase();
@@ -752,12 +742,6 @@ async function loadSumWeek(ws) {
       `?$select=ID,Date,Category,Amount,Notes,Project,EmployeeName/Title,EmployeeName/EMail` +
       `&$expand=EmployeeName` +
       `&$filter=${dateFilter(ws)}`
-    ).catch(() =>
-      spGet(
-        `${listItems(CFG.lists.expenses)}` +
-        `?$select=ID,Date,Category,Amount,Notes,Project,EmployeeName` +
-        `&$filter=${dateFilter(ws)}`
-      )
     )
   ]);
 
