@@ -685,20 +685,16 @@ function newExpRow(dk) {
 
 async function loadExpWeek(ws) {
   S.expWeekStart = ws;
+  // Filter by EmployeeNameId (SP always exposes the integer *Id field for User columns)
+  // This avoids needing $expand entirely
   const data = await spGet(
     `${listItems(CFG.lists.expenses)}` +
-    `?$select=ID,Date,Category,Amount,Notes,Project,EmployeeName/EMail,EmployeeName/Title` +
-    `&$expand=EmployeeName` +
-    `&$filter=${dateFilter(ws)}` +
+    `?$filter=${dateFilter(ws)} and EmployeeNameId eq ${S.currentUser.spId}` +
     `&$orderby=Date asc`
   );
 
   const byDate = {};
-  const myEmail = S.currentUser.email.toLowerCase();
   for (const item of data.value) {
-    // Filter to current user — works for both User lookup and plain text
-    const itemEmail = (item.EmployeeName?.EMail || '').toLowerCase();
-    if (itemEmail && itemEmail !== myEmail) continue;
     const dk = item.Date.split('T')[0];
     if (!byDate[dk]) byDate[dk] = [];
     byDate[dk].push({
@@ -733,8 +729,7 @@ async function loadSumWeek(ws) {
     ),
     spGet(
       `${listItems(CFG.lists.expenses)}` +
-      `?$select=ID,Date,Category,Amount,Notes,Project,EmployeeName/Title,EmployeeName/EMail` +
-      `&$expand=EmployeeName` +
+      `?$select=ID,Date,Amount,Category,Notes,Project,EmployeeNameId,EmployeeName` +
       `&$filter=${dateFilter(ws)}`
     )
   ]);
@@ -751,8 +746,15 @@ async function loadSumWeek(ws) {
   }));
   S.sumExpenses = ex.value.map(e => ({
     ...e,
-    _empName  : e.EmployeeName?.Title || '(Unknown)',
-    _empEmail : e.EmployeeName?.EMail || ''
+    // Without expand, EmployeeName may be a plain text field or null
+    // Match back to sumEntries by EmployeeNameId to get display name
+    _empName  : (typeof e.EmployeeName === 'string' && e.EmployeeName)
+                  || e.EmployeeName?.Title
+                  || (() => {
+                       const emp = S.sumEntries.find(t => t.Employee?.Id === e.EmployeeNameId);
+                       return emp ? emp._empName : '(Unknown)';
+                     })(),
+    _empEmail : ''
   }));
 
   // Aggregate by employee
