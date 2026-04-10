@@ -1334,7 +1334,11 @@ async function signIn() {
 }
 
 async function signOut() {
-  await msalClient.logoutPopup();
+  try {
+    await msalClient.logoutPopup();
+  } catch (e) {
+    console.warn('Logout popup error:', e);
+  }
   location.reload();
 }
 
@@ -1345,9 +1349,9 @@ async function getToken() {
     const res = await msalClient.acquireTokenSilent({ scopes: CONFIG.scopes, account: accounts[0] });
     return res.accessToken;
   } catch {
-    await msalClient.acquireTokenRedirect({ scopes: CONFIG.scopes, account: accounts[0] });
-    return null;
-  }
+  const res = await msalClient.acquireTokenPopup({ scopes: CONFIG.scopes, account: accounts[0] });
+  return res.accessToken;
+}
 }
 
 async function onSignedIn() {
