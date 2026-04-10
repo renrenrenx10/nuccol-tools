@@ -1420,12 +1420,12 @@ async function loadLookupData() {
       spGetAll('Companies',    'ID,Title,field_2,field_3,field_4,field_13,field_10', '', 5000),
       spGetAll('SCRLs',        'ID,Title,field_1,field_9,field_10,field_4,field_12,field_5', '', 2000),
     ]);
-    state.capabilities  = caps.sort((a,b)=>a.Title.localeCompare(b.Title));
-    state.commodities   = coms.sort((a,b)=>a.Title.localeCompare(b.Title));
-    state.accreditations= acreds.sort((a,b)=>a.Title.localeCompare(b.Title));
-    state.markets       = mkts.sort((a,b)=>a.Title.localeCompare(b.Title));
-    state.companies     = companies.map(normaliseCompany).sort((a,b)=>a.Title.localeCompare(b.Title));
-    state.scrls         = scrls.map(normaliseSCRL).sort((a,b)=>a.Title.localeCompare(b.Title));
+    state.capabilities  = caps.sort((a,b)=>(a.Title||"").localeCompare(b.Title||""));
+    state.commodities   = coms.sort((a,b)=>(a.Title||"").localeCompare(b.Title||""));
+    state.accreditations= acreds.sort((a,b)=>(a.Title||"").localeCompare(b.Title||""));
+    state.markets       = mkts.sort((a,b)=>(a.Title||"").localeCompare(b.Title||""));
+    state.companies     = companies.map(normaliseCompany).sort((a,b)=>(a.Title||"").localeCompare(b.Title||""));
+    state.scrls         = scrls.map(normaliseSCRL).sort((a,b)=>(a.Title||"").localeCompare(b.Title||""));
     state.counties      = [...new Set(state.companies.map(c=>c.County).filter(Boolean))].sort();
     populateSearchFilters();
     populateCompanyDropdowns();
@@ -1669,7 +1669,7 @@ async function saveCompany() {
     const idx = state.companies.findIndex(c => c.ID === saved.ID);
     if (idx >= 0) state.companies[idx] = { ...state.companies[idx], ...body };
     else state.companies.push(saved);
-    state.companies.sort((a,b)=>a.Title.localeCompare(b.Title));
+    state.companies.sort((a,b)=>(a.Title||"").localeCompare(b.Title||""));
     document.getElementById('btn-analyse').style.display = 'inline-block';
     document.getElementById('btn-view-scrape').style.display = 'inline-block';
     renderCompany(state.selectedCompany);
@@ -1920,7 +1920,7 @@ async function renderScrlListScreen() {
   showLoading(true);
   try {
     const rawScrls = await spGetAll('SCRLs', 'ID,Title,field_1,field_9,field_10,field_4,field_12,field_5', '', 2000);
-    state.scrls = rawScrls.map(normaliseSCRL).sort((a,b) => a.Title.localeCompare(b.Title));
+    state.scrls = rawScrls.map(normaliseSCRL).sort((a,b) => (a.Title||"").localeCompare(b.Title||""));
     renderScrlList();
   } catch (e) { toast('Error: ' + e.message, 'error'); }
   showLoading(false);
