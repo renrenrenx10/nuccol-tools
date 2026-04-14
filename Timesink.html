@@ -689,7 +689,7 @@ async function loadExpWeek(ws) {
   // This avoids needing $expand entirely
   const data = await spGet(
     `${listItems(CFG.lists.expenses)}` +
-    `?$filter=${dateFilter(ws)} and EmployeeNameId eq ${S.currentUser.spId}` +
+    `?$filter=${dateFilter(ws)} and EmployeeId eq ${S.currentUser.spId}` +
     `&$orderby=Date asc`
   );
 
@@ -700,7 +700,7 @@ async function loadExpWeek(ws) {
     byDate[dk].push({
       entryId   : uid(),
       date      : dk,
-      category  : item.Category || '',
+      category  : item.Category0 || item.Category || '',
       amount    : item.Amount != null ? String(item.Amount) : '',
       notes     : item.Notes || '',
       project   : item.Project || '',
@@ -729,7 +729,7 @@ async function loadSumWeek(ws) {
     ),
     spGet(
       `${listItems(CFG.lists.expenses)}` +
-      `?$select=ID,Date,Amount,Category,Notes,Project,EmployeeNameId,EmployeeName` +
+      `?$expand=Employee&$select=ID,Date,Amount,Category0,Notes,Project,EmployeeId,Employee/Title,Employee/EMail` +
       `&$filter=${dateFilter(ws)}`
     )
   ]);
@@ -746,15 +746,9 @@ async function loadSumWeek(ws) {
   }));
   S.sumExpenses = ex.value.map(e => ({
     ...e,
-    // Without expand, EmployeeName may be a plain text field or null
-    // Match back to sumEntries by EmployeeNameId to get display name
-    _empName  : (typeof e.EmployeeName === 'string' && e.EmployeeName)
-                  || e.EmployeeName?.Title
-                  || (() => {
-                       const emp = S.sumEntries.find(t => t.Employee?.Id === e.EmployeeNameId);
-                       return emp ? emp._empName : '(Unknown)';
-                     })(),
-    _empEmail : ''
+    Category  : e.Category0 || e.Category || '',
+    _empName  : e.Employee?.Title || '(Unknown)',
+    _empEmail : e.Employee?.EMail || ''
   }));
 
   // Aggregate by employee
@@ -874,11 +868,11 @@ async function saveExp() {
     const payload = {
       Title           : `Expense - ${row.date}`,
       Date            : `${row.date}T00:00:00Z`,
-      Category        : row.category || '',
+      Category0       : row.category || '',
       Amount          : row.amount !== '' ? parseFloat(row.amount) : null,
       Notes           : row.notes || '',
       Project         : row.project || '',
-      EmployeeNameId  : S.currentUser.spId
+      EmployeeId      : S.currentUser.spId
     };
     if (row.isExisting && row.spId) {
       await spPatch(listItem(CFG.lists.expenses, row.spId), payload);
