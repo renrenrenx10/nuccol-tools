@@ -602,6 +602,21 @@ async function spPatch(path, body) {
   if (!res.ok) { const t = await res.text(); throw new Error(`PATCH ${res.status}: ${t}`); }
 }
 
+async function spDelete(path) {
+  const token = await getToken();
+  const res = await fetch(`${CFG.siteUrl}/_api/${path}`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/json;odata=nometadata',
+      'Content-Type': 'application/json;odata=nometadata',
+      'X-HTTP-Method': 'DELETE',
+      'If-Match': '*'
+    }
+  });
+  if (!res.ok) { const t = await res.text(); throw new Error(`DELETE ${res.status}: ${t}`); }
+}
+
 const listItems = n => `web/lists/getbytitle('${encodeURIComponent(n)}')/items`;
 const listItem  = (n,id) => `web/lists/getbytitle('${encodeURIComponent(n)}')/items(${id})`;
 
@@ -1497,6 +1512,7 @@ function _renderPipelineDetail() {
           <div>${money(p.ExpectedValue)}</div>
         </div>
         <button class="btn-ghost" onclick="savePipelineNotes(${p.ID})">💾 Save Notes</button>
+        <button style="background:#16a34a;border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;letter-spacing:0.3px;" onclick="showPromoteModal(${p.ID})">🚀 Promote to Live Project</button>
         <span class="user-chip">${esc(S.currentUser?.displayName||'')}</span>
       </div>
     </div>
@@ -1555,6 +1571,126 @@ async function savePipelineNotes(projId) {
     if (p) p.Notes = notes;
     toast('Notes saved');
   } catch(e) { toast('Save failed: ' + e.message, 'err'); }
+}
+
+/* ================================================================
+   PROMOTE PIPELINE → LIVE PROJECT
+================================================================ */
+function showPromoteModal(projId) {
+  const p = S.pipeline.find(x => x.ID === projId);
+  if (!p) return;
+
+  // Remove any existing modal
+  const existing = document.getElementById('promoteModal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'promoteModal';
+  modal.style.cssText = `
+    position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;
+    display:flex;align-items:center;justify-content:center;
+  `;
+  modal.innerHTML = `
+    <div style="background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:28px 32px;max-width:480px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+      <div style="font-size:18px;font-weight:700;color:#f1f5f9;margin-bottom:6px;">🚀 Promote to Live Project</div>
+      <div style="font-size:13px;color:#94a3b8;margin-bottom:20px;">
+        This will create a new entry in the <strong style="color:#bfdbfe;">Projects</strong> list and remove
+        <strong style="color:#bfdbfe;">${esc(p.DisplayName)}</strong> from the Pipeline.
+        All time entries and expenses already booked will remain linked.
+      </div>
+
+      <div style="display:grid;gap:12px;margin-bottom:20px;">
+        <div>
+          <label style="font-size:11px;color:#94a3b8;display:block;margin-bottom:4px;">PO VALUE (£)</label>
+          <input id="pm_poValue" type="number" min="0" step="0.01"
+            style="width:100%;background:#0f172a;border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:8px 10px;color:#f1f5f9;font-size:13px;box-sizing:border-box;"
+            placeholder="e.g. 25000" />
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div>
+            <label style="font-size:11px;color:#94a3b8;display:block;margin-bottom:4px;">START DATE</label>
+            <input id="pm_startDate" type="date"
+              style="width:100%;background:#0f172a;border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:8px 10px;color:#f1f5f9;font-size:13px;box-sizing:border-box;"
+              value="${(p.ExpectedStart||'').slice(0,10)}" />
+          </div>
+          <div>
+            <label style="font-size:11px;color:#94a3b8;display:block;margin-bottom:4px;">END DATE</label>
+            <input id="pm_endDate" type="date"
+              style="width:100%;background:#0f172a;border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:8px 10px;color:#f1f5f9;font-size:13px;box-sizing:border-box;" />
+          </div>
+        </div>
+        <div>
+          <label style="font-size:11px;color:#94a3b8;display:block;margin-bottom:4px;">PLANNED HOURS</label>
+          <input id="pm_plannedHours" type="number" min="0" step="1"
+            style="width:100%;background:#0f172a;border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:8px 10px;color:#f1f5f9;font-size:13px;box-sizing:border-box;"
+            placeholder="e.g. 120" />
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button onclick="document.getElementById('promoteModal').remove()"
+          style="background:transparent;border:1px solid rgba(255,255,255,0.2);color:#94a3b8;padding:8px 18px;border-radius:6px;cursor:pointer;font-size:13px;">
+          Cancel
+        </button>
+        <button onclick="confirmPromote(${projId})"
+          style="background:#2563eb;border:none;color:#fff;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">
+          ✓ Promote &amp; Remove from Pipeline
+        </button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  // Close on backdrop click
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+}
+
+async function confirmPromote(projId) {
+  const p = S.pipeline.find(x => x.ID === projId);
+  if (!p) return;
+
+  const poValue     = parseFloat(document.getElementById('pm_poValue')?.value) || null;
+  const startDate   = document.getElementById('pm_startDate')?.value || null;
+  const endDate     = document.getElementById('pm_endDate')?.value || null;
+  const plannedHrs  = parseFloat(document.getElementById('pm_plannedHours')?.value) || null;
+
+  // Close modal and show spinner
+  document.getElementById('promoteModal')?.remove();
+  toast('Promoting project…', 'ok');
+
+  try {
+    // 1. Create item in Projects list
+    const newProjectBody = {
+      Title:         p.Company || p.Title,
+      Company:       p.Company || p.Title,
+      ProjectTitle0: p.ProjectTitle || '',
+      DisplayName:   p.DisplayName || '',
+      'Status@odata.type': 'SP.FieldChoiceValue',
+      Status: { Value: 'Live' },
+      Notes:         p.Notes || '',
+      ...(poValue    !== null && { POValue: poValue }),
+      ...(startDate  && { StartDate: startDate }),
+      ...(endDate    && { EndDate: endDate }),
+      ...(plannedHrs !== null && { PlannedHours: plannedHrs }),
+    };
+
+    await spPost(listItems(CFG.lists.projects), newProjectBody);
+
+    // 2. Delete the pipeline item
+    await spDelete(listItem(CFG.lists.pipelineProjects, projId));
+
+    // 3. Update local state — remove from pipeline array
+    S.pipeline = S.pipeline.filter(x => x.ID !== projId);
+    S.selectedPipeline = null;
+
+    toast(`✅ "${p.DisplayName}" promoted to Live Project and removed from Pipeline.`);
+
+    // Reload all data so Projects list reflects the new item
+    await loadAll();
+    viewPipeline();
+
+  } catch(e) {
+    toast('Promote failed: ' + e.message, 'err');
+  }
 }
 
 /* ================================================================
