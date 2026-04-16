@@ -1047,6 +1047,27 @@ function viewProjectDetail(projId) {
   _renderProjectDetail();
 }
 
+function teForPromotedPipeline(proj) {
+  // Find time entries that were booked against this project when it was in the pipeline.
+  // We match on SourcePipelineId (stored at promote time) or SourcePipelineName as fallback.
+  const pipeIdStr = proj.SourcePipelineId || '';
+  const pipeName  = proj.SourcePipelineName || '';
+  return S.timeEntries.filter(t => {
+    const type = t.ProjectType?.Value || t.ProjectType || '';
+    if (type !== 'Pipeline Project') return false;
+    // Match by stored pipeline ID (most reliable)
+    if (pipeIdStr) {
+      const f = S._tePipeField;
+      const fId = S._tePipeIdField || 'PipelineProjectId';
+      if (S._teHasExpand && f && t[f]) return String(t[f].Id) === pipeIdStr;
+      if (t[fId] != null) return String(t[fId]) === pipeIdStr;
+    }
+    // Fallback: match by display name stored on the TE
+    if (pipeName && t.ProjectDisplayName) return t.ProjectDisplayName === pipeName;
+    return false;
+  });
+}
+
 function _renderProjectDetail() {
   const p = S.selectedProject;
   const te = teForProject(p.ID);
@@ -1060,6 +1081,13 @@ function _renderProjectDetail() {
   const budgetPct = p.POValue ? (budgetLeft / p.POValue * 100) : 0;
   const empRows = groupByEmployee(te);
   const st = p.Status?.Value || p.Status || '';
+
+  // Sunk cost: time booked while this project was in the pipeline
+  const pipelineTe   = teForPromotedPipeline(p);
+  const sunkHours    = sumHours(pipelineTe);
+  const sunkStaff    = sumStaff(pipelineTe);
+  const sunkCommercial = sumCommercial(pipelineTe);
+  const hasSunkCost  = pipelineTe.length > 0;
 
   const empTableRows = empRows.map(e => {
     const empExps = sumExpenses(expForEmployee(p.DisplayName, e.name));
@@ -1660,12 +1688,14 @@ async function confirmPromote(projId) {
   try {
     // 1. Create item in Projects list
     const newProjectBody = {
-      Title:         p.Company || p.Title,
-      Company:       p.Company || p.Title,
-      ProjectTitle0: p.ProjectTitle || '',
-      DisplayName:   p.DisplayName || '',
-      Status: 'Live',
-      Notes:         p.Notes || '',
+      Title:              p.Company || p.Title,
+      Company:            p.Company || p.Title,
+      ProjectTitle0:      p.ProjectTitle || '',
+      DisplayName:        p.DisplayName || '',
+      Status:             'Live',
+      Notes:              p.Notes || '',
+      SourcePipelineId:   String(projId),
+      SourcePipelineName: p.DisplayName || '',
       ...(poValue    !== null && { POValue: poValue }),
       ...(startDate  && { StartDate: startDate }),
       ...(endDate    && { EndDate: endDate }),
