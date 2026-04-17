@@ -1530,8 +1530,7 @@ function _renderPipeline() {
 async function updatePipelineStatus(projId, newStatus) {
   try {
     await spPatch(listItem(CFG.lists.pipelineProjects, projId), {
-      StatusId: null,
-      Status: { Value: newStatus }
+      Status: newStatus
     });
     const p = S.pipeline.find(x => x.ID === projId);
     if (p) { if (p.Status?.Value !== undefined) p.Status.Value = newStatus; else p.Status = newStatus; }
@@ -1855,9 +1854,16 @@ async function loadPipelineCategories() {
   try {
     const sel = document.getElementById('f_category');
     if (!sel) return;
-    // Try choices endpoint
-    const ch = await spGet(`web/lists/getbytitle('${encodeURIComponent(CFG.lists.pipelineProjects)}')/fields?$filter=InternalName eq 'Category0'&$select=Choices`);
-    const choices = ch.value?.[0]?.Choices || [];
+    const fromItems = [...new Set(S.pipeline.map(p => String(p.Category || '').trim()).filter(Boolean))];
+    let choices = fromItems;
+    if (!choices.length) {
+      const fieldNames = ['Category', 'Category0'];
+      for (const fieldName of fieldNames) {
+        const ch = await spGet(`web/lists/getbytitle('${encodeURIComponent(CFG.lists.pipelineProjects)}')/fields?$filter=InternalName eq '${fieldName}'&$select=Choices`);
+        choices = ch.value?.[0]?.Choices || [];
+        if (choices.length) break;
+      }
+    }
     choices.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
   } catch(e) { /* category choices not critical */ }
 }
@@ -1871,7 +1877,7 @@ async function submitNewProject() {
     Company_x002f_ProjectName: company,
     ProjectTitle: projectTitle || company,
     ProjectNumber: document.getElementById('f_projectNumber')?.value?.trim() || null,
-    Status: { Value: document.getElementById('f_status')?.value || 'Lead' },
+    Status: document.getElementById('f_status')?.value || 'Lead',
     ExpectedValue: parseFloat(document.getElementById('f_value')?.value) || null,
     Probability: parseInt(document.getElementById('f_probability')?.value) || null,
     ExpectedStart: document.getElementById('f_startDate')?.value || null,
@@ -1880,9 +1886,9 @@ async function submitNewProject() {
   };
 
   const ownerVal = document.getElementById('f_owner')?.value;
-  if (ownerVal) body.Owner = ownerVal;
+  if (ownerVal) body.Owner_x002f_PM = ownerVal;
   const catVal = document.getElementById('f_category')?.value;
-  if (catVal) body.Category = { Value: catVal };
+  if (catVal) body.Category = catVal;
 
   try {
     const created = await spPost(listItems(CFG.lists.pipelineProjects), body);
