@@ -543,6 +543,8 @@ let nlPollTimer   = null;
 let genPollTimer  = null;
 let pollCount     = 0;
 
+const $ = (id) => document.getElementById(id);
+
 // ═══════════════════════════════════════════════════════════
 // AUTH
 // ═══════════════════════════════════════════════════════════
@@ -614,7 +616,7 @@ async function getToken() {
 }
 
 function setLoginStatus(html, isError = false) {
-  const el = document.getElementById('login-status');
+  const el = $('login-status');
   el.innerHTML = html;
   el.className = 'mt-6 text-sm min-h-[1.5rem] ' + (isError ? 'text-red-400' : 'text-zinc-500');
 }
@@ -622,35 +624,58 @@ function setLoginStatus(html, isError = false) {
 // ═══════════════════════════════════════════════════════════
 // SHAREPOINT REST API
 // ═══════════════════════════════════════════════════════════
-async function spGet(listName, select = "*", filter = "", orderBy = "") {
+function encodeSharePointListTitle(listName) {
+  return String(listName).replace(/'/g, "''");
+}
+
+function buildSharePointItemsUrl(siteUrl, listName, select = "*", filter = "", orderBy = "") {
+  const query = new URLSearchParams({ '$select': select, '$top': '500' });
+  if (filter) query.set('$filter', filter);
+  if (orderBy) query.set('$orderby', orderBy);
+  return `${siteUrl}/_api/web/lists/getbytitle('${encodeSharePointListTitle(listName)}')/items?${query.toString()}`;
+}
+
+async function getSharePointError(res, fallback) {
+  try {
+    const data = await res.clone().json();
+    const message = data?.error?.message?.value || data?.error?.message || data?.message;
+    if (message) return `${fallback}: ${message}`;
+  } catch (e) {
+    /* fall back to status text */
+  }
+  return `${fallback}: ${res.status} ${res.statusText}`;
+}
+
+async function spGetFromSite(siteUrl, listName, select = "*", filter = "", orderBy = "") {
   const token = await getToken();
-  let url = `${CONFIG.spSiteUrl}/_api/web/lists/getbytitle('${encodeURIComponent(listName)}')/items?$select=${select}&$top=500`;
-  if (filter)  url += `&$filter=${encodeURIComponent(filter)}`;
-  if (orderBy) url += `&$orderby=${encodeURIComponent(orderBy)}`;
-  const res = await fetch(url, {
-    headers: { "Authorization": "Bearer " + token, "Accept": "application/json;odata=nometadata" }
-  });
-  if (!res.ok) throw new Error(`GET ${listName}: ${res.status} ${res.statusText}`);
-  const data = await res.json();
-  return data.value;
+  const items = [];
+  let nextUrl = buildSharePointItemsUrl(siteUrl, listName, select, filter, orderBy);
+
+  while (nextUrl) {
+    const res = await fetch(nextUrl, {
+      headers: { "Authorization": "Bearer " + token, "Accept": "application/json;odata=nometadata" }
+    });
+    if (!res.ok) throw new Error(await getSharePointError(res, `GET ${listName}`));
+
+    const data = await res.json();
+    items.push(...(data.value || []));
+    nextUrl = data['@odata.nextLink'] || null;
+  }
+
+  return items;
+}
+
+async function spGet(listName, select = "*", filter = "", orderBy = "") {
+  return spGetFromSite(CONFIG.spSiteUrl, listName, select, filter, orderBy);
 }
 
 async function spGetScrl(listName, select = "*", filter = "", orderBy = "") {
-  const token = await getToken();
-  let url = `${CONFIG.spScrldUrl}/_api/web/lists/getbytitle('${encodeURIComponent(listName)}')/items?$select=${select}&$top=500`;
-  if (filter)  url += `&$filter=${encodeURIComponent(filter)}`;
-  if (orderBy) url += `&$orderby=${encodeURIComponent(orderBy)}`;
-  const res = await fetch(url, {
-    headers: { "Authorization": "Bearer " + token, "Accept": "application/json;odata=nometadata" }
-  });
-  if (!res.ok) throw new Error(`GET ${listName}: ${res.status} ${res.statusText}`);
-  const data = await res.json();
-  return data.value;
+  return spGetFromSite(CONFIG.spScrldUrl, listName, select, filter, orderBy);
 }
 
 async function spPatch(listName, itemId, fields) {
   const token = await getToken();
-  const url = `${CONFIG.spSiteUrl}/_api/web/lists/getbytitle('${encodeURIComponent(listName)}')/items(${itemId})`;
+  const url = `${CONFIG.spSiteUrl}/_api/web/lists/getbytitle('${encodeSharePointListTitle(listName)}')/items(${itemId})`;
   const res = await fetch(url, {
     method: "POST",
     headers: {
@@ -667,7 +692,7 @@ async function spPatch(listName, itemId, fields) {
 
 async function spPost(listName, fields) {
   const token = await getToken();
-  const url = `${CONFIG.spSiteUrl}/_api/web/lists/getbytitle('${encodeURIComponent(listName)}')/items`;
+  const url = `${CONFIG.spSiteUrl}/_api/web/lists/getbytitle('${encodeSharePointListTitle(listName)}')/items`;
   const res = await fetch(url, {
     method: "POST",
     headers: {
@@ -683,7 +708,7 @@ async function spPost(listName, fields) {
 
 async function spDelete(listName, itemId) {
   const token = await getToken();
-  const url = `${CONFIG.spSiteUrl}/_api/web/lists/getbytitle('${encodeURIComponent(listName)}')/items(${itemId})`;
+  const url = `${CONFIG.spSiteUrl}/_api/web/lists/getbytitle('${encodeSharePointListTitle(listName)}')/items(${itemId})`;
   const res = await fetch(url, {
     method: "POST",
     headers: {
@@ -769,8 +794,12 @@ async function loadCompanies() {
 
 async function refreshAllLists() {
   showToast("Refreshing from SharePoint...");
-  await loadAllData();
-  showToast("✅ Data refreshed");
+  try {
+    await loadAllData();
+    showToast("✅ Data refreshed");
+  } catch (e) {
+    /* loadAllData already surfaces the error */
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -801,10 +830,10 @@ async function nlScrape(scrapeType) {
 
   pollCount = 0;
   clearInterval(nlPollTimer);
-  nlPollTimer = setInterval(() => pollNLScrape(scrapeType), 15000);
+  nlPollTimer = setInterval(pollNLScrape, 15000);
 }
 
-async function pollNLScrape(scrapeType) {
+async function pollNLScrape() {
   pollCount++;
   updatePollCount(pollCount, 36);
   try {
@@ -1373,13 +1402,12 @@ function expandText(title, text) {
 function closeExpandModal() { document.getElementById('expandModal').classList.remove('active'); }
 
 function setBETab(n) {
-  document.getElementById('be-tab-content-1').classList.toggle('hidden', n !== 1);
-  document.getElementById('be-tab-content-2').classList.toggle('hidden', n !== 2);
-  document.getElementById('be-tab1').classList.toggle('active', n === 1);
-  document.getElementById('be-tab1').classList.toggle('text-zinc-400', n !== 1);
-  document.getElementById('be-tab1').classList.remove(n === 1 ? 'text-zinc-400' : '');
-  document.getElementById('be-tab2').classList.toggle('active', n === 2);
-  document.getElementById('be-tab2').classList.toggle('text-zinc-400', n !== 2);
+  $('be-tab-content-1').classList.toggle('hidden', n !== 1);
+  $('be-tab-content-2').classList.toggle('hidden', n !== 2);
+  $('be-tab1').classList.toggle('active', n === 1);
+  $('be-tab1').classList.toggle('text-zinc-400', n !== 1);
+  $('be-tab2').classList.toggle('active', n === 2);
+  $('be-tab2').classList.toggle('text-zinc-400', n !== 2);
 }
 
 function showProcessingOverlay(title, msg) {
@@ -1410,7 +1438,7 @@ function showToast(message, type = 'success') {
 // ═══════════════════════════════════════════════════════════
 // BOOT
 // ═══════════════════════════════════════════════════════════
-window.onload = () => initAuth();
+window.addEventListener('DOMContentLoaded', initAuth);
 </script>
 </body>
 </html>
