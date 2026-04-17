@@ -466,7 +466,7 @@ textarea { resize: vertical; min-height: 60px; }
         <button class="btn btn-secondary" onclick="saveCompany()">Save</button>
         <button class="btn btn-primary" id="btn-analyse" onclick="startScrape()" style="display:none">Analyse Firm</button>
         <button class="btn btn-outline" id="btn-view-scrape" onclick="viewLastScrape()" style="display:none">View Last Scrape</button>
-        <button class="btn btn-outline" onclick="history.back()">← Back</button>
+        <button class="btn btn-outline" onclick="navigateBack()">← Back</button>
       </div>
       <div class="tab-bar" id="company-tabs">
         <button class="tab-btn active" data-tab="c1" onclick="switchTab('company','c1',this)">Core Data</button>
@@ -1049,7 +1049,7 @@ textarea { resize: vertical; min-height: 60px; }
     <div id="screen-scrapeReview" class="screen">
       <div class="action-bar">
         <button class="btn btn-secondary" onclick="applyScrapedData()">Apply Changes</button>
-        <button class="btn btn-outline" onclick="history.back()">Back to Record</button>
+        <button class="btn btn-outline" onclick="navigateBack()">Back to Record</button>
       </div>
       <div class="panel">
         <div class="panel-header">
@@ -1103,10 +1103,11 @@ const msalClient = new msal.PublicClientApplication(msalConfig);
 let currentUser = null;
 let msalReady = false;
 
-// Initialise MSAL once and then attempt auto-login
+// Initialise MSAL once and then attempt auto-login (main window only — not inside the popup)
 (async () => {
   await msalClient.initialize();
   msalReady = true;
+  if (window.opener) return; // we're the MSAL popup — do nothing
   await msalClient.handleRedirectPromise();
   const accounts = msalClient.getAllAccounts();
   if (accounts.length) { currentUser = accounts[0]; onSignedIn(); }
@@ -1137,6 +1138,7 @@ async function getToken() {
     const res = await msalClient.acquireTokenSilent({ scopes: CONFIG.scopes, account: accounts[0] });
     return res.accessToken;
   } catch {
+    if (window.opener) throw new Error('Session expired — please reload and sign in again');
     const res = await msalClient.acquireTokenPopup({ scopes: CONFIG.scopes });
     return res.accessToken;
   }
@@ -1174,7 +1176,9 @@ async function spFetch(path, options = {}) {
     throw new Error(`SP ${res.status}: ${text.substring(0,200)}`);
   }
   if (res.status === 204) return {};
-  return res.json();
+  const text = await res.text();
+  if (!text || !text.trim()) return {};
+  return JSON.parse(text);
 }
 
 async function spGetAll(listName, select = '', filter = '', top = 5000) {
@@ -1219,6 +1223,7 @@ async function spDelete(listName, id) {
    ────────────────────────────────────────────────────────────────────────── */
 const state = {
   screen: 'dashboard',
+  navHistory: [],
   // data caches
   companies: [],
   capabilities: [],
@@ -1311,11 +1316,16 @@ function switchTab(prefix, tabId, btn) {
 /* ──────────────────────────────────────────────────────────────────────────
    ROUTER
    ────────────────────────────────────────────────────────────────────────── */
-function navigate(screen, params = {}) {
+function navigate(screen, params = {}, pushHistory = true) {
+  if (pushHistory && state.screen && state.screen !== screen) {
+    state.navHistory.push({ screen: state.screen, params: state.navParams || {} });
+    if (state.navHistory.length > 20) state.navHistory.shift(); // cap stack
+  }
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const el = document.getElementById('screen-' + screen);
   if (el) el.classList.add('active');
   state.screen = screen;
+  state.navParams = params;
 
   if (screen === 'dashboard')    renderDashboard();
   if (screen === 'search')       renderSearch();
@@ -1325,6 +1335,15 @@ function navigate(screen, params = {}) {
   if (screen === 'scrapeReview') renderScrapeReview();
 
   window.scrollTo(0, 0);
+}
+
+function navigateBack() {
+  if (state.navHistory.length) {
+    const prev = state.navHistory.pop();
+    navigate(prev.screen, prev.params, false);
+  } else {
+    navigate('search', {}, false);
+  }
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
