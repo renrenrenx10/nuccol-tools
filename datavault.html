@@ -1272,11 +1272,6 @@ function ragBadge(val) {
   return `<span class="rag ${v || 'empty'}">${v || '—'}</span>`;
 }
 
-function ragChip(val, text, itemId, removeFn) {
-  const v = val || 'empty';
-  return `<span class="chip ${v}" onclick="editChip(${itemId})">${text}<button class="chip-remove" onclick="event.stopPropagation();${removeFn}(${itemId})">✕</button></span>`;
-}
-
 function fmtDate(d) {
   if (!d) return '';
   const dt = new Date(d);
@@ -1504,8 +1499,6 @@ async function renderDashboard() {
   document.getElementById('stat-companies').textContent = state.companies.length || '—';
   document.getElementById('stat-scrls').textContent     = state.scrls.length || '—';
   try {
-    const caps = await spGetAll('Company_Capabilities', 'ID', '', 1);
-    // just get count via $top=1 trick — use metadata count instead
     const data = await spFetch(`web/lists/getbytitle('Company_Capabilities')/ItemCount`);
     document.getElementById('stat-caps').textContent = data.value || '—';
   } catch { /* silent */ }
@@ -1627,8 +1620,10 @@ function renderCompany(company) {
   setVal('c-marketnotes', c.MarketNotes);
 }
 
-function switchToFirstTab(tabBarId, firstTabId) {
-  const bar = document.getElementById(tabBarId);
+function switchToFirstTab(tabBarRef, firstTabId) {
+  const bar = typeof tabBarRef === 'string'
+    ? document.getElementById(tabBarRef) || document.querySelector(tabBarRef)
+    : tabBarRef;
   if (!bar) return;
   bar.querySelectorAll('.tab-btn').forEach((b,i) => {
     b.classList.toggle('active', i === 0);
@@ -1868,7 +1863,7 @@ function renderLocationTab() {
 
 function openGoogleMaps() {
   const postcode = getVal('c-postcode') || state.selectedCompany?.Postcode || '';
-  if (postcode) window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(postcode)}`, '_blank');
+  if (postcode) window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(postcode)}`, '_blank', 'noopener,noreferrer');
 }
 
 /* ── SCRAPE ──────────────────────────────────────────────────────────────── */
@@ -1995,14 +1990,7 @@ function renderSCRLDetail(scrl) {
   state.selectedComponent = null;
   state.selectedSCRLCompanyRow = null;
   state.selectedSCRLCompanyComponent = null;
-  switchToFirstTab('screen-scrlDetail .tab-bar', 'sd1');
-  // re-query since there's no id for the tab bar
-  document.querySelector('#screen-scrlDetail .tab-bar').querySelectorAll('.tab-btn').forEach((b,i) => {
-    b.classList.toggle('active', i === 0);
-  });
-  document.querySelectorAll('#screen-scrlDetail .tab-content').forEach((tc,i) => {
-    tc.classList.toggle('active', i === 0);
-  });
+  switchToFirstTab('#screen-scrlDetail .tab-bar', 'sd1');
 
   const s = scrl || {};
   setVal('sd-name',         s.Title);
@@ -2240,7 +2228,7 @@ function renderSCRLFirms() {
       <span class="col" style="flex:1;color:var(--muted);font-size:11px">${esc(f.AddedBy||'')}</span>
       <span class="col" style="flex:1.5;color:#555;font-size:11px">${esc(f.Notes||'')}</span>
       <span class="col" style="flex:1.5;color:#555;font-size:11px">${esc(f.CapabilityNotes||'')}</span>
-      <span class="col" style="flex:1.5;font-size:11px">${f.CitationURL?`<a href="${esc(f.CitationURL)}" target="_blank" style="color:var(--blue)">link</a>`:'—'}</span>
+      <span class="col" style="flex:1.5;font-size:11px">${f.CitationURL?`<a href="${esc(f.CitationURL)}" target="_blank" rel="noopener noreferrer" style="color:var(--blue)">link</a>`:'—'}</span>
       <span class="col" style="flex:0 0 50px;text-align:center">
         <button class="btn-icon" onclick="event.stopPropagation();removeFirmFromSCRL(${f.ID})">🗑</button>
       </span>
@@ -2415,7 +2403,7 @@ const REVIEW_FIELDS = [
   { label: 'Company Name', accept: 'name',     current: () => state.selectedCompany?.Title        || '', scraped: () => state.varScrapeRow?.Name     || '' },
   { label: 'Website',      accept: 'website',  current: () => state.selectedCompany?.Website      || '', scraped: () => state.varScrapeRow?.Website  || '' },
   { label: 'CH Number',    accept: 'ch',       current: () => state.selectedCompany?.RegisteredNumber||'', scraped: () => state.varScrapeRow?.CHNumber || '' },
-  { label: 'Address',      accept: 'city',     current: () => state.selectedCompany?.City         || '', scraped: () => state.varScrapeRow?.Address  || '' },
+  { label: 'Address',      accept: 'address',  current: () => state.selectedCompany?.Address      || '', scraped: () => state.varScrapeRow?.Address  || '' },
   { label: 'Postcode',     accept: 'postcode', current: () => state.selectedCompany?.Postcode     || '', scraped: () => state.varScrapeRow?.Postcode || '' },
   { label: 'Description',  accept: 'desc',     current: () => state.selectedCompany?.QuickDescription||'', scraped: () => state.varScrapeRow?.Overview || '', multiline: true },
 ];
@@ -2474,16 +2462,16 @@ async function applyScrapedData() {
     Title:    a.name     ? r.Name     : c.Title,
     field_6:  a.website  ? r.Website  : c.Website,
     field_8:  a.ch       ? r.CHNumber : c.RegisteredNumber,
-    field_2:  a.city     ? r.Address  : c.City,
+    field_25: a.address  ? r.Address  : c.Address,
     field_4:  a.postcode ? r.Postcode : c.Postcode,
     field_10: a.desc     ? r.Overview : c.QuickDescription,
   };
   showLoading(true);
   try {
     await spPatch('Companies', c.ID, body);
-    Object.assign(state.selectedCompany, body);
+    Object.assign(state.selectedCompany, body, { Address: body.field_25 ?? c.Address });
     const idx = state.companies.findIndex(x => x.ID === c.ID);
-    if (idx >= 0) Object.assign(state.companies[idx], body);
+    if (idx >= 0) Object.assign(state.companies[idx], body, { Address: body.field_25 ?? c.Address });
     toast('Changes applied', 'success');
     navigate('company', { company: state.selectedCompany });
   } catch (e) { toast('Error: ' + e.message, 'error'); }
