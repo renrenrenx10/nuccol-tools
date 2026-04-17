@@ -523,6 +523,7 @@ const CFG = {
   clientId : 'ec0a6806-59e8-4ea9-8ff5-6bdb1ba87baf',
   siteUrl  : 'https://nuccol.sharepoint.com/sites/ProjectControl',
   scope    : 'https://nuccol.sharepoint.com/.default',
+  hoursPerDay: 7.5,
   lists: {
     projects         : 'Projects',
     pipelineProjects : 'PipelineProjects',
@@ -577,13 +578,19 @@ async function spPost(path, body) {
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: 'application/json;odata=nometadata',
-      'Content-Type': 'application/json;odata=nometadata'
+      'Content-Type': 'application/json;odata=nometadata',
+      Prefer: 'return=representation'
     },
     body: JSON.stringify(body)
   });
   if (!res.ok) { const t = await res.text(); throw new Error(`POST ${res.status}: ${t}`); }
-  const t = await res.text();
-  return t ? JSON.parse(t) : {};
+  const t = (await res.text()).trim();
+  if (!t) return {};
+  try {
+    return JSON.parse(t);
+  } catch {
+    return {};
+  }
 }
 
 async function spPatch(path, body) {
@@ -620,53 +627,93 @@ async function spDelete(path) {
 const listItems = n => `web/lists/getbytitle('${encodeURIComponent(n)}')/items`;
 const listItem  = (n,id) => `web/lists/getbytitle('${encodeURIComponent(n)}')/items(${id})`;
 
-// Fetches a list with an expand; if 400, retries without $select to get all fields
-async function spGetSafe(path, selectFields, expandField, top=500) {
-  const url = `${path}?$select=${selectFields},${expandField}/DisplayName&$expand=${expandField}&$top=${top}&$orderby=Date desc`;
-  try {
-    return await spGet(url);
-  } catch(e) {
-    if (e.message.startsWith('GET 400')) {
-      return await spGet(`${path}?$expand=${expandField}&$top=${top}&$orderby=Date desc`);
-    }
-    throw e;
-  }
-}
-
-// Fetch a list with specific fields; if 400 (field doesn't exist), retry without $select
-async function spGetWithFallback(listName, fields, top=500, orderBy='Title') {
-  const base = listItems(listName);
-  try {
-    return await spGet(`${base}?$select=${fields}&$top=${top}&$orderby=${orderBy} asc`);
-  } catch(e) {
-    if (e.message.startsWith('GET 400')) {
-      // Some fields may not exist — fall back to no $select
-      try {
-        return await spGet(`${base}?$top=${top}&$orderby=Title asc`);
-      } catch(e2) {
-        return await spGet(`${base}?$top=${top}`);
-      }
-    }
-    throw e;
-  }
-}
-
 /* ================================================================
    UTILITIES
 ================================================================ */
+function toNumber(v) {
+  if (typeof v === 'number') return Number.isFinite(v) ? v : 0;
+  if (typeof v === 'string') {
+    const cleaned = v.replace(/[^0-9.-]/g, '');
+    if (!cleaned || cleaned === '-' || cleaned === '.' || cleaned === '-.') return 0;
+    const n = Number(cleaned);
+    return Number.isFinite(n) ? n : 0;
+  }
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+function firstNumber(...vals) {
+  for (const v of vals) {
+    const n = toNumber(v);
+    if (n !== 0) return n;
+    if (v === 0 || v === '0' || v === '0.00') return 0;
+  }
+  return 0;
+}
+function hasValue(v) {
+  return v !== null && v !== undefined && String(v).trim() !== '';
+}
+function normaliseKey(v) {
+  return String(v ?? '')
+    .toLowerCase()
+    .replace(/[\u2012-\u2015]/g, '-')
+    .replace(/\s+/g, ' ')
+    .replace(/\s*[-–—]\s*/g, '-')
+    .trim();
+}
+function employeeName(v) {
+  if (!v) return 'Unknown';
+  if (typeof v === 'string') return v;
+  return v.DisplayName || v.Title || v.Email || 'Unknown';
+}
+function projectNameCandidates(project) {
+  const vals = [
+    project?.DisplayName,
+    project?.Title,
+    project?.ProjectTitle,
+    project?.ProjectTitle0,
+    project?.Company,
+    project?.Company_x002f_ProjectName
+  ];
+  const company = project?.Company || project?.Company_x002f_ProjectName || '';
+  const title = project?.ProjectTitle || project?.ProjectTitle0 || project?.Title || '';
+  if (company && title) {
+    vals.push(`${company}-${title}`, `${company} - ${title}`, `${company} — ${title}`);
+  }
+  return [...new Set(vals.map(normaliseKey).filter(Boolean))];
+}
+function expenseMatchesProject(expense, project) {
+  const expenseKey = normaliseKey(expense?.Project);
+  if (!expenseKey) return false;
+  return projectNameCandidates(project).includes(expenseKey);
+}
+function entryHours(entry) {
+  return toNumber(entry?.HoursWorked) + toNumber(entry?.TravelHours);
+}
+function entryStaffAmount(entry) {
+  if (hasValue(entry?.StaffCost) || hasValue(entry?.StaffTotal)) {
+    return firstNumber(entry?.StaffCost, entry?.StaffTotal);
+  }
+  return firstNumber(entry?.StaffRate, entry?.StaffDayRate) * (entryHours(entry) / CFG.hoursPerDay);
+}
+function entryCommercialAmount(entry) {
+  if (hasValue(entry?.CommercialCost) || hasValue(entry?.CommercialTotal)) {
+    return firstNumber(entry?.CommercialCost, entry?.CommercialTotal);
+  }
+  return firstNumber(entry?.CommercialRate, entry?.CommercialDayRate) * (entryHours(entry) / CFG.hoursPerDay);
+}
 function esc(s) {
   return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 function money(v) {
-  const n = Number(v) || 0;
+  const n = toNumber(v);
   return '£' + n.toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
 function moneyDec(v) {
-  const n = Number(v) || 0;
+  const n = toNumber(v);
   return '£' + n.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
-function num(v) { return Number(v || 0).toLocaleString('en-GB', { maximumFractionDigits: 1 }); }
-function pct(v) { return (Number(v) || 0).toFixed(1) + '%'; }
+function num(v) { return toNumber(v).toLocaleString('en-GB', { maximumFractionDigits: 1 }); }
+function pct(v) { return toNumber(v).toFixed(1) + '%'; }
 function ukDate(s) {
   if (!s) return '—';
   const d = new Date(s.split('T')[0] + 'T12:00:00');
@@ -767,8 +814,8 @@ async function loadAll() {
     ...p,
     ProjectTitle:  p.ProjectTitle0 || p.Title || '',
     DisplayName:   p.Company ? (p.ProjectTitle0 ? `${p.Company}-${p.ProjectTitle0}` : p.Company) : (p.ProjectTitle0 || p.Title || ''),
-    POValue:       Number(p.POValue ?? 0),
-    PlannedHours:  Number(p.PlannedHours ?? 0)
+    POValue:       toNumber(p.POValue),
+    PlannedHours:  toNumber(p.PlannedHours)
   }));
 
   S.pipeline = pipe.value.map(p => ({
@@ -776,7 +823,7 @@ async function loadAll() {
     Company:       p.Company_x002f_ProjectName || p.Title || '',
     ProjectTitle:  p.ProjectTitle || p.Title || '',
     DisplayName:   p.Company_x002f_ProjectName ? (p.ProjectTitle ? `${p.Company_x002f_ProjectName} — ${p.ProjectTitle}` : p.Company_x002f_ProjectName) : (p.ProjectTitle || p.Title || ''),
-    ExpectedValue: Number(p.ExpectedValue ?? 0),
+    ExpectedValue: toNumber(p.ExpectedValue),
     Probability:   p.Probability ?? null,
     ExpectedStart: p.ExpectedStart || null,
     Owner:         p.Owner_x002f_PM || (p.Owner && p.Owner.Title) || ''
@@ -799,8 +846,22 @@ async function loadAll() {
   S._teProjField = teProjField;
   S._tePipeField = tePipeField;
 
-  S.timeEntries = te.value;
-  S.expenses = exp.value;
+  S.timeEntries = te.value.map(t => ({
+    ...t,
+    HoursWorked: toNumber(t.HoursWorked),
+    TravelHours: toNumber(t.TravelHours),
+    StaffRate: toNumber(t.StaffRate),
+    CommercialRate: toNumber(t.CommercialRate),
+    StaffCost: toNumber(t.StaffCost),
+    CommercialCost: toNumber(t.CommercialCost),
+    EmployeeName: employeeName(t.EmployeeName || t.Employee)
+  }));
+  S.expenses = exp.value.map(e => ({
+    ...e,
+    Amount: toNumber(e.Amount),
+    EmployeeName: employeeName(e.EmployeeName),
+    Project: e.Project || ''
+  }));
 }
 
 /* ================================================================
@@ -823,21 +884,48 @@ function teForPipeline(pipeId) {
   const f = S._tePipeIdField || 'PipelineProjectId';
   return S.timeEntries.filter(t => t[f] === pipeId);
 }
-function expForProject(displayName) {
-  return S.expenses.filter(e => e.Project === displayName);
+function expForProject(project) {
+  return S.expenses.filter(e => expenseMatchesProject(e, project));
 }
-function expForEmployee(displayName, empName) {
-  return S.expenses.filter(e => e.Project === displayName && e.EmployeeName && e.EmployeeName.DisplayName === empName);
+function expForEmployee(project, empName) {
+  return S.expenses.filter(e => expenseMatchesProject(e, project) && employeeName(e.EmployeeName) === empName);
 }
 function sumHours(entries) { return entries.reduce((a,e) => a + (e.HoursWorked||0) + (e.TravelHours||0), 0); }
-function sumStaff(entries) { return entries.reduce((a,e) => a + (e.StaffCost||0), 0); }
-function sumCommercial(entries) { return entries.reduce((a,e) => a + (e.CommercialCost||0), 0); }
-function sumExpenses(exps) { return exps.reduce((a,e) => a + (e.Amount||0), 0); }
+function sumStaff(entries) { return entries.reduce((a,e) => a + entryStaffAmount(e), 0); }
+function sumCommercial(entries) { return entries.reduce((a,e) => a + entryCommercialAmount(e), 0); }
+function sumExpenses(exps) { return exps.reduce((a,e) => a + toNumber(e.Amount), 0); }
+function projectFinancials(project) {
+  const te = teForProject(project.ID);
+  const exps = expForProject(project);
+  const hoursBooked = sumHours(te);
+  const staffCost = sumStaff(te);
+  const commercial = sumCommercial(te);
+  const totalExp = sumExpenses(exps);
+  const budget = toNumber(project.POValue);
+  const plannedHours = toNumber(project.PlannedHours);
+  const budgetLeft = budget - commercial - totalExp;
+  const budgetUsedPct = budget ? ((commercial + totalExp) / budget * 100) : 0;
+  const budgetRemainingPct = budget ? (budgetLeft / budget * 100) : 0;
+  return {
+    te,
+    exps,
+    hoursBooked,
+    staffCost,
+    commercial,
+    totalExp,
+    budget,
+    plannedHours,
+    hoursLeft: plannedHours - hoursBooked,
+    budgetLeft,
+    budgetUsedPct,
+    budgetRemainingPct
+  };
+}
 
 function groupByEmployee(entries) {
   const map = {};
   for (const e of entries) {
-    const n = e.EmployeeName || 'Unknown';
+    const n = employeeName(e.EmployeeName);
     if (!map[n]) map[n] = [];
     map[n].push(e);
   }
@@ -845,16 +933,16 @@ function groupByEmployee(entries) {
     name,
     hours: rows.reduce((a,r) => a + (r.HoursWorked||0), 0),
     travel: rows.reduce((a,r) => a + (r.TravelHours||0), 0),
-    staffCost: rows.reduce((a,r) => a + (r.StaffCost||0), 0),
-    commercialCost: rows.reduce((a,r) => a + (r.CommercialCost||0), 0)
+    staffCost: rows.reduce((a,r) => a + entryStaffAmount(r), 0),
+    commercialCost: rows.reduce((a,r) => a + entryCommercialAmount(r), 0)
   })).sort((a,b) => a.name.localeCompare(b.name));
 }
 
 function filteredProjects() {
   const f = S.projectFilter;
   return S.projects.filter(p => {
-    const te = teForProject(p.ID);
-    const spend = sumCommercial(te);
+    const { commercial, totalExp } = projectFinancials(p);
+    const spend = commercial + totalExp;
     if (f === 'Live') return (p.Status?.Value || p.Status) === 'Live';
     if (f === 'Complete') return (p.Status?.Value || p.Status) === 'Complete';
     if (f === 'InBudget') return spend <= (p.POValue||0);
@@ -1025,8 +1113,8 @@ function _renderProjectOverview() {
             <th class="hdr-blue" style="width:80px;">PO Hours</th>
             <th class="hdr-blue" style="width:90px;">Hours Booked</th>
             <th class="hdr-blue" style="width:80px;">Hours Left</th>
-            <th class="hdr-blue" style="width:100px;">Staff Rate</th>
-            <th class="hdr-blue" style="width:110px;">Charge Rate</th>
+            <th class="hdr-blue" style="width:100px;">Staff Cost</th>
+            <th class="hdr-blue" style="width:110px;">Charge Cost</th>
             <th class="hdr-blue" style="width:100px;">PO Value</th>
           </tr></thead>
           <tbody>${tableRows || '<tr><td colspan="9" class="ta-center" style="padding:20px;color:var(--muted);">No projects found</td></tr>'}</tbody>
@@ -1049,20 +1137,12 @@ function viewProjectDetail(projId) {
 
 function _renderProjectDetail() {
   const p = S.selectedProject;
-  const te = teForProject(p.ID);
-  const exps = expForProject(p.DisplayName);
-  const hoursBooked = sumHours(te);
-  const staffCost = sumStaff(te);
-  const commercial = sumCommercial(te);
-  const totalExp = sumExpenses(exps);
-  const hoursLeft = (p.PlannedHours||0) - hoursBooked;
-  const budgetLeft = (p.POValue||0) - commercial - totalExp;
-  const budgetPct = p.POValue ? (budgetLeft / p.POValue * 100) : 0;
+  const { te, hoursBooked, staffCost, commercial, totalExp, hoursLeft, budgetLeft, budgetRemainingPct, budgetUsedPct } = projectFinancials(p);
   const empRows = groupByEmployee(te);
   const st = p.Status?.Value || p.Status || '';
 
   const empTableRows = empRows.map(e => {
-    const empExps = sumExpenses(expForEmployee(p.DisplayName, e.name));
+    const empExps = sumExpenses(expForEmployee(p, e.name));
     return `<tr class="clickable" onclick="viewEmployeeEntries(${p.ID},'${esc(p.ProjectTitle)}','${esc(p.DisplayName)}','${esc(e.name)}',false)">
       <td>${esc(e.name)}</td>
       <td class="ta-center">${num(e.hours)}</td>
@@ -1122,7 +1202,7 @@ function _renderProjectDetail() {
         </div>
         <div class="detail-kpi">
           <div class="detail-kpi-label">Budget Remaining %</div>
-          <div class="detail-kpi-val" style="color:${budgetPct < 0 ? 'var(--red)' : 'var(--indigo)'}">${pct(budgetPct)}</div>
+          <div class="detail-kpi-val" style="color:${budgetRemainingPct < 0 ? 'var(--red)' : 'var(--indigo)'}">${pct(budgetRemainingPct)}</div>
         </div>
       </div>
 
@@ -1134,8 +1214,8 @@ function _renderProjectDetail() {
             <th style="width:80px;">Hours</th>
             <th style="width:80px;">Travel</th>
             <th style="width:110px;">Expenses</th>
-            <th style="width:110px;">Staff Rate</th>
-            <th style="width:120px;">Charge Rate</th>
+            <th style="width:110px;">Staff Cost</th>
+            <th style="width:120px;">Charge Cost</th>
           </tr></thead>
           <tbody>${empTableRows || '<tr><td colspan="6" class="ta-center" style="padding:14px;color:var(--muted);">No time entries</td></tr>'}</tbody>
           ${empRows.length ? `<tfoot><tr>
@@ -1170,9 +1250,9 @@ function _renderProjectDetail() {
               <span style="font-weight:700;font-size:16px;color:${budgetLeft < 0 ? 'var(--red)' : 'var(--green)'};">${money(budgetLeft)}</span>
             </div>
             <div style="margin-top:10px;background:#e5e7eb;height:8px;border-radius:0;">
-              <div style="height:8px;background:${(commercial+totalExp) > (p.POValue||0) ? 'var(--red)' : 'var(--blue)'};width:${Math.min(100, p.POValue ? ((commercial+totalExp)/p.POValue*100) : 0).toFixed(1)}%;transition:width 0.3s;"></div>
+              <div style="height:8px;background:${(commercial+totalExp) > (p.POValue||0) ? 'var(--red)' : 'var(--blue)'};width:${Math.min(100, budgetUsedPct).toFixed(1)}%;transition:width 0.3s;"></div>
             </div>
-            <div style="font-family:'Courier New',monospace;font-size:10px;color:var(--muted);margin-top:4px;">${p.POValue ? ((commercial+totalExp)/p.POValue*100).toFixed(1) : 0}% of budget used</div>
+            <div style="font-family:'Courier New',monospace;font-size:10px;color:var(--muted);margin-top:4px;">${pct(budgetUsedPct)} of budget used</div>
           </div>
         </div>
         <div>
@@ -1244,16 +1324,16 @@ function _renderEmployeeEntries() {
   if (isPipe) {
     entries = S.timeEntries.filter(t =>
       (_ppf ? (t[_ppf] && t[_ppf].Id === S.drillProjectId) : t[_ppfId] === S.drillProjectId)
-      && t.EmployeeName === empName
+      && employeeName(t.EmployeeName) === empName
     );
   } else {
     entries = S.timeEntries.filter(t =>
       (_pf ? (t[_pf] && t[_pf].Id === S.drillProjectId) : t[_pfId] === S.drillProjectId)
-      && t.EmployeeName === empName
+      && employeeName(t.EmployeeName) === empName
     );
   }
   exps = S.expenses.filter(e =>
-    e.Project === S.drillProjectDisplayName && e.EmployeeName?.DisplayName === empName
+    normaliseKey(e.Project) === normaliseKey(S.drillProjectDisplayName) && employeeName(e.EmployeeName) === empName
   );
 
   const th = entries.reduce((a,e)=>a+(e.HoursWorked||0),0);
@@ -1268,8 +1348,8 @@ function _renderEmployeeEntries() {
       <td>${esc((e[_pf] && (e[_pf][S._projTitleField||'Title'] || e[_pf].Title)) || (e[_ppf] && e[_ppf].ProjectTitle) || S.drillProjectDisplayName || '')}</td>
       <td class="ta-center">${num(e.HoursWorked)}</td>
       <td class="ta-center">${num(e.TravelHours)}</td>
-      <td class="ta-right">${money(e.StaffCost)}</td>
-      <td class="ta-right">${money(e.CommercialCost)}</td>
+      <td class="ta-right">${money(entryStaffAmount(e))}</td>
+      <td class="ta-right">${money(entryCommercialAmount(e))}</td>
       <td>${esc(e.Notes||'')}</td>
     </tr>`).join('')
     : `<tr><td colspan="7" class="ta-center" style="padding:14px;color:var(--muted);">No time entries</td></tr>`;
@@ -1302,7 +1382,7 @@ function _renderEmployeeEntries() {
         ${kpi('Travel Hours', num(tt), 'var(--orange)')}
         ${kpi('Expenses', moneyDec(te), 'var(--green)')}
         ${kpi('Staff Cost', money(ts), 'var(--violet)')}
-        ${kpi('Charge Rate', money(tc), 'var(--indigo)')}
+        ${kpi('Charge Cost', money(tc), 'var(--indigo)')}
       </div>
 
       <div class="section-hd">Time Entries</div>
@@ -1312,8 +1392,8 @@ function _renderEmployeeEntries() {
           <th>Project</th>
           <th class="ta-center" style="width:80px;">Hours</th>
           <th class="ta-center" style="width:80px;">Travel</th>
-          <th class="ta-right" style="width:110px;">Staff Rate</th>
-          <th class="ta-right" style="width:120px;">Charge Rate</th>
+          <th class="ta-right" style="width:110px;">Staff Cost</th>
+          <th class="ta-right" style="width:120px;">Charge Cost</th>
           <th>Notes</th>
         </tr></thead>
         <tbody>${teRows}</tbody>
@@ -1473,7 +1553,7 @@ function viewPipelineDetail(projId) {
 function _renderPipelineDetail() {
   const p = S.selectedPipeline;
   const te = teForPipeline(p.ID);
-  const exps = expForProject(p.DisplayName);
+  const exps = expForProject(p);
   const hoursBooked = sumHours(te);
   const staffCost = sumStaff(te);
   const commercial = sumCommercial(te);
@@ -1482,7 +1562,7 @@ function _renderPipelineDetail() {
   const st = p.Status?.Value || p.Status || '';
 
   const empTableRows = empRows.map(e => {
-    const empExps = sumExpenses(expForEmployee(p.DisplayName, e.name));
+    const empExps = sumExpenses(expForEmployee(p, e.name));
     return `<tr class="clickable" onclick="viewEmployeeEntries(${p.ID},'${esc(p.ProjectTitle)}','${esc(p.DisplayName)}','${esc(e.name)}',true)">
       <td>${esc(e.name)}</td>
       <td class="ta-center">${num(e.hours)}</td>
@@ -1527,11 +1607,11 @@ function _renderPipelineDetail() {
           <div class="detail-kpi-val" style="color:var(--indigo)">${moneyDec(totalExp)}</div>
         </div>
         <div class="detail-kpi">
-          <div class="detail-kpi-label">Cost Rate</div>
+          <div class="detail-kpi-label">Staff Cost</div>
           <div class="detail-kpi-val" style="color:var(--indigo)">${moneyDec(staffCost)}</div>
         </div>
         <div class="detail-kpi">
-          <div class="detail-kpi-label">Charge Rate</div>
+          <div class="detail-kpi-label">Charge Cost</div>
           <div class="detail-kpi-val" style="color:var(--indigo)">${moneyDec(commercial)}</div>
         </div>
         <div class="detail-kpi">
@@ -1548,8 +1628,8 @@ function _renderPipelineDetail() {
             <th style="width:80px;">Hours</th>
             <th style="width:80px;">Travel</th>
             <th style="width:110px;">Expenses</th>
-            <th style="width:110px;">Staff Rate</th>
-            <th style="width:120px;">Commercial Rate</th>
+            <th style="width:110px;">Staff Cost</th>
+            <th style="width:120px;">Commercial Cost</th>
           </tr></thead>
           <tbody>${empTableRows || '<tr><td colspan="6" class="ta-center" style="padding:14px;color:var(--muted);">No time entries</td></tr>'}</tbody>
         </table>
@@ -1773,7 +1853,6 @@ function viewAddProject() {
 
 async function loadPipelineCategories() {
   try {
-    const data = await spGet(`web/lists/getbytitle('${encodeURIComponent(CFG.lists.pipelineProjects)}')/fields?$filter=EntityPropertyName eq 'Category0' or InternalName eq 'Category0'`);
     const sel = document.getElementById('f_category');
     if (!sel) return;
     // Try choices endpoint
