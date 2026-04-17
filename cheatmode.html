@@ -530,7 +530,10 @@ const msalConfig = {
 };
 
 let msalInstance  = null;
-const spScopes    = [`${CONFIG.spSiteUrl.split('/sites/')[0]}/.default`];
+const sharePointScopesBySite = {
+  [CONFIG.spSiteUrl]: [`${new URL(CONFIG.spSiteUrl).origin}/.default`],
+  [CONFIG.spScrldUrl]: [`${new URL(CONFIG.spScrldUrl).origin}/.default`]
+};
 let currentAccount = null;
 
 // App state
@@ -573,12 +576,15 @@ async function initAuth() {
 async function signIn() {
   setLoginStatus('<span class="spinner"></span> Connecting to Microsoft...');
   try {
-    const response = await msalInstance.loginPopup({ scopes: spScopes, prompt: "select_account" });
+    const response = await msalInstance.loginPopup({
+      scopes: sharePointScopesBySite[CONFIG.spSiteUrl],
+      prompt: "select_account"
+    });
     currentAccount = response.account;
     onSignedIn();
   } catch(e) {
     if (e.errorCode === "popup_window_error" || e.errorCode === "empty_window_error") {
-      msalInstance.loginRedirect({ scopes: spScopes });
+      msalInstance.loginRedirect({ scopes: sharePointScopesBySite[CONFIG.spSiteUrl] });
     } else {
       setLoginStatus("⚠️ Sign in failed: " + e.message, true);
     }
@@ -604,8 +610,12 @@ function onSignedIn() {
   loadCompanies();
 }
 
-async function getToken() {
-  const request = { scopes: spScopes, account: currentAccount };
+function getScopesForSite(siteUrl) {
+  return sharePointScopesBySite[siteUrl] || [`${new URL(siteUrl).origin}/.default`];
+}
+
+async function getToken(siteUrl = CONFIG.spSiteUrl) {
+  const request = { scopes: getScopesForSite(siteUrl), account: currentAccount };
   try {
     const r = await msalInstance.acquireTokenSilent(request);
     return r.accessToken;
@@ -647,7 +657,7 @@ async function getSharePointError(res, fallback) {
 }
 
 async function spGetFromSite(siteUrl, listName, select = "*", filter = "", orderBy = "") {
-  const token = await getToken();
+  const token = await getToken(siteUrl);
   const items = [];
   let nextUrl = buildSharePointItemsUrl(siteUrl, listName, select, filter, orderBy);
 
@@ -673,8 +683,19 @@ async function spGetScrl(listName, select = "*", filter = "", orderBy = "") {
   return spGetFromSite(CONFIG.spScrldUrl, listName, select, filter, orderBy);
 }
 
+function getCompanyIdentifier(company) {
+  return company.CompanyID
+    || company.CompanyId
+    || company.companyId
+    || company.Company_x0020_ID
+    || company.Company_x005f_ID
+    || company.CompanyNumber
+    || company.Title
+    || company.ID;
+}
+
 async function spPatch(listName, itemId, fields) {
-  const token = await getToken();
+  const token = await getToken(CONFIG.spSiteUrl);
   const url = `${CONFIG.spSiteUrl}/_api/web/lists/getbytitle('${encodeSharePointListTitle(listName)}')/items(${itemId})`;
   const res = await fetch(url, {
     method: "POST",
@@ -691,7 +712,7 @@ async function spPatch(listName, itemId, fields) {
 }
 
 async function spPost(listName, fields) {
-  const token = await getToken();
+  const token = await getToken(CONFIG.spSiteUrl);
   const url = `${CONFIG.spSiteUrl}/_api/web/lists/getbytitle('${encodeSharePointListTitle(listName)}')/items`;
   const res = await fetch(url, {
     method: "POST",
@@ -707,7 +728,7 @@ async function spPost(listName, fields) {
 }
 
 async function spDelete(listName, itemId) {
-  const token = await getToken();
+  const token = await getToken(CONFIG.spSiteUrl);
   const url = `${CONFIG.spSiteUrl}/_api/web/lists/getbytitle('${encodeSharePointListTitle(listName)}')/items(${itemId})`;
   const res = await fetch(url, {
     method: "POST",
@@ -774,16 +795,17 @@ function updateStats() {
 
 async function loadCompanies() {
   try {
-    const companies = await spGetScrl(CONFIG.lists.companies, "ID,Title,CompanyID", "", "Title asc");
+    const companies = await spGetScrl(CONFIG.lists.companies, "*", "", "Title asc");
+
     const selects = ['ap-company', 'be-company', 'ss-company'];
     selects.forEach(selId => {
-      const sel = document.getElementById(selId);
+      const sel = $(selId);
       sel.innerHTML = '<option value="">Select Firm...</option>';
       companies.forEach(c => {
         const opt = document.createElement('option');
-        opt.value = c.CompanyID || c.ID;
-        opt.dataset.name = c.Title;
-        opt.textContent = c.Title;
+        opt.value = getCompanyIdentifier(c);
+        opt.dataset.name = c.Title || '';
+        opt.textContent = c.Title || `(Untitled company ${c.ID ?? ''})`;
         sel.appendChild(opt);
       });
     });
