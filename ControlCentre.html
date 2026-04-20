@@ -523,7 +523,6 @@ const CFG = {
   clientId : 'ec0a6806-59e8-4ea9-8ff5-6bdb1ba87baf',
   siteUrl  : 'https://nuccol.sharepoint.com/sites/ProjectControl',
   scope    : 'https://nuccol.sharepoint.com/.default',
-  hoursPerDay: 7.5,
   lists: {
     projects         : 'Projects',
     pipelineProjects : 'PipelineProjects',
@@ -578,19 +577,13 @@ async function spPost(path, body) {
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: 'application/json;odata=nometadata',
-      'Content-Type': 'application/json;odata=nometadata',
-      Prefer: 'return=representation'
+      'Content-Type': 'application/json;odata=nometadata'
     },
     body: JSON.stringify(body)
   });
   if (!res.ok) { const t = await res.text(); throw new Error(`POST ${res.status}: ${t}`); }
-  const t = (await res.text()).trim();
-  if (!t) return {};
-  try {
-    return JSON.parse(t);
-  } catch {
-    return {};
-  }
+  const t = await res.text();
+  return t ? JSON.parse(t) : {};
 }
 
 async function spPatch(path, body) {
@@ -627,93 +620,53 @@ async function spDelete(path) {
 const listItems = n => `web/lists/getbytitle('${encodeURIComponent(n)}')/items`;
 const listItem  = (n,id) => `web/lists/getbytitle('${encodeURIComponent(n)}')/items(${id})`;
 
+// Fetches a list with an expand; if 400, retries without $select to get all fields
+async function spGetSafe(path, selectFields, expandField, top=500) {
+  const url = `${path}?$select=${selectFields},${expandField}/DisplayName&$expand=${expandField}&$top=${top}&$orderby=Date desc`;
+  try {
+    return await spGet(url);
+  } catch(e) {
+    if (e.message.startsWith('GET 400')) {
+      return await spGet(`${path}?$expand=${expandField}&$top=${top}&$orderby=Date desc`);
+    }
+    throw e;
+  }
+}
+
+// Fetch a list with specific fields; if 400 (field doesn't exist), retry without $select
+async function spGetWithFallback(listName, fields, top=500, orderBy='Title') {
+  const base = listItems(listName);
+  try {
+    return await spGet(`${base}?$select=${fields}&$top=${top}&$orderby=${orderBy} asc`);
+  } catch(e) {
+    if (e.message.startsWith('GET 400')) {
+      // Some fields may not exist — fall back to no $select
+      try {
+        return await spGet(`${base}?$top=${top}&$orderby=Title asc`);
+      } catch(e2) {
+        return await spGet(`${base}?$top=${top}`);
+      }
+    }
+    throw e;
+  }
+}
+
 /* ================================================================
    UTILITIES
 ================================================================ */
-function toNumber(v) {
-  if (typeof v === 'number') return Number.isFinite(v) ? v : 0;
-  if (typeof v === 'string') {
-    const cleaned = v.replace(/[^0-9.-]/g, '');
-    if (!cleaned || cleaned === '-' || cleaned === '.' || cleaned === '-.') return 0;
-    const n = Number(cleaned);
-    return Number.isFinite(n) ? n : 0;
-  }
-  const n = Number(v);
-  return Number.isFinite(n) ? n : 0;
-}
-function firstNumber(...vals) {
-  for (const v of vals) {
-    const n = toNumber(v);
-    if (n !== 0) return n;
-    if (v === 0 || v === '0' || v === '0.00') return 0;
-  }
-  return 0;
-}
-function hasValue(v) {
-  return v !== null && v !== undefined && String(v).trim() !== '';
-}
-function normaliseKey(v) {
-  return String(v ?? '')
-    .toLowerCase()
-    .replace(/[\u2012-\u2015]/g, '-')
-    .replace(/\s+/g, ' ')
-    .replace(/\s*[-–—]\s*/g, '-')
-    .trim();
-}
-function employeeName(v) {
-  if (!v) return 'Unknown';
-  if (typeof v === 'string') return v;
-  return v.DisplayName || v.Title || v.Email || 'Unknown';
-}
-function projectNameCandidates(project) {
-  const vals = [
-    project?.DisplayName,
-    project?.Title,
-    project?.ProjectTitle,
-    project?.ProjectTitle0,
-    project?.Company,
-    project?.Company_x002f_ProjectName
-  ];
-  const company = project?.Company || project?.Company_x002f_ProjectName || '';
-  const title = project?.ProjectTitle || project?.ProjectTitle0 || project?.Title || '';
-  if (company && title) {
-    vals.push(`${company}-${title}`, `${company} - ${title}`, `${company} — ${title}`);
-  }
-  return [...new Set(vals.map(normaliseKey).filter(Boolean))];
-}
-function expenseMatchesProject(expense, project) {
-  const expenseKey = normaliseKey(expense?.Project);
-  if (!expenseKey) return false;
-  return projectNameCandidates(project).includes(expenseKey);
-}
-function entryHours(entry) {
-  return toNumber(entry?.HoursWorked) + toNumber(entry?.TravelHours);
-}
-function entryStaffAmount(entry) {
-  if (hasValue(entry?.StaffCost) || hasValue(entry?.StaffTotal)) {
-    return firstNumber(entry?.StaffCost, entry?.StaffTotal);
-  }
-  return firstNumber(entry?.StaffRate, entry?.StaffDayRate) * (entryHours(entry) / CFG.hoursPerDay);
-}
-function entryCommercialAmount(entry) {
-  if (hasValue(entry?.CommercialCost) || hasValue(entry?.CommercialTotal)) {
-    return firstNumber(entry?.CommercialCost, entry?.CommercialTotal);
-  }
-  return firstNumber(entry?.CommercialRate, entry?.CommercialDayRate) * (entryHours(entry) / CFG.hoursPerDay);
-}
 function esc(s) {
   return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 function money(v) {
-  const n = toNumber(v);
+  const n = Number(v) || 0;
   return '£' + n.toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
 function moneyDec(v) {
-  const n = toNumber(v);
+  const n = Number(v) || 0;
   return '£' + n.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
-function num(v) { return toNumber(v).toLocaleString('en-GB', { maximumFractionDigits: 1 }); }
-function pct(v) { return toNumber(v).toFixed(1) + '%'; }
+function num(v) { return Number(v || 0).toLocaleString('en-GB', { maximumFractionDigits: 1 }); }
+function pct(v) { return (Number(v) || 0).toFixed(1) + '%'; }
 function ukDate(s) {
   if (!s) return '—';
   const d = new Date(s.split('T')[0] + 'T12:00:00');
@@ -814,8 +767,8 @@ async function loadAll() {
     ...p,
     ProjectTitle:  p.ProjectTitle0 || p.Title || '',
     DisplayName:   p.Company ? (p.ProjectTitle0 ? `${p.Company}-${p.ProjectTitle0}` : p.Company) : (p.ProjectTitle0 || p.Title || ''),
-    POValue:       toNumber(p.POValue),
-    PlannedHours:  toNumber(p.PlannedHours)
+    POValue:       Number(p.POValue ?? 0),
+    PlannedHours:  Number(p.PlannedHours ?? 0)
   }));
 
   S.pipeline = pipe.value.map(p => ({
@@ -823,7 +776,7 @@ async function loadAll() {
     Company:       p.Company_x002f_ProjectName || p.Title || '',
     ProjectTitle:  p.ProjectTitle || p.Title || '',
     DisplayName:   p.Company_x002f_ProjectName ? (p.ProjectTitle ? `${p.Company_x002f_ProjectName} — ${p.ProjectTitle}` : p.Company_x002f_ProjectName) : (p.ProjectTitle || p.Title || ''),
-    ExpectedValue: toNumber(p.ExpectedValue),
+    ExpectedValue: Number(p.ExpectedValue ?? 0),
     Probability:   p.Probability ?? null,
     ExpectedStart: p.ExpectedStart || null,
     Owner:         p.Owner_x002f_PM || (p.Owner && p.Owner.Title) || ''
@@ -846,22 +799,8 @@ async function loadAll() {
   S._teProjField = teProjField;
   S._tePipeField = tePipeField;
 
-  S.timeEntries = te.value.map(t => ({
-    ...t,
-    HoursWorked: toNumber(t.HoursWorked),
-    TravelHours: toNumber(t.TravelHours),
-    StaffRate: toNumber(t.StaffRate),
-    CommercialRate: toNumber(t.CommercialRate),
-    StaffCost: toNumber(t.StaffCost),
-    CommercialCost: toNumber(t.CommercialCost),
-    EmployeeName: employeeName(t.EmployeeName || t.Employee)
-  }));
-  S.expenses = exp.value.map(e => ({
-    ...e,
-    Amount: toNumber(e.Amount),
-    EmployeeName: employeeName(e.EmployeeName),
-    Project: e.Project || ''
-  }));
+  S.timeEntries = te.value;
+  S.expenses = exp.value;
 }
 
 /* ================================================================
@@ -884,48 +823,32 @@ function teForPipeline(pipeId) {
   const f = S._tePipeIdField || 'PipelineProjectId';
   return S.timeEntries.filter(t => t[f] === pipeId);
 }
-function expForProject(project) {
-  return S.expenses.filter(e => expenseMatchesProject(e, project));
+function expForProject(displayName) {
+  return S.expenses.filter(e => e.Project === displayName);
 }
-function expForEmployee(project, empName) {
-  return S.expenses.filter(e => expenseMatchesProject(e, project) && employeeName(e.EmployeeName) === empName);
+function expForEmployee(displayName, empName) {
+  return S.expenses.filter(e => e.Project === displayName && e.EmployeeName && e.EmployeeName.DisplayName === empName);
 }
 function sumHours(entries) { return entries.reduce((a,e) => a + (e.HoursWorked||0) + (e.TravelHours||0), 0); }
-function sumStaff(entries) { return entries.reduce((a,e) => a + entryStaffAmount(e), 0); }
-function sumCommercial(entries) { return entries.reduce((a,e) => a + entryCommercialAmount(e), 0); }
-function sumExpenses(exps) { return exps.reduce((a,e) => a + toNumber(e.Amount), 0); }
-function projectFinancials(project) {
-  const te = teForProject(project.ID);
-  const exps = expForProject(project);
-  const hoursBooked = sumHours(te);
-  const staffCost = sumStaff(te);
-  const commercial = sumCommercial(te);
-  const totalExp = sumExpenses(exps);
-  const budget = toNumber(project.POValue);
-  const plannedHours = toNumber(project.PlannedHours);
-  const budgetLeft = budget - commercial - totalExp;
-  const budgetUsedPct = budget ? ((commercial + totalExp) / budget * 100) : 0;
-  const budgetRemainingPct = budget ? (budgetLeft / budget * 100) : 0;
-  return {
-    te,
-    exps,
-    hoursBooked,
-    staffCost,
-    commercial,
-    totalExp,
-    budget,
-    plannedHours,
-    hoursLeft: plannedHours - hoursBooked,
-    budgetLeft,
-    budgetUsedPct,
-    budgetRemainingPct
-  };
+// Use stored cost if available; fall back to rate * hours / 7 (PA flow may not have run yet)
+function entryStaffCost(e) {
+  const stored = Number(e.StaffCost);
+  if (stored && stored !== 0) return stored;
+  return ((e.HoursWorked||0) + (e.TravelHours||0)) * Number(e.StaffRate||0) / 7;
 }
+function entryCommercialCost(e) {
+  const stored = Number(e.CommercialCost);
+  if (stored && stored !== 0) return stored;
+  return ((e.HoursWorked||0) + (e.TravelHours||0)) * Number(e.CommercialRate||0) / 7;
+}
+function sumStaff(entries) { return entries.reduce((a,e) => a + entryStaffCost(e), 0); }
+function sumCommercial(entries) { return entries.reduce((a,e) => a + entryCommercialCost(e), 0); }
+function sumExpenses(exps) { return exps.reduce((a,e) => a + (e.Amount||0), 0); }
 
 function groupByEmployee(entries) {
   const map = {};
   for (const e of entries) {
-    const n = employeeName(e.EmployeeName);
+    const n = e.EmployeeName || 'Unknown';
     if (!map[n]) map[n] = [];
     map[n].push(e);
   }
@@ -933,16 +856,16 @@ function groupByEmployee(entries) {
     name,
     hours: rows.reduce((a,r) => a + (r.HoursWorked||0), 0),
     travel: rows.reduce((a,r) => a + (r.TravelHours||0), 0),
-    staffCost: rows.reduce((a,r) => a + entryStaffAmount(r), 0),
-    commercialCost: rows.reduce((a,r) => a + entryCommercialAmount(r), 0)
+    staffCost: rows.reduce((a,r) => a + entryStaffCost(r), 0),
+    commercialCost: rows.reduce((a,r) => a + entryCommercialCost(r), 0)
   })).sort((a,b) => a.name.localeCompare(b.name));
 }
 
 function filteredProjects() {
   const f = S.projectFilter;
   return S.projects.filter(p => {
-    const { commercial, totalExp } = projectFinancials(p);
-    const spend = commercial + totalExp;
+    const te = teForProject(p.ID);
+    const spend = sumCommercial(te);
     if (f === 'Live') return (p.Status?.Value || p.Status) === 'Live';
     if (f === 'Complete') return (p.Status?.Value || p.Status) === 'Complete';
     if (f === 'InBudget') return spend <= (p.POValue||0);
@@ -1113,8 +1036,8 @@ function _renderProjectOverview() {
             <th class="hdr-blue" style="width:80px;">PO Hours</th>
             <th class="hdr-blue" style="width:90px;">Hours Booked</th>
             <th class="hdr-blue" style="width:80px;">Hours Left</th>
-            <th class="hdr-blue" style="width:100px;">Staff Cost</th>
-            <th class="hdr-blue" style="width:110px;">Charge Cost</th>
+            <th class="hdr-blue" style="width:100px;">Staff Rate</th>
+            <th class="hdr-blue" style="width:110px;">Charge Rate</th>
             <th class="hdr-blue" style="width:100px;">PO Value</th>
           </tr></thead>
           <tbody>${tableRows || '<tr><td colspan="9" class="ta-center" style="padding:20px;color:var(--muted);">No projects found</td></tr>'}</tbody>
@@ -1135,14 +1058,50 @@ function viewProjectDetail(projId) {
   _renderProjectDetail();
 }
 
+function teForPromotedPipeline(proj) {
+  // Find time entries that were booked against this project when it was in the pipeline.
+  // We match on SourcePipelineId (stored at promote time) or SourcePipelineName as fallback.
+  const pipeIdStr = proj.SourcePipelineId || '';
+  const pipeName  = proj.SourcePipelineName || '';
+  return S.timeEntries.filter(t => {
+    const type = t.ProjectType?.Value || t.ProjectType || '';
+    if (type !== 'Pipeline Project') return false;
+    // Match by stored pipeline ID (most reliable)
+    if (pipeIdStr) {
+      const f = S._tePipeField;
+      const fId = S._tePipeIdField || 'PipelineProjectId';
+      if (S._teHasExpand && f && t[f]) return String(t[f].Id) === pipeIdStr;
+      if (t[fId] != null) return String(t[fId]) === pipeIdStr;
+    }
+    // Fallback: match by display name stored on the TE
+    if (pipeName && t.ProjectDisplayName) return t.ProjectDisplayName === pipeName;
+    return false;
+  });
+}
+
 function _renderProjectDetail() {
   const p = S.selectedProject;
-  const { te, hoursBooked, staffCost, commercial, totalExp, hoursLeft, budgetLeft, budgetRemainingPct, budgetUsedPct } = projectFinancials(p);
+  const te = teForProject(p.ID);
+  const exps = expForProject(p.DisplayName);
+  const hoursBooked = sumHours(te);
+  const staffCost = sumStaff(te);
+  const commercial = sumCommercial(te);
+  const totalExp = sumExpenses(exps);
+  const hoursLeft = (p.PlannedHours||0) - hoursBooked;
+  const budgetLeft = (p.POValue||0) - commercial - totalExp;
+  const budgetPct = p.POValue ? (budgetLeft / p.POValue * 100) : 0;
   const empRows = groupByEmployee(te);
   const st = p.Status?.Value || p.Status || '';
 
+  // Sunk cost: time booked while this project was in the pipeline
+  const pipelineTe   = teForPromotedPipeline(p);
+  const sunkHours    = sumHours(pipelineTe);
+  const sunkStaff    = sumStaff(pipelineTe);
+  const sunkCommercial = sumCommercial(pipelineTe);
+  const hasSunkCost  = pipelineTe.length > 0;
+
   const empTableRows = empRows.map(e => {
-    const empExps = sumExpenses(expForEmployee(p, e.name));
+    const empExps = sumExpenses(expForEmployee(p.DisplayName, e.name));
     return `<tr class="clickable" onclick="viewEmployeeEntries(${p.ID},'${esc(p.ProjectTitle)}','${esc(p.DisplayName)}','${esc(e.name)}',false)">
       <td>${esc(e.name)}</td>
       <td class="ta-center">${num(e.hours)}</td>
@@ -1175,6 +1134,7 @@ function _renderProjectDetail() {
           <div style="font-size:10px;opacity:0.7;margin-bottom:2px;">PO VALUE</div>
           <div>${money(p.POValue)}</div>
         </div>
+        <button class="btn-ghost" onclick="viewEditProject(${p.ID})">✏️ Edit Project</button>
         <span class="user-chip">${esc(S.currentUser?.displayName||'')}</span>
       </div>
     </div>
@@ -1202,7 +1162,7 @@ function _renderProjectDetail() {
         </div>
         <div class="detail-kpi">
           <div class="detail-kpi-label">Budget Remaining %</div>
-          <div class="detail-kpi-val" style="color:${budgetRemainingPct < 0 ? 'var(--red)' : 'var(--indigo)'}">${pct(budgetRemainingPct)}</div>
+          <div class="detail-kpi-val" style="color:${budgetPct < 0 ? 'var(--red)' : 'var(--indigo)'}">${pct(budgetPct)}</div>
         </div>
       </div>
 
@@ -1214,8 +1174,8 @@ function _renderProjectDetail() {
             <th style="width:80px;">Hours</th>
             <th style="width:80px;">Travel</th>
             <th style="width:110px;">Expenses</th>
-            <th style="width:110px;">Staff Cost</th>
-            <th style="width:120px;">Charge Cost</th>
+            <th style="width:110px;">Staff Rate</th>
+            <th style="width:120px;">Charge Rate</th>
           </tr></thead>
           <tbody>${empTableRows || '<tr><td colspan="6" class="ta-center" style="padding:14px;color:var(--muted);">No time entries</td></tr>'}</tbody>
           ${empRows.length ? `<tfoot><tr>
@@ -1250,9 +1210,9 @@ function _renderProjectDetail() {
               <span style="font-weight:700;font-size:16px;color:${budgetLeft < 0 ? 'var(--red)' : 'var(--green)'};">${money(budgetLeft)}</span>
             </div>
             <div style="margin-top:10px;background:#e5e7eb;height:8px;border-radius:0;">
-              <div style="height:8px;background:${(commercial+totalExp) > (p.POValue||0) ? 'var(--red)' : 'var(--blue)'};width:${Math.min(100, budgetUsedPct).toFixed(1)}%;transition:width 0.3s;"></div>
+              <div style="height:8px;background:${(commercial+totalExp) > (p.POValue||0) ? 'var(--red)' : 'var(--blue)'};width:${Math.min(100, p.POValue ? ((commercial+totalExp)/p.POValue*100) : 0).toFixed(1)}%;transition:width 0.3s;"></div>
             </div>
-            <div style="font-family:'Courier New',monospace;font-size:10px;color:var(--muted);margin-top:4px;">${pct(budgetUsedPct)} of budget used</div>
+            <div style="font-family:'Courier New',monospace;font-size:10px;color:var(--muted);margin-top:4px;">${p.POValue > 0 ? ((commercial+totalExp)/p.POValue*100).toFixed(1) : '—'}% of budget used</div>
           </div>
         </div>
         <div>
@@ -1324,16 +1284,16 @@ function _renderEmployeeEntries() {
   if (isPipe) {
     entries = S.timeEntries.filter(t =>
       (_ppf ? (t[_ppf] && t[_ppf].Id === S.drillProjectId) : t[_ppfId] === S.drillProjectId)
-      && employeeName(t.EmployeeName) === empName
+      && t.EmployeeName === empName
     );
   } else {
     entries = S.timeEntries.filter(t =>
       (_pf ? (t[_pf] && t[_pf].Id === S.drillProjectId) : t[_pfId] === S.drillProjectId)
-      && employeeName(t.EmployeeName) === empName
+      && t.EmployeeName === empName
     );
   }
   exps = S.expenses.filter(e =>
-    normaliseKey(e.Project) === normaliseKey(S.drillProjectDisplayName) && employeeName(e.EmployeeName) === empName
+    e.Project === S.drillProjectDisplayName && e.EmployeeName?.DisplayName === empName
   );
 
   const th = entries.reduce((a,e)=>a+(e.HoursWorked||0),0);
@@ -1348,8 +1308,8 @@ function _renderEmployeeEntries() {
       <td>${esc((e[_pf] && (e[_pf][S._projTitleField||'Title'] || e[_pf].Title)) || (e[_ppf] && e[_ppf].ProjectTitle) || S.drillProjectDisplayName || '')}</td>
       <td class="ta-center">${num(e.HoursWorked)}</td>
       <td class="ta-center">${num(e.TravelHours)}</td>
-      <td class="ta-right">${money(entryStaffAmount(e))}</td>
-      <td class="ta-right">${money(entryCommercialAmount(e))}</td>
+      <td class="ta-right">${money(e.StaffCost)}</td>
+      <td class="ta-right">${money(e.CommercialCost)}</td>
       <td>${esc(e.Notes||'')}</td>
     </tr>`).join('')
     : `<tr><td colspan="7" class="ta-center" style="padding:14px;color:var(--muted);">No time entries</td></tr>`;
@@ -1382,7 +1342,7 @@ function _renderEmployeeEntries() {
         ${kpi('Travel Hours', num(tt), 'var(--orange)')}
         ${kpi('Expenses', moneyDec(te), 'var(--green)')}
         ${kpi('Staff Cost', money(ts), 'var(--violet)')}
-        ${kpi('Charge Cost', money(tc), 'var(--indigo)')}
+        ${kpi('Charge Rate', money(tc), 'var(--indigo)')}
       </div>
 
       <div class="section-hd">Time Entries</div>
@@ -1392,8 +1352,8 @@ function _renderEmployeeEntries() {
           <th>Project</th>
           <th class="ta-center" style="width:80px;">Hours</th>
           <th class="ta-center" style="width:80px;">Travel</th>
-          <th class="ta-right" style="width:110px;">Staff Cost</th>
-          <th class="ta-right" style="width:120px;">Charge Cost</th>
+          <th class="ta-right" style="width:110px;">Staff Rate</th>
+          <th class="ta-right" style="width:120px;">Charge Rate</th>
           <th>Notes</th>
         </tr></thead>
         <tbody>${teRows}</tbody>
@@ -1530,7 +1490,8 @@ function _renderPipeline() {
 async function updatePipelineStatus(projId, newStatus) {
   try {
     await spPatch(listItem(CFG.lists.pipelineProjects, projId), {
-      Status: newStatus
+      StatusId: null,
+      Status: { Value: newStatus }
     });
     const p = S.pipeline.find(x => x.ID === projId);
     if (p) { if (p.Status?.Value !== undefined) p.Status.Value = newStatus; else p.Status = newStatus; }
@@ -1552,7 +1513,7 @@ function viewPipelineDetail(projId) {
 function _renderPipelineDetail() {
   const p = S.selectedPipeline;
   const te = teForPipeline(p.ID);
-  const exps = expForProject(p);
+  const exps = expForProject(p.DisplayName);
   const hoursBooked = sumHours(te);
   const staffCost = sumStaff(te);
   const commercial = sumCommercial(te);
@@ -1561,7 +1522,7 @@ function _renderPipelineDetail() {
   const st = p.Status?.Value || p.Status || '';
 
   const empTableRows = empRows.map(e => {
-    const empExps = sumExpenses(expForEmployee(p, e.name));
+    const empExps = sumExpenses(expForEmployee(p.DisplayName, e.name));
     return `<tr class="clickable" onclick="viewEmployeeEntries(${p.ID},'${esc(p.ProjectTitle)}','${esc(p.DisplayName)}','${esc(e.name)}',true)">
       <td>${esc(e.name)}</td>
       <td class="ta-center">${num(e.hours)}</td>
@@ -1591,6 +1552,7 @@ function _renderPipelineDetail() {
           <div>${money(p.ExpectedValue)}</div>
         </div>
         <button class="btn-ghost" onclick="savePipelineNotes(${p.ID})">💾 Save Notes</button>
+        <button class="btn-ghost" onclick="viewEditPipeline(${p.ID})">✏️ Edit</button>
         <button style="background:#16a34a;border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;letter-spacing:0.3px;" onclick="showPromoteModal(${p.ID})">🚀 Promote to Live Project</button>
         <span class="user-chip">${esc(S.currentUser?.displayName||'')}</span>
       </div>
@@ -1606,11 +1568,11 @@ function _renderPipelineDetail() {
           <div class="detail-kpi-val" style="color:var(--indigo)">${moneyDec(totalExp)}</div>
         </div>
         <div class="detail-kpi">
-          <div class="detail-kpi-label">Staff Cost</div>
+          <div class="detail-kpi-label">Cost Rate</div>
           <div class="detail-kpi-val" style="color:var(--indigo)">${moneyDec(staffCost)}</div>
         </div>
         <div class="detail-kpi">
-          <div class="detail-kpi-label">Charge Cost</div>
+          <div class="detail-kpi-label">Charge Rate</div>
           <div class="detail-kpi-val" style="color:var(--indigo)">${moneyDec(commercial)}</div>
         </div>
         <div class="detail-kpi">
@@ -1627,8 +1589,8 @@ function _renderPipelineDetail() {
             <th style="width:80px;">Hours</th>
             <th style="width:80px;">Travel</th>
             <th style="width:110px;">Expenses</th>
-            <th style="width:110px;">Staff Cost</th>
-            <th style="width:120px;">Commercial Cost</th>
+            <th style="width:110px;">Staff Rate</th>
+            <th style="width:120px;">Commercial Rate</th>
           </tr></thead>
           <tbody>${empTableRows || '<tr><td colspan="6" class="ta-center" style="padding:14px;color:var(--muted);">No time entries</td></tr>'}</tbody>
         </table>
@@ -1739,12 +1701,14 @@ async function confirmPromote(projId) {
   try {
     // 1. Create item in Projects list
     const newProjectBody = {
-      Title:         p.Company || p.Title,
-      Company:       p.Company || p.Title,
-      ProjectTitle0: p.ProjectTitle || '',
-      DisplayName:   p.DisplayName || '',
-      Status: 'Live',
-      Notes:         p.Notes || '',
+      Title:              p.Company || p.Title,
+      Company:            p.Company || p.Title,
+      ProjectTitle0:      p.ProjectTitle || '',
+      DisplayName:        p.DisplayName || '',
+      Status:             'Live',
+      Notes:              p.Notes || '',
+      SourcePipelineId:   String(projId),
+      SourcePipelineName: p.DisplayName || '',
       ...(poValue    !== null && { POValue: poValue }),
       ...(startDate  && { StartDate: startDate }),
       ...(endDate    && { EndDate: endDate }),
@@ -1852,18 +1816,12 @@ function viewAddProject() {
 
 async function loadPipelineCategories() {
   try {
+    const data = await spGet(`web/lists/getbytitle('${encodeURIComponent(CFG.lists.pipelineProjects)}')/fields?$filter=EntityPropertyName eq 'Category0' or InternalName eq 'Category0'`);
     const sel = document.getElementById('f_category');
     if (!sel) return;
-    const fromItems = [...new Set(S.pipeline.map(p => String(p.Category || '').trim()).filter(Boolean))];
-    let choices = fromItems;
-    if (!choices.length) {
-      const fieldNames = ['Category', 'Category0'];
-      for (const fieldName of fieldNames) {
-        const ch = await spGet(`web/lists/getbytitle('${encodeURIComponent(CFG.lists.pipelineProjects)}')/fields?$filter=InternalName eq '${fieldName}'&$select=Choices`);
-        choices = ch.value?.[0]?.Choices || [];
-        if (choices.length) break;
-      }
-    }
+    // Try choices endpoint
+    const ch = await spGet(`web/lists/getbytitle('${encodeURIComponent(CFG.lists.pipelineProjects)}')/fields?$filter=InternalName eq 'Category0'&$select=Choices`);
+    const choices = ch.value?.[0]?.Choices || [];
     choices.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
   } catch(e) { /* category choices not critical */ }
 }
@@ -1886,7 +1844,7 @@ async function submitNewProject() {
   };
 
   const ownerVal = document.getElementById('f_owner')?.value;
-  if (ownerVal) body.Owner_x002f_PM = ownerVal;
+  if (ownerVal) body['Owner_x002f_PM'] = ownerVal;
   const catVal = document.getElementById('f_category')?.value;
   if (catVal) body.Category = catVal;
 
@@ -1902,6 +1860,222 @@ async function submitNewProject() {
     toast('Project added successfully!');
     viewPipeline();
   } catch(e) { toast('Error saving project: ' + e.message, 'err'); }
+}
+
+
+/* ================================================================
+   EDIT PIPELINE PROJECT
+================================================================ */
+function viewEditPipeline(projId) {
+  const p = S.pipeline.find(x => x.ID === projId);
+  if (!p) return;
+  S.editTarget = { type: 'pipeline', id: projId };
+  const st = p.Status?.Value || p.Status || 'Lead';
+  const cat = p.Category?.Value || p.Category || '';
+  render(`
+    <div class="hdr">
+      <div class="hdr-left">
+        <button class="back-btn" onclick="viewPipelineDetail(${projId})">← Back</button>
+        <div>
+          <div class="hdr-title">Edit Pipeline Project</div>
+          <div class="hdr-sub">${esc(p.DisplayName)}</div>
+        </div>
+      </div>
+    </div>
+    <div class="main">
+      <div class="form-grid">
+        <div class="form-field">
+          <label>Company / Project Name</label>
+          <input type="text" id="f_company" value="${esc(p.Company||'')}">
+        </div>
+        <div class="form-field">
+          <label>Project Title</label>
+          <input type="text" id="f_projectTitle" value="${esc(p.ProjectTitle||'')}">
+        </div>
+        <div class="form-field">
+          <label>Project Number</label>
+          <input type="text" id="f_projectNumber" value="${esc(p.ProjectNumber||'')}">
+        </div>
+        <div class="form-field">
+          <label>Status</label>
+          <select id="f_status">
+            ${CFG.pipelineStatuses.map(s => `<option value="${esc(s)}" ${s===st?'selected':''}>${esc(s)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Expected Value (£)</label>
+          <input type="number" id="f_value" value="${p.ExpectedValue||''}">
+        </div>
+        <div class="form-field">
+          <label>Probability (%)</label>
+          <input type="number" id="f_probability" min="0" max="100" value="${p.Probability!=null?p.Probability:''}">
+        </div>
+        <div class="form-field">
+          <label>Expected Start Date</label>
+          <input type="date" id="f_startDate" value="${(p.ExpectedStart||'').slice(0,10)}">
+        </div>
+        <div class="form-field">
+          <label>Owner / PM</label>
+          <select id="f_owner">
+            <option value="">— Select owner —</option>
+            ${CFG.owners.map(o => `<option value="${esc(o)}" ${o===(p.Owner||'')?'selected':''}>${esc(o)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Contact</label>
+          <input type="text" id="f_contact" value="${esc(p.Contact||'')}">
+        </div>
+        <div class="form-field">
+          <label>Category</label>
+          <select id="f_category">
+            <option value="">— Select category —</option>
+          </select>
+        </div>
+        <div class="form-field form-field-full">
+          <label>Notes</label>
+          <textarea id="f_notes" style="min-height:120px;">${esc(p.Notes||'')}</textarea>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn" onclick="saveEditPipeline(${projId})">💾 Save Changes</button>
+        <button class="btn" style="background:var(--muted);border-color:var(--muted);" onclick="viewPipelineDetail(${projId})">Cancel</button>
+      </div>
+    </div>
+  `);
+  loadPipelineCategories().then(() => {
+    const sel = document.getElementById('f_category');
+    if (sel && cat) sel.value = cat;
+  });
+}
+
+async function saveEditPipeline(projId) {
+  const company = document.getElementById('f_company')?.value?.trim();
+  if (!company) { toast('Company / Project Name is required', 'err'); return; }
+  const body = {
+    Company_x002f_ProjectName: company,
+    ProjectTitle:  document.getElementById('f_projectTitle')?.value?.trim() || company,
+    ProjectNumber: document.getElementById('f_projectNumber')?.value?.trim() || null,
+    Status:        document.getElementById('f_status')?.value || 'Lead',
+    ExpectedValue: parseFloat(document.getElementById('f_value')?.value) || null,
+    Probability:   parseInt(document.getElementById('f_probability')?.value) || null,
+    ExpectedStart: document.getElementById('f_startDate')?.value || null,
+    Notes:         document.getElementById('f_notes')?.value?.trim() || null,
+    Contact:       document.getElementById('f_contact')?.value?.trim() || null,
+    'Owner_x002f_PM': document.getElementById('f_owner')?.value || null,
+    Category:      document.getElementById('f_category')?.value || null,
+  };
+  try {
+    await spPatch(listItem(CFG.lists.pipelineProjects, projId), body);
+    // Update local state
+    const p = S.pipeline.find(x => x.ID === projId);
+    if (p) {
+      Object.assign(p, {
+        Company: company, ProjectTitle: body.ProjectTitle,
+        DisplayName: body.ProjectTitle ? `${company} — ${body.ProjectTitle}` : company,
+        Status: body.Status, ExpectedValue: body.ExpectedValue||0,
+        Probability: body.Probability, ExpectedStart: body.ExpectedStart,
+        Notes: body.Notes, Contact: body.Contact,
+        Owner: body['Owner_x002f_PM']||'', Category: body.Category
+      });
+      S.selectedPipeline = p;
+    }
+    toast('Pipeline project updated');
+    viewPipelineDetail(projId);
+  } catch(e) { toast('Save failed: ' + e.message, 'err'); }
+}
+
+/* ================================================================
+   EDIT ACTIVE PROJECT
+================================================================ */
+function viewEditProject(projId) {
+  const p = S.projects.find(x => x.ID === projId);
+  if (!p) return;
+  const st = p.Status?.Value || p.Status || 'Live';
+  render(`
+    <div class="hdr">
+      <div class="hdr-left">
+        <button class="back-btn" onclick="viewProjectDetail(${projId})">← Back</button>
+        <div>
+          <div class="hdr-title">Edit Project</div>
+          <div class="hdr-sub">${esc(p.DisplayName)}</div>
+        </div>
+      </div>
+    </div>
+    <div class="main">
+      <div class="form-grid">
+        <div class="form-field">
+          <label>Company</label>
+          <input type="text" id="ep_company" value="${esc(p.Company||'')}">
+        </div>
+        <div class="form-field">
+          <label>Project Title</label>
+          <input type="text" id="ep_projectTitle" value="${esc(p.ProjectTitle||'')}">
+        </div>
+        <div class="form-field">
+          <label>PO Value (£)</label>
+          <input type="number" id="ep_poValue" value="${p.POValue||''}">
+        </div>
+        <div class="form-field">
+          <label>Status</label>
+          <select id="ep_status">
+            ${CFG.projectStatuses.map(s => `<option value="${esc(s)}" ${s===st?'selected':''}>${esc(s)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Start Date</label>
+          <input type="date" id="ep_startDate" value="${(p.StartDate||'').slice(0,10)}">
+        </div>
+        <div class="form-field">
+          <label>End Date</label>
+          <input type="date" id="ep_endDate" value="${(p.EndDate||'').slice(0,10)}">
+        </div>
+        <div class="form-field">
+          <label>Planned Hours</label>
+          <input type="number" id="ep_plannedHours" value="${p.PlannedHours||''}">
+        </div>
+        <div class="form-field form-field-full">
+          <label>Notes</label>
+          <textarea id="ep_notes" style="min-height:120px;">${esc(p.Notes||'')}</textarea>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn" onclick="saveEditProject(${projId})">💾 Save Changes</button>
+        <button class="btn" style="background:var(--muted);border-color:var(--muted);" onclick="viewProjectDetail(${projId})">Cancel</button>
+      </div>
+    </div>
+  `);
+}
+
+async function saveEditProject(projId) {
+  const company = document.getElementById('ep_company')?.value?.trim();
+  if (!company) { toast('Company is required', 'err'); return; }
+  const projectTitle = document.getElementById('ep_projectTitle')?.value?.trim() || '';
+  const body = {
+    Company:       company,
+    ProjectTitle0: projectTitle,
+    Status:        document.getElementById('ep_status')?.value || 'Live',
+    POValue:       parseFloat(document.getElementById('ep_poValue')?.value) || null,
+    StartDate:     document.getElementById('ep_startDate')?.value || null,
+    EndDate:       document.getElementById('ep_endDate')?.value || null,
+    PlannedHours:  parseFloat(document.getElementById('ep_plannedHours')?.value) || null,
+    Notes:         document.getElementById('ep_notes')?.value?.trim() || null,
+  };
+  try {
+    await spPatch(listItem(CFG.lists.projects, projId), body);
+    const p = S.projects.find(x => x.ID === projId);
+    if (p) {
+      Object.assign(p, {
+        Company: company, ProjectTitle: projectTitle,
+        DisplayName: projectTitle ? `${company}-${projectTitle}` : company,
+        Status: body.Status, POValue: body.POValue||0,
+        StartDate: body.StartDate, EndDate: body.EndDate,
+        PlannedHours: body.PlannedHours||0, Notes: body.Notes
+      });
+      S.selectedProject = p;
+    }
+    toast('Project updated');
+    viewProjectDetail(projId);
+  } catch(e) { toast('Save failed: ' + e.message, 'err'); }
 }
 
 /* ================================================================
