@@ -1816,14 +1816,20 @@ function viewAddProject() {
 
 async function loadPipelineCategories() {
   try {
-    const data = await spGet(`web/lists/getbytitle('${encodeURIComponent(CFG.lists.pipelineProjects)}')/fields?$filter=EntityPropertyName eq 'Category0' or InternalName eq 'Category0'`);
     const sel = document.getElementById('f_category');
     if (!sel) return;
-    // Try choices endpoint
-    const ch = await spGet(`web/lists/getbytitle('${encodeURIComponent(CFG.lists.pipelineProjects)}')/fields?$filter=InternalName eq 'Category0'&$select=Choices`);
+    // PipelineProjects uses InternalName 'Category' (not Category0)
+    const ch = await spGet(`web/lists/getbytitle('${encodeURIComponent(CFG.lists.pipelineProjects)}')/fields?$filter=InternalName eq 'Category'&$select=Choices`);
     const choices = ch.value?.[0]?.Choices || [];
-    choices.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
-  } catch(e) { /* category choices not critical */ }
+    if (!choices.length) {
+      // Fallback: fetch all choice fields and find Category by title
+      const all = await spGet(`web/lists/getbytitle('${encodeURIComponent(CFG.lists.pipelineProjects)}')/fields?$filter=TypeAsString eq 'Choice' and Title eq 'Category'&$select=Choices`);
+      const fallbackChoices = all.value?.[0]?.Choices || [];
+      fallbackChoices.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
+    } else {
+      choices.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
+    }
+  } catch(e) { console.warn('Could not load category choices:', e); }
 }
 
 async function submitNewProject() {
