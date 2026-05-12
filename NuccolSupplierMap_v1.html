@@ -264,7 +264,7 @@ html, body { height:100%; font-family:'Inter',sans-serif; background:var(--bg); 
     </div>
 
     <div id="stats-bar">
-      <div class="stat-box"><div class="stat-num">2,211</div><div class="stat-label">Suppliers</div></div>
+      <div class="stat-box"><div class="stat-num" id="stat-total">—</div><div class="stat-label">Suppliers</div></div>
       <div class="stat-box"><div class="stat-num">12</div><div class="stat-label">Regions</div></div>
       <div class="stat-box"><div class="stat-num" id="stat-visible">—</div><div class="stat-label">Shown</div></div>
     </div>
@@ -347,98 +347,89 @@ const MSAL_CFG   = {
 
 const msalApp = new msal.PublicClientApplication(MSAL_CFG);
 
-const COUNTY_REGION = {
-  "Carmarthenshire": "Wales",
-  "Berkshire": "South East",
-  "Devon": "South West",
-  "Warwickshire": "West Midlands",
-  "Cornwall": "South West",
-  "West Midlands": "West Midlands",
-  "Lanarkshire": "Scotland",
-  "Norfolk": "East of England",
-  "Merseyside": "North West",
-  "Nottinghamshire": "East Midlands",
-  "Staffordshire": "West Midlands",
-  "Tyne And Wear": "North East",
-  "Greater Manchester": "North West",
-  "Avon": "South West",
-  "Cumbria": "North West",
-  "Angus": "Scotland",
-  "Lancashire": "North West",
-  "London": "London",
-  "Kent": "South East",
-  "South Yorkshire": "Yorkshire and The Humber",
-  "Dorset": "South West",
-  "Hampshire": "South East",
-  "Surrey": "South East",
-  "Worcestershire": "West Midlands",
-  "West Yorkshire": "Yorkshire and The Humber",
-  "Wiltshire": "South West",
-  "Suffolk": "East of England",
-  "Buckinghamshire": "South East",
-  "Derbyshire": "East Midlands",
-  "Essex": "East of England",
-  "Stirlingshire": "Scotland",
-  "Shropshire": "West Midlands",
-  "Leicestershire": "East Midlands",
-  "Somerset": "South West",
-  "Cambridgeshire": "East of England",
-  "Gloucestershire": "South West",
-  "North Humberside": "Yorkshire and The Humber",
-  "North Yorkshire": "Yorkshire and The Humber",
-  "Oxfordshire": "South East",
-  "Aberdeenshire": "Scotland",
-  "Middlesex": "London",
-  "Midlothian": "Scotland",
-  "Hertfordshire": "East of England",
-  "Gwent": "Wales",
-  "County Durham": "North East",
-  "West Glamorgan": "Wales",
-  "Fife": "Scotland",
-  "Cheshire": "North West",
-  "Lincolnshire": "East Midlands",
-  "West Sussex": "South East",
-  "South Lanarkshire": "Scotland",
-  "Torfaen": "Wales",
-  "Greater London": "London",
-  "East Riding of Yorkshire": "Yorkshire and The Humber",
-  "West Lothian": "Scotland",
-  "Northamptonshire": "East Midlands",
-  "Gwynedd": "Wales",
-  "Bristol": "South West",
-  "Ayrshire": "Scotland",
-  "Annan": "Scotland",
-  "Bedfordshire": "East of England",
-  "Tyne & Wear": "North East",
-  "Clwyd": "Wales",
-  "Mid Glamorgan": "Wales",
-  "Renfrewshire": "Scotland",
-  "Northumberland": "North East",
-  "East Sussex": "South East",
-  "Deeside": "Wales",
-  "Cleveland": "North East",
-  "County Londonderry": "Northern Ireland",
-  "Inverness-Shire": "Scotland",
-  "Herefordshire": "West Midlands",
-  "Powys": "Wales",
-  "Isle Of Wight": "South East",
-  "Dyfed": "Wales",
-  "Pembrokeshire": "Wales",
-  "Co Armagh": "Northern Ireland",
-  "North Shields": "North East",
-  "County Down": "Northern Ireland",
-  "Perthshire": "Scotland",
-  "Highland": "Scotland",
-  "Flintshire": "Wales",
-  "Redcar & Cleveland": "North East",
-  "Ross-shire": "Scotland",
-  "National": "",
-  "South Glamorgan": "Wales",
-  "Dunbartonshire": "Scotland",
-  "East Yorkshire": "Yorkshire and The Humber",
-  "County Antrim": "Northern Ireland",
-  "Wrexham": "Wales"
+// Region derived from postcode area (first 1-2 letters) — ONS-aligned
+// Postcode takes priority over county; county is kept as a fallback only
+const POSTCODE_REGION = {
+  AB:"Scotland", AL:"East of England",
+  B:"West Midlands", BA:"South West", BB:"North West", BD:"Yorkshire and The Humber",
+  BH:"South West", BL:"North West", BN:"South East", BR:"London", BS:"South West",
+  BT:"Northern Ireland",
+  CA:"North West", CB:"East of England", CF:"Wales", CH:"North West",
+  CM:"East of England", CO:"East of England", CR:"London", CT:"South East",
+  CV:"West Midlands", CW:"North West",
+  DA:"South East", DD:"Scotland", DE:"East Midlands", DG:"Scotland",
+  DH:"North East", DL:"North East", DN:"Yorkshire and The Humber", DT:"South West",
+  DY:"West Midlands",
+  E:"London", EC:"London", EH:"Scotland", EN:"London", EX:"South West",
+  FK:"Scotland", FY:"North West",
+  G:"Scotland", GL:"South West", GU:"South East",
+  HA:"London", HD:"Yorkshire and The Humber", HG:"Yorkshire and The Humber",
+  HP:"South East", HR:"West Midlands", HS:"Scotland", HU:"Yorkshire and The Humber",
+  HX:"Yorkshire and The Humber",
+  IG:"London", IP:"East of England", IV:"Scotland",
+  KA:"Scotland", KT:"London", KW:"Scotland", KY:"Scotland",
+  L:"North West", LA:"North West", LD:"Wales", LE:"East Midlands",
+  LL:"Wales", LN:"East Midlands", LS:"Yorkshire and The Humber", LU:"East of England",
+  M:"North West", ME:"South East", MK:"South East", ML:"Scotland",
+  N:"London", NE:"North East", NG:"East Midlands", NN:"East Midlands",
+  NP:"Wales", NR:"East of England", NW:"London",
+  OL:"North West", OX:"South East",
+  PA:"Scotland", PE:"East of England", PH:"Scotland", PL:"South West",
+  PO:"South East", PR:"North West",
+  RG:"South East", RH:"South East", RM:"London",
+  S:"Yorkshire and The Humber", SA:"Wales", SE:"London", SG:"East of England",
+  SK:"North West", SL:"South East", SM:"London", SN:"South West",
+  SO:"South East", SP:"South West", SR:"North East", SS:"East of England",
+  ST:"West Midlands", SW:"London", SY:"West Midlands",
+  TA:"South West", TD:"Scotland", TF:"West Midlands", TN:"South East",
+  TQ:"South West", TR:"South West", TS:"North East", TW:"London",
+  UB:"London",
+  W:"London", WA:"North West", WC:"London", WD:"East of England",
+  WF:"Yorkshire and The Humber", WN:"North West", WR:"West Midlands",
+  WS:"West Midlands", WV:"West Midlands",
+  YO:"Yorkshire and The Humber",
+  ZE:"Scotland"
 };
+
+// County fallback for anything without a valid postcode
+const COUNTY_REGION = {
+  "Carmarthenshire":"Wales","Berkshire":"South East","Devon":"South West",
+  "Warwickshire":"West Midlands","Cornwall":"South West","West Midlands":"West Midlands",
+  "Lanarkshire":"Scotland","Norfolk":"East of England","Merseyside":"North West",
+  "Nottinghamshire":"East Midlands","Staffordshire":"West Midlands","Tyne And Wear":"North East",
+  "Greater Manchester":"North West","Avon":"South West","Cumbria":"North West",
+  "Angus":"Scotland","Lancashire":"North West","London":"London","Kent":"South East",
+  "South Yorkshire":"Yorkshire and The Humber","Dorset":"South West","Hampshire":"South East",
+  "Surrey":"South East","Worcestershire":"West Midlands","West Yorkshire":"Yorkshire and The Humber",
+  "Wiltshire":"South West","Suffolk":"East of England","Buckinghamshire":"South East",
+  "Derbyshire":"East Midlands","Essex":"East of England","Stirlingshire":"Scotland",
+  "Shropshire":"West Midlands","Leicestershire":"East Midlands","Somerset":"South West",
+  "Cambridgeshire":"East of England","Gloucestershire":"South West",
+  "North Humberside":"Yorkshire and The Humber","North Yorkshire":"Yorkshire and The Humber",
+  "Oxfordshire":"South East","Aberdeenshire":"Scotland","Middlesex":"London",
+  "Midlothian":"Scotland","Hertfordshire":"East of England","Gwent":"Wales",
+  "County Durham":"North East","West Glamorgan":"Wales","Fife":"Scotland",
+  "Cheshire":"North West","Lincolnshire":"East Midlands","West Sussex":"South East",
+  "South Lanarkshire":"Scotland","Torfaen":"Wales","Greater London":"London",
+  "East Riding of Yorkshire":"Yorkshire and The Humber","West Lothian":"Scotland",
+  "Northamptonshire":"East Midlands","Gwynedd":"Wales","Bristol":"South West",
+  "Ayrshire":"Scotland","Bedfordshire":"East of England","Tyne & Wear":"North East",
+  "Clwyd":"Wales","Mid Glamorgan":"Wales","Renfrewshire":"Scotland",
+  "Northumberland":"North East","East Sussex":"South East","Deeside":"Wales",
+  "Cleveland":"North East","County Londonderry":"Northern Ireland","Inverness-Shire":"Scotland",
+  "Herefordshire":"West Midlands","Powys":"Wales","Isle Of Wight":"South East",
+  "Dyfed":"Wales","Pembrokeshire":"Wales","Co Armagh":"Northern Ireland",
+  "County Down":"Northern Ireland","Perthshire":"Scotland","Highland":"Scotland",
+  "Flintshire":"Wales","Redcar & Cleveland":"North East","Ross-shire":"Scotland",
+  "South Glamorgan":"Wales","Dunbartonshire":"Scotland","East Yorkshire":"Yorkshire and The Humber",
+  "County Antrim":"Northern Ireland","Wrexham":"Wales"
+};
+
+function postcodeToRegion(postcode) {
+  const area = (postcode || '').trim().toUpperCase().match(/^([A-Z]{1,2})/);
+  if (area) return POSTCODE_REGION[area[1]] || null;
+  return null;
+}
 
 // ── Runtime data (populated from SharePoint) ────────────────────────────────
 let COMPANIES = [];
@@ -532,13 +523,14 @@ async function bootstrap() {
   COMPANIES = spCompanies
     .filter(c => c.lat && c.lng && !isNaN(parseFloat(c.lat)))
     .map(c => {
-      const id     = c.field_1;
-      const county = (c.field_3 || '').trim();
+      const id      = c.field_1;
+      const county  = (c.field_3 || '').trim();
+      const postcode = c.field_4 || '';
       return {
         name:    c.Title || '',
-        postcode: c.field_4 || '',
+        postcode,
         address: c.field_25 || '',
-        region:  COUNTY_REGION[county] || county || '',
+        region:  postcodeToRegion(postcode) || COUNTY_REGION[county] || county || '',
         url:     c.field_6 || '',
         f4n:     (c.field_19 || '').toLowerCase() === 'yes',
         ch_status: (c.CH_Status || '').trim(),
@@ -704,6 +696,7 @@ function init() {
   buildCapList();
 
   const n = COMPANIES.length.toLocaleString();
+  document.getElementById('stat-total').textContent = n;
   document.getElementById('stat-visible').textContent = n;
   document.getElementById('map-badge-num').textContent = n;
   document.getElementById('rc-num').textContent = n;
