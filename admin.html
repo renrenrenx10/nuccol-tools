@@ -259,15 +259,11 @@ async function bulkToggle(listName, value) {
 }
 
 async function loadAllContent() {
-  const [news, events, contracts] = await Promise.all([
-    spGet('NewsletterNews'),
-    spGet('NewsletterEvents'),
-    spGet('NewsletterContracts')
+  await Promise.all([
+    loadNews(),
+    loadEvents(),
+    loadContracts()
   ]);
-
-  renderList('news-list', news, 'NewsletterNews');
-  renderList('events-list', events, 'NewsletterEvents');
-  renderList('contracts-list', contracts, 'NewsletterContracts');
 }
 
 function renderList(containerId, items, listName) {
@@ -297,13 +293,38 @@ function renderList(containerId, items, listName) {
   `).join('');
 }
 
+async function loadNews() {
+  const items = await spGet('NewsletterNews');
+  renderList('news-list', items, 'NewsletterNews');
+}
+
+async function loadEvents() {
+  const items = await spGet('NewsletterEvents');
+  renderList('events-list', items, 'NewsletterEvents');
+}
+
+async function loadContracts() {
+  const items = await spGet('NewsletterContracts');
+  renderList('contracts-list', items, 'NewsletterContracts');
+}
+
 function navigateTo(screen) {
+  // Hide all screens
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(screen).classList.add('active');
   
+  // Show the selected screen
+  const targetScreen = document.getElementById(screen);
+  if (targetScreen) targetScreen.classList.add('active');
+
+  // Update active nav item
   document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
   const activeNav = document.querySelector(`[onclick="navigateTo('${screen}')"]`);
   if (activeNav) activeNav.classList.add('active');
+
+  // Refresh the list when switching tabs
+  if (screen === 'news') loadNews();
+  else if (screen === 'events') loadEvents();
+  else if (screen === 'contracts') loadContracts();
 }
 
 function signOut() {
