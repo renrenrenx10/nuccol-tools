@@ -142,7 +142,7 @@
 </div>
 
 <script>
-// Reuse CheatMode config
+// ==================== MSAL CONFIG ====================
 const CONFIG = {
   clientId: "ec0a6806-59e8-4ea9-8ff5-6bdb1ba87baf",
   tenantId: "d44192f5-1023-458c-9cb3-9ff7e9c6d4ad",
@@ -162,6 +162,7 @@ let msalInstance, currentAccount;
 async function initAuth() {
   msalInstance = new msal.PublicClientApplication(msalConfig);
   await msalInstance.initialize();
+  
   document.getElementById('btn-login').addEventListener('click', signIn);
 
   const accounts = msalInstance.getAllAccounts();
@@ -178,36 +179,61 @@ async function signIn() {
     });
     currentAccount = resp.account;
     onSignedIn();
-  } catch(e) { console.error(e); }
+  } catch(e) {
+    console.error("Login failed", e);
+    alert("Login failed. Check console.");
+  }
 }
 
 function onSignedIn() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
-  document.getElementById('user-name').textContent = currentAccount.name || currentAccount.username;
+  
+  if (currentAccount) {
+    document.getElementById('user-name').textContent = currentAccount.name || currentAccount.username;
+    document.getElementById('user-email').textContent = currentAccount.username;
+  }
+  
   loadAllContent();
 }
 
 async function getToken() {
-  const request = { 
-    scopes: [`${new URL(CONFIG.spSiteUrl).origin}/.default`], 
-    account: currentAccount 
-  };
-  const res = await msalInstance.acquireTokenSilent(request);
-  return res.accessToken;
+  try {
+    const request = { 
+      scopes: [`${new URL(CONFIG.spSiteUrl).origin}/.default`], 
+      account: currentAccount 
+    };
+    const res = await msalInstance.acquireTokenSilent(request);
+    return res.accessToken;
+  } catch(e) {
+    console.error("Token error", e);
+    return null;
+  }
 }
 
 async function spGet(listName) {
   const token = await getToken();
-  const resp = await fetch(`${CONFIG.spSiteUrl}/_api/web/lists/getbytitle('${listName}')/items?$select=ID,Title,Summary,Description,URL,Source,DatePublished,EventDate,ClosingDate,Organisation,Selected&$orderby=Created desc`, {
-    headers: { "Authorization": `Bearer ${token}`, "Accept": "application/json;odata=nometadata" }
-  });
-  const data = await resp.json();
-  return data.value || [];
+  if (!token) return [];
+
+  try {
+    const resp = await fetch(`${CONFIG.spSiteUrl}/_api/web/lists/getbytitle('${listName}')/items?$select=ID,Title,Summary,Description,URL,DatePublished,EventDate,ClosingDate,Organisation,Selected&$orderby=Created desc`, {
+      headers: { 
+        "Authorization": `Bearer ${token}`, 
+        "Accept": "application/json;odata=nometadata" 
+      }
+    });
+    const data = await resp.json();
+    return data.value || [];
+  } catch(e) {
+    console.error(`Error fetching ${listName}`, e);
+    return [];
+  }
 }
 
 async function toggleSelected(listName, id, selected) {
   const token = await getToken();
+  if (!token) return;
+
   await fetch(`${CONFIG.spSiteUrl}/_api/web/lists/getbytitle('${listName}')/items(${id})`, {
     method: "POST",
     headers: {
@@ -218,11 +244,14 @@ async function toggleSelected(listName, id, selected) {
     },
     body: JSON.stringify({ Selected: selected })
   });
+  
+  // Refresh the list
   loadAllContent();
 }
 
 async function bulkToggle(listName, value) {
-  if (!confirm(`Mark ALL items as ${value ? 'Selected' : 'Deselected'}?`)) return;
+  if (!confirm(`Mark ALL items as ${value ? 'SELECTED' : 'UNSELECTED'}?`)) return;
+  
   const items = await spGet(listName);
   for (const item of items) {
     await toggleSelected(listName, item.ID, value);
@@ -243,31 +272,42 @@ async function loadAllContent() {
 
 function renderList(containerId, items, listName) {
   const container = document.getElementById(containerId);
+  if (!container) return;
+
+  if (!items || items.length === 0) {
+    container.innerHTML = `<p class="text-zinc-500 py-12 text-center">No items found in this list.</p>`;
+    return;
+  }
+
   container.innerHTML = items.map(item => `
     <div class="nl-row bg-zinc-900 border border-zinc-700 rounded-2xl p-6 flex gap-6 items-start">
       <input type="checkbox" class="mt-1.5 w-5 h-5 accent-emerald-500" 
              ${item.Selected ? 'checked' : ''} 
              onchange="toggleSelected('${listName}', ${item.ID}, this.checked)">
-      <div class="flex-1">
+      <div class="flex-1 min-w-0">
         <div class="font-semibold text-lg">${item.Title || '(No title)'}</div>
-        <div class="text-zinc-400 text-sm mt-1 line-clamp-2">${item.Summary || item.Description || ''}</div>
+        <div class="text-zinc-400 text-sm mt-1 line-clamp-2">${item.Summary || item.Description || item.Organisation || ''}</div>
         <div class="text-xs text-zinc-500 mt-3">
-          ${item.DatePublished || item.EventDate || item.ClosingDate ? new Date(item.DatePublished || item.EventDate || item.ClosingDate).toLocaleDateString('en-GB') : ''}
+          ${item.DatePublished || item.EventDate || item.ClosingDate 
+            ? new Date(item.DatePublished || item.EventDate || item.ClosingDate).toLocaleDateString('en-GB') 
+            : ''}
         </div>
       </div>
     </div>
-  `).join('') || `<p class="text-zinc-500 py-12 text-center">No items found</p>`;
+  `).join('');
 }
 
 function navigateTo(screen) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(screen).classList.add('active');
+  
   document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-  document.querySelector(`[onclick="navigateTo('${screen}')"]`).classList.add('active');
+  const activeNav = document.querySelector(`[onclick="navigateTo('${screen}')"]`);
+  if (activeNav) activeNav.classList.add('active');
 }
 
 function signOut() {
-  msalInstance.logoutPopup();
+  if (msalInstance) msalInstance.logoutPopup();
 }
 
 window.addEventListener('DOMContentLoaded', initAuth);
