@@ -473,7 +473,7 @@ async function bootstrap() {
   setLoadingText('Loading map libraries…');
   await loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
   await loadScript('https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js');
-  await loadScript('https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js');
+  await loadScript('https://unpkg.com/@azure/msal-browser@2.38.3/lib/msal-browser.min.js');
 
   // ── Auth ──
   setLoadingText('Authenticating with Microsoft…');
