@@ -263,6 +263,7 @@ function navigateTo(screen) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(screen).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+  document.querySelector(`[onclick="navigateTo('${screen}')"]`).classList.add('active');
 }
 
 function signOut() {
