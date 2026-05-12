@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NucCol Content Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.38.3/lib/msal-browser.min.js"></script>
+<style>
+/* ─── Reuse most of DataVault styling ───────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: 'Courier New', Courier, monospace; background: #f0f2f5; color: #1e1e1e; font-size: 13px; }
+
+:root {
+  --navy:   #00126b; --blue: #3860b9; --blue2: #1b2a6b; --blue3: #2771c2;
+  --light: #f0f2f5; --white: #ffffff; --border: #dce1eb; --muted: #787878;
+  --green: #28a745; --amber: #ffc107; --red: #dc3545;
+}
+
+#auth-overlay {
+  position: fixed; inset: 0; background: var(--navy);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  z-index: 9999; gap: 24px;
+}
+#btn-login { background: var(--blue); color: #fff; border: none; padding: 14px 40px; font-family: inherit; font-size: 13px; letter-spacing: 2px; cursor: pointer; text-transform: uppercase; }
+#btn-login:hover { background: var(--blue2); }
+
+header {
+  background: var(--blue); height: 70px; display: flex; align-items: center; padding: 0 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.header-brand h1 { color: #fff; font-size: 22px; font-weight: 700; letter-spacing: 1px; }
+.header-nav button {
+  background: rgba(255,255,255,0.15); border: none; color: #fff; padding: 8px 16px; margin: 0 4px;
+  font-family: inherit; font-size: 12px; cursor: pointer; letter-spacing: 1px; text-transform: uppercase;
+}
+.header-nav button.active, .header-nav button:hover { background: rgba(255,255,255,0.3); }
+
+main { flex: 1; padding: 20px; max-width: 1400px; margin: 0 auto; }
+.screen { display: none; }
+.screen.active { display: block; }
+
+.panel { background: var(--white); border: 1px solid var(--border); margin-bottom: 20px; }
+.panel-header {
+  background: var(--blue2); color: #fff; padding: 10px 14px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; font-size: 12px;
+  display: flex; align-items: center;
+}
+.gallery { max-height: calc(100vh - 260px); overflow-y: auto; }
+.gallery-row {
+  display: flex; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--border); cursor: pointer;
+  font-size: 12px; transition: background 0.1s;
+}
+.gallery-row:hover { background: rgba(56,96,185,0.07); }
+.gallery-row .col { flex: 1; padding: 0 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gallery-row .col.name { font-weight: 600; color: var(--blue2); }
+
+.btn { font-family: inherit; font-size: 12px; padding: 8px 16px; border: none; cursor: pointer; letter-spacing: 1px; text-transform: uppercase; }
+.btn-primary { background: var(--blue); color: #fff; }
+.btn-primary:hover { background: var(--blue2); }
+.btn-secondary { background: var(--blue3); color: #fff; }
+.btn-outline { background: none; border: 1px solid var(--border); color: var(--muted); }
+.btn-outline:hover { border-color: var(--navy); color: var(--navy); }
+
+.toast {
+  position: fixed; bottom: 24px; right: 24px; padding: 12px 20px; background: var(--green); color: #fff;
+  font-size: 12px; letter-spacing: 1px; border-radius: 0; display: none; z-index: 999;
+}
+.loading {
+  position: fixed; top: 70px; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--blue) 0%, var(--blue3) 50%, var(--blue) 100%);
+  background-size: 200% 100%; animation: shimmer 1.2s infinite; display: none; z-index: 200;
+}
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: relative; display: inline-block; width: 48px; height: 24px; background: #ccc; border-radius: 24px; cursor: pointer;
+}
+.toggle-slider::before {
+  content: ''; position: absolute; left: 3px; top: 3px; width: 18px; height: 18px; background: white; border-radius: 50%; transition: 0.2s;
+}
+.toggle input:checked + .toggle-slider { background: var(--blue); }
+.toggle input:checked + .toggle-slider::before { transform: translateX(24px); }
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="auth-overlay">
+  <h1 style="color:white;letter-spacing:3px">NucCol</h1>
+  <h2 style="color:white">Content Admin</h2>
+  <button id="btn-login" onclick="signIn()">Sign in with Microsoft</button>
+</div>
+
+<div id="loading" class="loading"></div>
+<div id="toast" class="toast"></div>
+
+<!-- APP -->
+<div id="app" style="display:none; flex-direction:column; height:100vh">
+  <header>
+    <div class="header-brand">
+      <h1>CONTENT ADMIN</h1>
+    </div>
+    <nav class="header-nav">
+      <button onclick="navigate('dashboard')" class="active">Dashboard</button>
+      <button onclick="navigate('news')">News</button>
+      <button onclick="navigate('events')">Events</button>
+      <button onclick="navigate('contracts')">Contracts</button>
+      <button onclick="navigate('manual')">Manual Entries</button>
+      <button onclick="navigate('preview')">Preview</button>
+    </nav>
+    <div style="margin-left:auto">
+      <span id="user-name" style="color:rgba(255,255,255,0.8);margin-right:12px"></span>
+      <button onclick="signOut()" style="background:none;border:1px solid rgba(255,255,255,0.4);color:white;padding:6px 12px;cursor:pointer">Sign out</button>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- DASHBOARD -->
+    <div id="screen-dashboard" class="screen active">
+      <h2>Welcome to NucCol Content Manager</h2>
+      <p>Use the tabs above to manage what appears on the public website.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-top:30px">
+        <div class="panel" style="padding:20px" onclick="navigate('news')"><strong>News</strong><br><span id="count-news">0</span> selected</div>
+        <div class="panel" style="padding:20px" onclick="navigate('events')"><strong>Events</strong><br><span id="count-events">0</span> selected</div>
+        <div class="panel" style="padding:20px" onclick="navigate('contracts')"><strong>Contracts / Tenders</strong><br><span id="count-contracts">0</span> selected</div>
+      </div>
+    </div>
+
+    <!-- NEWS -->
+    <div id="screen-news" class="screen">
+      <div class="panel">
+        <div class="panel-header">
+          <span style="flex:3">Newsletter News</span>
+          <button class="btn btn-primary" onclick="bulkSelect('NewsletterNews', true)">Select All</button>
+          <button class="btn btn-outline" onclick="bulkSelect('NewsletterNews', false)">Deselect All</button>
+        </div>
+        <div class="gallery" id="gallery-news"></div>
+      </div>
+    </div>
+
+    <!-- EVENTS -->
+    <div id="screen-events" class="screen">
+      <div class="panel">
+        <div class="panel-header">
+          <span style="flex:3">Newsletter Events</span>
+          <button class="btn btn-primary" onclick="bulkSelect('NewsletterEvents', true)">Select All</button>
+          <button class="btn btn-outline" onclick="bulkSelect('NewsletterEvents', false)">Deselect All</button>
+        </div>
+        <div class="gallery" id="gallery-events"></div>
+      </div>
+    </div>
+
+    <!-- CONTRACTS -->
+    <div id="screen-contracts" class="screen">
+      <div class="panel">
+        <div class="panel-header">
+          <span style="flex:3">Newsletter Contracts</span>
+          <button class="btn btn-primary" onclick="bulkSelect('NewsletterContracts', true)">Select All</button>
+          <button class="btn btn-outline" onclick="bulkSelect('NewsletterContracts', false)">Deselect All</button>
+        </div>
+        <div class="gallery" id="gallery-contracts"></div>
+      </div>
+    </div>
+
+    <!-- MANUAL ENTRIES -->
+    <div id="screen-manual" class="screen">
+      <div class="panel">
+        <div class="panel-header">Manual / Custom Entries (Free Text)</div>
+        <div style="padding:20px">
+          <p>Coming soon — quick form to add one-off announcements.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- PREVIEW -->
+    <div id="screen-preview" class="screen">
+      <h3>Website Preview (Selected Content)</h3>
+      <div id="preview-content" style="background:white;padding:20px;border:1px solid #ddd"></div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ==================== CONFIG ====================
+const CONFIG = {
+  tenantId: 'd44192f5-1023-458c-9cb3-9ff7e9c6d4ad',
+  clientId: 'ec0a6806-59e8-4ea9-8ff5-6bdb1ba87baf',
+  siteUrl:  'https://nuccol.sharepoint.com/sites/CheatMode',
+  scopes:   ['https://nuccol.sharepoint.com/AllSites.Write'],
+};
+
+// ==================== MSAL SETUP ====================
+const msalConfig = {
+  auth: {
+    clientId:    CONFIG.clientId,
+    authority:   `https://login.microsoftonline.com/${CONFIG.tenantId}`,
+    redirectUri: window.location.origin + window.location.pathname,
+  },
+  cache: { cacheLocation: 'sessionStorage' },
+};
+const msalClient = new msal.PublicClientApplication(msalConfig);
+
+let currentUser = null;
+let msalReady   = false;
+
+// Initialise MSAL on load and auto-login if a session already exists
+(async () => {
+  await msalClient.initialize();
+  msalReady = true;
+  if (window.opener) return;
+  await msalClient.handleRedirectPromise();
+  const accounts = msalClient.getAllAccounts();
+  if (accounts.length) { currentUser = accounts[0]; onSignedIn(); }
+})();
+
+// ==================== UTILITIES ====================
+function showLoading(show) {
+  document.getElementById('loading').style.display = show ? 'block' : 'none';
+}
+
+function toast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = type === 'error' ? '#dc3545' : '#28a745';
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 3000);
+}
+
+async function spFetch(path, options = {}) {
+  const token = await getToken();
+  const url = path.startsWith('http') ? path : `${CONFIG.siteUrl}/_api/${path}`;
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/json;odata=nometadata',
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    },
+  });
+  if (!res.ok) { const text = await res.text(); throw new Error(text || res.statusText); }
+  if (res.status === 204) return null;
+  return res.json();
+}
+
+async function spGetAll(listTitle, select = '*', filter = '', top = 500) {
+  let path = `web/lists/getbytitle('${encodeURIComponent(listTitle)}')/items?$select=${select}&$top=${top}`;
+  if (filter) path += `&$filter=${filter}`;
+  const data = await spFetch(path);
+  return data?.value || [];
+}
+
+async function spPatch(listTitle, id, body) {
+  await spFetch(`web/lists/getbytitle('${encodeURIComponent(listTitle)}')/items(${id})`, {
+    method: 'PATCH',
+    headers: { 'IF-MATCH': '*', 'X-HTTP-Method': 'MERGE' },
+    body: JSON.stringify(body),
+  });
+}
+
+// ==================== AUTH ====================
+async function signIn() {
+  try {
+    if (!msalReady) await msalClient.initialize();
+    const result = await msalClient.loginPopup({ scopes: CONFIG.scopes });
+    currentUser = result.account;
+    onSignedIn();
+  } catch (e) {
+    console.error(e);
+    alert(e.message || 'Sign in failed');
+  }
+}
+
+async function signOut() {
+  await msalClient.logoutPopup();
+  location.reload();
+}
+
+async function getToken() {
+  const accounts = msalClient.getAllAccounts();
+  if (!accounts.length) throw new Error('Not signed in');
+  try {
+    const res = await msalClient.acquireTokenSilent({ scopes: CONFIG.scopes, account: accounts[0] });
+    return res.accessToken;
+  } catch {
+    if (window.opener) throw new Error('Session expired — please reload and sign in again');
+    const res = await msalClient.acquireTokenPopup({ scopes: CONFIG.scopes });
+    return res.accessToken;
+  }
+}
+
+async function onSignedIn() {
+  document.getElementById('auth-overlay').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  const accounts = msalClient.getAllAccounts();
+  if (accounts.length) {
+    currentUser = accounts[0];
+    document.getElementById('user-name').textContent = currentUser.name || currentUser.username;
+  }
+  initApp();
+}
+
+// ==================== MAIN APP ====================
+async function initApp() {
+  await loadAllCounts();
+  renderAllGalleries();
+}
+
+async function loadAllCounts() {
+  const lists = ['NewsletterNews', 'NewsletterEvents', 'NewsletterContracts'];
+  for (let list of lists) {
+    try {
+      const items = await spGetAll(list, 'ID,Selected', "Selected eq 1");
+      document.getElementById(`count-${list.toLowerCase().replace('newsletter','')}`).textContent = items.length;
+    } catch(e) {}
+  }
+}
+
+async function renderGallery(listName, containerId, fields) {
+  showLoading(true);
+  try {
+    const items = await spGetAll(listName, '*', '', 1000);
+    const html = items.map(item => `
+      <div class="gallery-row">
+        <div class="col" style="flex:0 0 40px">
+          <input type="checkbox" ${item.Selected ? 'checked' : ''} onchange="toggleSelected('${listName}', ${item.ID}, this.checked)">
+        </div>
+        <div class="col name" style="flex:3">${esc(item.Title || 'No title')}</div>
+        <div class="col" style="flex:2">${esc(item.DatePublished || item.EventDate || item.PublishedDate || '')}</div>
+        <div class="col" style="flex:3;color:#555">${esc((item.Summary || item.Description || '').substring(0,120))}</div>
+        <div class="col" style="flex:0 0 80px">
+          <button class="btn btn-outline btn-sm" onclick="editItem('${listName}', ${item.ID})">Edit</button>
+        </div>
+      </div>
+    `).join('');
+    document.getElementById(containerId).innerHTML = html || '<div style="padding:40px;text-align:center;color:#888">No items</div>';
+  } catch(e) {
+    toast('Error loading ' + listName, 'error');
+  }
+  showLoading(false);
+}
+
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+async function toggleSelected(listName, id, selected) {
+  showLoading(true);
+  try {
+    await spPatch(listName, id, { Selected: selected });
+    toast(selected ? 'Selected for website' : 'Removed from website');
+    await loadAllCounts();
+  } catch(e) {
+    toast('Save failed', 'error');
+  }
+  showLoading(false);
+}
+
+async function bulkSelect(listName, value) {
+  if (!confirm(`Set ALL items in this list to ${value ? 'Selected' : 'Deselected'}?`)) return;
+  showLoading(true);
+  try {
+    const items = await spGetAll(listName, 'ID');
+    for (let item of items) {
+      await spPatch(listName, item.ID, { Selected: value });
+    }
+    toast('Bulk update complete');
+    renderAllGalleries();
+    loadAllCounts();
+  } catch(e) {
+    toast('Bulk update failed', 'error');
+  }
+  showLoading(false);
+}
+
+function renderAllGalleries() {
+  renderGallery('NewsletterNews', 'gallery-news');
+  renderGallery('NewsletterEvents', 'gallery-events');
+  renderGallery('NewsletterContracts', 'gallery-contracts');
+}
+
+// Navigation
+function navigate(screen) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(`screen-${screen}`).classList.add('active');
+  document.querySelectorAll('.header-nav button').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('onclick') === `navigate('${screen}')`);
+  });
+}
+</script>
+</body>
+</html>
