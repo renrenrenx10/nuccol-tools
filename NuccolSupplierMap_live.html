@@ -175,6 +175,8 @@ html, body { height:100%; font-family:'Inter',sans-serif; background:var(--bg); 
 .rc-tag { font-size:9px; padding:2px 6px; border-radius:10px; font-weight:600; }
 .rc-tag.sector { background:#e0ecfb; color:#1a5fa8; }
 .rc-tag.f4n { background:var(--green-light); color:var(--green); }
+.rc-tag.ch-active { background:var(--green-light); color:var(--green); }
+.rc-tag.ch-inactive { background:#fef2f2; color:var(--red); }
 
 /* POPUP */
 .amrc-popup { min-width:240px; font-family:'Inter',sans-serif; }
@@ -186,6 +188,8 @@ html, body { height:100%; font-family:'Inter',sans-serif; background:var(--bg); 
 .popup-tag.sector { background:#e0ecfb; color:#1a5fa8; }
 .popup-tag.f4n { background:var(--green-light); color:var(--green); }
 .popup-tag.cert { background:#fef9c3; color:#854d0e; }
+.popup-tag.ch-active { background:var(--green-light); color:var(--green); }
+.popup-tag.ch-inactive { background:#fef2f2; color:var(--red); font-weight:700; }
 .popup-url { display:inline-block; margin-top:4px; font-size:11px; color:var(--accent); text-decoration:none; word-break:break-all; font-weight:500; }
 .popup-url:hover { text-decoration:underline; }
 .popup-caps-toggle { margin-top:8px; font-size:10px; color:var(--text-muted); cursor:pointer; border-top:1px solid var(--border); padding-top:6px; font-weight:500; }
@@ -367,7 +371,7 @@ const COUNTY_REGION = {
   "Wiltshire": "South West",
   "Suffolk": "East of England",
   "Buckinghamshire": "South East",
-  "Derbyshire": "Yorkshire and The Humber",
+  "Derbyshire": "East Midlands",
   "Essex": "East of England",
   "Stirlingshire": "Scotland",
   "Shropshire": "West Midlands",
@@ -383,7 +387,7 @@ const COUNTY_REGION = {
   "Midlothian": "Scotland",
   "Hertfordshire": "East of England",
   "Gwent": "Wales",
-  "County Durham": "Yorkshire and The Humber",
+  "County Durham": "North East",
   "West Glamorgan": "Wales",
   "Fife": "Scotland",
   "Cheshire": "North West",
@@ -420,10 +424,10 @@ const COUNTY_REGION = {
   "County Down": "Northern Ireland",
   "Perthshire": "Scotland",
   "Highland": "Scotland",
-  "Flintshire": "North West",
+  "Flintshire": "Wales",
   "Redcar & Cleveland": "North East",
   "Ross-shire": "Scotland",
-  "National": "South East",
+  "National": "",
   "South Glamorgan": "Wales",
   "Dunbartonshire": "Scotland",
   "East Yorkshire": "Yorkshire and The Humber",
@@ -496,7 +500,7 @@ async function bootstrap() {
   setLoadingText('Loading company data…');
   const [spCompanies, spMarkets, spCaps, spCerts] = await Promise.all([
     fetchAllSP(token, 'Companies',
-      'Title,field_1,field_3,field_4,field_6,field_19,field_25,lat,lng'),
+      'Title,field_1,field_3,field_4,field_6,field_19,field_25,lat,lng,CH_Status'),
     fetchAllSP(token, 'Company_Markets',
       'CompanyID_Ref,MarketName_Ref'),
     fetchAllSP(token, 'Company_Capabilities',
@@ -534,6 +538,7 @@ async function bootstrap() {
         region:  COUNTY_REGION[county] || county || '',
         url:     c.field_6 || '',
         f4n:     (c.field_19 || '').toLowerCase() === 'yes',
+        ch_status: (c.CH_Status || '').trim(),
         lat:     parseFloat(c.lat),
         lng:     parseFloat(c.lng),
         sectors: marketsByID[id]  || [],
@@ -573,17 +578,25 @@ function makeIcon() {
   });
 }
 
+function chStatusTag(status, cls) {
+  if (!status) return '';
+  const isActive = status.toLowerCase() === 'active';
+  const tagClass = cls + (isActive ? ' ch-active' : ' ch-inactive');
+  return `<span class="${tagClass}">${status}</span>`;
+}
+
 function makePopup(co) {
   const sectorTags = co.sectors.map(s=>`<span class="popup-tag sector">${s}</span>`).join('');
   const f4nTag = co.f4n ? '<span class="popup-tag f4n">F4N Granted</span>' : '';
   const certTags = co.certs.slice(0,5).map(c=>`<span class="popup-tag cert">${c}</span>`).join('');
   const moreCerts = co.certs.length>5 ? `<span class="popup-tag cert">+${co.certs.length-5} more</span>` : '';
   const urlHtml = co.url ? `<a class="popup-url" href="${co.url.startsWith('http')?co.url:'https://'+co.url}" target="_blank" rel="noopener">↗ ${co.url}</a>` : '';
+  const chTag = chStatusTag(co.ch_status, 'popup-tag');
   return `<div class="amrc-popup">
     <div class="popup-name">${co.name}</div>
     <div class="popup-region">${co.region||''} · ${co.postcode}</div>
     ${co.address?`<div class="popup-address">${co.address}</div>`:''}
-    <div class="popup-tags">${f4nTag}${sectorTags}</div>
+    <div class="popup-tags">${chTag}${f4nTag}${sectorTags}</div>
     <div class="popup-tags">${certTags}${moreCerts}</div>
     ${urlHtml}
     ${co.caps.length?`<div class="popup-caps-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display===\'none\'?\'block\':\'none\'">▸ Show ${co.caps.length} capabilities</div><div class="popup-caps" style="display:none">${co.caps.join(' · ')}</div>`:''}
@@ -621,7 +634,7 @@ function buildResultsList(list) {
     card.className = 'result-card'+(selectedCompany===co.name?' selected':'');
     card.innerHTML = `<div class="rc-name">${co.name}</div>
       <div class="rc-region">${co.region||'—'} · ${co.postcode}</div>
-      <div class="rc-tags">${co.f4n?'<span class="rc-tag f4n">F4N</span>':''}${co.sectors.slice(0,3).map(s=>`<span class="rc-tag sector">${s}</span>`).join('')}</div>`;
+      <div class="rc-tags">${chStatusTag(co.ch_status,'rc-tag')}${co.f4n?'<span class="rc-tag f4n">F4N</span>':''}${co.sectors.slice(0,3).map(s=>`<span class="rc-tag sector">${s}</span>`).join('')}</div>`;
     card.addEventListener('click', () => {
       selectedCompany = co.name;
       document.querySelectorAll('.result-card').forEach(c=>c.classList.remove('selected'));
