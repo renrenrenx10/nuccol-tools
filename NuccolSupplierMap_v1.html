@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NuCCoL Supplier Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.38.3/lib/msal-browser.min.js"></script>
+<style>
+:root {
+  --bg: #f4f6f9;
+  --panel: #ffffff;
+  --panel2: #f0f3f7;
+  --border: #dde3ec;
+  --border2: #c8d0dc;
+  --accent: #1a5fa8;
+  --accent-light: #e8f0fb;
+  --accent-hover: #145090;
+  --text: #1a2535;
+  --text-muted: #5a6a7e;
+  --text-dim: #94a3b8;
+  --red: #dc2626;
+  --green: #16a34a;
+  --green-light: #dcfce7;
+  --gold: #d97706;
+  --sidebar-w: 340px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); overflow:hidden; }
+
+#app { display:flex; height:100vh; width:100vw; }
+#sidebar {
+  width:var(--sidebar-w); min-width:var(--sidebar-w);
+  background:var(--panel); border-right:1px solid var(--border);
+  display:flex; flex-direction:column; overflow:hidden;
+  box-shadow:2px 0 8px rgba(0,0,0,0.06); z-index:1000;
+}
+#map-container { flex:1; position:relative; }
+#map { height:100%; width:100%; }
+
+/* HEADER */
+#header {
+  padding:16px 18px;
+  border-bottom:1px solid var(--border);
+  background:#fff;
+  flex-shrink:0;
+}
+.logo-row { display:flex; align-items:center; gap:10px; }
+.logo-icon {
+  width:36px; height:36px; border-radius:8px;
+  background:var(--accent); display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.logo-icon svg { width:20px; height:20px; fill:#fff; }
+.logo-text-wrap { line-height:1.2; }
+.logo-name {
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:18px; font-weight:800; letter-spacing:0.03em;
+  color:var(--accent); text-transform:uppercase;
+}
+.logo-sub { font-size:10px; color:var(--text-muted); letter-spacing:0.06em; text-transform:uppercase; font-weight:500; }
+
+/* STATS */
+#stats-bar {
+  display:flex; border-bottom:1px solid var(--border);
+  background:var(--panel2); flex-shrink:0;
+}
+.stat-box { flex:1; padding:10px 8px; text-align:center; border-right:1px solid var(--border); }
+.stat-box:last-child { border-right:none; }
+.stat-num { font-family:'Barlow Condensed',sans-serif; font-size:20px; font-weight:700; color:var(--accent); line-height:1; }
+.stat-label { font-size:9px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.08em; margin-top:2px; font-weight:500; }
+
+/* SEARCH */
+#search-wrap { padding:12px 14px 8px; flex-shrink:0; }
+#search {
+  width:100%; padding:8px 12px 8px 34px;
+  background:var(--panel2); border:1.5px solid var(--border);
+  border-radius:6px; color:var(--text);
+  font-family:'Inter',sans-serif; font-size:13px; outline:none;
+  transition:border-color 0.15s, box-shadow 0.15s;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='%235a6a7e' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.44 1.386a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:11px center;
+}
+#search:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(26,95,168,0.1); background-color:#fff; }
+#search::placeholder { color:var(--text-dim); }
+
+/* TABS */
+#filter-tabs { display:flex; border-bottom:1px solid var(--border); flex-shrink:0; background:#fff; }
+.ftab {
+  flex:1; padding:8px 4px; font-size:10px; font-weight:600;
+  text-transform:uppercase; letter-spacing:0.07em; color:var(--text-muted);
+  background:none; border:none; cursor:pointer;
+  border-bottom:2px solid transparent; transition:all 0.15s;
+}
+.ftab:hover { color:var(--text); }
+.ftab.active { color:var(--accent); border-bottom-color:var(--accent); }
+
+/* FILTER PANELS */
+#filter-panels { flex-shrink:0; background:#fff; border-bottom:1px solid var(--border); }
+.filter-panel { display:none; padding:10px 14px 12px; }
+.filter-panel.active { display:block; }
+.chip-grid { display:flex; flex-wrap:wrap; gap:5px; }
+.chip {
+  padding:4px 9px; border-radius:20px; font-size:11px; font-weight:500;
+  background:var(--panel2); border:1.5px solid var(--border);
+  color:var(--text-muted); cursor:pointer; transition:all 0.15s;
+}
+.chip:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-light); }
+.chip.active { background:var(--accent-light); border-color:var(--accent); color:var(--accent); font-weight:600; }
+
+/* CAP FILTER */
+#cap-search-wrap { margin-bottom:8px; }
+#cap-search {
+  width:100%; padding:7px 10px;
+  background:var(--panel2); border:1.5px solid var(--border);
+  border-radius:6px; color:var(--text);
+  font-family:'Inter',sans-serif; font-size:12px; outline:none;
+  transition:border-color 0.15s;
+}
+#cap-search:focus { border-color:var(--accent); background:#fff; }
+#cap-search::placeholder { color:var(--text-dim); }
+#cap-list { max-height:170px; overflow-y:auto; }
+#cap-list::-webkit-scrollbar { width:4px; }
+#cap-list::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+.cap-item {
+  display:flex; align-items:center; gap:8px; padding:5px 3px;
+  cursor:pointer; border-radius:4px; font-size:12px; color:var(--text-muted);
+  transition:all 0.12s;
+}
+.cap-item:hover { color:var(--text); background:var(--panel2); padding-left:6px; }
+.cap-item.active { color:var(--accent); }
+.cap-cb {
+  width:14px; height:14px; border:1.5px solid var(--border2);
+  border-radius:3px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+  transition:all 0.15s;
+}
+.cap-item.active .cap-cb { background:var(--accent); border-color:var(--accent); }
+.cap-check { font-size:9px; color:#fff; display:none; }
+.cap-item.active .cap-check { display:block; }
+
+/* CLEAR */
+#clear-filters {
+  margin:0 14px 10px; padding:7px; width:calc(100% - 28px);
+  background:none; border:1.5px solid var(--border2); border-radius:6px;
+  color:var(--text-muted); font-size:11px; font-weight:500; cursor:pointer;
+  transition:all 0.15s; display:none; font-family:'Inter',sans-serif;
+}
+#clear-filters:hover { border-color:var(--red); color:var(--red); background:#fef2f2; }
+#clear-filters.visible { display:block; }
+
+/* RESULTS */
+#results-header {
+  padding:8px 14px; border-bottom:1px solid var(--border);
+  background:var(--panel2); flex-shrink:0;
+}
+#results-count { font-size:12px; color:var(--text-muted); font-weight:500; }
+#results-count strong { color:var(--accent); font-size:14px; }
+
+#results-list { flex:1; overflow-y:auto; padding:6px 8px; background:#fff; }
+#results-list::-webkit-scrollbar { width:4px; }
+#results-list::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+
+.result-card {
+  padding:10px 10px; border-radius:6px; border:1.5px solid transparent;
+  cursor:pointer; margin-bottom:3px; transition:all 0.12s;
+}
+.result-card:hover { background:var(--panel2); border-color:var(--border); }
+.result-card.selected { background:var(--accent-light); border-color:var(--accent); }
+.rc-name { font-size:12px; font-weight:600; color:var(--text); line-height:1.3; margin-bottom:2px; }
+.rc-region { font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.06em; font-weight:500; }
+.rc-tags { display:flex; flex-wrap:wrap; gap:3px; margin-top:5px; }
+.rc-tag { font-size:9px; padding:2px 6px; border-radius:10px; font-weight:600; }
+.rc-tag.sector { background:#e0ecfb; color:#1a5fa8; }
+.rc-tag.f4n { background:var(--green-light); color:var(--green); }
+.rc-tag.ch-active { background:var(--green-light); color:var(--green); }
+.rc-tag.ch-inactive { background:#fef2f2; color:var(--red); }
+
+/* POPUP */
+.amrc-popup { min-width:240px; font-family:'Inter',sans-serif; }
+.popup-name { font-family:'Barlow Condensed',sans-serif; font-size:16px; font-weight:700; text-transform:uppercase; letter-spacing:0.03em; color:var(--text); margin-bottom:3px; }
+.popup-region { font-size:11px; color:var(--text-muted); margin-bottom:7px; font-weight:500; }
+.popup-address { font-size:11px; color:var(--text-muted); margin-bottom:8px; line-height:1.5; }
+.popup-tags { display:flex; flex-wrap:wrap; gap:3px; margin-bottom:6px; }
+.popup-tag { font-size:10px; padding:2px 7px; border-radius:10px; font-weight:600; }
+.popup-tag.sector { background:#e0ecfb; color:#1a5fa8; }
+.popup-tag.f4n { background:var(--green-light); color:var(--green); }
+.popup-tag.cert { background:#fef9c3; color:#854d0e; }
+.popup-tag.ch-active { background:var(--green-light); color:var(--green); }
+.popup-tag.ch-inactive { background:#fef2f2; color:var(--red); font-weight:700; }
+.popup-url { display:inline-block; margin-top:4px; font-size:11px; color:var(--accent); text-decoration:none; word-break:break-all; font-weight:500; }
+.popup-url:hover { text-decoration:underline; }
+.popup-caps-toggle { margin-top:8px; font-size:10px; color:var(--text-muted); cursor:pointer; border-top:1px solid var(--border); padding-top:6px; font-weight:500; }
+.popup-caps { font-size:10px; color:var(--text-muted); margin-top:5px; line-height:1.7; }
+
+/* Leaflet overrides */
+.leaflet-popup-content-wrapper {
+  background:#fff !important; border:1px solid var(--border) !important;
+  border-radius:8px !important; box-shadow:var(--shadow-md) !important;
+  color:var(--text) !important;
+}
+.leaflet-popup-tip { background:#fff !important; }
+.leaflet-popup-close-button { color:var(--text-muted) !important; font-size:18px !important; top:8px !important; right:10px !important; }
+
+/* MAP BADGE */
+#map-badge {
+  position:absolute; top:16px; right:16px; z-index:500;
+  background:rgba(255,255,255,0.95); backdrop-filter:blur(8px);
+  border:1px solid var(--border); border-radius:8px;
+  padding:10px 16px; box-shadow:var(--shadow-md);
+}
+#map-badge-num { font-family:'Barlow Condensed',sans-serif; font-size:28px; font-weight:800; color:var(--accent); line-height:1; }
+#map-badge-label { font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.1em; font-weight:600; }
+
+/* LOADING */
+#loading {
+  position:fixed; inset:0; background:#f4f6f9;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  z-index:9999; gap:16px;
+}
+.loading-ring {
+  width:44px; height:44px; border:3px solid var(--border);
+  border-top-color:var(--accent); border-radius:50%;
+  animation:spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+.loading-text { font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.12em; color:var(--text-muted); }
+
+@media (max-width:700px) {
+  :root { --sidebar-w:100vw; }
+  #app { flex-direction:column; }
+  #sidebar { width:100%; min-width:100%; height:55vh; }
+  #map-container { height:45vh; }
+}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="loading-ring"></div>
+  <div class="loading-text">Loading Supplier Data…</div>
+</div>
+
+<div id="app">
+  <div id="sidebar">
+    <div id="header">
+      <div class="logo-row">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="3"/>
+            <ellipse cx="12" cy="12" rx="10" ry="4" fill="none" stroke="#fff" stroke-width="1.5"/>
+            <ellipse cx="12" cy="12" rx="10" ry="4" fill="none" stroke="#fff" stroke-width="1.5" transform="rotate(60 12 12)"/>
+            <ellipse cx="12" cy="12" rx="10" ry="4" fill="none" stroke="#fff" stroke-width="1.5" transform="rotate(120 12 12)"/>
+          </svg>
+        </div>
+        <div class="logo-text-wrap">
+          <div class="logo-name">NuCCoL</div>
+          <div class="logo-sub">Supplier Map</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="stats-bar">
+      <div class="stat-box"><div class="stat-num">2,211</div><div class="stat-label">Suppliers</div></div>
+      <div class="stat-box"><div class="stat-num">12</div><div class="stat-label">Regions</div></div>
+      <div class="stat-box"><div class="stat-num" id="stat-visible">—</div><div class="stat-label">Shown</div></div>
+    </div>
+
+    <div id="search-wrap">
+      <input type="search" id="search" placeholder="Search company name or postcode…">
+    </div>
+
+    <div id="filter-tabs">
+      <button class="ftab active" data-tab="sectors">Sectors</button>
+      <button class="ftab" data-tab="certs">Certs</button>
+      <button class="ftab" data-tab="caps">Capabilities</button>
+      <button class="ftab" data-tab="region">Region</button>
+    </div>
+
+    <div id="filter-panels">
+      <div class="filter-panel active" id="panel-sectors"><div class="chip-grid" id="sector-chips"></div></div>
+      <div class="filter-panel" id="panel-certs"><div class="chip-grid" id="cert-chips"></div></div>
+      <div class="filter-panel" id="panel-caps">
+        <div id="cap-search-wrap"><input type="search" id="cap-search" placeholder="Search capabilities…"></div>
+        <div id="cap-list"></div>
+      </div>
+      <div class="filter-panel" id="panel-region"><div class="chip-grid" id="region-chips"></div></div>
+    </div>
+
+    <button id="clear-filters">✕ Clear all filters</button>
+
+    <div id="results-header">
+      <div id="results-count"><strong id="rc-num">0</strong> suppliers found</div>
+    </div>
+    <div id="results-list"></div>
+  </div>
+
+  <div id="map-container">
+    <div id="map"></div>
+    <div id="map-badge">
+      <div id="map-badge-num">0</div>
+      <div id="map-badge-label">Suppliers</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// (company data loaded from SharePoint at runtime)
+const CAP_COLS  = ["Access Ladders Stairs & Platforms","Acoustic Systems","Additive - metal","Additive - polymer","Adhesives","Air Ejectors Dryers & Receivers","Alarms & Monitoring including Condition Monitoring","Analysers","Antivibration","Apparatus","Arrestors Exciters & Inverters","Automation","Backfill & Shoring","Batteries and Battery Chargers","Bearings & Seals","Blowers","Bus Bars","Cable Supports Conduit Fixings Trays Trunking Ducting & Splicers","Cables","Chains & Hoists including Heavy Lift","Chemical Liquid & Resin Products","Circuit Breakers","Civil Works & Civil Engineering excluding Earthworks","cladding","Coatings Paints Protection Processes & Systems","Columns","Communications Systems","Composites","Compressors","Computer monitors & panels","Concrete & Cement","Condensers","Condition monitoring equipment","Construction Building","Containment Structure","Control Rod Drive Mechanism","Control Rods","Control Systems","Cooling & Coolers","Core Components & Assemblies","Cranes & Lifting","Cyber Security","Decontamination","Deminalisation Systems & Equipment","Desalination Equipment","Detectors Sensors Transmitters & Detection Systems","Diesel Generators","Displacement Sensors","Doors - Airlocks, Gates, Hatches","Ducting","Earthworks","Electrical & Electronic Components, Connectors and PCB's","Electrical Feedthroughs","Electrical Generators","Electrical Protection","Elevators","Expansion Joints","Fan Systems & Fans","Fasteners & Fixings","Fencing","Filtration Systems","Fire Alarms","Fire Protection","fire suppression","Fire Water System","Flasks, Casks & Containers","Flow Sensors","Fuel Components and systems","Fuel Handling","Fuel Pool Gates","Full Assembly","Fuses & Switches","Geiger-Muller Tubes","Glands","Gloveboxes","Gratings Sumps Covers Plates & Drains","Grounding Devices","Heat Exchangers","Heat recovery","Heaters Pressuriser","Heaters Systems","HVAC Blowers","HVAC Chillers & Compressors","HVAC Controllers","HVAC Cooling & Coolers","HVAC Dampers & Louvers","HVAC Ducting","HVAC Fan Systems & Fans","HVAC Filtration & Filters","HVAC Heaters & Heating Units","HVAC Humidifiers & Dehumidifiers","HVAC Plenums","HVAC Systems","Hydraulics","In-core monitoring and instrumentation","Integrated Head Assembly","Interior Walls Buildings","Interlock Controls","Ion Exchange Systems","Laboratory Equipment","Level Control","Level Sensors","Level Sensors","Lighting","Load Sensors","Lubrication Systems","Manipulators","Marine Works","Material Plate & Bar","Materials Castings","Materials Embedment's & Rebar","Materials Forgings & Steels","Materials Structural Steels Flanged Beams & Sections","Materials Testing","Materials Wire & Wire Rope","Mechanical handling equipment","Neutron Absorbers & Detectors","OMR","Penetrations Electrical & Mechanical Systems","Penetrations, electrical","Penetrations, mechanical","Piles and Caissons","Pipework","Pool Liners","Power Distribution","Pressure Sensors","Pressure Vessels & Tanks","Pumps","Racking Devices","Radiation Protection Monitoring & Radiological Controls","Radwaste Processing","Rail","Reactor Control Detectors","Reactor Pressure Vessel","Reactor Pressure Vessel Internals","Robotics, robots and robotic equipment","Rotors & Shafts","Sampling","Seals, Gaskets, & O-Rings","Separator Reheaters","Shielding","Shutdown Systems Emergency","Simulators & Training Systems","Site Gas Supplies & Systems","Smoke Detectors","Stators","Storage Racks & Furniture including Pond","Structural Components Building","Structural Fabrications","Structures","Stud Tensioning","Surface coatings","Switchgear","Temperature Sensors","Thermal Insulation","Tooling Equipment","Trace Heating","Transformers","Tunnel Boring Machinery","Turbine Generators","Turbine Generators Bypass","Turbine Gland Systems","Valves","Waste Management","Water Treatment Systems","3D laser scanning","Bending","Civil Construction including modular construction","Design services","Effluent Management Systems","Equipment Qualification Analysis / Simulation","Equipment Qualification Manufacturing Facility - In-house Physical Testing","Equipment Qualification Test Facility - Physical Testing","Equipment Qualification Unclassified","Exotic materials","Fabrications - Large","Fabrications - Small to Medium","Forming","Geotechnical Quality Assurance","Heat treatment","Inspection & Surveillance Services","Inspection Equipment & Services including NDE & Surveillance","Installation","Law","Logistics","Machining","Material handling","Modular construction","On Site services","Pipe inspection","Port services","Project management","Radiation monitor calibration","Safety, security and risk management","Stock holders","System integration","Welding/Joining"];
+const SECTORS = ["Nuclear Civil","Defence","Oil and Gas","Renewables","Aerospace","Medical & Pharmaceuticals","Automotive","Rail","Chemical"];
+const CERTS   = ["10-CFR-50-app B","Achiles UVDB Verify Cat A","Achiles UVDB Verify Cat B","Achiles UVDB Verify Cat C","Achiles UVDB Verify Cat D","ANSI","AS 9100","ASME","ASME N","ASME R","ASME S","ASME U","ASME U2","BS EN 13445","CE Marking/EN 1090","HAF 604","ISO 14001","ISO 17025","ISO 19443","ISO 27001","ISO 44001","ISO 45001/18001","ISO 9001:2015","ISO 9606-1","ISO 9606-2","NADCAP","RCC-E","RCC-M","Rolls-Royce specific","SC21 Award - Bronze","SC21 Award - Gold","SC21 Award - Silver","Sellafield specific"];
+const REGIONS = ["East Midlands","East of England","London","North East","North West","Northern Ireland","Scotland","South East","South West","Wales","West Midlands","Yorkshire and The Humber"];
+
+let filters = { search:'', sectors:[], certs:[], caps:[], regions:[] };
+let selectedCompany = null;
+let markers = {};
+let markerCluster, map;
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = () => reject(new Error('Failed to load script: ' + src));
+    document.head.appendChild(s);
+  });
+}
+function loadCSS(href) {
+  const l = document.createElement('link');
+  l.rel = 'stylesheet'; l.href = href;
+  document.head.appendChild(l);
+}
+
+// ── SharePoint config ───────────────────────────────────────────────────────
+const SP_SITE    = 'https://nuccol.sharepoint.com/sites/SCRLDatabase';
+const MSAL_CFG   = {
+  auth: {
+    clientId:    'ec0a6806-59e8-4ea9-8ff5-6bdb1ba87baf',
+    authority:   'https://login.microsoftonline.com/d44192f5-1023-458c-9cb3-9ff7e9c6d4ad',
+    redirectUri: window.location.origin + window.location.pathname
+  },
+  cache: { cacheLocation: 'sessionStorage' }
+};
+
+const msalApp = new msal.PublicClientApplication(MSAL_CFG);
+
+const COUNTY_REGION = {
+  "Carmarthenshire": "Wales",
+  "Berkshire": "South East",
+  "Devon": "South West",
+  "Warwickshire": "West Midlands",
+  "Cornwall": "South West",
+  "West Midlands": "West Midlands",
+  "Lanarkshire": "Scotland",
+  "Norfolk": "East of England",
+  "Merseyside": "North West",
+  "Nottinghamshire": "East Midlands",
+  "Staffordshire": "West Midlands",
+  "Tyne And Wear": "North East",
+  "Greater Manchester": "North West",
+  "Avon": "South West",
+  "Cumbria": "North West",
+  "Angus": "Scotland",
+  "Lancashire": "North West",
+  "London": "London",
+  "Kent": "South East",
+  "South Yorkshire": "Yorkshire and The Humber",
+  "Dorset": "South West",
+  "Hampshire": "South East",
+  "Surrey": "South East",
+  "Worcestershire": "West Midlands",
+  "West Yorkshire": "Yorkshire and The Humber",
+  "Wiltshire": "South West",
+  "Suffolk": "East of England",
+  "Buckinghamshire": "South East",
+  "Derbyshire": "East Midlands",
+  "Essex": "East of England",
+  "Stirlingshire": "Scotland",
+  "Shropshire": "West Midlands",
+  "Leicestershire": "East Midlands",
+  "Somerset": "South West",
+  "Cambridgeshire": "East of England",
+  "Gloucestershire": "South West",
+  "North Humberside": "Yorkshire and The Humber",
+  "North Yorkshire": "Yorkshire and The Humber",
+  "Oxfordshire": "South East",
+  "Aberdeenshire": "Scotland",
+  "Middlesex": "London",
+  "Midlothian": "Scotland",
+  "Hertfordshire": "East of England",
+  "Gwent": "Wales",
+  "County Durham": "North East",
+  "West Glamorgan": "Wales",
+  "Fife": "Scotland",
+  "Cheshire": "North West",
+  "Lincolnshire": "East Midlands",
+  "West Sussex": "South East",
+  "South Lanarkshire": "Scotland",
+  "Torfaen": "Wales",
+  "Greater London": "London",
+  "East Riding of Yorkshire": "Yorkshire and The Humber",
+  "West Lothian": "Scotland",
+  "Northamptonshire": "East Midlands",
+  "Gwynedd": "Wales",
+  "Bristol": "South West",
+  "Ayrshire": "Scotland",
+  "Annan": "Scotland",
+  "Bedfordshire": "East of England",
+  "Tyne & Wear": "North East",
+  "Clwyd": "Wales",
+  "Mid Glamorgan": "Wales",
+  "Renfrewshire": "Scotland",
+  "Northumberland": "North East",
+  "East Sussex": "South East",
+  "Deeside": "Wales",
+  "Cleveland": "North East",
+  "County Londonderry": "Northern Ireland",
+  "Inverness-Shire": "Scotland",
+  "Herefordshire": "West Midlands",
+  "Powys": "Wales",
+  "Isle Of Wight": "South East",
+  "Dyfed": "Wales",
+  "Pembrokeshire": "Wales",
+  "Co Armagh": "Northern Ireland",
+  "North Shields": "North East",
+  "County Down": "Northern Ireland",
+  "Perthshire": "Scotland",
+  "Highland": "Scotland",
+  "Flintshire": "Wales",
+  "Redcar & Cleveland": "North East",
+  "Ross-shire": "Scotland",
+  "National": "",
+  "South Glamorgan": "Wales",
+  "Dunbartonshire": "Scotland",
+  "East Yorkshire": "Yorkshire and The Humber",
+  "County Antrim": "Northern Ireland",
+  "Wrexham": "Wales"
+};
+
+// ── Runtime data (populated from SharePoint) ────────────────────────────────
+let COMPANIES = [];
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+function setLoadingText(msg) {
+  const el = document.querySelector('#loading .loading-text');
+  if (el) el.textContent = msg;
+}
+
+async function fetchAllSP(token, listName, select) {
+  const headers = {
+    'Authorization': `Bearer ${token}`,
+    'Accept': 'application/json;odata=nometadata'
+  };
+  let url = `${SP_SITE}/_api/web/lists/getbytitle('${listName}')/items?$select=${select}&$top=5000`;
+  const items = [];
+  while (url) {
+    const resp = await fetch(url, { headers });
+    if (!resp.ok) throw new Error(`SP list '${listName}' fetch failed: ${resp.status} ${resp.statusText}`);
+    const data = await resp.json();
+    items.push(...data.value);
+    url = data['@odata.nextLink'] || null;
+  }
+  return items;
+}
+
+// ── Bootstrap ────────────────────────────────────────────────────────────────
+async function bootstrap() {
+  // Load map CSS
+  loadCSS('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
+  loadCSS('https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css');
+  loadCSS('https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css');
+
+  setLoadingText('Loading map libraries…');
+  await loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
+  await loadScript('https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js');
+
+  // ── Auth ──
+  setLoadingText('Authenticating with Microsoft…');
+  await msalApp.initialize();
+
+  // Handle redirect callback if returning from redirect flow
+  try { await msalApp.handleRedirectPromise(); } catch(_) {}
+
+  const scopes = ['https://nuccol.sharepoint.com/AllSites.Write'];
+  let token;
+  try {
+    const existing = msalApp.getAllAccounts()[0];
+    const res = await msalApp.acquireTokenSilent({ scopes, account: existing });
+    token = res.accessToken;
+  } catch(_) {
+    try {
+      const res = await msalApp.acquireTokenPopup({ scopes });
+      token = res.accessToken;
+    } catch(e) {
+      throw new Error('Authentication failed: ' + e.message);
+    }
+  }
+
+  // ── Fetch all data ──
+  setLoadingText('Loading company data…');
+  const [spCompanies, spMarkets, spCaps, spCerts] = await Promise.all([
+    fetchAllSP(token, 'Companies',
+      'Title,field_1,field_3,field_4,field_6,field_19,field_25,lat,lng,CH_Status'),
+    fetchAllSP(token, 'Company_Markets',
+      'CompanyID_Ref,MarketName_Ref'),
+    fetchAllSP(token, 'Company_Capabilities',
+      'CompanyID_Ref,CapabilityName_Ref').then(r => (setLoadingText('Loading capabilities…'), r)),
+    fetchAllSP(token, 'Company_Accreditations',
+      'CompanyID_Ref,AccreditationName_Ref')
+  ]);
+
+  setLoadingText('Building map…');
+
+  // ── Build lookup maps by CompanyID ──
+  const marketsByID = {};
+  spMarkets.forEach(m => {
+    if (m.MarketName_Ref) (marketsByID[m.CompanyID_Ref] ??= []).push(m.MarketName_Ref);
+  });
+  const capsByID = {};
+  spCaps.forEach(c => {
+    if (c.CapabilityName_Ref) (capsByID[c.CompanyID_Ref] ??= []).push(c.CapabilityName_Ref);
+  });
+  const certsByID = {};
+  spCerts.forEach(c => {
+    if (c.AccreditationName_Ref) (certsByID[c.CompanyID_Ref] ??= []).push(c.AccreditationName_Ref);
+  });
+
+  // ── Build COMPANIES array ──
+  COMPANIES = spCompanies
+    .filter(c => c.lat && c.lng && !isNaN(parseFloat(c.lat)))
+    .map(c => {
+      const id     = c.field_1;
+      const county = (c.field_3 || '').trim();
+      return {
+        name:    c.Title || '',
+        postcode: c.field_4 || '',
+        address: c.field_25 || '',
+        region:  COUNTY_REGION[county] || county || '',
+        url:     c.field_6 || '',
+        f4n:     (c.field_19 || '').toLowerCase() === 'yes',
+        ch_status: (c.CH_Status || '').trim(),
+        lat:     parseFloat(c.lat),
+        lng:     parseFloat(c.lng),
+        sectors: marketsByID[id]  || [],
+        certs:   certsByID[id]    || [],
+        caps:    capsByID[id]     || []
+      };
+    });
+
+  init();
+}
+
+
+function initMap() {
+  map = L.map('map', { center:[54.5,-2.5], zoom:6, zoomControl:true, attributionControl:false });
+  // Full colour street map
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19 }).addTo(map);
+  L.control.attribution({ prefix:'© NuCCoL | © OpenStreetMap contributors' }).addTo(map);
+
+  markerCluster = L.markerClusterGroup({
+    maxClusterRadius:50, spiderfyOnMaxZoom:true, showCoverageOnHover:false,
+    iconCreateFunction(cluster) {
+      const n = cluster.getChildCount();
+      const sz = n > 100 ? 44 : n > 30 ? 38 : 32;
+      return L.divIcon({
+        html:`<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:#1a5fa8;border:2px solid #fff;display:flex;align-items:center;justify-content:center;color:#fff;font-family:Inter,sans-serif;font-weight:700;font-size:${sz>36?13:11}px;box-shadow:0 2px 8px rgba(26,95,168,0.4)">${n}</div>`,
+        className:'', iconSize:[sz,sz], iconAnchor:[sz/2,sz/2]
+      });
+    }
+  });
+  map.addLayer(markerCluster);
+}
+
+function makeIcon() {
+  return L.divIcon({
+    html:`<div style="width:10px;height:10px;border-radius:50%;background:#1a5fa8;border:2px solid #fff;box-shadow:0 1px 4px rgba(26,95,168,0.5)"></div>`,
+    className:'', iconSize:[10,10], iconAnchor:[5,5]
+  });
+}
+
+function chStatusTag(status, cls) {
+  if (!status) return '';
+  const isActive = status.toLowerCase() === 'active';
+  const tagClass = cls + (isActive ? ' ch-active' : ' ch-inactive');
+  return `<span class="${tagClass}">${status}</span>`;
+}
+
+function makePopup(co) {
+  const sectorTags = co.sectors.map(s=>`<span class="popup-tag sector">${s}</span>`).join('');
+  const f4nTag = co.f4n ? '<span class="popup-tag f4n">F4N Granted</span>' : '';
+  const certTags = co.certs.slice(0,5).map(c=>`<span class="popup-tag cert">${c}</span>`).join('');
+  const moreCerts = co.certs.length>5 ? `<span class="popup-tag cert">+${co.certs.length-5} more</span>` : '';
+  const urlHtml = co.url ? `<a class="popup-url" href="${co.url.startsWith('http')?co.url:'https://'+co.url}" target="_blank" rel="noopener">↗ ${co.url}</a>` : '';
+  const chTag = chStatusTag(co.ch_status, 'popup-tag');
+  return `<div class="amrc-popup">
+    <div class="popup-name">${co.name}</div>
+    <div class="popup-region">${co.region||''} · ${co.postcode}</div>
+    ${co.address?`<div class="popup-address">${co.address}</div>`:''}
+    <div class="popup-tags">${chTag}${f4nTag}${sectorTags}</div>
+    <div class="popup-tags">${certTags}${moreCerts}</div>
+    ${urlHtml}
+    ${co.caps.length?`<div class="popup-caps-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display===\'none\'?\'block\':\'none\'">▸ Show ${co.caps.length} capabilities</div><div class="popup-caps" style="display:none">${co.caps.join(' · ')}</div>`:''}
+  </div>`;
+}
+
+function matchesFilters(co) {
+  const s = filters.search.toLowerCase();
+  if(s && !co.name.toLowerCase().includes(s) && !co.postcode.toLowerCase().includes(s) && !co.region.toLowerCase().includes(s)) return false;
+  if(filters.sectors.length && !filters.sectors.some(f=>co.sectors.includes(f))) return false;
+  if(filters.certs.length && !filters.certs.every(f=>co.certs.includes(f))) return false;
+  if(filters.caps.length && !filters.caps.every(f=>co.caps.includes(f))) return false;
+  if(filters.regions.length && !filters.regions.includes(co.region)) return false;
+  return true;
+}
+
+function applyFilters() {
+  const visible = COMPANIES.filter(matchesFilters);
+  const hasActive = filters.search||filters.sectors.length||filters.certs.length||filters.caps.length||filters.regions.length;
+  document.getElementById('clear-filters').classList.toggle('visible', !!hasActive);
+  markerCluster.clearLayers();
+  markerCluster.addLayers(visible.map(co=>markers[co.name]).filter(Boolean));
+  const n = visible.length.toLocaleString();
+  document.getElementById('map-badge-num').textContent = n;
+  document.getElementById('stat-visible').textContent = n;
+  document.getElementById('rc-num').textContent = n;
+  buildResultsList(visible.slice(0,200));
+}
+
+function buildResultsList(list) {
+  const el = document.getElementById('results-list');
+  el.innerHTML = '';
+  list.forEach(co => {
+    const card = document.createElement('div');
+    card.className = 'result-card'+(selectedCompany===co.name?' selected':'');
+    card.innerHTML = `<div class="rc-name">${co.name}</div>
+      <div class="rc-region">${co.region||'—'} · ${co.postcode}</div>
+      <div class="rc-tags">${chStatusTag(co.ch_status,'rc-tag')}${co.f4n?'<span class="rc-tag f4n">F4N</span>':''}${co.sectors.slice(0,3).map(s=>`<span class="rc-tag sector">${s}</span>`).join('')}</div>`;
+    card.addEventListener('click', () => {
+      selectedCompany = co.name;
+      document.querySelectorAll('.result-card').forEach(c=>c.classList.remove('selected'));
+      card.classList.add('selected');
+      const m = markers[co.name];
+      if(m) markerCluster.zoomToShowLayer(m, ()=>m.openPopup());
+    });
+    el.appendChild(card);
+  });
+  if(list.length===200) {
+    const note = document.createElement('div');
+    note.style.cssText='padding:8px;text-align:center;font-size:10px;color:var(--text-dim)';
+    note.textContent='Showing first 200 results — refine filters to see more';
+    el.appendChild(note);
+  }
+}
+
+function buildChips(containerId, items, filterKey) {
+  const el = document.getElementById(containerId);
+  items.forEach(item => {
+    const chip = document.createElement('button');
+    chip.className='chip'; chip.textContent=item;
+    chip.addEventListener('click', () => {
+      const arr=filters[filterKey], i=arr.indexOf(item);
+      if(i>=0){arr.splice(i,1);chip.classList.remove('active');}
+      else{arr.push(item);chip.classList.add('active');}
+      applyFilters();
+    });
+    el.appendChild(chip);
+  });
+}
+
+function buildCapList(filter='') {
+  const el = document.getElementById('cap-list');
+  el.innerHTML = '';
+  const lc = filter.toLowerCase();
+  CAP_COLS.filter(c=>!lc||c.toLowerCase().includes(lc)).forEach(cap => {
+    const item = document.createElement('div');
+    const active = filters.caps.includes(cap);
+    item.className='cap-item'+(active?' active':'');
+    item.innerHTML=`<div class="cap-cb"><span class="cap-check">✓</span></div><span>${cap}</span>`;
+    item.addEventListener('click', () => {
+      const i=filters.caps.indexOf(cap);
+      if(i>=0)filters.caps.splice(i,1);else filters.caps.push(cap);
+      item.classList.toggle('active');
+      applyFilters();
+    });
+    el.appendChild(item);
+  });
+}
+
+function init() {
+  initMap();
+  COMPANIES.forEach(co => {
+    const m = L.marker([co.lat,co.lng],{icon:makeIcon()});
+    m.bindPopup(makePopup(co),{maxWidth:300});
+    markers[co.name] = m;
+  });
+  markerCluster.addLayers(Object.values(markers));
+
+  buildChips('sector-chips', SECTORS, 'sectors');
+  buildChips('cert-chips', CERTS, 'certs');
+  buildChips('region-chips', REGIONS, 'regions');
+  buildCapList();
+
+  const n = COMPANIES.length.toLocaleString();
+  document.getElementById('stat-visible').textContent = n;
+  document.getElementById('map-badge-num').textContent = n;
+  document.getElementById('rc-num').textContent = n;
+  buildResultsList(COMPANIES.slice(0,200));
+
+  document.getElementById('search').addEventListener('input', e=>{filters.search=e.target.value.trim();applyFilters();});
+  document.getElementById('cap-search').addEventListener('input', e=>buildCapList(e.target.value.trim()));
+  document.querySelectorAll('.ftab').forEach(tab=>{
+    tab.addEventListener('click',()=>{
+      document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.filter-panel').forEach(p=>p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('panel-'+tab.dataset.tab).classList.add('active');
+    });
+  });
+  document.getElementById('clear-filters').addEventListener('click',()=>{
+    filters={search:'',sectors:[],certs:[],caps:[],regions:[]};
+    document.getElementById('search').value='';
+    document.getElementById('cap-search').value='';
+    document.querySelectorAll('.chip.active').forEach(c=>c.classList.remove('active'));
+    buildCapList();
+    applyFilters();
+  });
+
+  document.getElementById('loading').style.display='none';
+}
+
+bootstrap().catch(err=>{
+  const msg = (err instanceof Error) ? err.message : (err && err.toString ? err.toString() : JSON.stringify(err));
+  document.getElementById('loading').innerHTML=`<div style="color:#dc2626;font-family:monospace;padding:20px;text-align:center;max-width:500px">
+    <strong>Failed to load supplier map</strong><br><br>
+    ${msg}<br><br>
+    <small>Check you are signed into Microsoft 365 and have access to the NuCCoL SharePoint site.</small>
+  </div>`;
+});
+</script>
+</body>
+</html>
