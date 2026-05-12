@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.38.3/lib/msal-browser.min.js"></script>
 <style>
 :root {
   --bg: #f4f6f9;
@@ -337,8 +338,8 @@ function loadCSS(href) {
 const SP_SITE    = 'https://nuccol.sharepoint.com/sites/SCRLDatabase';
 const MSAL_CFG   = {
   auth: {
-    clientId:    'a419516f-8885-4904-929c-3b3b04e95b25',
-    authority:   'https://login.microsoftonline.com/d44192f5-1023-458c-9cb3-9ff7e9c6d4ab',
+    clientId:    'ec0a6806-59e8-4ea9-8ff5-6bdb1ba87baf',
+    authority:   'https://login.microsoftonline.com/d44192f5-1023-458c-9cb3-9ff7e9c6d4ad',
     redirectUri: window.location.origin + window.location.pathname
   },
   cache: { cacheLocation: 'sessionStorage' }
@@ -473,7 +474,6 @@ async function bootstrap() {
   setLoadingText('Loading map libraries…');
   await loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
   await loadScript('https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js');
-  await loadScript('https://unpkg.com/@azure/msal-browser@2.38.3/lib/msal-browser.min.js');
 
   // ── Auth ──
   setLoadingText('Authenticating with Microsoft…');
@@ -483,7 +483,7 @@ async function bootstrap() {
   // Handle redirect callback if returning from redirect flow
   try { await msalApp.handleRedirectPromise(); } catch(_) {}
 
-  const scopes = ['https://nuccol.sharepoint.com/.default'];
+  const scopes = ['https://nuccol.sharepoint.com/AllSites.Write'];
   let token;
   try {
     const existing = msalApp.getAllAccounts()[0];
