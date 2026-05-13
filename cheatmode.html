@@ -92,6 +92,7 @@
       <div onclick="navigateTo('ap')" class="nav-item flex items-center gap-3 px-4 py-3 hover:bg-zinc-800 rounded-2xl cursor-pointer"><i class="fa-solid fa-person w-5"></i><span>AP Feedback</span></div>
       <div onclick="navigateTo('be')" class="nav-item flex items-center gap-3 px-4 py-3 hover:bg-zinc-800 rounded-2xl cursor-pointer"><i class="fa-solid fa-file-lines w-5"></i><span>BE Report</span></div>
       <div onclick="navigateTo('ss')" class="nav-item flex items-center gap-3 px-4 py-3 hover:bg-zinc-800 rounded-2xl cursor-pointer"><i class="fa-solid fa-industry w-5"></i><span>Sector Specific</span></div>
+      <div onclick="navigateTo('website')" class="nav-item flex items-center gap-3 px-4 py-3 hover:bg-zinc-800 rounded-2xl cursor-pointer"><i class="fa-solid fa-globe w-5"></i><span>Website</span></div>
     </div>
     <!-- User info + sign out -->
     <div class="p-4 border-t border-zinc-800">
@@ -417,6 +418,90 @@
       </div>
     </div>
 
+
+    <!-- ══════════════════════════════════════ WEBSITE ADMIN -->
+    <div id="website" class="screen p-8">
+      <div class="max-w-6xl mx-auto">
+        <div class="flex justify-between items-end mb-8">
+          <div>
+            <h1 class="text-4xl font-bold title-font tracking-tighter">WEBSITE</h1>
+            <p class="text-blue-400">Publish content to the live site</p>
+          </div>
+          <div id="ws-status" class="text-sm text-zinc-500">—</div>
+        </div>
+
+        <!-- Sub-tabs -->
+        <div class="flex border-b border-zinc-800 mb-8">
+          <button onclick="wsTab('feed')" id="ws-tab-feed"
+            class="ws-tab-btn px-8 py-4 border-b-4 border-blue-500 text-white font-medium text-sm">
+            📰 Members Feed
+          </button>
+          <button onclick="wsTab('pages')" id="ws-tab-pages"
+            class="ws-tab-btn px-8 py-4 border-b-4 border-transparent text-zinc-400 hover:text-zinc-200 text-sm">
+            🌐 Page Content
+          </button>
+        </div>
+
+        <!-- ── MEMBERS FEED TAB ── -->
+        <div id="ws-feed" class="ws-pane">
+          <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 mb-6">
+            <div class="flex items-start justify-between gap-4 flex-wrap">
+              <div>
+                <h2 class="text-lg font-semibold mb-1">Members Area Feed</h2>
+                <p class="text-zinc-400 text-sm">Tick the items you want live on the Members Area, then click Publish. All unticked items will be removed from the site.</p>
+              </div>
+              <div class="flex items-center gap-4 flex-wrap">
+                <div class="text-sm text-zinc-400">Live: <span id="ws-live-count" class="text-emerald-400 font-semibold">—</span></div>
+                <button onclick="wsPublishFeed()" id="ws-publish-btn"
+                  class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-2xl text-sm font-semibold transition-colors flex items-center gap-2">
+                  🚀 Publish to Members Area
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feed sub-tabs -->
+          <div class="flex border-b border-zinc-800 mb-5">
+            <button onclick="wsFeedTab(1)" id="ws-ftab1" class="ws-ftab px-6 py-3 border-b-4 border-blue-500 text-white font-medium text-sm">
+              📰 News <span id="ws-count-news" class="text-xs text-zinc-400 ml-1"></span>
+            </button>
+            <button onclick="wsFeedTab(2)" id="ws-ftab2" class="ws-ftab px-6 py-3 border-b-4 border-transparent text-zinc-400 hover:text-zinc-200 text-sm">
+              📅 Events <span id="ws-count-events" class="text-xs text-zinc-400 ml-1"></span>
+            </button>
+            <button onclick="wsFeedTab(3)" id="ws-ftab3" class="ws-ftab px-6 py-3 border-b-4 border-transparent text-zinc-400 hover:text-zinc-200 text-sm">
+              📋 Tenders <span id="ws-count-tenders" class="text-xs text-zinc-400 ml-1"></span>
+            </button>
+          </div>
+          <div id="ws-feed-list" class="space-y-3 max-h-[calc(100vh-420px)] overflow-auto pr-2"></div>
+        </div>
+
+        <!-- ── PAGE CONTENT TAB ── -->
+        <div id="ws-pages" class="ws-pane hidden">
+          <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-1">Page Content Editor</h2>
+            <p class="text-zinc-400 text-sm">Add and edit content rows for each page. Rows are saved individually to SharePoint and go live as soon as the page reads them.</p>
+          </div>
+
+          <!-- Page selector -->
+          <div class="flex flex-wrap gap-2 mb-6">
+            <button onclick="wsPageTab('events')"   id="ws-ptab-events"   class="ws-ptab px-5 py-2 rounded-xl text-sm font-medium bg-blue-600 text-white">Events</button>
+            <button onclick="wsPageTab('services')" id="ws-ptab-services" class="ws-ptab px-5 py-2 rounded-xl text-sm font-medium bg-zinc-700 text-zinc-300 hover:bg-zinc-600">Services</button>
+            <button onclick="wsPageTab('projects')" id="ws-ptab-projects" class="ws-ptab px-5 py-2 rounded-xl text-sm font-medium bg-zinc-700 text-zinc-300 hover:bg-zinc-600">Projects</button>
+            <button onclick="wsPageTab('index')"    id="ws-ptab-index"    class="ws-ptab px-5 py-2 rounded-xl text-sm font-medium bg-zinc-700 text-zinc-300 hover:bg-zinc-600">Homepage</button>
+            <button onclick="wsPageTab('about')"    id="ws-ptab-about"    class="ws-ptab px-5 py-2 rounded-xl text-sm font-medium bg-zinc-700 text-zinc-300 hover:bg-zinc-600">About</button>
+          </div>
+
+          <div id="ws-page-content" class="space-y-4 max-h-[calc(100vh-420px)] overflow-auto pr-2"></div>
+
+          <button onclick="wsAddRow()"
+            class="mt-6 px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-2xl text-sm font-semibold transition-colors flex items-center gap-2">
+            + Add Row
+          </button>
+        </div>
+
+      </div>
+    </div>
+
   </div><!-- end main content -->
 </div><!-- end app -->
 
@@ -513,7 +598,8 @@ const CONFIG = {
     companies:        "Companies",
     apGenerator:      "APGenerator",
     beGenerator:      "BEGenerator",
-    ssGenerator:      "SSGenerator"
+    ssGenerator:      "SSGenerator",
+    websiteContent:   "WebsiteContent"
   }
 };
 
@@ -760,9 +846,9 @@ async function loadAllData() {
   document.getElementById('nl-sync-status').textContent = 'Loading...';
   try {
     const [news, events, tenders, nucCol] = await Promise.all([
-      spGet(CONFIG.lists.news,    "ID,Title,Summary,URL,Source,DatePublished,Selected"),
-      spGet(CONFIG.lists.events,  "ID,Title,Description,URL,OrganiserName,EventDate,Selected"),
-      spGet(CONFIG.lists.tenders, "ID,Title,Description,URL,Organisation,ClosingDate,Selected"),
+      spGet(CONFIG.lists.news,    "ID,Title,Summary,URL,Source,DatePublished,Selected,WebsiteSelected"),
+      spGet(CONFIG.lists.events,  "ID,Title,Description,URL,OrganiserName,EventDate,Selected,WebsiteSelected"),
+      spGet(CONFIG.lists.tenders, "ID,Title,Description,URL,Organisation,ClosingDate,Selected,WebsiteSelected"),
       spGet(CONFIG.lists.nucCol,  "ID,Title,Description,URL,DatePublished,Selected")
     ]);
     nlData.news    = news;
@@ -791,6 +877,17 @@ function updateStats() {
   document.getElementById('tab-count-2').textContent = `(${ev})`;
   document.getElementById('tab-count-3').textContent = `(${t})`;
   document.getElementById('tab-count-4').textContent = `(${nc})`;
+  // Keep website feed counts fresh if the screen is loaded
+  if (document.getElementById('ws-count-news')) {
+    document.getElementById('ws-count-news').textContent    = `(${n})`;
+    document.getElementById('ws-count-events').textContent  = `(${ev})`;
+    document.getElementById('ws-count-tenders').textContent = `(${t})`;
+    const liveCount = nlData.news.filter(i=>i.WebsiteSelected).length +
+                      nlData.events.filter(i=>i.WebsiteSelected).length +
+                      nlData.tenders.filter(i=>i.WebsiteSelected).length;
+    const el = document.getElementById('ws-live-count');
+    if (el) el.textContent = liveCount;
+  }
 }
 
 async function loadCompanies() {
@@ -1411,8 +1508,10 @@ function navigateTo(screen) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(screen).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  const map = { dashboard: 0, newsletter: 1, ap: 2, be: 3, ss: 4 };
+  const map = { dashboard: 0, newsletter: 1, ap: 2, be: 3, ss: 4, website: 5 };
   document.querySelectorAll('.nav-item')[map[screen]]?.classList.add('active');
+  // Render website feed when navigating to it
+  if (screen === 'website') { renderWsFeed(); }
 }
 
 function expandText(title, text) {
@@ -1455,6 +1554,327 @@ function showToast(message, type = 'success') {
   toast.classList.remove('hidden');
   clearTimeout(window._toastTimer);
   window._toastTimer = setTimeout(() => toast.classList.add('hidden'), 4000);
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// WEBSITE ADMIN
+// ═══════════════════════════════════════════════════════════
+
+let wsFeedTabActive = 1;
+let wsPageTabActive = 'events';
+let wsPageData      = {};   // keyed by pageName, array of SP items
+
+// ── Sub-tab switching ──────────────────────────────────────
+function wsTab(tab) {
+  ['feed','pages'].forEach(t => {
+    document.getElementById(`ws-${t}`).classList.toggle('hidden', t !== tab);
+    const btn = document.getElementById(`ws-tab-${t}`);
+    btn.className = t === tab
+      ? 'ws-tab-btn px-8 py-4 border-b-4 border-blue-500 text-white font-medium text-sm'
+      : 'ws-tab-btn px-8 py-4 border-b-4 border-transparent text-zinc-400 hover:text-zinc-200 text-sm';
+  });
+  if (tab === 'feed')  renderWsFeed();
+  if (tab === 'pages') wsPageTab(wsPageTabActive);
+}
+
+// ── Feed sub-tabs ──────────────────────────────────────────
+function wsFeedTab(n) {
+  wsFeedTabActive = n;
+  [1,2,3].forEach(i => {
+    const btn = document.getElementById(`ws-ftab${i}`);
+    btn.className = i === n
+      ? 'ws-ftab px-6 py-3 border-b-4 border-blue-500 text-white font-medium text-sm'
+      : 'ws-ftab px-6 py-3 border-b-4 border-transparent text-zinc-400 hover:text-zinc-200 text-sm';
+  });
+  renderWsFeed();
+}
+
+function renderWsFeed() {
+  const datasets  = [null, nlData.news, nlData.events, nlData.tenders];
+  const data      = datasets[wsFeedTabActive] || [];
+  const container = document.getElementById('ws-feed-list');
+
+  // Update tab counts
+  document.getElementById('ws-count-news').textContent    = `(${nlData.news.length})`;
+  document.getElementById('ws-count-events').textContent  = `(${nlData.events.length})`;
+  document.getElementById('ws-count-tenders').textContent = `(${nlData.tenders.length})`;
+
+  // Live count across all three lists
+  const liveCount =
+    nlData.news.filter(i => i.WebsiteSelected).length +
+    nlData.events.filter(i => i.WebsiteSelected).length +
+    nlData.tenders.filter(i => i.WebsiteSelected).length;
+  document.getElementById('ws-live-count').textContent = liveCount;
+
+  if (!data.length) {
+    container.innerHTML = '<div class="text-zinc-500 text-sm py-8 text-center">No items loaded. Use the Newsletter tab to scrape first.</div>';
+    return;
+  }
+
+  container.innerHTML = data.map(item => {
+    const live     = !!item.WebsiteSelected;
+    const dateField = item.EventDate || item.ClosingDate || item.DatePublished;
+    const src       = item.OrganiserName || item.Organisation || item.Source || '';
+    const summary   = item.Summary || item.Description || '';
+    const dateStr   = dateField ? new Date(dateField).toLocaleDateString('en-GB') : '—';
+    return `
+      <div class="nl-row ${live ? 'selected' : 'unselected'} bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex items-start gap-4 cursor-pointer"
+           onclick="wsToggleItem(${item.ID}, ${wsFeedTabActive}, this)">
+        <div class="mt-1 w-5 flex-shrink-0">
+          ${live
+            ? `<i class="fa-solid fa-circle-check text-emerald-400"></i>`
+            : `<i class="fa-regular fa-circle text-zinc-600"></i>`}
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="font-semibold text-sm mb-1 truncate">${esc2(item.Title||'(No title)')}</div>
+          <div class="text-xs text-zinc-400 line-clamp-2 mb-2">${esc2(summary)}</div>
+          <div class="flex gap-4 text-xs text-zinc-500 flex-wrap">
+            <span>${dateStr}</span>
+            ${src ? `<span>· ${esc2(src)}</span>` : ''}
+            ${item.URL ? `<a href="${item.URL}" target="_blank" onclick="event.stopPropagation()" class="text-blue-400 hover:underline">↗ Link</a>` : ''}
+          </div>
+        </div>
+        <div class="flex-shrink-0">
+          ${live
+            ? `<span class="text-xs bg-emerald-900/40 text-emerald-400 border border-emerald-700/50 px-2 py-1 rounded-lg">LIVE</span>`
+            : `<span class="text-xs bg-zinc-800 text-zinc-500 px-2 py-1 rounded-lg">OFF</span>`}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function esc2(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function wsToggleItem(id, tab, el) {
+  const dataKey  = ['','news','events','tenders'][tab];
+  const item     = nlData[dataKey].find(i => i.ID === id);
+  if (!item) return;
+  item.WebsiteSelected = !item.WebsiteSelected;
+  renderWsFeed();
+}
+
+// ── Publish ────────────────────────────────────────────────
+async function wsPublishFeed() {
+  const allItems = [
+    ...nlData.news.map(i    => ({ list: CONFIG.lists.news,    id: i.ID, val: !!i.WebsiteSelected })),
+    ...nlData.events.map(i  => ({ list: CONFIG.lists.events,  id: i.ID, val: !!i.WebsiteSelected })),
+    ...nlData.tenders.map(i => ({ list: CONFIG.lists.tenders, id: i.ID, val: !!i.WebsiteSelected })),
+  ];
+  const liveCount = allItems.filter(i => i.val).length;
+  if (!confirm(`Publish ${liveCount} item(s) to the Members Area?
+
+All other items will be marked as not live.`)) return;
+
+  const btn = document.getElementById('ws-publish-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Publishing...';
+  document.getElementById('ws-status').textContent = `Updating ${allItems.length} items...`;
+
+  let errors = 0;
+  for (const item of allItems) {
+    try {
+      await spPatch(item.list, item.id, { WebsiteSelected: item.val });
+    } catch(e) {
+      errors++;
+    }
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '🚀 Publish to Members Area';
+
+  if (errors === 0) {
+    document.getElementById('ws-status').innerHTML = `<span class="text-emerald-400">✅ Published — ${liveCount} items live</span>`;
+    showToast(`✅ Published! ${liveCount} items now live on Members Area.`);
+  } else {
+    document.getElementById('ws-status').innerHTML = `<span class="text-amber-400">⚠️ Published with ${errors} error(s)</span>`;
+    showToast(`⚠️ Published with ${errors} error(s). Check SharePoint.`, 'warn');
+  }
+  renderWsFeed();
+}
+
+// ── Page Content Editor ────────────────────────────────────
+async function wsPageTab(page) {
+  wsPageTabActive = page;
+  document.querySelectorAll('.ws-ptab').forEach(btn => {
+    const isActive = btn.id === `ws-ptab-${page}`;
+    btn.className = `ws-ptab px-5 py-2 rounded-xl text-sm font-medium ${isActive ? 'bg-blue-600 text-white' : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'}`;
+  });
+  await wsLoadPageRows(page);
+}
+
+async function wsLoadPageRows(page) {
+  const container = document.getElementById('ws-page-content');
+  container.innerHTML = '<div class="text-zinc-500 text-sm py-4">Loading...</div>';
+  try {
+    const items = await spGet(
+      CONFIG.lists.websiteContent,
+      'ID,Title,PageName,SectionKey,Title2,Body,Date,Location,SortOrder',
+      `PageName eq '${page}'`,
+      'SortOrder asc'
+    );
+    wsPageData[page] = items;
+    renderWsPageRows(page);
+  } catch(e) {
+    container.innerHTML = `<div class="text-red-400 text-sm py-4">Error loading: ${e.message}</div>`;
+  }
+}
+
+function renderWsPageRows(page) {
+  const container = document.getElementById('ws-page-content');
+  const items = wsPageData[page] || [];
+  if (!items.length) {
+    container.innerHTML = '<div class="text-zinc-500 text-sm py-4 text-center">No content rows yet. Click "+ Add Row" to create one.</div>';
+    return;
+  }
+  container.innerHTML = items.map(item => wsRowHTML(item, page)).join('');
+}
+
+function wsRowHTML(item, page) {
+  const showDate     = ['events'].includes(page);
+  const showLocation = ['events'].includes(page);
+  return `
+    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5" id="ws-row-${item.ID}">
+      <div class="grid grid-cols-2 gap-4 mb-4">
+        <div>
+          <label class="text-xs text-zinc-500 uppercase tracking-wider block mb-1">Section Key</label>
+          <input type="text" value="${esc2(item.SectionKey||'')}"
+            class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
+            placeholder="e.g. upcoming-event-1"
+            oninput="wsRowChanged(${item.ID})">
+        </div>
+        <div>
+          <label class="text-xs text-zinc-500 uppercase tracking-wider block mb-1">Sort Order</label>
+          <input type="text" value="${esc2(item.SortOrder||'')}"
+            class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
+            placeholder="1, 2, 3..."
+            oninput="wsRowChanged(${item.ID})">
+        </div>
+      </div>
+      <div class="mb-4">
+        <label class="text-xs text-zinc-500 uppercase tracking-wider block mb-1">Title</label>
+        <input type="text" value="${esc2(item.Title2||'')}"
+          class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
+          placeholder="Display title"
+          oninput="wsRowChanged(${item.ID})">
+      </div>
+      <div class="mb-4">
+        <label class="text-xs text-zinc-500 uppercase tracking-wider block mb-1">Body</label>
+        <textarea rows="3"
+          class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none resize-none"
+          placeholder="Main content / description"
+          oninput="wsRowChanged(${item.ID})">${esc2(item.Body||'')}</textarea>
+      </div>
+      ${showDate || showLocation ? `
+      <div class="grid grid-cols-2 gap-4 mb-4">
+        ${showDate ? `
+        <div>
+          <label class="text-xs text-zinc-500 uppercase tracking-wider block mb-1">Date</label>
+          <input type="date" value="${item.Date ? item.Date.substring(0,10) : ''}"
+            class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
+            oninput="wsRowChanged(${item.ID})">
+        </div>` : ''}
+        ${showLocation ? `
+        <div>
+          <label class="text-xs text-zinc-500 uppercase tracking-wider block mb-1">Location</label>
+          <input type="text" value="${esc2(item.Location||'')}"
+            class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
+            placeholder="City / venue"
+            oninput="wsRowChanged(${item.ID})">
+        </div>` : ''}
+      </div>` : ''}
+      <div class="flex gap-3 justify-end">
+        <button onclick="wsDeleteRow(${item.ID}, '${page}')"
+          class="px-4 py-2 bg-zinc-700 hover:bg-red-900/50 text-zinc-300 hover:text-red-400 rounded-xl text-xs font-medium transition-colors">
+          🗑 Delete
+        </button>
+        <button onclick="wsSaveRow(${item.ID}, '${page}')" id="ws-save-${item.ID}"
+          class="px-5 py-2 bg-zinc-700 text-zinc-400 rounded-xl text-xs font-medium transition-colors cursor-not-allowed" disabled>
+          Save
+        </button>
+      </div>
+    </div>`;
+}
+
+function wsRowChanged(id) {
+  const btn = document.getElementById(`ws-save-${id}`);
+  if (btn) {
+    btn.disabled = false;
+    btn.className = 'px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-medium transition-colors';
+  }
+}
+
+async function wsSaveRow(id, page) {
+  const rowEl = document.getElementById(`ws-row-${id}`);
+  const inputs = rowEl.querySelectorAll('input, textarea');
+  // inputs order: SectionKey, SortOrder, Title2, Body, [Date, Location]
+  const fields = {
+    SectionKey: inputs[0].value,
+    SortOrder:  inputs[1].value,
+    Title2:     inputs[2].value,
+    Body:       inputs[3].value,
+  };
+  if (inputs[4]) {
+    if (inputs[4].type === 'date')   fields.Date     = inputs[4].value || null;
+    if (inputs[4].type === 'text')   fields.Location = inputs[4].value;
+  }
+  if (inputs[5]) fields.Location = inputs[5].value;
+
+  const btn = document.getElementById(`ws-save-${id}`);
+  btn.innerHTML = '<span class="spinner"></span>';
+  btn.disabled = true;
+  try {
+    await spPatch(CONFIG.lists.websiteContent, id, fields);
+    const item = (wsPageData[page] || []).find(i => i.ID === id);
+    if (item) Object.assign(item, fields);
+    btn.innerHTML = '✓ Saved';
+    btn.className = 'px-5 py-2 bg-emerald-700 text-white rounded-xl text-xs font-medium transition-colors cursor-not-allowed';
+    showToast('✅ Row saved');
+    setTimeout(() => {
+      btn.innerHTML = 'Save';
+      btn.className = 'px-5 py-2 bg-zinc-700 text-zinc-400 rounded-xl text-xs font-medium transition-colors cursor-not-allowed';
+      btn.disabled = true;
+    }, 2000);
+  } catch(e) {
+    btn.innerHTML = 'Save';
+    btn.disabled = false;
+    showToast('⚠️ Save failed: ' + e.message, 'error');
+  }
+}
+
+async function wsDeleteRow(id, page) {
+  const item = (wsPageData[page]||[]).find(i => i.ID === id);
+  if (!confirm(`Delete "${item?.Title2 || item?.SectionKey || 'this row'}"?`)) return;
+  try {
+    await spDelete(CONFIG.lists.websiteContent, id);
+    wsPageData[page] = (wsPageData[page]||[]).filter(i => i.ID !== id);
+    renderWsPageRows(page);
+    showToast('🗑 Row deleted');
+  } catch(e) {
+    showToast('⚠️ Delete failed: ' + e.message, 'error');
+  }
+}
+
+async function wsAddRow() {
+  const page = wsPageTabActive;
+  try {
+    const newItem = await spPost(CONFIG.lists.websiteContent, {
+      Title:    `${page}-${Date.now()}`,
+      PageName: page,
+      SortOrder: String((wsPageData[page]?.length || 0) + 1)
+    });
+    wsPageData[page] = wsPageData[page] || [];
+    wsPageData[page].push(newItem);
+    renderWsPageRows(page);
+    // scroll to bottom
+    const c = document.getElementById('ws-page-content');
+    c.scrollTop = c.scrollHeight;
+    showToast('✅ New row created — fill in the details and save');
+  } catch(e) {
+    showToast('⚠️ Could not create row: ' + e.message, 'error');
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
