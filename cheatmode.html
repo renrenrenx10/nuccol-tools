@@ -494,6 +494,11 @@
               class="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-2xl text-sm font-semibold transition-colors">
               + Add Row
             </button>
+            <button onclick="wsSeedData()"
+              class="px-6 py-3 bg-zinc-600 hover:bg-zinc-500 rounded-2xl text-sm font-semibold transition-colors"
+              title="Pre-populate SharePoint with current live content for this page">
+              🌱 Seed Current Content
+            </button>
             <button onclick="wsPublishPage()"
               class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-2xl text-sm font-semibold transition-colors">
               🚀 Publish Page to WordPress
@@ -1825,7 +1830,7 @@ async function wsLoadPageRows(page) {
   try {
     const items = await spGet(
       CONFIG.lists.websiteContent,
-      'ID,Title,PageName,SectionKey,Title2,Body,URL,Date,Location,SortOrder',
+      'ID,Title,PageName,SectionKey,Title2,Body,URL,Date,Location,SortOrder,Tags',
       `PageName eq '${page}'`,
       'SortOrder asc'
     );
@@ -1851,7 +1856,7 @@ function wsRowHTML(item, page) {
   const sectionOptions = {
     events:   ['Upcoming Events', 'Webinars', 'Past Events', 'NucCol Hosted', 'External Events'],
     services: ['🏭 Supply Chain', '📊 Demand Modelling', '🏛️ Policy Support', '🎯 Strategy', '🤝 Events & Marketing', '⚙️ Manufacturing'],
-    projects: ['Current Projects', 'Completed Projects', 'Case Studies'],
+    projects: ['Current Projects', 'Completed Projects', 'Case Studies', 'Featured'],
     index:    ['Hero', 'Feature 1', 'Feature 2', 'Feature 3', 'CTA'],
     about:    ['Intro', 'Mission', 'Team', 'History', 'Partners'],
   };
@@ -1861,7 +1866,7 @@ function wsRowHTML(item, page) {
   const cfg = {
     events:   { f3Label:'Group',    f4Label:'Location', f4Hint:'Derby / online  or  Derby|url:https://...', showDate:true,  showF4:true  },
     services: { f3Label:'Icon',     f4Label:'Tags',     f4Hint:'Tag1,Tag2,Tag3',                            showDate:false, showF4:true  },
-    projects: { f3Label:'Category', f4Label:'Partners', f4Hint:'Partner1,Partner2',                         showDate:true,  showF4:true  },
+    projects: { f3Label:'Image URL', f4Label:'Partners', f4Hint:'Partner1,Partner2',                        showDate:true,  showF4:true  },
     index:    { f3Label:'Section',  f4Label:'',         f4Hint:'',                                          showDate:false, showF4:false },
     about:    { f3Label:'Section',  f4Label:'',         f4Hint:'',                                          showDate:false, showF4:false },
   };
@@ -1923,8 +1928,13 @@ function wsRowHTML(item, page) {
         </div>` : '<div></div>'}
       </div>
       ${page === 'projects' ? `
-      <div class="mb-4 px-3 py-2 bg-zinc-800/50 rounded-xl text-xs text-zinc-500">
-        💡 To add a link URL for projects, add a <strong style="color:#94a3b8">Tags</strong> column (Single line of text) to the WebsiteContent SharePoint list, then this field will appear automatically.
+      <div class="mb-4">
+        <label class="text-xs text-zinc-500 uppercase tracking-wider block mb-1">Button Label <span class="text-zinc-600 normal-case font-normal">(text on the link button)</span></label>
+        <input type="text"
+          class="ws-field w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
+          placeholder="e.g. Download Report  /  Learn More  /  Discuss a Project"
+          value="${wsEsc(item.Tags||'')}"
+          oninput="wsRowChanged(${item.ID})">
       </div>` : ''}
       <div class="flex gap-3 justify-end">
         <button onclick="wsDeleteRow(${item.ID}, '${page}')"
@@ -1960,6 +1970,7 @@ async function wsSaveRow(id, page) {
   };
   if (fields[5] && fields[5].type === 'date') patch.Date     = fields[5].value || null;
   if (fields[6])                              patch.Location = fields[6].value;
+  if (fields[7])                              patch.Tags     = fields[7].value;
 
   const btn = document.getElementById(`ws-save-${id}`);
   btn.innerHTML = '<span class="spinner"></span>';
@@ -2053,6 +2064,7 @@ async function wsPublishPage() {
       body:       i.Body       || '',
       date:       i.Date       ? i.Date.substring(0,10) : '',
       url:        i.URL        || '',
+      tags:       i.Tags       || '',
       location:   i.Location   || '',
       // tags: add 'Tags' column to WebsiteContent SP list to enable this
     }))
@@ -2069,6 +2081,114 @@ async function wsPublishPage() {
     showToast('⚠️ WordPress publish failed: ' + e.message, 'error');
   }
 }
+
+
+// ── Seed Data ──────────────────────────────────────────────
+// Pre-populates SharePoint WebsiteContent with current live content
+async function wsSeedData() {
+  const page = wsPageTabActive;
+
+  const SEED = {
+    services: [
+      { SectionKey:'🏭', SortOrder:'1', Title2:'Supply Chain Development',
+        Body:'NucCol is a dynamic supply chain solutions provider, specialising in enhancing the UK\'s manufacturing capabilities across low-carbon sectors, including nuclear, hydrogen, and carbon capture. We work closely with businesses to ensure they can meet sector-specific requirements and capitalise on growth opportunities in a rapidly evolving landscape.\n\nOur SCRL assessments provide an in-depth evaluation of UK manufacturers\' ability to meet the increasing demands of energy infrastructure projects. We identify gaps in capacity and capability, assess supplier readiness, and offer actionable insights to optimise supply chains.\n\nWe engage directly with UK suppliers to assess their readiness and capabilities, ensuring detailed comparative analysis of strengths and areas for improvement.',
+        Location:'SCRL Assessment,Supplier Engagement,Capacity Analysis,UK Content' },
+      { SectionKey:'📊', SortOrder:'2', Title2:'Demand Modelling',
+        Body:'NucCol provides expert demand modelling services, helping businesses navigate the UK\'s evolving clean energy market. By forecasting future demand for key commodities — components, systems, and subsystems — we offer critical insights into market trends, technological needs, and supplier capabilities.\n\nThrough demand modelling, we provide valuable insights to inform strategic decisions around capability and capacity, supporting businesses in adapting to market shifts.',
+        Location:'Market Forecasting,Commodity Analysis,Capacity Planning,Clean Energy' },
+      { SectionKey:'🏛️', SortOrder:'3', Title2:'Government Policy Support',
+        Body:'Navigating and aligning with government policies is essential for businesses in highly regulated industries like nuclear manufacturing. NucCol\'s Government Policy Support service helps companies stay ahead of policy changes, ensuring compliance and strategic alignment with government initiatives.\n\nWe also assist in identifying and accessing government funding schemes, grants, and incentives, unlocking financial support to drive innovation and growth.',
+        Location:'Policy Compliance,Funding Access,Strategic Alignment,Regulatory Guidance' },
+      { SectionKey:'🎯', SortOrder:'4', Title2:'Business Strategy Development',
+        Body:'We support businesses in developing tailored strategies, including nuclear sector roadmaps and strategic plans, to align with long-term goals and drive growth in the energy sector. From identifying opportunities for growth and innovation to risk mitigation, our approach supports both immediate operational goals and sustainable development.\n\nBy leveraging our network and industry knowledge, NucCol ensures businesses can access cutting-edge manufacturing technologies and solutions that optimise performance.',
+        Location:'Sector Roadmaps,Strategic Planning,Risk Mitigation,Growth Strategy' },
+      { SectionKey:'🤝', SortOrder:'5', Title2:'Events & Marketing',
+        Body:'NucCol specialises in creating and managing impactful events that connect industry leaders, government stakeholders, and key suppliers. We organise a range of events including round tables, industry and government forums, and our highly regarded annual Nuclear Supply Chain Summit.\n\nOur Meet the Buyer events foster direct engagement between suppliers and key buyers, while regional networking opportunities leverage our extensive network to help businesses establish valuable connections.',
+        Location:'Meet the Buyer,Round Tables,Annual Summit,Forums' },
+    ],
+    projects: [
+      { SectionKey:'https://i0.wp.com/iuk-business-connect.org.uk/wp-content/uploads/2025/07/Nuclear-Image.jpg?ssl=1',
+        SortOrder:'1', Title2:'SMR Workforce Foresighting Report',
+        Body:'Working alongside the Workforce Foresighting Hub to help shape thinking on the future of nuclear skills. A skilled, future-ready workforce is essential to realising the UK\'s SMR ambitions, and this report offers valuable insights into the capabilities, pathways, and planning needed to get there.',
+        Date:'2025-07-01', Location:'Rolls-Royce SMR,Innovate UK,MTC,Workforce Foresighting Hub',
+        URL:'https://lnkd.in/eJ6AHZux', Tags:'Download Report' },
+      { SectionKey:'https://media.licdn.com/dms/image/v2/D4E22AQFxEB-FnXietw/feedshare-shrink_2048_1536/B4EZb3Y9.TGcAo-/0/1747907242491?e=1762992000&v=beta&t=ayPiHrl-iZgjk3qyZhCdF5IwL0l3RCe8XXhro91H1zs',
+        SortOrder:'2', Title2:'F4N Programme with Sizewell C',
+        Body:'NucCol has been selected by Sizewell C to deliver a Fit 4 Nuclear (F4N) Supply Chain Development Programme — a significant milestone in our ongoing efforts to enhance the capability of the UK supply chain. We\'re looking forward to collaborating with Sizewell C to help build a stronger and more resilient UK supply base.',
+        Date:'2025-06-01', Location:'Sizewell C',
+        URL:'f4n.html', Tags:'Learn About F4N' },
+      { SectionKey:'https://media.licdn.com/dms/image/v2/D4E22AQGB265ruXPI-g/feedshare-shrink_800/B4EZS7pGfgGgAg-/0/1738314902707?e=1762992000&v=beta&t=1-_6xIvQU3phB3Ow5BQBo0WTMcgPpSf_9-2HvzzPNEI',
+        SortOrder:'3', Title2:'BWRX-300 Supply Chain Readiness Collaboration',
+        Body:'As part of industry engagement on Small Modular Reactor (SMR) development, NucCol joined leading partners to explore how the UK supply chain can support the BWRX-300 programme. The collaboration focused on assessing capability, readiness, and opportunities for UK suppliers in the next generation of nuclear delivery.',
+        Date:'2025-02-01', Location:'Amentum,GE Hitachi Nuclear Energy,Laing O\'Rourke,Cavendish Nuclear',
+        URL:'contact.html', Tags:'Discuss a Project' },
+    ],
+    about: [
+      { SectionKey:'Intro', SortOrder:'1', Title2:'About NucCol',
+        Body:'Built on decades of expertise, NucCol provides independent insights, fosters collaboration across industry, government, and academia, and drives innovation, skills development, and supply chain strategies within the clean energy sector.\n\nNucCol\'s team consists of highly experienced professionals including Supply Chain Consultants, Manufacturing Engineers, Project and Programme Managers, and support staff — all bringing a wealth of knowledge in manufacturing operational excellence, business strategy, and diverse manufacturing processes.\n\nWith over 100 years of combined experience, NucCol offers objective, evidence-based analysis on supply chain readiness, identifying gaps and recommending effective interventions.' },
+      { SectionKey:'Mission', SortOrder:'2', Title2:'Our Heritage',
+        Body:'As the successor to the Nuclear Advanced Manufacturing Research Centre (Nuclear AMRC), NucCol continues to build on significant achievements in supply chain development. By maintaining this continuity and focusing on nuclear manufacturing innovation, NucCol is committed to advancing the sector\'s long-term growth and success.' },
+    ],
+    index: [
+      { SectionKey:'Event Strip', SortOrder:'1', Title2:'Nuclear Supply Chain Summit 2026',
+        Body:'Registration opening soon for the Nuclear Supply Chain Summit 2026.',
+        Date:'2026-10-21', Location:'Derby', URL:'events.html' },
+    ],
+  };
+
+  const seedRows = SEED[page];
+  if (!seedRows) {
+    showToast(`No seed data defined for "${page}" page.`, 'warn');
+    return;
+  }
+
+  // Check if rows already exist
+  const existing = wsPageData[page] || [];
+  if (existing.length > 0) {
+    if (!confirm(`This page already has ${existing.length} row(s) in SharePoint.\n\nSeed data will ADD to existing rows, not replace them.\n\nContinue?`)) return;
+  } else {
+    if (!confirm(`Seed ${seedRows.length} rows of current live content into SharePoint for the "${page}" page?\n\nYou can edit them afterwards.`)) return;
+  }
+
+  const btn = document.querySelector('[onclick="wsSeedData()"]');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Seeding...';
+
+  let errors = 0;
+  for (const row of seedRows) {
+    try {
+      const newItem = await spPost(CONFIG.lists.websiteContent, {
+        Title:      `${page}-seed-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,
+        PageName:   page,
+        SectionKey: row.SectionKey || '',
+        SortOrder:  row.SortOrder  || '',
+        Title2:     row.Title2     || '',
+        Body:       row.Body       || '',
+        URL:        row.URL        || '',
+        Date:       row.Date       || null,
+        Location:   row.Location   || '',
+        Tags:       row.Tags       || '',
+      });
+      if (!wsPageData[page]) wsPageData[page] = [];
+      wsPageData[page].push(newItem);
+    } catch(e) {
+      errors++;
+      console.error('Seed row failed:', e);
+    }
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '🌱 Seed Current Content';
+
+  if (errors === 0) {
+    renderWsPageRows(page);
+    showToast(`✅ Seeded ${seedRows.length} rows for "${page}" — review and publish when ready.`);
+  } else {
+    showToast(`⚠️ Seeded with ${errors} error(s). Check console.`, 'warn');
+    await wsLoadPageRows(page);
+  }
+}
+
 
 // ═══════════════════════════════════════════════════════════
 // BOOT
