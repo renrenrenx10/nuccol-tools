@@ -1578,49 +1578,52 @@ function wpAuthHeader() {
 }
 
 async function wpUploadJSON(filename, data) {
-  const json    = JSON.stringify(data, null, 2);
-  const blob    = new Blob([json], { type: 'application/json' });
-  const wpUrl   = `${CONFIG.wp.siteUrl}/wp-json/wp/v2/media`;
+  const json   = JSON.stringify(data, null, 2);
+  const blob   = new Blob([json], { type: 'application/json' });
+  const wpUrl  = `${CONFIG.wp.siteUrl}/wp-json/wp/v2/media`;
+  const auth   = wpAuthHeader();
 
-  // Check if file already exists so we can update instead of duplicate
-  const searchRes = await fetch(`${wpUrl}?search=${filename}&per_page=5`, {
-    headers: { 'Authorization': wpAuthHeader() }
-  });
-  const existing = searchRes.ok ? await searchRes.json() : [];
-  const match    = existing.find(m => m.slug === filename.replace('.json','') || (m.source_url||'').endsWith(filename));
-
-  const formData = new FormData();
-  formData.append('file', blob, filename);
-  formData.append('title', filename);
-
-  if (match) {
-    // Update existing media item
-    const upRes = await fetch(`${wpUrl}/${match.id}`, {
-      method:  'POST',
-      headers: { 'Authorization': wpAuthHeader() },
-      body:    formData
-    });
-    if (!upRes.ok) {
-      const err = await upRes.text();
-      throw new Error(`WP update failed: ${upRes.status} — ${err.substring(0,120)}`);
+  // Step 1: Find and delete ALL existing copies of this file (WP may have made duplicates)
+  try {
+    // Search by source_url suffix — most reliable way to find the file
+    const searchRes = await fetch(
+      `${wpUrl}?search=${encodeURIComponent(filename)}&per_page=20&media_type=application`,
+      { headers: { 'Authorization': auth } }
+    );
+    if (searchRes.ok) {
+      const items = await searchRes.json();
+      // Match on source_url ending with the filename (catches dated subfolder paths too)
+      const matches = items.filter(m =>
+        (m.source_url || '').includes(filename) ||
+        (m.slug || '').startsWith(filename.replace('.json',''))
+      );
+      // Delete all matches so we always start clean
+      for (const m of matches) {
+        await fetch(`${wpUrl}/${m.id}?force=true`, {
+          method: 'DELETE',
+          headers: { 'Authorization': auth }
+        });
+      }
     }
-    return await upRes.json();
-  } else {
-    // Create new media item
-    const upRes = await fetch(wpUrl, {
-      method:  'POST',
-      headers: {
-        'Authorization':       wpAuthHeader(),
-        'Content-Disposition': `attachment; filename="${filename}"`,
-      },
-      body: blob
-    });
-    if (!upRes.ok) {
-      const err = await upRes.text();
-      throw new Error(`WP upload failed: ${upRes.status} — ${err.substring(0,120)}`);
-    }
-    return await upRes.json();
+  } catch(e) {
+    console.warn('WP cleanup warning (non-fatal):', e.message);
   }
+
+  // Step 2: Upload fresh copy
+  const upRes = await fetch(wpUrl, {
+    method:  'POST',
+    headers: {
+      'Authorization':       auth,
+      'Content-Disposition': `attachment; filename="${filename}"`,
+      'Content-Type':        'application/json',
+    },
+    body: blob
+  });
+  if (!upRes.ok) {
+    const err = await upRes.text();
+    throw new Error(`WP upload failed: ${upRes.status} — ${err.substring(0,200)}`);
+  }
+  return await upRes.json();
 }
 
 // ── Sub-tab switching ──────────────────────────────────────
@@ -2030,7 +2033,16 @@ async function wsPublishPage() {
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Publishing...';
 
-  const sorted = [...items].sort((a,b) => (parseInt(a.SortOrder)||0) - (parseInt(b.SortOrder)||0));
+  // Events: sort by date ascending (earliest first), no-date items go to end
+  // All other pages: sort by SortOrder
+  const sorted = [...items].sort((a, b) => {
+    if (page === 'events') {
+      const da = a.Date ? new Date(a.Date) : new Date('9999-12-31');
+      const db = b.Date ? new Date(b.Date) : new Date('9999-12-31');
+      return da - db;
+    }
+    return (parseInt(a.SortOrder)||0) - (parseInt(b.SortOrder)||0);
+  });
   const payload = {
     published: new Date().toISOString(),
     page:      page,
