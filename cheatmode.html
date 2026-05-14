@@ -1822,7 +1822,7 @@ async function wsLoadPageRows(page) {
   try {
     const items = await spGet(
       CONFIG.lists.websiteContent,
-      'ID,Title,PageName,SectionKey,Title2,Body,Date,Location,SortOrder',
+      'ID,Title,PageName,SectionKey,Title2,Body,URL,Date,Location,SortOrder',
       `PageName eq '${page}'`,
       'SortOrder asc'
     );
@@ -1895,6 +1895,14 @@ function wsRowHTML(item, page) {
           placeholder="Main content. Use new lines for separate paragraphs."
           oninput="wsRowChanged(${item.ID})">${wsEsc(item.Body||'')}</textarea>
       </div>
+      <div class="mb-4">
+        <label class="text-xs text-zinc-500 uppercase tracking-wider block mb-1">URL <span class="text-zinc-600 normal-case font-normal">(optional — adds a Find Out More button)</span></label>
+        <input type="url"
+          class="ws-field w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
+          placeholder="https://..."
+          value="${wsEsc(item.URL||'')}"
+          oninput="wsRowChanged(${item.ID})">
+      </div>
       <div class="grid grid-cols-2 gap-4 mb-4">
         ${c.showDate ? `
         <div>
@@ -1939,16 +1947,16 @@ function wsRowChanged(id) {
 async function wsSaveRow(id, page) {
   const rowEl  = document.getElementById(`ws-row-${id}`);
   const fields = rowEl.querySelectorAll('.ws-field');
-  // fields order: SectionKey[0], SortOrder[1], Title2[2], Body[3], Date[4]?, Location[5]?, Tags[6]?
+  // fields order: SectionKey[0], SortOrder[1], Title2[2], Body[3], URL[4], Date[5]?, Location[6]?
   const patch = {
     SectionKey: fields[0].value,
     SortOrder:  fields[1].value,
     Title2:     fields[2].value,
     Body:       fields[3].value,
+    URL:        fields[4] ? fields[4].value : '',
   };
-  if (fields[4] && fields[4].type === 'date') patch.Date     = fields[4].value || null;
-  if (fields[5])                              patch.Location = fields[5].value;
-  // Tags field: add 'Tags' column to WebsiteContent SP list to enable link URLs for projects
+  if (fields[5] && fields[5].type === 'date') patch.Date     = fields[5].value || null;
+  if (fields[6])                              patch.Location = fields[6].value;
 
   const btn = document.getElementById(`ws-save-${id}`);
   btn.innerHTML = '<span class="spinner"></span>';
@@ -2032,6 +2040,7 @@ async function wsPublishPage() {
       title:      i.Title2     || '',
       body:       i.Body       || '',
       date:       i.Date       ? i.Date.substring(0,10) : '',
+      url:        i.URL        || '',
       location:   i.Location   || '',
       // tags: add 'Tags' column to WebsiteContent SP list to enable this
     }))
