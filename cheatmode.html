@@ -448,7 +448,7 @@
             <div class="flex items-start justify-between gap-4 flex-wrap">
               <div>
                 <h2 class="text-lg font-semibold mb-1">Members Area Feed</h2>
-                <p class="text-zinc-400 text-sm">Tick the items you want live on the Members Area, then click Publish. All unticked items will be removed from the site.</p>
+                <p class="text-zinc-400 text-sm">Tick the items you want live on the Members Area, then click Publish. This updates SharePoint flags <em>and</em> writes the live JSON to WordPress in one step.</p>
               </div>
               <div class="flex items-center gap-4 flex-wrap">
                 <div class="text-sm text-zinc-400">Live: <span id="ws-live-count" class="text-emerald-400 font-semibold">—</span></div>
@@ -479,10 +479,8 @@
         <div id="ws-pages" class="ws-pane hidden">
           <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 mb-6">
             <h2 class="text-lg font-semibold mb-1">Page Content Editor</h2>
-            <p class="text-zinc-400 text-sm">Add and edit content rows for each page. Rows are saved individually to SharePoint and go live as soon as the page reads them.</p>
+            <p class="text-zinc-400 text-sm">Add and edit content rows for each page. Rows save to SharePoint individually. Use the Publish button per page to push a JSON snapshot to WordPress.</p>
           </div>
-
-          <!-- Page selector -->
           <div class="flex flex-wrap gap-2 mb-6">
             <button onclick="wsPageTab('events')"   id="ws-ptab-events"   class="ws-ptab px-5 py-2 rounded-xl text-sm font-medium bg-blue-600 text-white">Events</button>
             <button onclick="wsPageTab('services')" id="ws-ptab-services" class="ws-ptab px-5 py-2 rounded-xl text-sm font-medium bg-zinc-700 text-zinc-300 hover:bg-zinc-600">Services</button>
@@ -490,13 +488,17 @@
             <button onclick="wsPageTab('index')"    id="ws-ptab-index"    class="ws-ptab px-5 py-2 rounded-xl text-sm font-medium bg-zinc-700 text-zinc-300 hover:bg-zinc-600">Homepage</button>
             <button onclick="wsPageTab('about')"    id="ws-ptab-about"    class="ws-ptab px-5 py-2 rounded-xl text-sm font-medium bg-zinc-700 text-zinc-300 hover:bg-zinc-600">About</button>
           </div>
-
-          <div id="ws-page-content" class="space-y-4 max-h-[calc(100vh-420px)] overflow-auto pr-2"></div>
-
-          <button onclick="wsAddRow()"
-            class="mt-6 px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-2xl text-sm font-semibold transition-colors flex items-center gap-2">
-            + Add Row
-          </button>
+          <div id="ws-page-content" class="space-y-4 max-h-[calc(100vh-460px)] overflow-auto pr-2"></div>
+          <div class="mt-6 flex gap-3">
+            <button onclick="wsAddRow()"
+              class="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-2xl text-sm font-semibold transition-colors">
+              + Add Row
+            </button>
+            <button onclick="wsPublishPage()"
+              class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-2xl text-sm font-semibold transition-colors">
+              🚀 Publish Page to WordPress
+            </button>
+          </div>
         </div>
 
       </div>
@@ -589,6 +591,12 @@ const CONFIG = {
   tenantId:  "d44192f5-1023-458c-9cb3-9ff7e9c6d4ad",
   spSiteUrl: "https://nuccol.sharepoint.com/sites/CHEATMODE",
   spScrldUrl: "https://nuccol.sharepoint.com/sites/SCRLDatabase",
+  wp: {
+    siteUrl:  "https://nuccol.co.uk",
+    user:     "rene.dorset@nuccol.co.uk",
+    appPass:  "IKqJ Jltz 9N2y OU03 Mx9T GyiF",
+    jsonFile: "members-feed.json"
+  },
   lists: {
     news:             "NewsletterNews",
     events:           "NewsletterEvents",
@@ -848,7 +856,7 @@ async function loadAllData() {
     const [news, events, tenders, nucCol] = await Promise.all([
       spGet(CONFIG.lists.news,    "ID,Title,Summary,URL,Source,DatePublished,Selected,WebsiteSelected"),
       spGet(CONFIG.lists.events,  "ID,Title,Description,URL,OrganiserName,EventDate,Selected,WebsiteSelected"),
-      spGet(CONFIG.lists.tenders, "ID,Title,Description,URL,Organisation,ClosingDate,Selected,WebsiteSelected"),
+      spGet(CONFIG.lists.tenders, "ID,Title,Description,URL,Organisation,ClosingDate,Selected,WebsiteSelected,Category"),
       spGet(CONFIG.lists.nucCol,  "ID,Title,Description,URL,DatePublished,Selected")
     ]);
     nlData.news    = news;
@@ -877,7 +885,6 @@ function updateStats() {
   document.getElementById('tab-count-2').textContent = `(${ev})`;
   document.getElementById('tab-count-3').textContent = `(${t})`;
   document.getElementById('tab-count-4').textContent = `(${nc})`;
-  // Keep website feed counts fresh if the screen is loaded
   if (document.getElementById('ws-count-news')) {
     document.getElementById('ws-count-news').textContent    = `(${n})`;
     document.getElementById('ws-count-events').textContent  = `(${ev})`;
@@ -1509,9 +1516,8 @@ function navigateTo(screen) {
   document.getElementById(screen).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   const map = { dashboard: 0, newsletter: 1, ap: 2, be: 3, ss: 4, website: 5 };
-  document.querySelectorAll('.nav-item')[map[screen]]?.classList.add('active');
-  // Render website feed when navigating to it
   if (screen === 'website') { renderWsFeed(); }
+  document.querySelectorAll('.nav-item')[map[screen]]?.classList.add('active');
 }
 
 function expandText(title, text) {
@@ -1563,7 +1569,59 @@ function showToast(message, type = 'success') {
 
 let wsFeedTabActive = 1;
 let wsPageTabActive = 'events';
-let wsPageData      = {};   // keyed by pageName, array of SP items
+let wsPageData      = {};
+
+// ── WordPress helpers ──────────────────────────────────────
+function wpAuthHeader() {
+  const creds = btoa(`${CONFIG.wp.user}:${CONFIG.wp.appPass}`);
+  return `Basic ${creds}`;
+}
+
+async function wpUploadJSON(filename, data) {
+  const json    = JSON.stringify(data, null, 2);
+  const blob    = new Blob([json], { type: 'application/json' });
+  const wpUrl   = `${CONFIG.wp.siteUrl}/wp-json/wp/v2/media`;
+
+  // Check if file already exists so we can update instead of duplicate
+  const searchRes = await fetch(`${wpUrl}?search=${filename}&per_page=5`, {
+    headers: { 'Authorization': wpAuthHeader() }
+  });
+  const existing = searchRes.ok ? await searchRes.json() : [];
+  const match    = existing.find(m => m.slug === filename.replace('.json','') || (m.source_url||'').endsWith(filename));
+
+  const formData = new FormData();
+  formData.append('file', blob, filename);
+  formData.append('title', filename);
+
+  if (match) {
+    // Update existing media item
+    const upRes = await fetch(`${wpUrl}/${match.id}`, {
+      method:  'POST',
+      headers: { 'Authorization': wpAuthHeader() },
+      body:    formData
+    });
+    if (!upRes.ok) {
+      const err = await upRes.text();
+      throw new Error(`WP update failed: ${upRes.status} — ${err.substring(0,120)}`);
+    }
+    return await upRes.json();
+  } else {
+    // Create new media item
+    const upRes = await fetch(wpUrl, {
+      method:  'POST',
+      headers: {
+        'Authorization':       wpAuthHeader(),
+        'Content-Disposition': `attachment; filename="${filename}"`,
+      },
+      body: blob
+    });
+    if (!upRes.ok) {
+      const err = await upRes.text();
+      throw new Error(`WP upload failed: ${upRes.status} — ${err.substring(0,120)}`);
+    }
+    return await upRes.json();
+  }
+}
 
 // ── Sub-tab switching ──────────────────────────────────────
 function wsTab(tab) {
@@ -1594,13 +1652,12 @@ function renderWsFeed() {
   const datasets  = [null, nlData.news, nlData.events, nlData.tenders];
   const data      = datasets[wsFeedTabActive] || [];
   const container = document.getElementById('ws-feed-list');
+  if (!container) return;
 
-  // Update tab counts
   document.getElementById('ws-count-news').textContent    = `(${nlData.news.length})`;
   document.getElementById('ws-count-events').textContent  = `(${nlData.events.length})`;
   document.getElementById('ws-count-tenders').textContent = `(${nlData.tenders.length})`;
 
-  // Live count across all three lists
   const liveCount =
     nlData.news.filter(i => i.WebsiteSelected).length +
     nlData.events.filter(i => i.WebsiteSelected).length +
@@ -1613,25 +1670,25 @@ function renderWsFeed() {
   }
 
   container.innerHTML = data.map(item => {
-    const live     = !!item.WebsiteSelected;
+    const live      = !!item.WebsiteSelected;
     const dateField = item.EventDate || item.ClosingDate || item.DatePublished;
     const src       = item.OrganiserName || item.Organisation || item.Source || '';
     const summary   = item.Summary || item.Description || '';
     const dateStr   = dateField ? new Date(dateField).toLocaleDateString('en-GB') : '—';
     return `
       <div class="nl-row ${live ? 'selected' : 'unselected'} bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex items-start gap-4 cursor-pointer"
-           onclick="wsToggleItem(${item.ID}, ${wsFeedTabActive}, this)">
+           onclick="wsToggleItem(${item.ID}, ${wsFeedTabActive})">
         <div class="mt-1 w-5 flex-shrink-0">
           ${live
             ? `<i class="fa-solid fa-circle-check text-emerald-400"></i>`
             : `<i class="fa-regular fa-circle text-zinc-600"></i>`}
         </div>
         <div class="flex-1 min-w-0">
-          <div class="font-semibold text-sm mb-1 truncate">${esc2(item.Title||'(No title)')}</div>
-          <div class="text-xs text-zinc-400 line-clamp-2 mb-2">${esc2(summary)}</div>
+          <div class="font-semibold text-sm mb-1 truncate">${wsEsc(item.Title||'(No title)')}</div>
+          <div class="text-xs text-zinc-400 line-clamp-2 mb-2">${wsEsc(summary)}</div>
           <div class="flex gap-4 text-xs text-zinc-500 flex-wrap">
             <span>${dateStr}</span>
-            ${src ? `<span>· ${esc2(src)}</span>` : ''}
+            ${src ? `<span>· ${wsEsc(src)}</span>` : ''}
             ${item.URL ? `<a href="${item.URL}" target="_blank" onclick="event.stopPropagation()" class="text-blue-400 hover:underline">↗ Link</a>` : ''}
           </div>
         </div>
@@ -1644,53 +1701,107 @@ function renderWsFeed() {
   }).join('');
 }
 
-function esc2(s) {
+function wsEsc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function wsToggleItem(id, tab, el) {
-  const dataKey  = ['','news','events','tenders'][tab];
-  const item     = nlData[dataKey].find(i => i.ID === id);
+function wsToggleItem(id, tab) {
+  const dataKey = ['','news','events','tenders'][tab];
+  const item    = nlData[dataKey].find(i => i.ID === id);
   if (!item) return;
   item.WebsiteSelected = !item.WebsiteSelected;
   renderWsFeed();
 }
 
-// ── Publish ────────────────────────────────────────────────
+// ── Publish members feed ───────────────────────────────────
 async function wsPublishFeed() {
+  const selectedNews    = nlData.news.filter(i => i.WebsiteSelected);
+  const selectedEvents  = nlData.events.filter(i => i.WebsiteSelected);
+  const selectedTenders = nlData.tenders.filter(i => i.WebsiteSelected);
+  const liveCount = selectedNews.length + selectedEvents.length + selectedTenders.length;
+
+  if (!confirm(`Publish ${liveCount} item(s) to the Members Area?
+
+This will:
+1. Update SharePoint flags on all items
+2. Write members-feed.json to WordPress
+
+All unticked items will be removed from the live site.`)) return;
+
+  const btn = document.getElementById('ws-publish-btn');
+  const statusEl = document.getElementById('ws-status');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Publishing...';
+
+  // ── Step 1: Patch SharePoint ──
+  statusEl.textContent = 'Step 1/2 — Updating SharePoint flags...';
   const allItems = [
     ...nlData.news.map(i    => ({ list: CONFIG.lists.news,    id: i.ID, val: !!i.WebsiteSelected })),
     ...nlData.events.map(i  => ({ list: CONFIG.lists.events,  id: i.ID, val: !!i.WebsiteSelected })),
     ...nlData.tenders.map(i => ({ list: CONFIG.lists.tenders, id: i.ID, val: !!i.WebsiteSelected })),
   ];
-  const liveCount = allItems.filter(i => i.val).length;
-  if (!confirm(`Publish ${liveCount} item(s) to the Members Area?
-
-All other items will be marked as not live.`)) return;
-
-  const btn = document.getElementById('ws-publish-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Publishing...';
-  document.getElementById('ws-status').textContent = `Updating ${allItems.length} items...`;
-
-  let errors = 0;
+  let spErrors = 0;
   for (const item of allItems) {
-    try {
-      await spPatch(item.list, item.id, { WebsiteSelected: item.val });
-    } catch(e) {
-      errors++;
-    }
+    try { await spPatch(item.list, item.id, { WebsiteSelected: item.val }); }
+    catch(e) { spErrors++; }
   }
 
+  // ── Step 2: Build JSON and push to WordPress ──
+  statusEl.textContent = 'Step 2/2 — Writing JSON to WordPress...';
+
+  // Shape data to match what members.html render functions expect
+  const feedJSON = {
+    published: new Date().toISOString(),
+    news: selectedNews.map(i => ({
+      title:    i.Title    || '',
+      url:      i.URL      || '',
+      source:   i.Source   || '',
+      summary:  i.Summary  || '',
+      category: i.Category || 'Nuclear',
+      date:     i.DatePublished ? i.DatePublished.substring(0,10) : ''
+    })),
+    events: selectedEvents.map(i => ({
+      title:       i.Title         || '',
+      url:         i.URL           || '',
+      description: i.Description   || '',
+      location:    i.Location      || '',
+      eventType:   i.EventType     || '',
+      category:    i.Category      || 'Nuclear',
+      organiser:   i.OrganiserName || '',
+      date:        i.EventDate     ? i.EventDate.substring(0,10) : ''
+    })),
+    tenders: selectedTenders.map(i => ({
+      title:         i.Title        || '',
+      url:           i.URL          || '',
+      description:   i.Description  || '',
+      organisation:  i.Organisation || '',
+      sector:        i.Category     || 'Nuclear',
+      value:         i.Value        || '',
+      closingDate:   i.ClosingDate  ? i.ClosingDate.substring(0,10)   : '',
+      publishedDate: i.DatePublished ? i.DatePublished.substring(0,10) : ''
+    }))
+  };
+
+  let wpError = null;
+  try {
+    await wpUploadJSON(CONFIG.wp.jsonFile, feedJSON);
+  } catch(e) {
+    wpError = e.message;
+  }
+
+  // ── Done ──
   btn.disabled = false;
   btn.innerHTML = '🚀 Publish to Members Area';
 
-  if (errors === 0) {
-    document.getElementById('ws-status').innerHTML = `<span class="text-emerald-400">✅ Published — ${liveCount} items live</span>`;
-    showToast(`✅ Published! ${liveCount} items now live on Members Area.`);
+  if (!wpError && spErrors === 0) {
+    statusEl.innerHTML = `<span class="text-emerald-400">✅ Published — ${liveCount} items live · ${new Date().toLocaleTimeString('en-GB')}</span>`;
+    showToast(`✅ Published! ${liveCount} items live on Members Area.`);
+  } else if (wpError) {
+    statusEl.innerHTML = `<span class="text-amber-400">⚠️ SharePoint OK but WordPress failed: ${wpError.substring(0,80)}</span>`;
+    showToast('⚠️ WordPress upload failed — SharePoint was updated. Check WP credentials.', 'warn');
   } else {
-    document.getElementById('ws-status').innerHTML = `<span class="text-amber-400">⚠️ Published with ${errors} error(s)</span>`;
-    showToast(`⚠️ Published with ${errors} error(s). Check SharePoint.`, 'warn');
+    statusEl.innerHTML = `<span class="text-amber-400">⚠️ Done with ${spErrors} SharePoint error(s)</span>`;
+    showToast(`⚠️ Published with ${spErrors} SP error(s). JSON may be incomplete.`, 'warn');
   }
   renderWsFeed();
 }
@@ -1699,8 +1810,8 @@ All other items will be marked as not live.`)) return;
 async function wsPageTab(page) {
   wsPageTabActive = page;
   document.querySelectorAll('.ws-ptab').forEach(btn => {
-    const isActive = btn.id === `ws-ptab-${page}`;
-    btn.className = `ws-ptab px-5 py-2 rounded-xl text-sm font-medium ${isActive ? 'bg-blue-600 text-white' : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'}`;
+    const active = btn.id === `ws-ptab-${page}`;
+    btn.className = `ws-ptab px-5 py-2 rounded-xl text-sm font-medium ${active ? 'bg-blue-600 text-white' : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'}`;
   });
   await wsLoadPageRows(page);
 }
@@ -1711,20 +1822,20 @@ async function wsLoadPageRows(page) {
   try {
     const items = await spGet(
       CONFIG.lists.websiteContent,
-      'ID,Title,PageName,SectionKey,Title2,Body,Date,Location,SortOrder',
+      'ID,Title,PageName,SectionKey,Title2,Body,Date,Location,SortOrder,Tags',
       `PageName eq '${page}'`,
       'SortOrder asc'
     );
     wsPageData[page] = items;
     renderWsPageRows(page);
   } catch(e) {
-    container.innerHTML = `<div class="text-red-400 text-sm py-4">Error loading: ${e.message}</div>`;
+    container.innerHTML = `<div class="text-red-400 text-sm py-4">Error loading: ${wsEsc(e.message)}</div>`;
   }
 }
 
 function renderWsPageRows(page) {
   const container = document.getElementById('ws-page-content');
-  const items = wsPageData[page] || [];
+  const items     = wsPageData[page] || [];
   if (!items.length) {
     container.innerHTML = '<div class="text-zinc-500 text-sm py-4 text-center">No content rows yet. Click "+ Add Row" to create one.</div>';
     return;
@@ -1733,57 +1844,70 @@ function renderWsPageRows(page) {
 }
 
 function wsRowHTML(item, page) {
-  const showDate     = ['events'].includes(page);
-  const showLocation = ['events'].includes(page);
+  // Per-page field config
+  const cfg = {
+    events:   { f3Label:'Section Key',  f3Hint:'group:Upcoming Events|  or  type:Summit|key', f4Label:'Location', f4Hint:'Derby / online', showDate:true,  showF4:true  },
+    services: { f3Label:'Icon (emoji)', f3Hint:'🏭 🔹 ⚙️ etc.',                               f4Label:'Tags',     f4Hint:'Tag1,Tag2,Tag3',   showDate:false, showF4:true  },
+    projects: { f3Label:'Image URL',    f3Hint:'https://...',                                  f4Label:'Partners', f4Hint:'Partner1,Partner2', showDate:true,  showF4:true  },
+    index:    { f3Label:'Section Key',  f3Hint:'hero, feature-1 etc.',                         f4Label:'',         f4Hint:'',                 showDate:false, showF4:false },
+    about:    { f3Label:'Section Key',  f3Hint:'intro, team-1 etc.',                           f4Label:'',         f4Hint:'',                 showDate:false, showF4:false },
+  };
+  const c = cfg[page] || cfg.events;
+  // For projects: tags field = link URL
+  const tagsLabel = page === 'projects' ? 'Link URL' : 'Tags (comma separated)';
+  const tagsHint  = page === 'projects' ? 'https://...' : 'Tag1,Tag2,Tag3';
+
   return `
     <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5" id="ws-row-${item.ID}">
       <div class="grid grid-cols-2 gap-4 mb-4">
         <div>
-          <label class="text-xs text-zinc-500 uppercase tracking-wider block mb-1">Section Key</label>
-          <input type="text" value="${esc2(item.SectionKey||'')}"
-            class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
-            placeholder="e.g. upcoming-event-1"
-            oninput="wsRowChanged(${item.ID})">
+          <label class="text-xs text-zinc-500 uppercase tracking-wider block mb-1">${c.f3Label}</label>
+          <input type="text" value="${wsEsc(item.SectionKey||'')}"
+            class="ws-field w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
+            placeholder="${c.f3Hint}" oninput="wsRowChanged(${item.ID})">
         </div>
         <div>
           <label class="text-xs text-zinc-500 uppercase tracking-wider block mb-1">Sort Order</label>
-          <input type="text" value="${esc2(item.SortOrder||'')}"
-            class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
-            placeholder="1, 2, 3..."
-            oninput="wsRowChanged(${item.ID})">
+          <input type="text" value="${wsEsc(item.SortOrder||'')}"
+            class="ws-field w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
+            placeholder="1, 2, 3..." oninput="wsRowChanged(${item.ID})">
         </div>
       </div>
       <div class="mb-4">
         <label class="text-xs text-zinc-500 uppercase tracking-wider block mb-1">Title</label>
-        <input type="text" value="${esc2(item.Title2||'')}"
-          class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
-          placeholder="Display title"
-          oninput="wsRowChanged(${item.ID})">
+        <input type="text" value="${wsEsc(item.Title2||'')}"
+          class="ws-field w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
+          placeholder="Display title" oninput="wsRowChanged(${item.ID})">
       </div>
       <div class="mb-4">
         <label class="text-xs text-zinc-500 uppercase tracking-wider block mb-1">Body</label>
         <textarea rows="3"
-          class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none resize-none"
-          placeholder="Main content / description"
-          oninput="wsRowChanged(${item.ID})">${esc2(item.Body||'')}</textarea>
+          class="ws-field w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none resize-none"
+          placeholder="Main content. Use new lines for separate paragraphs."
+          oninput="wsRowChanged(${item.ID})">${wsEsc(item.Body||'')}</textarea>
       </div>
-      ${showDate || showLocation ? `
       <div class="grid grid-cols-2 gap-4 mb-4">
-        ${showDate ? `
+        ${c.showDate ? `
         <div>
           <label class="text-xs text-zinc-500 uppercase tracking-wider block mb-1">Date</label>
           <input type="date" value="${item.Date ? item.Date.substring(0,10) : ''}"
-            class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
+            class="ws-field w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
             oninput="wsRowChanged(${item.ID})">
-        </div>` : ''}
-        ${showLocation ? `
+        </div>` : '<div></div>'}
+        ${c.showF4 ? `
         <div>
-          <label class="text-xs text-zinc-500 uppercase tracking-wider block mb-1">Location</label>
-          <input type="text" value="${esc2(item.Location||'')}"
-            class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
-            placeholder="City / venue"
-            oninput="wsRowChanged(${item.ID})">
-        </div>` : ''}
+          <label class="text-xs text-zinc-500 uppercase tracking-wider block mb-1">${page === 'projects' ? tagsLabel : c.f4Label}</label>
+          <input type="text" value="${wsEsc(item.Location||'')}"
+            class="ws-field w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
+            placeholder="${page === 'projects' ? tagsHint : c.f4Hint}" oninput="wsRowChanged(${item.ID})">
+        </div>` : '<div></div>'}
+      </div>
+      ${page === 'projects' ? `
+      <div class="mb-4">
+        <label class="text-xs text-zinc-500 uppercase tracking-wider block mb-1">Link URL</label>
+        <input type="text" value="${wsEsc(item.Tags||'')}"
+          class="ws-field w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
+          placeholder="https://linkedin.com/..." oninput="wsRowChanged(${item.ID})">
       </div>` : ''}
       <div class="flex gap-3 justify-end">
         <button onclick="wsDeleteRow(${item.ID}, '${page}')"
@@ -1791,7 +1915,7 @@ function wsRowHTML(item, page) {
           🗑 Delete
         </button>
         <button onclick="wsSaveRow(${item.ID}, '${page}')" id="ws-save-${item.ID}"
-          class="px-5 py-2 bg-zinc-700 text-zinc-400 rounded-xl text-xs font-medium transition-colors cursor-not-allowed" disabled>
+          class="px-5 py-2 bg-zinc-700 text-zinc-400 rounded-xl text-xs font-medium cursor-not-allowed" disabled>
           Save
         </button>
       </div>
@@ -1807,39 +1931,37 @@ function wsRowChanged(id) {
 }
 
 async function wsSaveRow(id, page) {
-  const rowEl = document.getElementById(`ws-row-${id}`);
-  const inputs = rowEl.querySelectorAll('input, textarea');
-  // inputs order: SectionKey, SortOrder, Title2, Body, [Date, Location]
-  const fields = {
-    SectionKey: inputs[0].value,
-    SortOrder:  inputs[1].value,
-    Title2:     inputs[2].value,
-    Body:       inputs[3].value,
+  const rowEl  = document.getElementById(`ws-row-${id}`);
+  const fields = rowEl.querySelectorAll('.ws-field');
+  // fields order: SectionKey[0], SortOrder[1], Title2[2], Body[3], Date[4]?, Location[5]?, Tags[6]?
+  const patch = {
+    SectionKey: fields[0].value,
+    SortOrder:  fields[1].value,
+    Title2:     fields[2].value,
+    Body:       fields[3].value,
   };
-  if (inputs[4]) {
-    if (inputs[4].type === 'date')   fields.Date     = inputs[4].value || null;
-    if (inputs[4].type === 'text')   fields.Location = inputs[4].value;
-  }
-  if (inputs[5]) fields.Location = inputs[5].value;
+  if (fields[4] && fields[4].type === 'date') patch.Date     = fields[4].value || null;
+  if (fields[5])                              patch.Location = fields[5].value;
+  if (fields[6])                              patch.Tags     = fields[6].value;  // projects link URL
 
   const btn = document.getElementById(`ws-save-${id}`);
   btn.innerHTML = '<span class="spinner"></span>';
-  btn.disabled = true;
+  btn.disabled  = true;
   try {
-    await spPatch(CONFIG.lists.websiteContent, id, fields);
-    const item = (wsPageData[page] || []).find(i => i.ID === id);
-    if (item) Object.assign(item, fields);
+    await spPatch(CONFIG.lists.websiteContent, id, patch);
+    const item = (wsPageData[page]||[]).find(i => i.ID === id);
+    if (item) Object.assign(item, patch);
     btn.innerHTML = '✓ Saved';
-    btn.className = 'px-5 py-2 bg-emerald-700 text-white rounded-xl text-xs font-medium transition-colors cursor-not-allowed';
+    btn.className = 'px-5 py-2 bg-emerald-700 text-white rounded-xl text-xs font-medium cursor-not-allowed';
     showToast('✅ Row saved');
     setTimeout(() => {
       btn.innerHTML = 'Save';
-      btn.className = 'px-5 py-2 bg-zinc-700 text-zinc-400 rounded-xl text-xs font-medium transition-colors cursor-not-allowed';
-      btn.disabled = true;
-    }, 2000);
+      btn.className = 'px-5 py-2 bg-zinc-700 text-zinc-400 rounded-xl text-xs font-medium cursor-not-allowed';
+      btn.disabled  = true;
+    }, 2500);
   } catch(e) {
     btn.innerHTML = 'Save';
-    btn.disabled = false;
+    btn.disabled  = false;
     showToast('⚠️ Save failed: ' + e.message, 'error');
   }
 }
@@ -1861,19 +1983,55 @@ async function wsAddRow() {
   const page = wsPageTabActive;
   try {
     const newItem = await spPost(CONFIG.lists.websiteContent, {
-      Title:    `${page}-${Date.now()}`,
-      PageName: page,
+      Title:     `${page}-${Date.now()}`,
+      PageName:  page,
       SortOrder: String((wsPageData[page]?.length || 0) + 1)
     });
     wsPageData[page] = wsPageData[page] || [];
     wsPageData[page].push(newItem);
     renderWsPageRows(page);
-    // scroll to bottom
     const c = document.getElementById('ws-page-content');
     c.scrollTop = c.scrollHeight;
     showToast('✅ New row created — fill in the details and save');
   } catch(e) {
     showToast('⚠️ Could not create row: ' + e.message, 'error');
+  }
+}
+
+async function wsPublishPage() {
+  const page  = wsPageTabActive;
+  const items = wsPageData[page] || [];
+  if (!items.length) { showToast('⚠️ No rows to publish for this page.', 'warn'); return; }
+  if (!confirm(`Publish ${items.length} row(s) for the "${page}" page to WordPress?`)) return;
+
+  const btn = document.querySelector('[onclick="wsPublishPage()"]');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Publishing...';
+
+  const sorted = [...items].sort((a,b) => (parseInt(a.SortOrder)||0) - (parseInt(b.SortOrder)||0));
+  const payload = {
+    published: new Date().toISOString(),
+    page:      page,
+    rows:      sorted.map(i => ({
+      sectionKey: i.SectionKey || '',
+      sortOrder:  i.SortOrder  || '',
+      title:      i.Title2     || '',
+      body:       i.Body       || '',
+      date:       i.Date       ? i.Date.substring(0,10) : '',
+      location:   i.Location   || '',
+      tags:       i.Tags       || ''
+    }))
+  };
+
+  try {
+    await wpUploadJSON(`${page}-content.json`, payload);
+    btn.innerHTML = '🚀 Publish Page to WordPress';
+    btn.disabled  = false;
+    showToast(`✅ ${page} content published to WordPress`);
+  } catch(e) {
+    btn.innerHTML = '🚀 Publish Page to WordPress';
+    btn.disabled  = false;
+    showToast('⚠️ WordPress publish failed: ' + e.message, 'error');
   }
 }
 
