@@ -1844,27 +1844,36 @@ function renderWsPageRows(page) {
 }
 
 function wsRowHTML(item, page) {
+  // Per-page dropdown options for Section Key
+  const sectionOptions = {
+    events:   ['Upcoming Events', 'Webinars', 'Past Events', 'NucCol Hosted', 'External Events'],
+    services: ['🏭 Supply Chain', '📊 Demand Modelling', '🏛️ Policy Support', '🎯 Strategy', '🤝 Events & Marketing', '⚙️ Manufacturing'],
+    projects: ['Current Projects', 'Completed Projects', 'Case Studies'],
+    index:    ['Hero', 'Feature 1', 'Feature 2', 'Feature 3', 'CTA'],
+    about:    ['Intro', 'Mission', 'Team', 'History', 'Partners'],
+  };
+  const options = sectionOptions[page] || sectionOptions.events;
+
   // Per-page field config
   const cfg = {
-    events:   { f3Label:'Section Key',  f3Hint:'group:Upcoming Events|  or  type:Summit|key', f4Label:'Location', f4Hint:'Derby / online', showDate:true,  showF4:true  },
-    services: { f3Label:'Icon (emoji)', f3Hint:'🏭 🔹 ⚙️ etc.',                               f4Label:'Tags',     f4Hint:'Tag1,Tag2,Tag3',   showDate:false, showF4:true  },
-    projects: { f3Label:'Image URL',    f3Hint:'https://...',                                  f4Label:'Partners', f4Hint:'Partner1,Partner2', showDate:true,  showF4:true  },
-    index:    { f3Label:'Section Key',  f3Hint:'hero, feature-1 etc.',                         f4Label:'',         f4Hint:'',                 showDate:false, showF4:false },
-    about:    { f3Label:'Section Key',  f3Hint:'intro, team-1 etc.',                           f4Label:'',         f4Hint:'',                 showDate:false, showF4:false },
+    events:   { f3Label:'Group',    f4Label:'Location', f4Hint:'Derby / online  or  Derby|url:https://...', showDate:true,  showF4:true  },
+    services: { f3Label:'Icon',     f4Label:'Tags',     f4Hint:'Tag1,Tag2,Tag3',                            showDate:false, showF4:true  },
+    projects: { f3Label:'Category', f4Label:'Partners', f4Hint:'Partner1,Partner2',                         showDate:true,  showF4:true  },
+    index:    { f3Label:'Section',  f4Label:'',         f4Hint:'',                                          showDate:false, showF4:false },
+    about:    { f3Label:'Section',  f4Label:'',         f4Hint:'',                                          showDate:false, showF4:false },
   };
   const c = cfg[page] || cfg.events;
-  // For projects: tags field = link URL
-  const tagsLabel = page === 'projects' ? 'Link URL' : 'Tags (comma separated)';
-  const tagsHint  = page === 'projects' ? 'https://...' : 'Tag1,Tag2,Tag3';
 
   return `
     <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5" id="ws-row-${item.ID}">
       <div class="grid grid-cols-2 gap-4 mb-4">
         <div>
           <label class="text-xs text-zinc-500 uppercase tracking-wider block mb-1">${c.f3Label}</label>
-          <input type="text" value="${wsEsc(item.SectionKey||'')}"
+          <select
             class="ws-field w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
-            placeholder="${c.f3Hint}" oninput="wsRowChanged(${item.ID})">
+            onchange="wsRowChanged(${item.ID})">
+            ${options.map(opt => `<option value="${wsEsc(opt)}" ${item.SectionKey === opt ? 'selected' : ''}>${wsEsc(opt)}</option>`).join('')}
+          </select>
         </div>
         <div>
           <label class="text-xs text-zinc-500 uppercase tracking-wider block mb-1">Sort Order</label>
@@ -1979,10 +1988,18 @@ async function wsDeleteRow(id, page) {
 async function wsAddRow() {
   const page = wsPageTabActive;
   try {
+    const defaultKeys = {
+      events:   'Upcoming Events',
+      services: '🏭 Supply Chain',
+      projects: 'Current Projects',
+      index:    'Hero',
+      about:    'Intro',
+    };
     const newItem = await spPost(CONFIG.lists.websiteContent, {
-      Title:     `${page}-${Date.now()}`,
-      PageName:  page,
-      SortOrder: String((wsPageData[page]?.length || 0) + 1)
+      Title:      `${page}-${Date.now()}`,
+      PageName:   page,
+      SectionKey: defaultKeys[page] || '',
+      SortOrder:  String((wsPageData[page]?.length || 0) + 1)
     });
     wsPageData[page] = wsPageData[page] || [];
     wsPageData[page].push(newItem);
