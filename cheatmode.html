@@ -1921,10 +1921,10 @@ function wsRowHTML(item, page) {
         </div>` : '<div></div>'}
         ${c.showF4 ? `
         <div>
-          <label class="text-xs text-zinc-500 uppercase tracking-wider block mb-1">${page === 'projects' ? tagsLabel : c.f4Label}</label>
+          <label class="text-xs text-zinc-500 uppercase tracking-wider block mb-1">${c.f4Label}</label>
           <input type="text" value="${wsEsc(item.Location||'')}"
             class="ws-field w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
-            placeholder="${page === 'projects' ? tagsHint : c.f4Hint}" oninput="wsRowChanged(${item.ID})">
+            placeholder="${c.f4Hint}" oninput="wsRowChanged(${item.ID})">
         </div>` : '<div></div>'}
       </div>
       ${page === 'projects' ? `
