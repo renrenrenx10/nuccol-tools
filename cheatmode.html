@@ -856,7 +856,7 @@ async function loadAllData() {
     const [news, events, tenders, nucCol] = await Promise.all([
       spGet(CONFIG.lists.news,    "ID,Title,Summary,URL,Source,DatePublished,Selected,WebsiteSelected"),
       spGet(CONFIG.lists.events,  "ID,Title,Description,URL,OrganiserName,EventDate,Selected,WebsiteSelected"),
-      spGet(CONFIG.lists.tenders, "ID,Title,Description,URL,Organisation,ClosingDate,Selected,WebsiteSelected,Category"),
+      spGet(CONFIG.lists.tenders, "ID,Title,Description,URL,Organisation,ClosingDate,Selected,WebsiteSelected"),
       spGet(CONFIG.lists.nucCol,  "ID,Title,Description,URL,DatePublished,Selected")
     ]);
     nlData.news    = news;
@@ -1822,7 +1822,7 @@ async function wsLoadPageRows(page) {
   try {
     const items = await spGet(
       CONFIG.lists.websiteContent,
-      'ID,Title,PageName,SectionKey,Title2,Body,Date,Location,SortOrder,Tags',
+      'ID,Title,PageName,SectionKey,Title2,Body,Date,Location,SortOrder',
       `PageName eq '${page}'`,
       'SortOrder asc'
     );
@@ -1903,11 +1903,8 @@ function wsRowHTML(item, page) {
         </div>` : '<div></div>'}
       </div>
       ${page === 'projects' ? `
-      <div class="mb-4">
-        <label class="text-xs text-zinc-500 uppercase tracking-wider block mb-1">Link URL</label>
-        <input type="text" value="${wsEsc(item.Tags||'')}"
-          class="ws-field w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
-          placeholder="https://linkedin.com/..." oninput="wsRowChanged(${item.ID})">
+      <div class="mb-4 px-3 py-2 bg-zinc-800/50 rounded-xl text-xs text-zinc-500">
+        💡 To add a link URL for projects, add a <strong style="color:#94a3b8">Tags</strong> column (Single line of text) to the WebsiteContent SharePoint list, then this field will appear automatically.
       </div>` : ''}
       <div class="flex gap-3 justify-end">
         <button onclick="wsDeleteRow(${item.ID}, '${page}')"
@@ -1942,7 +1939,7 @@ async function wsSaveRow(id, page) {
   };
   if (fields[4] && fields[4].type === 'date') patch.Date     = fields[4].value || null;
   if (fields[5])                              patch.Location = fields[5].value;
-  if (fields[6])                              patch.Tags     = fields[6].value;  // projects link URL
+  // Tags field: add 'Tags' column to WebsiteContent SP list to enable link URLs for projects
 
   const btn = document.getElementById(`ws-save-${id}`);
   btn.innerHTML = '<span class="spinner"></span>';
@@ -2019,7 +2016,7 @@ async function wsPublishPage() {
       body:       i.Body       || '',
       date:       i.Date       ? i.Date.substring(0,10) : '',
       location:   i.Location   || '',
-      tags:       i.Tags       || ''
+      // tags: add 'Tags' column to WebsiteContent SP list to enable this
     }))
   };
 
