@@ -440,6 +440,10 @@
             class="ws-tab-btn px-8 py-4 border-b-4 border-transparent text-zinc-400 hover:text-zinc-200 text-sm">
             🌐 Page Content
           </button>
+          <button onclick="wsTab('f4n')" id="ws-tab-f4n"
+            class="ws-tab-btn px-8 py-4 border-b-4 border-transparent text-zinc-400 hover:text-zinc-200 text-sm">
+            🏭 F4N Companies
+          </button>
         </div>
 
         <!-- ── MEMBERS FEED TAB ── -->
@@ -503,6 +507,97 @@
               class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-2xl text-sm font-semibold transition-colors">
               🚀 Publish Page to WordPress
             </button>
+          </div>
+        </div>
+
+        <!-- ── F4N COMPANIES TAB ── -->
+        <div id="ws-f4n" class="ws-pane hidden">
+          <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 mb-6">
+            <div class="flex items-start justify-between gap-4 flex-wrap">
+              <div>
+                <h2 class="text-lg font-semibold mb-1">F4N Companies</h2>
+                <p class="text-zinc-400 text-sm">Manage Fit For Nuclear companies. Add and remove companies in the <strong class="text-white">Granted</strong> and <strong class="text-white">On the Journey</strong> lists, then publish to WordPress.</p>
+              </div>
+              <div class="flex items-center gap-3 flex-wrap">
+                <button onclick="f4nSeedData()" id="f4n-seed-btn"
+                  class="px-5 py-3 bg-zinc-600 hover:bg-zinc-500 rounded-2xl text-sm font-semibold transition-colors"
+                  title="Pre-populate SharePoint with all current live companies">
+                  🌱 Seed Current Companies
+                </button>
+                <button onclick="f4nPublish()" id="f4n-publish-btn"
+                  class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-2xl text-sm font-semibold transition-colors flex items-center gap-2">
+                  🚀 Publish to WordPress
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filter/Add bar -->
+          <div class="flex flex-wrap gap-3 mb-6 items-center">
+            <div class="flex gap-2">
+              <button onclick="f4nFilterTab('all')" id="f4n-ftab-all"
+                class="f4n-ftab px-5 py-2 rounded-xl text-sm font-medium bg-blue-600 text-white">All</button>
+              <button onclick="f4nFilterTab('granted')" id="f4n-ftab-granted"
+                class="f4n-ftab px-5 py-2 rounded-xl text-sm font-medium bg-zinc-700 text-zinc-300 hover:bg-zinc-600">✅ Granted</button>
+              <button onclick="f4nFilterTab('journey')" id="f4n-ftab-journey"
+                class="f4n-ftab px-5 py-2 rounded-xl text-sm font-medium bg-zinc-700 text-zinc-300 hover:bg-zinc-600">🔄 On the Journey</button>
+            </div>
+            <div class="ml-auto">
+              <button onclick="f4nAddCompany()"
+                class="px-5 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-semibold transition-colors">
+                + Add Company
+              </button>
+            </div>
+          </div>
+
+          <div id="f4n-status" class="text-sm text-zinc-500 mb-3"></div>
+          <div id="f4n-list" class="space-y-3 max-h-[calc(100vh-460px)] overflow-auto pr-2"></div>
+        </div>
+
+        <!-- F4N Add/Edit Modal -->
+        <div id="f4nModal" class="modal fixed inset-0 bg-black/80 items-center justify-center z-50" style="display:none;">
+          <div class="bg-zinc-900 w-full max-w-2xl mx-4 rounded-3xl overflow-hidden">
+            <div class="bg-zinc-800 p-6 flex justify-between items-center">
+              <div id="f4nModalTitle" class="font-bold text-xl title-font">Add Company</div>
+              <button onclick="closef4nModal()" class="text-3xl text-zinc-400 hover:text-white">×</button>
+            </div>
+            <div class="p-8 space-y-4">
+              <input type="hidden" id="f4n-edit-id" value="" />
+              <div>
+                <label class="block text-xs text-zinc-400 mb-1">COMPANY NAME</label>
+                <input id="f4n-edit-name" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm" placeholder="e.g. Acme Engineering Ltd" />
+              </div>
+              <div>
+                <label class="block text-xs text-zinc-400 mb-1">STATUS</label>
+                <select id="f4n-edit-status" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm text-white">
+                  <option value="granted">✅ Granted</option>
+                  <option value="journey">🔄 On the Journey</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs text-zinc-400 mb-1">DESCRIPTION</label>
+                <textarea id="f4n-edit-desc" rows="3" class="terminal-input w-full rounded-xl p-4 text-sm" placeholder="Short company description..."></textarea>
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs text-zinc-400 mb-1">WEBSITE URL</label>
+                  <input id="f4n-edit-url" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm font-mono" placeholder="https://..." />
+                </div>
+                <div>
+                  <label class="block text-xs text-zinc-400 mb-1">LOGO IMAGE URL</label>
+                  <input id="f4n-edit-logo" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm font-mono" placeholder="https://nuccol.co.uk/wp-content/uploads/..." />
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs text-zinc-400 mb-1">SORT ORDER</label>
+                <input id="f4n-edit-sort" type="number" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm" placeholder="1, 2, 3..." />
+              </div>
+            </div>
+            <div class="p-6 border-t border-zinc-800 flex gap-3 justify-end">
+              <button onclick="deletef4nItem()" id="f4n-delete-btn" class="px-6 py-3 bg-red-700 hover:bg-red-600 rounded-xl text-sm font-semibold items-center gap-2 hidden"><i class="fa-solid fa-trash"></i> Delete</button>
+              <button onclick="savef4nItem()" class="px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-semibold flex items-center gap-2"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+              <button onclick="closef4nModal()" class="px-6 py-3 bg-zinc-700 hover:bg-zinc-600 rounded-xl text-sm">Cancel</button>
+            </div>
           </div>
         </div>
 
@@ -612,7 +707,8 @@ const CONFIG = {
     apGenerator:      "APGenerator",
     beGenerator:      "BEGenerator",
     ssGenerator:      "SSGenerator",
-    websiteContent:   "WebsiteContent"
+    websiteContent:   "WebsiteContent",
+    f4nCompanies:     "F4NCompanies"
   }
 };
 
@@ -1633,7 +1729,7 @@ async function wpUploadJSON(filename, data) {
 
 // ── Sub-tab switching ──────────────────────────────────────
 function wsTab(tab) {
-  ['feed','pages'].forEach(t => {
+  ['feed','pages','f4n'].forEach(t => {
     document.getElementById(`ws-${t}`).classList.toggle('hidden', t !== tab);
     const btn = document.getElementById(`ws-tab-${t}`);
     btn.className = t === tab
@@ -1642,6 +1738,7 @@ function wsTab(tab) {
   });
   if (tab === 'feed')  renderWsFeed();
   if (tab === 'pages') wsPageTab(wsPageTabActive);
+  if (tab === 'f4n')   f4nLoad();
 }
 
 // ── Feed sub-tabs ──────────────────────────────────────────
@@ -2188,6 +2285,463 @@ async function wsSeedData() {
     await wsLoadPageRows(page);
   }
 }
+
+
+// ═══════════════════════════════════════════════════════════
+// F4N COMPANIES
+// ═══════════════════════════════════════════════════════════
+
+let f4nData        = [];          // all rows from SharePoint
+let f4nFilterActive = 'all';      // 'all' | 'granted' | 'journey'
+let f4nLoaded      = false;
+
+// ── Load ─────────────────────────────────────────────────
+async function f4nLoad(force = false) {
+  if (f4nLoaded && !force) { renderF4nList(); return; }
+  const status = document.getElementById('f4n-status');
+  status.textContent = 'Loading companies from SharePoint...';
+  try {
+    const items = await spGet(
+      CONFIG.lists.f4nCompanies,
+      'ID,Title,CompanyName,Status,Description,URL,LogoURL,SortOrder',
+      '',
+      'Status asc,SortOrder asc'
+    );
+    f4nData   = items;
+    f4nLoaded = true;
+    status.textContent = `${items.length} companies loaded`;
+    renderF4nList();
+  } catch(e) {
+    status.innerHTML = `<span class="text-red-400">⚠️ ${wsEsc(e.message)}</span>`;
+  }
+}
+
+// ── Filter tabs ──────────────────────────────────────────
+function f4nFilterTab(filter) {
+  f4nFilterActive = filter;
+  document.querySelectorAll('.f4n-ftab').forEach(btn => {
+    const isActive = btn.id === `f4n-ftab-${filter}`;
+    btn.className = `f4n-ftab px-5 py-2 rounded-xl text-sm font-medium ${isActive ? 'bg-blue-600 text-white' : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'}`;
+  });
+  renderF4nList();
+}
+
+// ── Render list ──────────────────────────────────────────
+function renderF4nList() {
+  const container = document.getElementById('f4n-list');
+  if (!container) return;
+
+  const filtered = f4nFilterActive === 'all'
+    ? f4nData
+    : f4nData.filter(c => (c.Status || '').toLowerCase() === f4nFilterActive);
+
+  if (!filtered.length) {
+    const msg = f4nLoaded
+      ? 'No companies found. Use "+ Add Company" to create one, or seed the current live data.'
+      : 'No data loaded.';
+    container.innerHTML = `<div class="text-zinc-500 text-sm py-8 text-center">${msg}</div>`;
+    return;
+  }
+
+  const granted = filtered.filter(c => (c.Status||'').toLowerCase() === 'granted');
+  const journey = filtered.filter(c => (c.Status||'').toLowerCase() === 'journey');
+
+  let html = '';
+
+  if (f4nFilterActive !== 'journey' && granted.length) {
+    html += `<div class="flex items-center gap-3 mb-3 mt-1">
+      <span class="text-xs font-semibold tracking-widest text-emerald-400 uppercase">✅ Granted (${granted.length})</span>
+      <div class="flex-1 h-px bg-zinc-800"></div>
+    </div>`;
+    html += granted.map(c => f4nRowHTML(c)).join('');
+  }
+
+  if (f4nFilterActive !== 'granted' && journey.length) {
+    html += `<div class="flex items-center gap-3 mb-3 mt-5">
+      <span class="text-xs font-semibold tracking-widest text-yellow-400 uppercase">🔄 On the Journey (${journey.length})</span>
+      <div class="flex-1 h-px bg-zinc-800"></div>
+    </div>`;
+    html += journey.map(c => f4nRowHTML(c)).join('');
+  }
+
+  container.innerHTML = html;
+}
+
+function f4nRowHTML(item) {
+  const statusColour = (item.Status||'').toLowerCase() === 'granted'
+    ? 'text-emerald-400 bg-emerald-900/20 border-emerald-800'
+    : 'text-yellow-400 bg-yellow-900/20 border-yellow-800';
+  const statusLabel  = (item.Status||'').toLowerCase() === 'granted' ? 'Granted' : 'On the Journey';
+  const name   = item.CompanyName || item.Title || '(Unnamed)';
+  const desc   = item.Description || '';
+  const url    = item.URL || '';
+  const logo   = item.LogoURL || '';
+  const sort   = item.SortOrder || '';
+
+  return `
+    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex items-center gap-5">
+      ${logo
+        ? `<div class="w-20 h-12 flex-shrink-0 bg-white rounded-lg flex items-center justify-center overflow-hidden">
+             <img src="${wsEsc(logo)}" alt="${wsEsc(name)}" class="max-w-full max-h-full object-contain" onerror="this.style.display='none'" />
+           </div>`
+        : `<div class="w-20 h-12 flex-shrink-0 bg-zinc-800 rounded-lg flex items-center justify-center text-zinc-600 text-xs">No logo</div>`
+      }
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-3 mb-1 flex-wrap">
+          <span class="font-semibold text-sm">${wsEsc(name)}</span>
+          <span class="text-xs px-2 py-0.5 rounded-full border ${statusColour} font-medium">${statusLabel}</span>
+          ${sort ? `<span class="text-xs text-zinc-600">#${wsEsc(sort)}</span>` : ''}
+        </div>
+        <div class="text-xs text-zinc-400 line-clamp-2">${wsEsc(desc)}</div>
+        ${url ? `<a href="${wsEsc(url)}" target="_blank" class="text-blue-400 text-xs hover:underline mt-1 inline-block">↗ ${wsEsc(url)}</a>` : ''}
+      </div>
+      <button onclick="f4nEditCompany(${item.ID})"
+        class="flex-shrink-0 px-4 py-2 bg-zinc-700 hover:bg-zinc-600 rounded-xl text-xs font-medium transition-colors">
+        ✏️ Edit
+      </button>
+    </div>`;
+}
+
+// ── Add / Edit modal ─────────────────────────────────────
+function f4nAddCompany() {
+  $('f4nModalTitle').textContent = 'Add Company';
+  $('f4n-edit-id').value    = '';
+  $('f4n-edit-name').value  = '';
+  $('f4n-edit-status').value = 'granted';
+  $('f4n-edit-desc').value  = '';
+  $('f4n-edit-url').value   = '';
+  $('f4n-edit-logo').value  = '';
+  $('f4n-edit-sort').value  = String(f4nData.length + 1);
+  $('f4n-delete-btn').classList.add('hidden');
+  $('f4nModal').style.display = 'flex';
+}
+
+function f4nEditCompany(id) {
+  const item = f4nData.find(c => c.ID === id);
+  if (!item) return;
+  $('f4nModalTitle').textContent = 'Edit Company';
+  $('f4n-edit-id').value    = id;
+  $('f4n-edit-name').value  = item.CompanyName || item.Title || '';
+  $('f4n-edit-status').value = (item.Status||'granted').toLowerCase();
+  $('f4n-edit-desc').value  = item.Description || '';
+  $('f4n-edit-url').value   = item.URL || '';
+  $('f4n-edit-logo').value  = item.LogoURL || '';
+  $('f4n-edit-sort').value  = item.SortOrder || '';
+  $('f4n-delete-btn').classList.remove('hidden');
+  $('f4nModal').style.display = 'flex';
+}
+
+function closef4nModal() {
+  $('f4nModal').style.display = 'none';
+}
+
+async function savef4nItem() {
+  const id     = $('f4n-edit-id').value;
+  const name   = $('f4n-edit-name').value.trim();
+  const status = $('f4n-edit-status').value;
+  const desc   = $('f4n-edit-desc').value.trim();
+  const url    = $('f4n-edit-url').value.trim();
+  const logo   = $('f4n-edit-logo').value.trim();
+  const sort   = $('f4n-edit-sort').value.trim();
+
+  if (!name) { showToast('⚠️ Company name is required.', 'warn'); return; }
+
+  const fields = {
+    Title:       name,
+    CompanyName: name,
+    Status:      status,
+    Description: desc,
+    URL:         url,
+    LogoURL:     logo,
+    SortOrder:   sort,
+  };
+
+  try {
+    if (id) {
+      // Edit existing
+      await spPatch(CONFIG.lists.f4nCompanies, parseInt(id), fields);
+      const idx = f4nData.findIndex(c => c.ID === parseInt(id));
+      if (idx !== -1) Object.assign(f4nData[idx], fields);
+      showToast('✅ Company updated');
+    } else {
+      // New item
+      const newItem = await spPost(CONFIG.lists.f4nCompanies, fields);
+      f4nData.push(newItem);
+      showToast('✅ Company added');
+    }
+    closef4nModal();
+    renderF4nList();
+    $('f4n-status').textContent = `${f4nData.length} companies`;
+  } catch(e) {
+    showToast('⚠️ Save failed: ' + e.message, 'error');
+  }
+}
+
+async function deletef4nItem() {
+  const id   = parseInt($('f4n-edit-id').value);
+  const name = $('f4n-edit-name').value.trim();
+  if (!id) return;
+  if (!confirm(`Remove "${name}" from the F4N companies list?\n\nThis will delete it from SharePoint.`)) return;
+  try {
+    await spDelete(CONFIG.lists.f4nCompanies, id);
+    f4nData = f4nData.filter(c => c.ID !== id);
+    closef4nModal();
+    renderF4nList();
+    $('f4n-status').textContent = `${f4nData.length} companies`;
+    showToast('🗑 Company removed');
+  } catch(e) {
+    showToast('⚠️ Delete failed: ' + e.message, 'error');
+  }
+}
+
+// ── Publish ──────────────────────────────────────────────
+async function f4nPublish() {
+  if (!f4nData.length) { showToast('⚠️ No companies to publish.', 'warn'); return; }
+  const granted = f4nData.filter(c => (c.Status||'').toLowerCase() === 'granted')
+    .sort((a,b) => (parseInt(a.SortOrder)||0) - (parseInt(b.SortOrder)||0));
+  const journey = f4nData.filter(c => (c.Status||'').toLowerCase() === 'journey')
+    .sort((a,b) => (parseInt(a.SortOrder)||0) - (parseInt(b.SortOrder)||0));
+
+  if (!confirm(`Publish ${granted.length} granted + ${journey.length} journey companies to WordPress?`)) return;
+
+  const btn = $('f4n-publish-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Publishing...';
+
+  const toRow = c => ({
+    name:      c.CompanyName || c.Title || '',
+    status:    (c.Status||'').toLowerCase(),
+    desc:      c.Description || '',
+    url:       c.URL || '',
+    logo:      c.LogoURL || '',
+    sortOrder: c.SortOrder || '',
+  });
+
+  const payload = {
+    published: new Date().toISOString(),
+    granted:   granted.map(toRow),
+    journey:   journey.map(toRow),
+  };
+
+  try {
+    await wpUploadJSON('f4n-companies-content.json', payload);
+    btn.innerHTML = '🚀 Publish to WordPress';
+    btn.disabled  = false;
+    showToast(`✅ F4N companies published — ${granted.length} granted, ${journey.length} on the journey`);
+  } catch(e) {
+    btn.innerHTML = '🚀 Publish to WordPress';
+    btn.disabled  = false;
+    showToast('⚠️ WordPress publish failed: ' + e.message, 'error');
+  }
+}
+
+// ── Seed ─────────────────────────────────────────────────
+async function f4nSeedData() {
+  const existing = f4nData;
+  if (existing.length > 0) {
+    if (!confirm(`SharePoint already has ${existing.length} company row(s).\n\nSeed data will ADD to existing rows, not replace them.\n\nContinue?`)) return;
+  } else {
+    if (!confirm(`Seed all current live F4N companies (${F4N_SEED.length} companies) into SharePoint?\n\nYou can edit them afterwards.`)) return;
+  }
+
+  const btn = $('f4n-seed-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Seeding...';
+
+  let errors = 0;
+  for (const row of F4N_SEED) {
+    try {
+      const newItem = await spPost(CONFIG.lists.f4nCompanies, {
+        Title:       row.name,
+        CompanyName: row.name,
+        Status:      row.status,
+        Description: row.desc,
+        URL:         row.url,
+        LogoURL:     row.logo,
+        SortOrder:   String(row.sort),
+      });
+      f4nData.push(newItem);
+    } catch(e) {
+      errors++;
+      console.error('F4N seed row failed:', row.name, e);
+    }
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '🌱 Seed Current Companies';
+  f4nLoaded = true;
+
+  if (errors === 0) {
+    renderF4nList();
+    $('f4n-status').textContent = `${f4nData.length} companies`;
+    showToast(`✅ Seeded ${F4N_SEED.length} companies — review and publish when ready.`);
+  } else {
+    showToast(`⚠️ Seeded with ${errors} error(s). Check console.`, 'warn');
+    await f4nLoad(true);
+  }
+}
+
+// ── Seed data (current live companies from f4n-companies.html) ──
+const F4N_SEED = [
+  // ── GRANTED ──────────────────────────────────────────────────────────────
+  { sort:1,  status:'granted', name:'Amazon Filters',
+    desc:'A leading European supplier of high-quality filters and vessels, with expertise in bespoke filtration solutions.',
+    url:'https://www.amazonfilters.com/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2024/11/3515f-amazon-filters.png?resize=450%2C200&ssl=1' },
+  { sort:2,  status:'granted', name:'BEP Surface Technologies',
+    desc:'Advanced chrome, nickel, and copper plating, precision grinding, and electroforming for energy, nuclear, and industrial sectors.',
+    url:'https://bep-st.com/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2024/11/87ffc-bep.png?resize=450%2C200&ssl=1' },
+  { sort:3,  status:'granted', name:'Ellis Patents',
+    desc:'Designs and manufactures high-performance cable cleats, protecting critical electrical systems across nuclear, transport, and renewable energy.',
+    url:'https://www.ellispatents.co.uk/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2025/10/ellis.jpg?resize=450%2C200&ssl=1' },
+  { sort:4,  status:'granted', name:'Caunton Engineering',
+    desc:'High-quality structural steel solutions combining 50+ years of experience with agility, innovation, and sustainable construction practices.',
+    url:'https://www.caunton.co.uk/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2025/10/caunton.jpg?resize=450%2C200&ssl=1' },
+  { sort:5,  status:'granted', name:'Fort Vale Nuclear Ltd',
+    desc:'World leader in precision manufacture of valves and fittings for the transportation of bulk liquids in tank container, road tanker, and rail industries.',
+    url:'https://www.fortvale.com/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2024/11/cc48f-fortvale.png?ssl=1' },
+  { sort:6,  status:'granted', name:'Graham Hart (Process Technology) Ltd',
+    desc:'Designs and manufactures high-integrity heat transfer and pressure equipment, including heat exchangers and reactor vessels.',
+    url:'https://www.graham-hart.com/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2024/11/923a3-graham-hart.png?resize=450%2C200&ssl=1' },
+  { sort:7,  status:'granted', name:'Extract Technology',
+    desc:'Supplies containment and aseptic systems globally, serving pharmaceutical, healthcare, biotech, chemical, and nuclear markets.',
+    url:'https://extract-technology.com/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2025/10/extract.jpg?resize=450%2C200&ssl=1' },
+  { sort:8,  status:'granted', name:'Exalto Bearings UK',
+    desc:'Manufactures high-quality rubber-lined and composite cutlass bearings for pump and marine industries, in bespoke and standard sizes.',
+    url:'https://exalto.co.uk/en/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2025/10/exalto.jpg?resize=450%2C200&ssl=1' },
+  { sort:9,  status:'granted', name:'Oldham Engineering',
+    desc:'Long-established company providing in-house fabrication and machining for complex projects in the nuclear and defence sectors.',
+    url:'https://www.oldham-eng.com/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2024/11/a9813-oldham.png?resize=450%2C200&ssl=1' },
+  { sort:10, status:'granted', name:'RTR GmbH & Co. KG',
+    desc:'Delivers end-to-end steel solutions, from inventory and mill production to bespoke fabrication, with a global supply chain.',
+    url:'https://www.rtr-group.com/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2024/11/2e7f0-rtr.png?resize=450%2C200&ssl=1' },
+  { sort:11, status:'granted', name:'Score Europe',
+    desc:'Specialises in valves, fuel systems, and components, delivering complex engineering solutions across energy, aerospace, defence, and nuclear.',
+    url:'https://score-group.com/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2024/11/82378-score.png?resize=450%2C200&ssl=1' },
+  { sort:12, status:'granted', name:'Landguard Engineering',
+    desc:'Delivers high-quality steel fabrication and installation, specialising in acoustic control, structural steel, and offshore projects.',
+    url:'https://www.landguardengineering.co.uk/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2024/11/150d0-langard.png?ssl=1' },
+  { sort:13, status:'granted', name:'SYSPAL Ltd',
+    desc:'Bespoke and standard stainless steel and aluminium equipment, supported by in-house design and over four decades of manufacturing experience.',
+    url:'https://www.syspal.com/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2025/09/download-5-1.png?resize=450%2C200&ssl=1' },
+  { sort:14, status:'granted', name:'Trident Maritime Systems',
+    desc:'Combines innovative engineering and precision manufacturing to provide reliable maritime systems for harsh environments.',
+    url:'https://www.tridentllc.com/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2024/11/1ab98-trident.png?resize=450%2C200&ssl=1' },
+  { sort:15, status:'granted', name:'XL Engineering',
+    desc:'Provides complex and rapid short batch small to medium sheet metal fabrications from a purpose-built facility in Sandbach, Cheshire.',
+    url:'https://www.xl-eng.co.uk/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2024/11/9eb79-xl.png?resize=450%2C200&ssl=1' },
+  { sort:16, status:'granted', name:'Trillium Flow Technologies',
+    desc:'Global designer, manufacturer, and aftermarket service provider of engineered valves and pumps for critical infrastructure and industrial applications.',
+    url:'https://www.trilliumflow.com/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2024/11/fb08a-trillium.png?resize=450%2C200&ssl=1' },
+  { sort:17, status:'granted', name:'Hydrobolt',
+    desc:'UK market leader specialising in manufacturing high integrity fasteners for the energy industries.',
+    url:'https://hydroboltgroup.com/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2024/11/c8172-hydrobolt-1.png?resize=450%2C200&ssl=1' },
+  { sort:18, status:'granted', name:'BHC',
+    desc:"One of the UK's leading structural steel fabrication and construction companies, supplying and erecting fabricated steel across the UK and Ireland.",
+    url:'https://bhc.ltd.uk/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2024/11/64eb5-bhc.png?resize=450%2C200&ssl=1' },
+  { sort:19, status:'granted', name:'Backer Heatrod',
+    desc:'Greater Manchester based UK leader in manufacturing heating elements and associated process heating equipment for industrial applications.',
+    url:'',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2025/11/heatrod.jpg?resize=450%2C200&ssl=1' },
+  { sort:20, status:'granted', name:'Eurofabs (UK) Ltd',
+    desc:'Leading high-end fabrication company specialising in the design and manufacture of specialist stainless steel and precision-engineered solutions.',
+    url:'https://eurofabs.co.uk/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2026/01/eurofab.jpg?resize=450%2C200&ssl=1' },
+  { sort:21, status:'granted', name:'Koso Kent',
+    desc:'Delivers globally trusted valves, combining quality engineering, customer focus, and rapid technical response for critical applications.',
+    url:'https://kentintrol.com/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2025/10/kent.jpg?resize=450%2C200&ssl=1' },
+  { sort:22, status:'granted', name:'Ace Polishing Services Ltd',
+    desc:'Over 30 years of metal polishing and beadblasting expertise across Nuclear, Pharmaceutical, Architectural, Aerospace, and Oil & Gas sectors.',
+    url:'https://acepolishingservices.co.uk/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2026/01/aps.jpg?resize=720%2C326&ssl=1' },
+  { sort:23, status:'granted', name:'MCE Group',
+    desc:'Improving UK plant reliability since 1990. Provides 24/7 emergency services, diagnostic services, and comprehensive valve management solutions.',
+    url:'https://mce-group.com/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2026/04/download.jpg?resize=554%2C206&ssl=1' },
+  { sort:24, status:'granted', name:'Vecom UK',
+    desc:'Based in Bury, a leading specialist in metal surface treatments including pickling, passivation, and mechanical polishing.',
+    url:'https://www.vecom-group.com/en-uk/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2026/04/vecom.jpg?resize=450%2C200&ssl=1' },
+  { sort:25, status:'granted', name:'ASD Limited',
+    desc:"One of the UK's leading metal stockholders and processing suppliers and a proud member of the Hierros Añón Group.",
+    url:'https://asd.ltd/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2026/04/cropped-ASD-2024.jpg?resize=417%2C200&ssl=1' },
+  { sort:26, status:'granted', name:'Dynamic Aerospace Fabrications',
+    desc:'Supplies complex, high-precision fabricated and machined metal parts and assemblies to market-leading aerospace companies.',
+    url:'https://dynamicaerofabs.com/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2026/04/Dynamic-Aero-Fabs-Logo.png?resize=3102%2C1469&ssl=1' },
+  // ── ON THE JOURNEY ────────────────────────────────────────────────────────
+  { sort:1,  status:'journey', name:'Agemaspark',
+    desc:'Delivers bespoke manufacturing services, from single components to full assemblies, supported by extensive industry experience and supplier networks.',
+    url:'https://agemaspark.com/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2025/10/agema.jpg?resize=450%2C200&ssl=1' },
+  { sort:2,  status:'journey', name:'C2 Construction & Fabrication',
+    desc:'Specialises in complex construction projects, offering turnkey solutions, bespoke steel fabrication, and full principal contractor services.',
+    url:'https://www.c2-construction.co.uk/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2025/10/c2.jpg?resize=450%2C200&ssl=1' },
+  { sort:3,  status:'journey', name:'Exentec',
+    desc:'Part of the Exyte Group, providing tailored, mission-critical solutions for high-tech industries, combining reliability, innovation, and energy-efficient design.',
+    url:'https://www.exentec.net/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2025/10/hargreaves.jpg?resize=450%2C200&ssl=1' },
+  { sort:4,  status:'journey', name:'BFS Enterprise (Fabrications) Ltd',
+    desc:'Specialises in bespoke structural steel fabrications and precision machining for the energy, oil & gas, and renewables sectors.',
+    url:'https://bfs-fabs.com/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2026/01/bfs.jpg?resize=720%2C326&ssl=1' },
+  { sort:5,  status:'journey', name:'Mayflower Engineering',
+    desc:'Delivers high-quality engineered solutions across offshore, nuclear, renewable, rail, and military sectors, backed by 50 years of expertise.',
+    url:'https://www.mayflower-engineering.co.uk/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2025/10/mayflower.jpg?resize=450%2C200&ssl=1' },
+  { sort:6,  status:'journey', name:'MSCM Limited',
+    desc:'Designs and manufactures hydraulic distribution products and systems for subsea production, delivering fully in-house solutions with unmatched flexibility.',
+    url:'https://www.mscmltd.co.uk/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2025/10/mscm.jpg?resize=450%2C200&ssl=1' },
+  { sort:7,  status:'journey', name:'Ovivo',
+    desc:'Global leader in water treatment, delivering advanced equipment, technologies, and systems for purification and wastewater management.',
+    url:'https://www.ovivowater.com/en/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2025/10/ovio.jpg?resize=450%2C200&ssl=1' },
+  { sort:8,  status:'journey', name:'Preformed Windings',
+    desc:'Leading UK manufacturer of high-voltage coils, delivering customised, award-winning solutions with a 10-year performance guarantee.',
+    url:'https://www.preformedwindings.com/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2025/10/preformed.jpg?resize=450%2C200&ssl=1' },
+  { sort:9,  status:'journey', name:'Prism Power Group',
+    desc:'Designs, manufactures, and maintains electrical switchgear, critical power systems, and monitoring solutions across diverse industries.',
+    url:'https://www.prismpower.co.uk/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2025/10/prism.jpg?resize=450%2C200&ssl=1' },
+  { sort:10, status:'journey', name:'Robert Stuart',
+    desc:'Applies decades of aerospace expertise to provide integrated treatments and process evaluation for precision engineering across multiple industries.',
+    url:'https://www.robert-stuart.co.uk/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2025/10/rob.jpg?resize=450%2C200&ssl=1' },
+  { sort:11, status:'journey', name:'Special Piping Materials',
+    desc:'Global leader in high-quality and exotic piping products, supplying pipes, fittings, flanges, and bar from trusted mills worldwide.',
+    url:'https://specialpipingmaterials.com/en/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2025/10/special-pipe.jpg?resize=450%2C200&ssl=1' },
+  { sort:12, status:'journey', name:'Wright Engineering',
+    desc:'Provides global engineering solutions from bulk materials processing to mechanical services, backed by decades of industry leadership.',
+    url:'https://www.wrighteng.co.uk/',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2025/10/wright.jpg?resize=450%2C200&ssl=1' },
+  { sort:13, status:'journey', name:'P.A.R.C. Ltd',
+    desc:"One of the UK's leading UKAS accredited test laboratories, offering a wide range of environmental tests using modern equipment and experienced engineers.",
+    url:'',
+    logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2025/11/parc.jpg?resize=450%2C200&ssl=1' },
+];
 
 
 // ═══════════════════════════════════════════════════════════
