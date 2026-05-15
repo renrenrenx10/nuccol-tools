@@ -93,6 +93,7 @@
       <div onclick="navigateTo('be')" class="nav-item flex items-center gap-3 px-4 py-3 hover:bg-zinc-800 rounded-2xl cursor-pointer"><i class="fa-solid fa-file-lines w-5"></i><span>BE Report</span></div>
       <div onclick="navigateTo('ss')" class="nav-item flex items-center gap-3 px-4 py-3 hover:bg-zinc-800 rounded-2xl cursor-pointer"><i class="fa-solid fa-industry w-5"></i><span>Sector Specific</span></div>
       <div onclick="navigateTo('website')" class="nav-item flex items-center gap-3 px-4 py-3 hover:bg-zinc-800 rounded-2xl cursor-pointer"><i class="fa-solid fa-globe w-5"></i><span>Website</span></div>
+      <div onclick="navigateTo('members')" class="nav-item flex items-center gap-3 px-4 py-3 hover:bg-zinc-800 rounded-2xl cursor-pointer"><i class="fa-solid fa-users w-5"></i><span>Members Area</span></div>
     </div>
     <!-- User info + sign out -->
     <div class="p-4 border-t border-zinc-800">
@@ -604,8 +605,125 @@
       </div>
     </div>
 
+    <!-- ══════════════════════════════════════ MEMBERS AREA -->
+    <div id="members" class="screen p-8">
+      <div class="max-w-6xl mx-auto">
+        <div class="flex justify-between items-end mb-8">
+          <div>
+            <h1 class="text-4xl font-bold title-font tracking-tighter">MEMBERS AREA</h1>
+            <p class="text-blue-400">Manage content for the members area</p>
+          </div>
+          <div id="members-status" class="text-sm text-zinc-500">—</div>
+        </div>
+
+        <!-- Sub-tabs -->
+        <div class="flex border-b border-zinc-800 mb-8">
+          <button onclick="membersTab('webinars')" id="members-tab-webinars"
+            class="members-tab-btn px-8 py-4 border-b-4 border-blue-500 text-white font-medium text-sm">
+            🎥 Webinars &amp; Videos
+          </button>
+        </div>
+
+        <!-- ── WEBINARS TAB ── -->
+        <div id="members-webinars" class="members-pane">
+          <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 mb-6">
+            <div class="flex items-start justify-between gap-4 flex-wrap">
+              <div>
+                <h2 class="text-lg font-semibold mb-1">Webinars &amp; Videos</h2>
+                <p class="text-zinc-400 text-sm">Add, edit, and reorder webinar sessions. Each entry can have a YouTube link and multiple resource links. Click <strong class="text-white">Publish</strong> to push the live JSON to WordPress.</p>
+              </div>
+              <div class="flex items-center gap-3 flex-wrap">
+                <button onclick="wbnSeedData()" id="wbn-seed-btn"
+                  class="px-5 py-3 bg-zinc-600 hover:bg-zinc-500 rounded-2xl text-sm font-semibold transition-colors"
+                  title="Seed current live webinars from members.html into SharePoint">
+                  🌱 Seed Current Webinars
+                </button>
+                <button onclick="wbnPublish()" id="wbn-publish-btn"
+                  class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-2xl text-sm font-semibold transition-colors flex items-center gap-2">
+                  🚀 Publish to WordPress
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Add + filter bar -->
+          <div class="flex flex-wrap gap-3 mb-6 items-center">
+            <div class="flex gap-2">
+              <button onclick="wbnFilterTab('all')" id="wbn-ftab-all"
+                class="wbn-ftab px-5 py-2 rounded-xl text-sm font-medium bg-blue-600 text-white">All</button>
+              <button onclick="wbnFilterTab('nuclear')" id="wbn-ftab-nuclear"
+                class="wbn-ftab px-5 py-2 rounded-xl text-sm font-medium bg-zinc-700 text-zinc-300 hover:bg-zinc-600">⚛️ Nuclear</button>
+              <button onclick="wbnFilterTab('supply')" id="wbn-ftab-supply"
+                class="wbn-ftab px-5 py-2 rounded-xl text-sm font-medium bg-zinc-700 text-zinc-300 hover:bg-zinc-600">🔗 Supply Chain</button>
+            </div>
+            <div class="ml-auto flex gap-3">
+              <button onclick="openWebinarModal()"
+                class="px-5 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-semibold transition-colors">
+                + Add Webinar
+              </button>
+            </div>
+          </div>
+
+          <div id="wbn-status" class="text-sm text-zinc-500 mb-3"></div>
+          <div id="wbn-list" class="space-y-3 max-h-[calc(100vh-460px)] overflow-auto pr-2"></div>
+        </div>
+
+      </div>
+    </div>
+
   </div><!-- end main content -->
-</div><!-- end app -->
+
+  <!-- ══════════════════════════════════════ MEMBERS WEBINAR MODAL -->
+  <div id="webinarModal" class="modal fixed inset-0 bg-black/80 items-center justify-center z-50" style="display:none;">
+    <div class="bg-zinc-900 w-full max-w-2xl mx-4 rounded-3xl overflow-hidden">
+      <div class="bg-zinc-800 p-6 flex justify-between items-center">
+        <div id="webinarModalTitle" class="font-bold text-xl title-font">Add Webinar</div>
+        <button onclick="closeWebinarModal()" class="text-3xl text-zinc-400 hover:text-white">×</button>
+      </div>
+      <div class="p-8 space-y-4">
+        <input type="hidden" id="wbn-edit-id" value="" />
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs text-zinc-400 mb-1">DATE</label>
+            <input id="wbn-edit-date" type="date" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs text-zinc-400 mb-1">TAG</label>
+            <select id="wbn-edit-tag" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm text-white">
+              <option value="nuclear">Nuclear</option>
+              <option value="supply">Supply Chain</option>
+              <option value="policy">Policy</option>
+              <option value="smr">SMR</option>
+              <option value="event">Event</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs text-zinc-400 mb-1">TITLE</label>
+          <input id="wbn-edit-title" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm" placeholder="e.g. CFSI - What it means for the supply chain" />
+        </div>
+        <div>
+          <label class="block text-xs text-zinc-400 mb-1">YOUTUBE URL <span class="text-zinc-600">(leave blank if recording isn't ready yet)</span></label>
+          <input id="wbn-edit-video" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm font-mono" placeholder="https://www.youtube.com/watch?v=..." />
+        </div>
+        <div>
+          <label class="block text-xs text-zinc-400 mb-1">RESOURCE LINKS <span class="text-zinc-600">(one per line: Label | URL)</span></label>
+          <textarea id="wbn-edit-resources-plain" rows="4" class="terminal-input w-full rounded-xl p-4 text-sm" placeholder="SZC CFSI Handbook | https://nuccol.co.uk/wp-content/uploads/...&#10;Slides | https://..."></textarea>
+          <input type="hidden" id="wbn-edit-resources" />
+          <div id="wbn-resources-error" class="text-red-400 text-xs mt-1 hidden">⚠️ Check formatting — use: Label | URL (one per line)</div>
+        </div>
+        <div>
+          <label class="block text-xs text-zinc-400 mb-1">SORT ORDER <span class="text-zinc-600">(lower = newer, appears first)</span></label>
+          <input id="wbn-edit-sort" type="number" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm" placeholder="1" />
+        </div>
+      </div>
+      <div class="p-6 border-t border-zinc-800 flex gap-3 justify-end">
+        <button onclick="deleteWebinarItem()" id="wbn-delete-btn" class="px-6 py-3 bg-red-700 hover:bg-red-600 rounded-xl text-sm font-semibold items-center gap-2 hidden"><i class="fa-solid fa-trash"></i> Delete</button>
+        <button onclick="saveWebinarItem()" class="px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-semibold flex items-center gap-2"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+        <button onclick="closeWebinarModal()" class="px-6 py-3 bg-zinc-700 hover:bg-zinc-600 rounded-xl text-sm">Cancel</button>
+      </div>
+    </div>
+  </div>
 
 <!-- ══════════════════════════════════════ EDIT MODAL -->
 <div id="editModal" class="modal fixed inset-0 bg-black/80 items-center justify-center z-50">
@@ -708,7 +826,8 @@ const CONFIG = {
     beGenerator:      "BEGenerator",
     ssGenerator:      "SSGenerator",
     websiteContent:   "WebsiteContent",
-    f4nCompanies:     "F4NCompanies"
+    f4nCompanies:     "F4NCompanies",
+    membersWebinars:  "MembersWebinars"
   }
 };
 
@@ -1616,8 +1735,9 @@ function navigateTo(screen) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(screen).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  const map = { dashboard: 0, newsletter: 1, ap: 2, be: 3, ss: 4, website: 5 };
+  const map = { dashboard: 0, newsletter: 1, ap: 2, be: 3, ss: 4, website: 5, members: 6 };
   if (screen === 'website') { renderWsFeed(); }
+  if (screen === 'members') { membersLoad(); }
   document.querySelectorAll('.nav-item')[map[screen]]?.classList.add('active');
 }
 
@@ -2743,6 +2863,310 @@ const F4N_SEED = [
     logo:'https://i0.wp.com/nuccol.co.uk/wp-content/uploads/2025/11/parc.jpg?resize=450%2C200&ssl=1' },
 ];
 
+
+// ═══════════════════════════════════════════════════════════
+// MEMBERS AREA — WEBINARS
+// ═══════════════════════════════════════════════════════════
+let wbnData         = [];
+let wbnFilterActive = 'all';
+
+const WBN_TAG_MAP = {
+  nuclear: { label: 'Nuclear',      cls: 't-nuclear' },
+  supply:  { label: 'Supply Chain', cls: 't-supply' },
+  policy:  { label: 'Policy',       cls: 't-policy' },
+  smr:     { label: 'SMR',          cls: 't-smr' },
+  event:   { label: 'Event',        cls: 't-event' },
+};
+
+// ── TAB SWITCHING ──────────────────────────────────────────
+function membersTab(tab) {
+  document.querySelectorAll('.members-pane').forEach(p => p.classList.add('hidden'));
+  document.querySelectorAll('.members-tab-btn').forEach(b => {
+    b.classList.remove('border-blue-500', 'text-white');
+    b.classList.add('border-transparent', 'text-zinc-400');
+  });
+  const pane = document.getElementById('members-' + tab);
+  const btn  = document.getElementById('members-tab-' + tab);
+  if (pane) pane.classList.remove('hidden');
+  if (btn) { btn.classList.add('border-blue-500', 'text-white'); btn.classList.remove('border-transparent', 'text-zinc-400'); }
+}
+
+// ── LOAD ───────────────────────────────────────────────────
+async function membersLoad() {
+  $('members-status').textContent = 'Loading...';
+  $('wbn-status').textContent     = 'Loading from SharePoint...';
+  try {
+    wbnData = await spGet(CONFIG.lists.membersWebinars,
+      "ID,Title,WebinarDate,Tag,VideoURL,Resources,SortOrder", "", "SortOrder asc");
+    $('members-status').innerHTML = '<span class="text-emerald-400">✓ Connected</span>';
+    renderWbnList();
+  } catch(e) {
+    $('members-status').innerHTML = `<span class="text-red-400">⚠️ ${e.message}</span>`;
+    $('wbn-status').textContent   = 'Error loading — SharePoint list "MembersWebinars" may not exist yet. Use Seed to create entries.';
+    wbnData = [];
+    renderWbnList();
+  }
+}
+
+// ── RENDER ─────────────────────────────────────────────────
+function renderWbnList() {
+  const list = $('wbn-list');
+  const filtered = wbnFilterActive === 'all'
+    ? wbnData
+    : wbnData.filter(w => (w.Tag || '').toLowerCase() === wbnFilterActive);
+
+  $('wbn-status').textContent = `${wbnData.length} webinars${wbnFilterActive !== 'all' ? ` (${filtered.length} shown)` : ''}`;
+
+  if (!filtered.length) {
+    list.innerHTML = `<div class="text-zinc-500 text-sm py-8 text-center">No webinars yet. Click <strong class="text-zinc-300">+ Add Webinar</strong> or use <strong class="text-zinc-300">Seed</strong> to get started.</div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(w => {
+    const tag     = WBN_TAG_MAP[(w.Tag||'').toLowerCase()] || { label: w.Tag || 'General', cls: 't-nuclear' };
+    const hasVideo = !!(w.VideoURL && w.VideoURL.trim());
+    const dateStr  = w.WebinarDate ? new Date(w.WebinarDate).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }) : '—';
+    let resources = [];
+    try { resources = JSON.parse(w.Resources || '[]'); } catch(e) { /* ignore */ }
+
+    return `
+    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex items-start gap-5 group hover:border-zinc-700 transition-colors">
+      <div class="w-14 text-center flex-shrink-0">
+        <div class="text-xs text-zinc-500 font-medium title-font">SORT</div>
+        <div class="text-2xl font-bold text-blue-400 title-font">${w.SortOrder || '—'}</div>
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 mb-1 flex-wrap">
+          <span class="tag ${tag.cls}">${tag.label}</span>
+          <span class="text-xs text-zinc-500">${dateStr}</span>
+          ${hasVideo
+            ? `<span class="text-xs text-emerald-400 flex items-center gap-1"><i class="fa-brands fa-youtube"></i> Video ready</span>`
+            : `<span class="text-xs text-zinc-600">No video yet</span>`}
+        </div>
+        <div class="font-semibold text-sm mb-2">${wbnEsc(w.Title || '')}</div>
+        ${resources.length > 0
+          ? `<div class="flex flex-wrap gap-2">${resources.map(r => `<span class="text-xs bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-zinc-300">📎 ${wbnEsc(r.label || r.url || '')}</span>`).join('')}</div>`
+          : `<div class="text-xs text-zinc-600">No resource links</div>`}
+      </div>
+      <button onclick="openWebinarModal(${w.ID})"
+        class="opacity-0 group-hover:opacity-100 transition-opacity px-4 py-2 bg-zinc-700 hover:bg-zinc-600 rounded-xl text-xs font-semibold flex-shrink-0">
+        Edit
+      </button>
+    </div>`;
+  }).join('');
+}
+
+function wbnEsc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── FILTER ─────────────────────────────────────────────────
+function wbnFilterTab(tab) {
+  wbnFilterActive = tab;
+  document.querySelectorAll('.wbn-ftab').forEach(b => {
+    b.classList.remove('bg-blue-600','text-white');
+    b.classList.add('bg-zinc-700','text-zinc-300');
+  });
+  const active = $('wbn-ftab-' + tab);
+  if (active) { active.classList.add('bg-blue-600','text-white'); active.classList.remove('bg-zinc-700','text-zinc-300'); }
+  renderWbnList();
+}
+
+// ── MODAL OPEN ─────────────────────────────────────────────
+function openWebinarModal(id) {
+  const modal = $('webinarModal');
+  $('wbn-resources-error').classList.add('hidden');
+
+  if (id) {
+    const item = wbnData.find(w => w.ID === id);
+    if (!item) return;
+    $('webinarModalTitle').textContent = 'Edit Webinar';
+    $('wbn-edit-id').value        = item.ID;
+    $('wbn-edit-title').value     = item.Title || '';
+    $('wbn-edit-date').value      = (item.WebinarDate || '').split('T')[0];
+    $('wbn-edit-tag').value       = (item.Tag || 'nuclear').toLowerCase();
+    $('wbn-edit-video').value     = item.VideoURL || '';
+    // Convert stored JSON resources back to plain text
+    let resPlain = '';
+    try {
+      const arr = JSON.parse(item.Resources || '[]');
+      resPlain = arr.map(r => `${r.label || ''} | ${r.url || ''}`).join('\n');
+    } catch(e) {}
+    $('wbn-edit-resources-plain').value = resPlain;
+    $('wbn-edit-sort').value      = item.SortOrder || '';
+    $('wbn-delete-btn').classList.remove('hidden');
+    $('wbn-delete-btn').classList.add('flex');
+  } else {
+    $('webinarModalTitle').textContent = 'Add Webinar';
+    $('wbn-edit-id').value        = '';
+    $('wbn-edit-title').value     = '';
+    $('wbn-edit-date').value      = new Date().toISOString().split('T')[0];
+    $('wbn-edit-tag').value       = 'nuclear';
+    $('wbn-edit-video').value     = '';
+    $('wbn-edit-resources-plain').value = '';
+    $('wbn-edit-sort').value      = wbnData.length + 1;
+    $('wbn-delete-btn').classList.add('hidden');
+    $('wbn-delete-btn').classList.remove('flex');
+  }
+
+  modal.style.display = 'flex';
+}
+
+function closeWebinarModal() { $('webinarModal').style.display = 'none'; }
+
+// ── SAVE ───────────────────────────────────────────────────
+async function saveWebinarItem() {
+  const id    = $('wbn-edit-id').value;
+  const title = $('wbn-edit-title').value.trim();
+  const date  = $('wbn-edit-date').value;
+  const tag   = $('wbn-edit-tag').value;
+  const video = $('wbn-edit-video').value.trim();
+  const sort  = parseInt($('wbn-edit-sort').value) || 99;
+
+  if (!title) { showToast('⚠️ Please enter a title', 'warn'); return; }
+
+  // Parse plain-text resource lines → JSON
+  $('wbn-resources-error').classList.add('hidden');
+  const plainLines = ($('wbn-edit-resources-plain').value || '').split('\n').map(l => l.trim()).filter(Boolean);
+  const resources = [];
+  for (const line of plainLines) {
+    const parts = line.split('|');
+    if (parts.length < 2) {
+      $('wbn-resources-error').classList.remove('hidden');
+      return;
+    }
+    resources.push({ label: parts[0].trim(), url: parts.slice(1).join('|').trim() });
+  }
+  const resJson = JSON.stringify(resources);
+
+  const fields = {
+    Title:        title,
+    WebinarDate:  date ? new Date(date).toISOString() : null,
+    Tag:          tag,
+    VideoURL:     video,
+    Resources:    resJson,
+    SortOrder:    sort,
+  };
+
+  try {
+    if (id) {
+      await spPatch(CONFIG.lists.membersWebinars, parseInt(id), fields);
+      const idx = wbnData.findIndex(w => w.ID === parseInt(id));
+      if (idx !== -1) Object.assign(wbnData[idx], { ...fields, ID: parseInt(id) });
+      showToast('✅ Webinar updated');
+    } else {
+      const newItem = await spPost(CONFIG.lists.membersWebinars, fields);
+      wbnData.push(newItem);
+      showToast('✅ Webinar added');
+    }
+    closeWebinarModal();
+    renderWbnList();
+  } catch(e) {
+    showToast('⚠️ Save failed: ' + e.message, 'error');
+  }
+}
+
+// ── DELETE ─────────────────────────────────────────────────
+async function deleteWebinarItem() {
+  const id    = parseInt($('wbn-edit-id').value);
+  const title = $('wbn-edit-title').value.trim();
+  if (!id) return;
+  if (!confirm(`Delete "${title}"?\n\nThis cannot be undone.`)) return;
+  try {
+    await spDelete(CONFIG.lists.membersWebinars, id);
+    wbnData = wbnData.filter(w => w.ID !== id);
+    closeWebinarModal();
+    renderWbnList();
+    showToast('🗑 Webinar deleted');
+  } catch(e) {
+    showToast('⚠️ Delete failed: ' + e.message, 'error');
+  }
+}
+
+// ── PUBLISH ────────────────────────────────────────────────
+async function wbnPublish() {
+  if (!wbnData.length) { showToast('⚠️ No webinars to publish.', 'warn'); return; }
+  if (!confirm(`Publish ${wbnData.length} webinar(s) to WordPress?`)) return;
+
+  const btn = $('wbn-publish-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Publishing...';
+
+  const payload = {
+    published: new Date().toISOString(),
+    webinars: wbnData
+      .sort((a,b) => (parseInt(a.SortOrder)||99) - (parseInt(b.SortOrder)||99))
+      .map(w => {
+        let resources = [];
+        try { resources = JSON.parse(w.Resources || '[]'); } catch(e) {}
+        return {
+          date:      (w.WebinarDate || '').split('T')[0],
+          title:     w.Title || '',
+          tag:       (w.Tag || 'nuclear').toLowerCase(),
+          videoUrl:  w.VideoURL || '',
+          resources,
+          sortOrder: w.SortOrder || 99,
+        };
+      })
+  };
+
+  try {
+    await wpUploadJSON('members-webinars.json', payload);
+    btn.innerHTML = '🚀 Publish to WordPress';
+    btn.disabled  = false;
+    showToast(`✅ Webinars published — ${wbnData.length} sessions`);
+  } catch(e) {
+    btn.innerHTML = '🚀 Publish to WordPress';
+    btn.disabled  = false;
+    showToast('⚠️ WordPress publish failed: ' + e.message, 'error');
+  }
+}
+
+// ── SEED ───────────────────────────────────────────────────
+const WBN_SEED = [
+  { sort:1, date:'2026-03-27', tag:'nuclear', title:'CFSI - What it means for the supply chain',
+    videoUrl:'https://www.youtube.com/watch?v=YwFUGeuZspg',
+    resources:[{label:'SZC CFSI Handbook',url:'https://nuccol.co.uk/wp-content/uploads/2026/03/SZC-CFSI-Handbook.pdf'}] },
+  { sort:2, date:'2026-02-27', tag:'supply',  title:'The Trent Supercluster',        videoUrl:'', resources:[] },
+  { sort:3, date:'2026-01-30', tag:'supply',  title:'Supply Chain & Skills Readiness for 2026', videoUrl:'', resources:[] },
+  { sort:4, date:'2025-12-18', tag:'nuclear', title:'Nuclear - A Year in Review',    videoUrl:'', resources:[] },
+  { sort:5, date:'2025-09-09', tag:'nuclear', title:'Current Nuclear Landscape',     videoUrl:'', resources:[] },
+];
+
+async function wbnSeedData() {
+  if (wbnData.length > 0) {
+    if (!confirm(`SharePoint already has ${wbnData.length} webinar(s).\nSeeding will ADD to existing rows — not replace them.\n\nContinue?`)) return;
+  } else {
+    if (!confirm(`Seed ${WBN_SEED.length} current webinars into SharePoint?`)) return;
+  }
+
+  const btn = $('wbn-seed-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Seeding...';
+
+  let errors = 0;
+  for (const row of WBN_SEED) {
+    try {
+      const newItem = await spPost(CONFIG.lists.membersWebinars, {
+        Title:       row.title,
+        WebinarDate: new Date(row.date).toISOString(),
+        Tag:         row.tag,
+        VideoURL:    row.videoUrl,
+        Resources:   JSON.stringify(row.resources),
+        SortOrder:   row.sort,
+      });
+      wbnData.push(newItem);
+    } catch(e) { errors++; }
+  }
+
+  btn.innerHTML = '🌱 Seed Current Webinars';
+  btn.disabled  = false;
+  renderWbnList();
+
+  if (errors === 0) {
+    showToast(`✅ Seeded ${WBN_SEED.length} webinars into SharePoint`);
+  } else {
+    showToast(`⚠️ Seeded with ${errors} error(s). Check SharePoint list exists.`, 'error');
+  }
+}
 
 // ═══════════════════════════════════════════════════════════
 // BOOT
