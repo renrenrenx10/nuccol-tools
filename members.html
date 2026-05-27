@@ -1639,26 +1639,9 @@ async function loadWebinars() {
   if (!grid) return;
 
   try {
-    // Fetch file URL via WP REST API (no auth needed — media is public)
-    const searchRes = await fetch(
-      'https://nuccol.co.uk/wp-json/wp/v2/media?search=members-webinars&per_page=5&media_type=application',
-      { headers: { 'Accept': 'application/json' } }
-    );
-    if (!searchRes.ok) throw new Error('Media search failed: ' + searchRes.status);
-    const items = await searchRes.json();
-
-    // Find the right file
-    const match = items.find(m =>
-      (m.source_url || '').includes('members-webinars') ||
-      (m.slug || '').includes('members-webinars')
-    );
-    if (!match) throw new Error('members-webinars.json not found in WordPress media library');
-
-    // Fetch the actual JSON
-    const dataRes = await fetch(match.source_url + '?v=' + Date.now());
-    if (!dataRes.ok) throw new Error('Failed to load webinars data: ' + dataRes.status);
-    const data = await dataRes.json();
-
+    const res = await fetch('https://nuccol.co.uk/wp-content/uploads/members-webinars.json?v=' + Date.now());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
     renderWebinars(data.webinars || []);
   } catch (err) {
     console.error('Webinars load error:', err);
