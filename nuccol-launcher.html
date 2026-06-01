@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NuCCoL — Internal Systems</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700&family=Barlow:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy: #060e1c;
+    --navy-mid: #0c1e3a;
+    --navy-card: #0f2347;
+    --navy-border: #1a3560;
+    --cyan: #00c8e0;
+    --cyan-dim: #0090a8;
+    --cyan-glow: rgba(0,200,224,0.12);
+    --text-primary: #e8f0ff;
+    --text-secondary: #7a9cc4;
+    --text-muted: #3d5a80;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--navy);
+    color: var(--text-primary);
+    font-family: 'Barlow', sans-serif;
+    font-weight: 300;
+  }
+
+  body {
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0,120,160,0.18) 0%, transparent 70%),
+      repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(26,53,96,0.3) 39px, rgba(26,53,96,0.3) 40px),
+      repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(26,53,96,0.3) 39px, rgba(26,53,96,0.3) 40px);
+  }
+
+  .page-wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 2rem 4rem;
+  }
+
+  /* ── HEADER ── */
+  header {
+    padding: 3rem 0 2.5rem;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--navy-border);
+    margin-bottom: 3rem;
+  }
+
+  .logo-block {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+  }
+
+  .logo-atom {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+  }
+
+  .logo-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .logo-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 2rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    line-height: 1;
+  }
+
+  .logo-name span {
+    color: var(--cyan);
+  }
+
+  .logo-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .header-meta {
+    text-align: right;
+  }
+
+  .header-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  .header-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+    font-size: 1.1rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+
+  /* ── SECTION LABEL ── */
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .section-label::before {
+    content: '';
+    display: block;
+    width: 3px;
+    height: 1.1rem;
+    background: var(--cyan);
+    border-radius: 2px;
+  }
+
+  .section-label span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--cyan);
+  }
+
+  /* ── GRID ── */
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+  }
+
+  @media (max-width: 900px) {
+    .tools-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 560px) {
+    .tools-grid { grid-template-columns: 1fr; }
+    header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+    .header-meta { text-align: left; }
+  }
+
+  /* ── TOOL CARD ── */
+  .tool-card {
+    display: block;
+    text-decoration: none;
+    background: var(--navy-card);
+    border: 1px solid var(--navy-border);
+    border-radius: 4px;
+    padding: 1.5rem 1.5rem 1.25rem;
+    transition: border-color 0.2s, background 0.2s, transform 0.15s;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  .tool-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--cyan-glow);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .tool-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--card-accent, var(--cyan));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.25s ease;
+  }
+
+  .tool-card:hover {
+    border-color: var(--cyan-dim);
+    transform: translateY(-3px);
+  }
+
+  .tool-card:hover::before { opacity: 1; }
+  .tool-card:hover::after { transform: scaleX(1); }
+
+  .tool-card:hover .card-arrow {
+    transform: translate(3px, -3px);
+    opacity: 1;
+  }
+
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 0.9rem;
+  }
+
+  .card-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 3px;
+    background: rgba(0,200,224,0.08);
+    border: 1px solid rgba(0,200,224,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card-icon svg {
+    width: 18px;
+    height: 18px;
+    stroke: var(--card-accent, var(--cyan));
+    stroke-width: 1.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .card-arrow {
+    width: 16px;
+    height: 16px;
+    opacity: 0.3;
+    transition: transform 0.2s, opacity 0.2s;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .card-arrow svg {
+    width: 16px;
+    height: 16px;
+    stroke: var(--text-secondary);
+    stroke-width: 1.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .card-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+    font-size: 1.3rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    margin-bottom: 0.4rem;
+    line-height: 1;
+  }
+
+  .card-desc {
+    font-size: 0.82rem;
+    font-weight: 300;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  .card-tag {
+    display: inline-block;
+    margin-top: 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--card-accent, var(--cyan));
+    opacity: 0.55;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    margin-top: 3.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--navy-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .footer-note {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--cyan);
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+    animation: pulse 2.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header>
+    <div class="logo-block">
+      <svg class="logo-atom" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="24" cy="24" rx="21" ry="8" stroke="#00c8e0" stroke-width="1.5" opacity="0.4"/>
+        <ellipse cx="24" cy="24" rx="21" ry="8" stroke="#00c8e0" stroke-width="1.5" transform="rotate(60 24 24)" opacity="0.4"/>
+        <ellipse cx="24" cy="24" rx="21" ry="8" stroke="#00c8e0" stroke-width="1.5" transform="rotate(120 24 24)" opacity="0.4"/>
+        <circle cx="24" cy="24" r="3.5" fill="#00c8e0"/>
+      </svg>
+      <div class="logo-text">
+        <div class="logo-name">Nuc<span>CoL</span></div>
+        <div class="logo-sub">Nuclear Collaboration Ltd</div>
+      </div>
+    </div>
+    <div class="header-meta">
+      <div class="header-label">Internal Systems</div>
+      <div class="header-title">Tool Launcher</div>
+    </div>
+  </header>
+
+  <div class="section-label"><span>Available Systems — 9</span></div>
+
+  <div class="tools-grid">
+
+    <!-- Sector Ready -->
+    <a class="tool-card" href="https://nuccol.co.uk/wp-content/uploads/2026/04/NuclearReady_Explorer.html" target="_blank" style="--card-accent: #00c8e0;">
+      <div class="card-top">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 0 1 5.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 0 1 9.288 0M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+        </div>
+        <div class="card-arrow"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M7 7h10v10"/></svg></div>
+      </div>
+      <div class="card-name">Sector Ready</div>
+      <div class="card-desc">Connect with companies on the F4N programme</div>
+      <span class="card-tag">F4N · Supplier Network</span>
+    </a>
+
+    <!-- Plant Explorer -->
+    <a class="tool-card" href="https://renrenrenx10.github.io/nuccol-tools/NuCCoL_Plant_Explorer.html" target="_blank" style="--card-accent: #4fc3f7;">
+      <div class="card-top">
+        <div class="card-icon" style="background: rgba(79,195,247,0.08); border-color: rgba(79,195,247,0.15);">
+          <svg viewBox="0 0 24 24" style="stroke: #4fc3f7;"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3m-3.5-6.5-2.1 2.1M7.6 16.4l-2.1 2.1m0-12.1 2.1 2.1m8.8 8.8 2.1 2.1"/></svg>
+        </div>
+        <div class="card-arrow"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M7 7h10v10"/></svg></div>
+      </div>
+      <div class="card-name">Plant Explorer</div>
+      <div class="card-desc">Explore what goes into a nuclear power plant</div>
+      <span class="card-tag" style="color: #4fc3f7;">Interactive · Schematic</span>
+    </a>
+
+    <!-- DangerMouse -->
+    <a class="tool-card" href="https://renrenrenx10.github.io/nuccol-tools/index.html" target="_blank" style="--card-accent: #ffd54f;">
+      <div class="card-top">
+        <div class="card-icon" style="background: rgba(255,213,79,0.08); border-color: rgba(255,213,79,0.15);">
+          <svg viewBox="0 0 24 24" style="stroke: #ffd54f;"><path d="M3 3v18h18"/><path d="m7 16 4-8 4 8"/><path d="m9 13 2-4 2 4"/><path d="M19 9c-2 0-3 1-3 3"/></svg>
+        </div>
+        <div class="card-arrow"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M7 7h10v10"/></svg></div>
+      </div>
+      <div class="card-name">DangerMouse</div>
+      <div class="card-desc">Demand modelling and predictive insights</div>
+      <span class="card-tag" style="color: #ffd54f;">Forecasting · Analytics</span>
+    </a>
+
+    <!-- Supplier Map -->
+    <a class="tool-card" href="https://nuccol.co.uk/wp-content/uploads/2026/02/NuccolSupplierMap.html" target="_blank" style="--card-accent: #69f0ae;">
+      <div class="card-top">
+        <div class="card-icon" style="background: rgba(105,240,174,0.08); border-color: rgba(105,240,174,0.15);">
+          <svg viewBox="0 0 24 24" style="stroke: #69f0ae;"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8Z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+        <div class="card-arrow"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M7 7h10v10"/></svg></div>
+      </div>
+      <div class="card-name">Supplier Map</div>
+      <div class="card-desc">Interactive map of UK nuclear suppliers</div>
+      <span class="card-tag" style="color: #69f0ae;">Geographic · UK Supply Chain</span>
+    </a>
+
+    <!-- CheatMode -->
+    <a class="tool-card" href="https://renrenrenx10.github.io/nuccol-tools/cheatmode.html" target="_blank" style="--card-accent: #b39ddb;">
+      <div class="card-top">
+        <div class="card-icon" style="background: rgba(179,157,219,0.08); border-color: rgba(179,157,219,0.15);">
+          <svg viewBox="0 0 24 24" style="stroke: #b39ddb;"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.46 2.5 2.5 0 0 1-2.09-3.33l1.76-5.27A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.46 2.5 2.5 0 0 0 2.09-3.33l-1.76-5.27A2.5 2.5 0 0 0 14.5 2Z"/></svg>
+        </div>
+        <div class="card-arrow"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M7 7h10v10"/></svg></div>
+      </div>
+      <div class="card-name">CheatMode</div>
+      <div class="card-desc">AI text summariser and insight generator</div>
+      <span class="card-tag" style="color: #b39ddb;">AI · Summarisation</span>
+    </a>
+
+    <!-- TimeSink -->
+    <a class="tool-card" href="https://renrenrenx10.github.io/nuccol-tools/Timesink.html" target="_blank" style="--card-accent: #ff8a65;">
+      <div class="card-top">
+        <div class="card-icon" style="background: rgba(255,138,101,0.08); border-color: rgba(255,138,101,0.15);">
+          <svg viewBox="0 0 24 24" style="stroke: #ff8a65;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="card-arrow"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M7 7h10v10"/></svg></div>
+      </div>
+      <div class="card-name">TimeSink</div>
+      <div class="card-desc">Track and log working hours efficiently</div>
+      <span class="card-tag" style="color: #ff8a65;">Timesheets · Expenses</span>
+    </a>
+
+    <!-- DataVault -->
+    <a class="tool-card" href="https://renrenrenx10.github.io/nuccol-tools/datavault.html" target="_blank" style="--card-accent: #00c8e0;">
+      <div class="card-top">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        </div>
+        <div class="card-arrow"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M7 7h10v10"/></svg></div>
+      </div>
+      <div class="card-name">DataVault</div>
+      <div class="card-desc">Central Supply Chain Readiness Repository</div>
+      <span class="card-tag">SCRL · Company Database</span>
+    </a>
+
+    <!-- ControlCentre -->
+    <a class="tool-card" href="https://renrenrenx10.github.io/nuccol-tools/ControlCentre.html" target="_blank" style="--card-accent: #80cbc4;">
+      <div class="card-top">
+        <div class="card-icon" style="background: rgba(128,203,196,0.08); border-color: rgba(128,203,196,0.15);">
+          <svg viewBox="0 0 24 24" style="stroke: #80cbc4;"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/><path d="M7 8h.01M12 8h.01M17 8h.01M7 12h10"/></svg>
+        </div>
+        <div class="card-arrow"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M7 7h10v10"/></svg></div>
+      </div>
+      <div class="card-name">ControlCentre</div>
+      <div class="card-desc">Central hub for timebooking &amp; project management</div>
+      <span class="card-tag" style="color: #80cbc4;">Projects · PM</span>
+    </a>
+
+    <!-- Rolodex -->
+    <a class="tool-card" href="https://renrenrenx10.github.io/nuccol-tools/ControlCentre.html" target="_blank" style="--card-accent: #f48fb1;">
+      <div class="card-top">
+        <div class="card-icon" style="background: rgba(244,143,177,0.08); border-color: rgba(244,143,177,0.15);">
+          <svg viewBox="0 0 24 24" style="stroke: #f48fb1;"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 12h.01M11 12h6M7 16h.01M11 16h6M7 8h.01M11 8h6"/></svg>
+        </div>
+        <div class="card-arrow"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M7 7h10v10"/></svg></div>
+      </div>
+      <div class="card-name">Rolodex</div>
+      <div class="card-desc">Manage contacts and company records</div>
+      <span class="card-tag" style="color: #f48fb1;">CRM · Contacts</span>
+    </a>
+
+  </div>
+
+  <footer>
+    <div class="footer-note"><span class="status-dot"></span>NuCCoL Internal Use Only</div>
+    <div class="footer-note">Nuclear Collaboration Ltd · Derby</div>
+  </footer>
+
+</div>
+</body>
+</html>
