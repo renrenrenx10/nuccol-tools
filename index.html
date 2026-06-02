@@ -1362,7 +1362,7 @@ async function viewChart() {
     } else {
       await spPost(CONFIG.lists.chartCache, { Title: 'cache', ChartData: payload });
     }
-    window.open('https://renrenrenx10.github.io/dangermouse-chart/', '_blank');
+    window.open('https://renrenrenx10.github.io/nuccol-tools/chart.html', '_blank');
   } catch(e) {
     toast('Chart export failed: ' + e.message, 'error');
   }
