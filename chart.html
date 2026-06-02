@@ -223,6 +223,8 @@ function showAllSeries() {
   if (!chartInstance) return;
   chartInstance.data.datasets.forEach((_, i) => chartInstance.show(i));
   chartInstance.update();
+  // Re-render to reset isolatedIndex closure
+  applyFilters();
 }
 
 function setChartType(type, btn) {
@@ -409,6 +411,23 @@ function renderChart(data, view) {
   });
 
   if (chartInstance) chartInstance.destroy();
+
+  // Track isolated state — null means nothing isolated, otherwise the isolated dataset index
+  let isolatedIndex = null;
+
+  function isolateDataset(ci, idx) {
+    if (isolatedIndex === idx) {
+      // Already isolated — restore all
+      ci.data.datasets.forEach((_, i) => ci.show(i));
+      isolatedIndex = null;
+    } else {
+      // Isolate this one
+      ci.data.datasets.forEach((_, i) => { if (i !== idx) ci.hide(i); else ci.show(i); });
+      isolatedIndex = idx;
+    }
+    ci.update();
+  }
+
   chartInstance = new Chart(document.getElementById('demandChart').getContext('2d'), {
     type: isArea ? 'line' : 'bar',
     data: { labels: years, datasets },
@@ -421,23 +440,22 @@ function renderChart(data, view) {
           position: 'right',
           labels: {
             font: { family: 'Barlow', size: 12 },
-            usePointStyle: true,
-            pointStyleWidth: 10,
-            padding: 10,
+            // No usePointStyle — use plain text labels so the full label text is the hit area
+            boxWidth: 12,
+            boxHeight: 12,
+            padding: 12,
             generateLabels: chart => chart.data.datasets.map((ds, i) => ({
               text: ds.label,
               fillStyle: Array.isArray(ds.backgroundColor) ? ds.backgroundColor[0] : (ds.backgroundColor || ds.borderColor),
               strokeStyle: ds.borderColor || ds.backgroundColor,
               lineWidth: 1,
-              pointStyle: 'circle',
               hidden: !chart.isDatasetVisible(i),
               datasetIndex: i
             }))
           },
           onClick: (e, legendItem, legend) => {
-            const idx = legendItem.datasetIndex;
-            const ci  = legend.chart;
-            if (ci.isDatasetVisible(idx)) { ci.hide(idx); } else { ci.show(idx); }
+            // Single click = isolate (show only this), click again = show all
+            isolateDataset(legend.chart, legendItem.datasetIndex);
           }
         },
         tooltip: {
@@ -448,7 +466,8 @@ function renderChart(data, view) {
               const val = ctx.parsed.y;
               if (!val) return null;
               return ` ${ctx.dataset.label}: ${val.toLocaleString('en-GB', {maximumFractionDigits: 0})}`;
-            }
+            },
+            afterBody: () => ['', ' ↖ Click chart to isolate this series']
           },
           itemSort: (a, b) => b.parsed.y - a.parsed.y
         }
@@ -463,11 +482,21 @@ function renderChart(data, view) {
         }
       },
       onClick: (evt, elements) => {
-        if (view !== 'family' || !elements.length) return;
-        const family = datasets[elements[0].datasetIndex].label;
-        document.getElementById('filterView').value   = 'category';
-        document.getElementById('filterFamily').value = family;
-        applyFilters();
+        if (!chartInstance) return;
+
+        // Drill-down: family view clicking a bar → switch to category
+        if (view === 'family' && elements.length) {
+          const family = datasets[elements[0].datasetIndex].label;
+          document.getElementById('filterView').value   = 'category';
+          document.getElementById('filterFamily').value = family;
+          applyFilters();
+          return;
+        }
+
+        // Isolate: clicking any bar/point in category view isolates that series
+        if (elements.length) {
+          isolateDataset(chartInstance, elements[0].datasetIndex);
+        }
       }
     }
   });
