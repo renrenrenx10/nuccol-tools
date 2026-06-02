@@ -667,8 +667,56 @@ body{font-family:'Barlow',sans-serif;background:var(--navy);color:var(--white);o
         <div class="live-dot"></div>
         <span class="live-label">Updated regularly</span>
       </div>
-      <div id="wbn-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px">
-        <div style="color:var(--grey);font-size:.85rem;padding:8px 0">Loading webinars…</div>
+            <div id="wbn-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px">
+        <div class="wbn-card" onclick="openVideo('https://www.youtube.com/watch?v=YwFUGeuZspg','CFSI - What it means for the supply chain')" style=" cursor:pointer">
+          <div class="wbn-date">27 Mar 2026</div>
+          <div class="wbn-title">CFSI - What it means for the supply chain</div>
+          <div class="wbn-meta">
+            <span class="tag t-nuclear">Nuclear</span>
+            <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><a href="https://www.youtube.com/watch?v=YwFUGeuZspg" target="_blank" class="wbn-link" onclick="event.stopPropagation()">Watch Again</a><a href="https://nuccol.co.uk/wp-content/uploads/2026/03/SZC-CFSI-Handbook.pdf" target="_blank" class="wbn-link" onclick="event.stopPropagation()">SZC CFSI Handbook</a></div>
+          </div>
+        </div>
+        <div class="wbn-card" style="">
+          <div class="wbn-date">27 Feb 2026</div>
+          <div class="wbn-title">The Trent Supercluster</div>
+          <div class="wbn-meta">
+            <span class="tag t-supply">Supply Chain</span>
+            <div style="margin-top:8px;color:var(--grey);font-size:.85rem">Recording coming soon</div>
+          </div>
+        </div>
+        <div class="wbn-card" onclick="openVideo('https://nuccol.co.uk/wp-content/uploads/2026/01/NucCol-Webinar-Supply-Chain-Skills-Readiness-for-2026-20260130_090045UTC-Meeting-Recording.mp4','Supply Chain &amp; Skills Readiness for 2026')" style=" cursor:pointer">
+          <div class="wbn-date">30 Jan 2026</div>
+          <div class="wbn-title">Supply Chain &amp; Skills Readiness for 2026</div>
+          <div class="wbn-meta">
+            <span class="tag t-supply">Supply Chain</span>
+            <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><a href="https://nuccol.co.uk/wp-content/uploads/2026/01/NucCol-Webinar-Supply-Chain-Skills-Readiness-for-2026-20260130_090045UTC-Meeting-Recording.mp4" target="_blank" class="wbn-link" onclick="event.stopPropagation()">Watch Again</a></div>
+          </div>
+        </div>
+        <div class="wbn-card" onclick="openVideo('https://nuccol.co.uk/wp-content/uploads/2026/01/Nuclear-A-Year-in-Review-20251218_105640UTC-Meeting-Recording.mp4','Nuclear - A Year in Review')" style=" cursor:pointer">
+          <div class="wbn-date">18 Dec 2025</div>
+          <div class="wbn-title">Nuclear - A Year in Review</div>
+          <div class="wbn-meta">
+            <span class="tag t-nuclear">Nuclear</span>
+            <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><a href="https://nuccol.co.uk/wp-content/uploads/2026/01/Nuclear-A-Year-in-Review-20251218_105640UTC-Meeting-Recording.mp4" target="_blank" class="wbn-link" onclick="event.stopPropagation()">Watch Again</a></div>
+          </div>
+        </div>
+        <div class="wbn-card" style="">
+          <div class="wbn-date">09 Sep 2025</div>
+          <div class="wbn-title">Current Nuclear Landscape</div>
+          <div class="wbn-meta">
+            <span class="tag t-nuclear">Nuclear</span>
+            <div style="margin-top:8px;color:var(--grey);font-size:.85rem">Recording coming soon</div>
+          </div>
+        </div>
+        <div class="wbn-card" onclick="openVideo('https://nuccol.co.uk/wp-content/uploads/Support-for-manufacturers-and-businesses-through-Chamber-networks.mp4','Support For Manufacturers and Businesses Through Chamber Networks')" style=" cursor:pointer">
+          <div class="wbn-date">15 May 2026</div>
+          <div class="wbn-title">Support For Manufacturers and Businesses Through Chamber Networks</div>
+          <div class="wbn-meta">
+            <span class="tag t-nuclear">Nuclear</span>
+            <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><a href="https://nuccol.co.uk/wp-content/uploads/Support-for-manufacturers-and-businesses-through-Chamber-networks.mp4" target="_blank" class="wbn-link" onclick="event.stopPropagation()">Watch Again</a></div>
+          </div>
+        </div>
+      </div>
       </div>
     </div>
     <!-- VIDEO MODAL -->    <!-- VIDEO MODAL -->
@@ -1623,83 +1671,6 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Enter'&&e.target.id==='comm-email') document.getElementById('comm-pass').focus();
 });
 
-// ═══════════════════════════════════════════════════════════
-// WEBINARS — dynamic load from WordPress JSON
-// ═══════════════════════════════════════════════════════════
-const WBN_TAG_LABELS = {
-  nuclear: { label:'Nuclear',      cls:'t-nuclear' },
-  supply:  { label:'Supply Chain', cls:'t-supply'  },
-  policy:  { label:'Policy',       cls:'t-policy'  },
-  smr:     { label:'SMR',          cls:'t-smr'     },
-  event:   { label:'Event',        cls:'t-event'   },
-};
-
-async function loadWebinars() {
-  const grid = document.getElementById('wbn-grid');
-  if (!grid) return;
-
-  try {
-    const res = await fetch('https://nuccol.co.uk/wp-content/uploads/members-webinars.json?v=' + Date.now());
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
-    renderWebinars(data.webinars || []);
-  } catch (err) {
-    console.error('Webinars load error:', err);
-    grid.innerHTML = '<div style="color:var(--grey);font-size:.85rem;padding:8px 0">Unable to load webinars. Please refresh the page.</div>';
-  }
-}
-
-function renderWebinars(webinars) {
-  const grid = document.getElementById('wbn-grid');
-  if (!grid) return;
-
-  // Sort by sortOrder ascending (lowest = newest = first)
-  const sorted = [...webinars].sort((a, b) => (a.sortOrder || 99) - (b.sortOrder || 99));
-
-  if (!sorted.length) {
-    grid.innerHTML = '<div style="color:var(--grey);font-size:.85rem;padding:8px 0">No webinars available yet.</div>';
-    return;
-  }
-
-  grid.innerHTML = sorted.map(w => {
-    const tag     = WBN_TAG_LABELS[(w.tag || '').toLowerCase()] || { label: w.tag || '', cls: 't-nuclear' };
-    const hasVideo = !!(w.videoUrl && w.videoUrl.trim());
-    const dateStr  = w.date
-      ? new Date(w.date).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' })
-      : '';
-
-    const escapedTitle = (w.title || '').replace(/'/g, "\\'");
-    const escapedUrl   = (w.videoUrl || '').replace(/'/g, "\\'");
-
-    // Resource links
-    const resourceLinks = (w.resources || []).map(r =>
-      `<a href="${r.url}" target="_blank" class="wbn-link" onclick="event.stopPropagation()">${r.label || 'Resource'}</a>`
-    ).join('');
-
-    // Video link (Watch Again / link text)
-    const videoLink = hasVideo
-      ? `<a href="${w.videoUrl}" target="_blank" class="wbn-link" onclick="event.stopPropagation()">Watch Again</a>`
-      : '';
-
-    const anyLinks = hasVideo || (w.resources && w.resources.length > 0);
-
-    return `
-      <div class="wbn-card" ${hasVideo ? `onclick="openVideo('${escapedUrl}','${escapedTitle}')"` : ''} style="${hasVideo ? 'cursor:pointer' : ''}">
-        <div class="wbn-date">${dateStr}</div>
-        <div class="wbn-title">${w.title || ''}</div>
-        <div class="wbn-meta">
-          <span class="tag ${tag.cls}">${tag.label}</span>
-          ${anyLinks
-            ? `<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">${videoLink}${resourceLinks}</div>`
-            : `<div style="margin-top:8px;color:var(--grey);font-size:.85rem">Recording coming soon</div>`
-          }
-        </div>
-      </div>`;
-  }).join('');
-}
-
-// Load on page ready
-loadWebinars();
 </script>
 </body>
 </html>
