@@ -195,6 +195,9 @@
       <button id="btnLeadTime" onclick="toggleLeadTime(this)" style="display:none;margin-left:8px;padding:4px 12px;font-size:12px;font-family:'Barlow',sans-serif;background:transparent;border:1.5px solid #8e44ad;border-radius:6px;color:#8e44ad;cursor:pointer;align-items:center;gap:5px;">
         <span>◈</span> Lead Time
       </button>
+      <span style="margin-left:auto;font-size:11px;color:var(--muted);font-family:'Barlow',sans-serif;">
+        Click = isolate &nbsp;·&nbsp; Double-click = drill down / back up
+      </span>
     </div>
     <div id="emptyState"><div class="icon">📊</div><div>No data yet — run Generate Demand in Power Apps first.</div></div>
     <canvas id="demandChart"></canvas>
@@ -621,8 +624,54 @@ function renderChart(data, view) {
 
   isolatedIndex = null;  // reset on each fresh render
 
-  chartInstance = new Chart(document.getElementById('demandChart').getContext('2d'), {
-    type: 'bar',  // always use bar as base — area datasets override with type:'line' per dataset
+  // ── Click handling: single click isolates, double click drills down ──────
+  // We track click timing ourselves since Chart.js doesn't expose dblclick natively
+  let clickTimer = null;
+  const DBLCLICK_MS = 280;
+
+  function handleChartClick(evt) {
+    if (!chartInstance) return;
+    const currentView = document.getElementById('filterView').value;
+    const hits = chartInstance.getElementsAtEventForMode(evt, 'nearest', { intersect: false }, false);
+    if (!hits.length) return;
+    const ds = chartInstance.data.datasets[hits[0].datasetIndex];
+    if (!ds || ds.isCapacityLine || ds.isLeadTimeLine) return;
+
+    if (clickTimer) {
+      // Second click within DBLCLICK_MS — treat as double click → drill down
+      clearTimeout(clickTimer);
+      clickTimer = null;
+      if (currentView === 'family') {
+        isolatedIndex = null;
+        document.getElementById('filterView').value   = 'category';
+        document.getElementById('filterFamily').value = ds.label;
+        applyFilters();
+      }
+      // Double click in category view: go back up to family view
+      else if (currentView === 'category') {
+        isolatedIndex = null;
+        document.getElementById('filterView').value   = 'family';
+        document.getElementById('filterFamily').value = 'All';
+        applyFilters();
+      }
+    } else {
+      // First click — wait to see if a second click follows
+      clickTimer = setTimeout(() => {
+        clickTimer = null;
+        // Single click → isolate/un-isolate in any view
+        isolateDataset(chartInstance, hits[0].datasetIndex);
+      }, DBLCLICK_MS);
+    }
+  }
+
+  const canvas = document.getElementById('demandChart');
+  // Remove previous listener to avoid stacking on re-renders
+  canvas.removeEventListener('click', canvas._dmClickHandler || null);
+  canvas._dmClickHandler = handleChartClick;
+  canvas.addEventListener('click', canvas._dmClickHandler);
+
+  chartInstance = new Chart(canvas.getContext('2d'), {
+    type: isArea ? 'line' : 'bar',
     data: { labels: years, datasets },
     options: {
       responsive: true,
@@ -669,6 +718,7 @@ function renderChart(data, view) {
       },
       scales: {
         x: {
+          stacked: isArea,
           title:{display:true,text:'Year',font:{family:'Share Tech Mono',size:12},color:'#6c757d'},
           grid:{display:false}
         },
@@ -677,28 +727,6 @@ function renderChart(data, view) {
           title:{display:true,text:'Amount',font:{family:'Share Tech Mono',size:12},color:'#6c757d'},
           beginAtZero:true,
           ticks:{ callback: v => v.toLocaleString() }
-        }
-      },
-      onClick: (evt, elements) => {
-        if (!chartInstance) return;
-        const currentView = document.getElementById('filterView').value;
-
-        // Use relaxed hit detection — finds nearest bar even if slightly off
-        const hits = chartInstance.getElementsAtEventForMode(evt, 'nearest', { intersect: false }, false);
-        if (!hits.length) return;
-
-        const ds = chartInstance.data.datasets[hits[0].datasetIndex];
-        if (!ds || ds.isCapacityLine || ds.isLeadTimeLine) return;
-
-        if (currentView === 'family') {
-          // Drill down — reset isolation, switch to category view filtered to this family
-          isolatedIndex = null;
-          document.getElementById('filterView').value   = 'category';
-          document.getElementById('filterFamily').value = ds.label;
-          applyFilters();
-        } else {
-          // Category view — isolate/un-isolate
-          isolateDataset(chartInstance, hits[0].datasetIndex);
         }
       }
     }
