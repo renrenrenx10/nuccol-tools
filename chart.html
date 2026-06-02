@@ -301,8 +301,9 @@ async function loadData() {
     const json = await resp.json();
     if (!json.value?.length) throw new Error("No 'cache' item found in ChartCache list.");
     const raw = json.value[0].ChartData;
-    if (!raw) throw new Error("ChartData is empty — run Generate Demand in Power Apps first.");
-    allData = JSON.parse(raw);
+    if (!raw) throw new Error("ChartData is empty — run Generate Demand in DangerMouse first.");
+    const parsed = JSON.parse(raw);
+    allData = Array.isArray(parsed) ? parsed : (parsed.rows || []);
     setStatus(`Loaded ${allData.length} rows successfully.`, true);
     hideSpinner();
     populateFilters();
