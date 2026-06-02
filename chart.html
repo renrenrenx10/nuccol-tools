@@ -218,11 +218,10 @@ let allData = [];
 let chartInstance = null;
 let selectedDevs = new Set(['__all__']);
 let currentChartType = 'bar';
-let isolatedIndex = null;   // persists across renders
-let clickTimer    = null;   // for double-click detection
-const DBLCLICK_MS = 300;
+let isolatedIndex = null;  // module-level so it persists across renders
+let _clickTimer   = null;
+const DBLCLICK_MS = 280;
 
-// ── Isolate a dataset (persists between renders) ───────────────────────────
 function isolateDataset(ci, idx) {
   if (isolatedIndex === idx) {
     ci.data.datasets.forEach((_, i) => ci.show(i));
@@ -401,67 +400,64 @@ function renderChart(data, view) {
   document.getElementById('demandChart').style.display = 'block';
 
   const years    = [...new Set(data.map(r=>r.y))].sort();
+  // Group by family or category depending on view
   const groupKey = (view === 'category') ? r => r.p : r => (r.f || 'Unknown');
   const groups   = [...new Set(data.map(groupKey))].sort();
-  const isArea   = currentChartType === 'area';
+
+  const isArea = currentChartType === 'area';
 
   const datasets = groups.map((g, i) => {
     const colour = palette[i % palette.length];
-    const vals   = years.map(y => data.filter(r => groupKey(r) === g && r.y === y).reduce((s,r) => s+(r.a||0), 0));
+    const base = {
+      label: g,
+      data:  years.map(y => data.filter(r => groupKey(r) === g && r.y === y).reduce((s,r) => s+(r.a||0), 0))
+    };
     if (isArea) {
-      return { label:g, data:vals, fill:true, tension:0.4,
-               borderColor:colour, backgroundColor:colour+'55',
-               pointBackgroundColor:colour, pointRadius:3, pointHoverRadius:5, borderWidth:2 };
+      return { ...base, type:'line', fill:true, tension:0.4, borderColor:colour,
+               backgroundColor:colour+'33', pointBackgroundColor:colour,
+               pointRadius:3, pointHoverRadius:5, borderWidth:2 };
     } else {
-      return { label:g, data:vals, backgroundColor:colour, borderRadius:3 };
+      return { ...base, backgroundColor:colour, borderRadius:3 };
     }
   });
 
   if (chartInstance) chartInstance.destroy();
   isolatedIndex = null;  // reset on fresh render
 
-  // ── Double-click detection ─────────────────────────────────────────────────
-  // Attach to canvas directly so we control single vs double click ourselves.
-  // Chart.js onClick fires on every click; we intercept at the canvas level instead.
+  // Attach canvas click handler for single/double-click detection
   const canvas = document.getElementById('demandChart');
-  if (canvas._clickHandler) canvas.removeEventListener('click', canvas._clickHandler);
-
-  canvas._clickHandler = function(evt) {
+  if (canvas._dmClick) canvas.removeEventListener('click', canvas._dmClick);
+  canvas._dmClick = function(evt) {
     if (!chartInstance) return;
-    // Get the hit element
-    const hits = chartInstance.getElementsAtEventForMode(evt, 'nearest', { intersect: false }, false);
+    const hits = chartInstance.getElementsAtEventForMode(evt, 'nearest', {intersect:false}, false);
     if (!hits.length) return;
     const dsIdx = hits[0].datasetIndex;
-    const ds    = chartInstance.data.datasets[dsIdx];
-    if (!ds) return;
+    const currentView = document.getElementById('filterView').value;
 
-    if (clickTimer) {
-      // ── Double click ──
-      clearTimeout(clickTimer);
-      clickTimer = null;
-      if (view === 'family') {
-        // Drill down into this family's categories
-        isolatedIndex = null;
+    if (_clickTimer) {
+      // Double click
+      clearTimeout(_clickTimer);
+      _clickTimer = null;
+      isolatedIndex = null;
+      if (currentView === 'family') {
+        const label = chartInstance.data.datasets[dsIdx].label;
         document.getElementById('filterView').value   = 'category';
-        document.getElementById('filterFamily').value = ds.label;
+        document.getElementById('filterFamily').value = label;
         applyFilters();
       } else {
-        // Double-click in category view → back up to family
-        isolatedIndex = null;
         document.getElementById('filterView').value   = 'family';
         document.getElementById('filterFamily').value = 'All';
         applyFilters();
       }
     } else {
-      // ── Single click — wait to confirm it isn't a double click ──
-      clickTimer = setTimeout(() => {
-        clickTimer = null;
+      // Single click — wait to confirm not a double click
+      _clickTimer = setTimeout(() => {
+        _clickTimer = null;
         isolateDataset(chartInstance, dsIdx);
       }, DBLCLICK_MS);
     }
   };
-
-  canvas.addEventListener('click', canvas._clickHandler);
+  canvas.addEventListener('click', canvas._dmClick);
 
   chartInstance = new Chart(canvas.getContext('2d'), {
     type: isArea ? 'line' : 'bar',
@@ -469,53 +465,54 @@ function renderChart(data, view) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      // Disable Chart.js built-in onClick — we handle clicks on the canvas directly
-      events: ['mousemove', 'mouseout', 'touchstart', 'touchmove'],
+      interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: {
           position: 'right',
           labels: {
             font: { family: 'Barlow', size: 12 },
-            boxWidth: 12, boxHeight: 12, padding: 12,
+            // No usePointStyle — use plain text labels so the full label text is the hit area
+            boxWidth: 12,
+            boxHeight: 12,
+            padding: 12,
             generateLabels: chart => chart.data.datasets.map((ds, i) => ({
-              text:       ds.label,
-              fillStyle:  ds.backgroundColor || ds.borderColor,
-              strokeStyle:ds.borderColor     || ds.backgroundColor,
-              lineWidth:  1,
-              hidden:     !chart.isDatasetVisible(i),
+              text: ds.label,
+              fillStyle: Array.isArray(ds.backgroundColor) ? ds.backgroundColor[0] : (ds.backgroundColor || ds.borderColor),
+              strokeStyle: ds.borderColor || ds.backgroundColor,
+              lineWidth: 1,
+              hidden: !chart.isDatasetVisible(i),
               datasetIndex: i
             }))
           },
           onClick: (e, legendItem, legend) => {
+            // Single click = isolate (show only this), click again = show all
             isolateDataset(legend.chart, legendItem.datasetIndex);
           }
         },
         tooltip: {
-          mode: 'nearest',
-          intersect: true,
+          mode: 'index',
+          intersect: false,
           callbacks: {
             label: ctx => {
               const val = ctx.parsed.y;
               if (!val) return null;
               return ` ${ctx.dataset.label}: ${val.toLocaleString('en-GB', {maximumFractionDigits: 0})}`;
-            }
+            },
+            afterBody: () => ['', ' ↖ Click chart to isolate this series']
           },
           itemSort: (a, b) => b.parsed.y - a.parsed.y
         }
       },
       scales: {
-        x: {
-          stacked: isArea,
-          title: {display:true, text:'Year', font:{family:'Share Tech Mono',size:12}, color:'#6c757d'},
-          grid:  {display:false}
-        },
+        x: { stacked: isArea, title:{display:true,text:'Year',font:{family:'Share Tech Mono',size:12},color:'#6c757d'}, grid:{display:false} },
         y: {
           stacked: isArea,
-          title: {display:true, text:'Amount', font:{family:'Share Tech Mono',size:12}, color:'#6c757d'},
-          beginAtZero: true,
-          ticks: { callback: v => v.toLocaleString() }
+          title:{display:true,text:'Amount',font:{family:'Share Tech Mono',size:12},color:'#6c757d'},
+          beginAtZero:true,
+          ticks:{ callback: v => v.toLocaleString() }
         }
-      }
+      },
+      // clicks handled by canvas._dmClick listener above
     }
   });
 }
