@@ -228,6 +228,37 @@ let showLeadTime = false;
 let chartInstance = null;
 let selectedDevs = new Set(['__all__']);
 let currentChartType = 'bar';
+let isolatedIndex = null;  // persists across renders
+
+function isolateDataset(ci, idx) {
+  const clickedDs = ci.data.datasets[idx];
+  if (clickedDs && (clickedDs.isCapacityLine || clickedDs.isLeadTimeLine)) return;
+
+  if (isolatedIndex === idx) {
+    // Already isolated — restore all, respect global toggles
+    ci.data.datasets.forEach((ds, i) => {
+      if ((ds.isCapacityLine && !showCapacity) || (ds.isLeadTimeLine && !showLeadTime)) {
+        ci.hide(i);
+      } else {
+        ci.show(i);
+      }
+    });
+    isolatedIndex = null;
+  } else {
+    const demandLabel = ci.data.datasets[idx].label;
+    ci.data.datasets.forEach((ds, i) => {
+      if (i === idx) {
+        ci.show(i);
+      } else if (ds.isCapacityLine && ds.label.startsWith(demandLabel)) {
+        ci.show(i);
+      } else {
+        ci.hide(i);
+      }
+    });
+    isolatedIndex = idx;
+  }
+  ci.update();
+}
 
 function toggleLeadTime(btn) {
   showLeadTime = !showLeadTime;
@@ -245,9 +276,8 @@ function toggleCapacity(btn) {
 
 function showAllSeries() {
   if (!chartInstance) return;
-  chartInstance.data.datasets.forEach((_, i) => chartInstance.show(i));
-  chartInstance.update();
-  // Re-render to reset isolatedIndex closure
+  isolatedIndex = null;
+  // Re-render fresh so state is clean
   applyFilters();
 }
 
@@ -589,37 +619,7 @@ function renderChart(data, view) {
     });
   }
 
-  // Track isolated state — null means nothing isolated, otherwise the isolated dataset index
-  let isolatedIndex = null;
-
-  function isolateDataset(ci, idx) {
-    // Skip if clicking a capacity line directly — isolate its paired demand series instead
-    const clickedDs = ci.data.datasets[idx];
-    if (clickedDs && clickedDs.isCapacityLine) return;
-
-    if (isolatedIndex === idx) {
-      // Already isolated — restore all, hide capacity lines unless global toggle is on
-      ci.data.datasets.forEach((ds, i) => {
-        if (ds.isCapacityLine && !showCapacity) ci.hide(i);
-        else ci.show(i);
-      });
-      isolatedIndex = null;
-    } else {
-      // Isolate this demand series + show its matching capacity line, hide everything else
-      const demandLabel = ci.data.datasets[idx].label;
-      ci.data.datasets.forEach((ds, i) => {
-        if (i === idx) {
-          ci.show(i); // the demand series
-        } else if (ds.isCapacityLine && ds.label.startsWith(demandLabel)) {
-          ci.show(i); // its paired capacity line
-        } else {
-          ci.hide(i);
-        }
-      });
-      isolatedIndex = idx;
-    }
-    ci.update();
-  }
+  isolatedIndex = null;  // reset on each fresh render
 
   chartInstance = new Chart(document.getElementById('demandChart').getContext('2d'), {
     type: 'bar',  // always use bar as base — area datasets override with type:'line' per dataset
@@ -670,8 +670,7 @@ function renderChart(data, view) {
       scales: {
         x: {
           title:{display:true,text:'Year',font:{family:'Share Tech Mono',size:12},color:'#6c757d'},
-          grid:{display:false},
-          stacked: isArea  // stack x-axis only in area mode
+          grid:{display:false}
         },
         y: {
           stacked: isArea,
@@ -682,26 +681,23 @@ function renderChart(data, view) {
       },
       onClick: (evt, elements) => {
         if (!chartInstance) return;
+        const currentView = document.getElementById('filterView').value;
 
-        // Use getElementsAtEventForMode for more reliable hit detection on bars
+        // Use relaxed hit detection — finds nearest bar even if slightly off
         const hits = chartInstance.getElementsAtEventForMode(evt, 'nearest', { intersect: false }, false);
         if (!hits.length) return;
 
-        const currentView = document.getElementById('filterView').value;
+        const ds = chartInstance.data.datasets[hits[0].datasetIndex];
+        if (!ds || ds.isCapacityLine || ds.isLeadTimeLine) return;
 
-        // Drill-down: family view → switch to category view for clicked family
         if (currentView === 'family') {
-          const ds = datasets[hits[0].datasetIndex];
-          if (ds && !ds.isCapacityLine && !ds.isLeadTimeLine) {
-            document.getElementById('filterView').value   = 'category';
-            document.getElementById('filterFamily').value = ds.label;
-            applyFilters();
-            return;
-          }
-        }
-
-        // Isolate in category view
-        if (currentView === 'category') {
+          // Drill down — reset isolation, switch to category view filtered to this family
+          isolatedIndex = null;
+          document.getElementById('filterView').value   = 'category';
+          document.getElementById('filterFamily').value = ds.label;
+          applyFilters();
+        } else {
+          // Category view — isolate/un-isolate
           isolateDataset(chartInstance, hits[0].datasetIndex);
         }
       }
