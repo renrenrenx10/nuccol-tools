@@ -189,6 +189,9 @@
         <button id="btnArea" onclick="setChartType('area', this)">◿ Area</button>
       </div>
       <button onclick="showAllSeries()" style="margin-left:8px;padding:4px 12px;font-size:12px;font-family:'Barlow',sans-serif;background:transparent;border:1.5px solid var(--navy);border-radius:6px;color:var(--navy);cursor:pointer;">Show All</button>
+      <button id="btnCapacity" onclick="toggleCapacity(this)" style="display:none;margin-left:8px;padding:4px 12px;font-size:12px;font-family:'Barlow',sans-serif;background:transparent;border:1.5px solid #e74c3c;border-radius:6px;color:#e74c3c;cursor:pointer;align-items:center;gap:5px;">
+        <span>━</span> UK Capacity
+      </button>
     </div>
     <div id="emptyState"><div class="icon">📊</div><div>No data yet — run Generate Demand in Power Apps first.</div></div>
     <canvas id="demandChart"></canvas>
@@ -215,9 +218,18 @@ const scopes = ["https://nuccol.sharepoint.com/AllSites.Read"];
 const palette = ['#4e79a7','#f28e2b','#e15759','#76b7b2','#59a14f','#edc948','#b07aa1','#ff9da7','#9c755f','#bab0ac','#1f77b4','#aec7e8','#ffbb78','#98df8a','#d62728'];
 
 let allData = [];
+let capacityData = {};   // { category: { capacity, unit, confidence, notes } }
+let showCapacity = false;
 let chartInstance = null;
 let selectedDevs = new Set(['__all__']); // '__all__' means all selected
 let currentChartType = 'bar';
+
+function toggleCapacity(btn) {
+  showCapacity = !showCapacity;
+  btn.style.background  = showCapacity ? '#e74c3c' : 'transparent';
+  btn.style.color       = showCapacity ? '#fff'    : '#e74c3c';
+  applyFilters();
+}
 
 function showAllSeries() {
   if (!chartInstance) return;
@@ -282,6 +294,8 @@ async function loadData() {
   setStatus("Fetching data from SharePoint…", false);
   try {
     const token = await getToken();
+
+    // Load demand data from ChartCache
     const url = `${SITE_URL}/_api/web/lists/getbytitle('${LIST_NAME}')/items?$filter=Title eq '${ITEM_TITLE}'&$select=ChartData&$top=1`;
     const resp = await fetch(url, {
       headers: { Authorization: `Bearer ${token}`, Accept: "application/json;odata=nometadata" }
@@ -290,8 +304,35 @@ async function loadData() {
     const json = await resp.json();
     if (!json.value?.length) throw new Error("No 'cache' item found in ChartCache list.");
     const raw = json.value[0].ChartData;
-    if (!raw) throw new Error("ChartData is empty — run Generate Demand in Power Apps first.");
+    if (!raw) throw new Error("ChartData is empty — run Generate Demand in DangerMouse first.");
     allData = JSON.parse(raw);
+
+    // Load capacity data from DM - Capacity list (non-fatal if missing)
+    try {
+      const capUrl = `${SITE_URL}/_api/web/lists/getbytitle('DM - Capacity')/items?$select=Title,field_1,field_2,field_3,field_4,field_5&$top=500`;
+      const capResp = await fetch(capUrl, {
+        headers: { Authorization: `Bearer ${token}`, Accept: "application/json;odata=nometadata" }
+      });
+      if (capResp.ok) {
+        const capJson = await capResp.json();
+        capacityData = {};
+        (capJson.value || []).forEach(row => {
+          // Title=Category, field_1=Commodity_Family, field_2=UK_Capacity_Per_Year,
+          // field_3=Unit, field_4=Confidence, field_5=Notes
+          capacityData[row.Title] = {
+            family:     row.field_1 || '',
+            capacity:   parseFloat(row.field_2) || 0,
+            unit:       row.field_3 || '',
+            confidence: row.field_4 || 'Unknown',
+            notes:      row.field_5 || ''
+          };
+        });
+        document.getElementById('btnCapacity').style.display = 'inline-flex';
+      }
+    } catch(e) {
+      console.warn('Capacity data not available:', e.message);
+    }
+
     setStatus(`Loaded ${allData.length} rows successfully.`, true);
     hideSpinner();
     populateFilters();
@@ -410,6 +451,48 @@ function renderChart(data, view) {
     }
   });
 
+  // Add capacity overlay lines if enabled
+  if (showCapacity && Object.keys(capacityData).length) {
+    groups.forEach((g, i) => {
+      const colour = palette[i % palette.length];
+
+      // For family view: sum capacity of all categories in this family
+      // For category view: look up capacity directly
+      let capValue = 0;
+      let confidenceLevel = 'Unknown';
+
+      if (view === 'category') {
+        const cap = capacityData[g];
+        if (cap) { capValue = cap.capacity; confidenceLevel = cap.confidence; }
+      } else {
+        // Family view — sum all categories in this family
+        const familyCats = Object.entries(capacityData).filter(([cat, d]) => d.family === g);
+        capValue = familyCats.reduce((s, [, d]) => s + (d.capacity || 0), 0);
+        const confs = familyCats.map(([,d]) => d.confidence);
+        confidenceLevel = confs.includes('Low') ? 'Low' : confs.includes('Medium') ? 'Medium' : 'High';
+      }
+
+      if (capValue > 0) {
+        // Dashed line at capacity value across all years
+        const dashStyle = confidenceLevel === 'High' ? [] : confidenceLevel === 'Medium' ? [6, 3] : [3, 6];
+        datasets.push({
+          label: `${g} — UK Capacity`,
+          data:  years.map(() => capValue),
+          type:  'line',
+          fill:  false,
+          borderColor:     colour,
+          backgroundColor: 'transparent',
+          borderWidth:     2,
+          borderDash:      dashStyle,
+          pointRadius:     0,
+          pointHoverRadius:4,
+          tension:         0,
+          isCapacityLine:  true,   // custom flag for legend/tooltip
+        });
+      }
+    });
+  }
+
   if (chartInstance) chartInstance.destroy();
 
   // Track isolated state — null means nothing isolated, otherwise the isolated dataset index
@@ -445,12 +528,14 @@ function renderChart(data, view) {
             boxHeight: 12,
             padding: 12,
             generateLabels: chart => chart.data.datasets.map((ds, i) => ({
-              text: ds.label,
+              text: ds.isCapacityLine ? `━ ${ds.label}` : ds.label,
               fillStyle: Array.isArray(ds.backgroundColor) ? ds.backgroundColor[0] : (ds.backgroundColor || ds.borderColor),
               strokeStyle: ds.borderColor || ds.backgroundColor,
-              lineWidth: 1,
+              lineWidth: ds.isCapacityLine ? 2 : 1,
+              lineDash: ds.borderDash || [],
               hidden: !chart.isDatasetVisible(i),
-              datasetIndex: i
+              datasetIndex: i,
+              fontColor: ds.isCapacityLine ? '#999' : undefined
             }))
           },
           onClick: (e, legendItem, legend) => {
@@ -465,11 +550,20 @@ function renderChart(data, view) {
             label: ctx => {
               const val = ctx.parsed.y;
               if (!val) return null;
-              return ` ${ctx.dataset.label}: ${val.toLocaleString('en-GB', {maximumFractionDigits: 0})}`;
+              const ds = ctx.dataset;
+              if (ds.isCapacityLine) {
+                return ` ━ ${ds.label}: ${val.toLocaleString('en-GB', {maximumFractionDigits: 0})} (UK capacity/yr)`;
+              }
+              return ` ${ds.label}: ${val.toLocaleString('en-GB', {maximumFractionDigits: 0})}`;
             },
-            afterBody: () => ['', ' ↖ Click chart to isolate this series']
+            afterBody: () => showCapacity ? [] : ['', ' ↖ Click chart to isolate this series']
           },
-          itemSort: (a, b) => b.parsed.y - a.parsed.y
+          itemSort: (a, b) => {
+            // Capacity lines go to bottom of tooltip
+            if (a.dataset.isCapacityLine && !b.dataset.isCapacityLine) return 1;
+            if (!a.dataset.isCapacityLine && b.dataset.isCapacityLine) return -1;
+            return b.parsed.y - a.parsed.y;
+          }
         }
       },
       scales: {
