@@ -192,6 +192,9 @@
       <button id="btnCapacity" onclick="toggleCapacity(this)" style="display:none;margin-left:8px;padding:4px 12px;font-size:12px;font-family:'Barlow',sans-serif;background:transparent;border:1.5px solid #e74c3c;border-radius:6px;color:#e74c3c;cursor:pointer;align-items:center;gap:5px;">
         <span>━</span> UK Capacity
       </button>
+      <button id="btnLeadTime" onclick="toggleLeadTime(this)" style="display:none;margin-left:8px;padding:4px 12px;font-size:12px;font-family:'Barlow',sans-serif;background:transparent;border:1.5px solid #8e44ad;border-radius:6px;color:#8e44ad;cursor:pointer;align-items:center;gap:5px;">
+        <span>◈</span> Lead Time
+      </button>
     </div>
     <div id="emptyState"><div class="icon">📊</div><div>No data yet — run Generate Demand in Power Apps first.</div></div>
     <canvas id="demandChart"></canvas>
@@ -218,11 +221,20 @@ const scopes = ["https://nuccol.sharepoint.com/AllSites.Read"];
 const palette = ['#4e79a7','#f28e2b','#e15759','#76b7b2','#59a14f','#edc948','#b07aa1','#ff9da7','#9c755f','#bab0ac','#1f77b4','#aec7e8','#ffbb78','#98df8a','#d62728'];
 
 let allData = [];
-let capacityData = {};   // { category: { capacity, unit, confidence, notes } }
+let capacityData = {};
+let leadTimeData = {};
 let showCapacity = false;
+let showLeadTime = false;
 let chartInstance = null;
-let selectedDevs = new Set(['__all__']); // '__all__' means all selected
+let selectedDevs = new Set(['__all__']);
 let currentChartType = 'bar';
+
+function toggleLeadTime(btn) {
+  showLeadTime = !showLeadTime;
+  btn.style.background = showLeadTime ? '#8e44ad' : 'transparent';
+  btn.style.color      = showLeadTime ? '#fff'    : '#8e44ad';
+  applyFilters();
+}
 
 function toggleCapacity(btn) {
   showCapacity = !showCapacity;
@@ -305,7 +317,17 @@ async function loadData() {
     if (!json.value?.length) throw new Error("No 'cache' item found in ChartCache list.");
     const raw = json.value[0].ChartData;
     if (!raw) throw new Error("ChartData is empty — run Generate Demand in DangerMouse first.");
-    allData = JSON.parse(raw);
+    // Handle both old format (array) and new format ({rows, leadTimes})
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      allData = parsed;
+    } else {
+      allData = parsed.rows || [];
+      leadTimeData = parsed.leadTimes || {};
+      if (Object.keys(leadTimeData).length) {
+        document.getElementById('btnLeadTime').style.display = 'inline-flex';
+      }
+    }
 
     // Load capacity data from DM - Capacity list (non-fatal if missing)
     try {
@@ -493,7 +515,65 @@ function renderChart(data, view) {
     });
   }
 
-  if (chartInstance) chartInstance.destroy();
+  // Add lead time overlay bands if enabled
+  // Shows a shaded vertical region per category showing the procurement window
+  // Implemented as a nearly-transparent bar dataset on a secondary x-axis isn't feasible in Chart.js
+  // Instead: add annotation-style lines marking start and end of procurement window per visible series
+  if (showLeadTime && Object.keys(leadTimeData).length) {
+    groups.forEach((g, i) => {
+      const colour = palette[i % palette.length];
+
+      let ltStart = null, ltEnd = null;
+
+      if (view === 'category') {
+        const lt = leadTimeData[g];
+        if (lt) { ltStart = lt.start; ltEnd = lt.end; }
+      } else {
+        // Family view: use earliest start and latest end across all categories in family
+        const familyCats = Object.entries(leadTimeData).filter(([cat]) => {
+          const prod = allData.find(r => r.p === cat && r.f === g);
+          return !!prod;
+        });
+        if (familyCats.length) {
+          ltStart = Math.min(...familyCats.map(([,d]) => d.start));
+          ltEnd   = Math.max(...familyCats.map(([,d]) => d.end));
+        }
+      }
+
+      if (ltStart !== null && ltEnd !== null) {
+        // Convert months-from-FNC to calendar years using the earliest build start year
+        const baseYear = years[0] || new Date().getFullYear();
+        // FNC is roughly end of year 1 / start of year 2 for SMR (~month 12)
+        // For GW (~month 24). Use 18 months as a reasonable mid-point assumption.
+        const fncOffsetYears = 1.5;
+        const startYear = baseYear + fncOffsetYears + (ltStart / 12);
+        const endYear   = baseYear + fncOffsetYears + (ltEnd   / 12);
+
+        // Add a thin vertical dotted line at procurement start
+        datasets.push({
+          label: `${g} — Order by`,
+          data:  years.map(y => y >= startYear && y <= endYear ? null : null), // placeholder
+          type:  'line',
+          fill:  false,
+          borderColor:     colour + '88',
+          backgroundColor: colour + '22',
+          borderWidth:     1.5,
+          borderDash:      [4, 4],
+          pointRadius:     0,
+          tension:         0,
+          isLeadTimeLine:  true,
+          ltStartYear:     startYear,
+          ltEndYear:       endYear,
+          ltLabel:         `${g}: order ${ltStart >= 0 ? '+' : ''}${ltStart}m to +${ltEnd}m from FNC`,
+          data: years.map(y => {
+            // Show a small marker value at the start year
+            if (Math.abs(y - Math.round(startYear)) < 0.6) return 0;
+            return null;
+          })
+        });
+      }
+    });
+  }
 
   // Track isolated state — null means nothing isolated, otherwise the isolated dataset index
   let isolatedIndex = null;
@@ -604,10 +684,12 @@ function renderChart(data, view) {
     }
   });
 
-  // Hide capacity lines on initial render unless global toggle is on
-  if (!showCapacity) {
+  // Hide capacity and lead time lines on initial render unless toggles are on
+  if (!showCapacity || !showLeadTime) {
     chartInstance.data.datasets.forEach((ds, i) => {
-      if (ds.isCapacityLine) chartInstance.hide(i);
+      if ((ds.isCapacityLine && !showCapacity) || (ds.isLeadTimeLine && !showLeadTime)) {
+        chartInstance.hide(i);
+      }
     });
     chartInstance.update('none');
   }

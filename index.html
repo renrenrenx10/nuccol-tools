@@ -685,12 +685,13 @@ textarea.form-control { height: 72px; resize: vertical; }
       <span class="count-badge" id="prodCount">— products</span>
     </div>
     <div class="table-header">
-      <span class="th p-name">Product Name</span>
-      <span class="th p-mat">Material Type</span>
-      <span class="th p-res">Resource Type</span>
-      <span class="th p-wt">Weight</span>
-      <span class="th p-lt">Lead Time</span>
-      <span class="th p-rate">Prod. Rate</span>
+      <span class="th p-name">Category</span>
+      <span class="th p-mat">Classification</span>
+      <span class="th p-res" style="width:100px;">Plant Type</span>
+      <span class="th p-wt" style="text-align:right;">GW Total</span>
+      <span class="th p-lt" style="width:130px;">SMR Total</span>
+      <span class="th p-rate" style="text-align:right;width:60px;">Unit</span>
+      <span class="th" style="width:140px;">Procurement Window</span>
     </div>
     <div class="table-wrap" id="productsBody">
       <div class="loading-row"><div class="spinner"></div> Loading products…</div>
@@ -843,47 +844,6 @@ textarea.form-control { height: 72px; resize: vertical; }
                 <div style="background:var(--navy);color:white;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px;">${n}</div>
                 <div><div style="font-size:13px;font-weight:700;color:var(--slate);margin-bottom:3px;">${title}</div><div style="font-size:13px;line-height:1.6;color:var(--muted);">${desc}</div></div>
               </div>`).join('')}
-          </div>
-        </div>
-
-        <!-- UK Supply Chain Capacity -->
-        <div style="background:white;border-radius:10px;border:1px solid var(--border);padding:24px 28px;">
-          <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:10px;">
-            <span style="font-size:20px;">🏭</span> UK supply chain capacity — how we derived the numbers
-          </div>
-          <p style="font-size:14px;line-height:1.7;color:var(--slate);margin-bottom:16px;">
-            The capacity overlay in the chart shows an estimate of how many units per year the UK supply chain could realistically deliver for each commodity category today. These are not official figures — they are NuCCoL's best estimates, derived from a structured methodology using publicly available market data and known UK supplier positions.
-          </p>
-
-          <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--navy);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em;">The methodology in four steps</div>
-          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
-            ${[
-              ['1', 'Global nuclear production rate', 'For each category we established how many units are produced globally per year across the nuclear industry. This was taken from published market research reports (2024 base year) — for example, QY Research estimates global nuclear heat exchanger production at around 310 units per year excluding steam generators. Where no nuclear-specific figure was available we used broader industrial market data and applied a nuclear share percentage.'],
-              ['2', 'UK share of global production', 'We then estimated the UK\'s current share of that global production, based on known UK manufacturers and their nuclear supply history. The UK represents roughly 2% of the global nuclear fleet by installed capacity, but in some categories — particularly where a UK company is a world leader — the share is significantly higher. For example, Howden (Glasgow) is a major global supplier of nuclear-grade fans, and Prysmian\'s Wrexham facility manufactures nuclear-grade cable. In categories where there is no UK manufacturing capability at all (RPV, steam generators, reactor coolant pumps), capacity is set to zero.'],
-              ['3', 'Scaling to annual units', 'The global production rate × UK share gives an estimated annual output. This is the number shown as the capacity line on the chart — the flat line represents what the UK could supply in a single year at current capability. Where demand exceeds this line, the gap represents either a need for UK supply chain development, or reliance on imports.'],
-              ['4', 'Confidence rating', 'Each capacity figure carries a confidence rating: High (solid line) where the estimate is well-evidenced by known UK supplier data; Medium (dashed line) where the estimate is reasonable but less certain; Low (short-dashed line) where the figure is speculative or where capability is nascent. The confidence rating is shown in the chart legend and tooltip.'],
-            ].map(([n, title, desc]) => `
-              <div style="display:flex;gap:14px;align-items:flex-start;">
-                <div style="background:var(--navy);color:white;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px;">${n}</div>
-                <div><div style="font-size:13px;font-weight:700;color:var(--slate);margin-bottom:3px;">${title}</div><div style="font-size:13px;line-height:1.6;color:var(--muted);">${desc}</div></div>
-              </div>`).join('')}
-          </div>
-
-          <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--navy);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em;">Key sources</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;font-size:12px;color:var(--slate);line-height:1.5;">
-            <div style="background:var(--bg);border-radius:6px;padding:10px 12px;"><strong>Nuclear pump market</strong> — VMR 2024: $2.5Bn total nuclear pump market. Global production ~400–600 nuclear-qualified pumps/yr across all types.</div>
-            <div style="background:var(--bg);border-radius:6px;padding:10px 12px;"><strong>Nuclear valve market</strong> — IntelMarketResearch 2024: $1.57Bn nuclear island valves. Cognitive Market Research: $6.24Bn nuclear grade valve market total.</div>
-            <div style="background:var(--bg);border-radius:6px;padding:10px 12px;"><strong>Nuclear heat exchangers</strong> — QY Research 2024: ~310 units/yr globally (excl. steam generators) at avg $550k/unit = $171M market.</div>
-            <div style="background:var(--bg);border-radius:6px;padding:10px 12px;"><strong>Nuclear cable</strong> — Global Growth Insights 2024: Class 1E instrumentation cable $1.075Bn. Prysmian Wrexham confirmed UK nuclear cable manufacturer.</div>
-            <div style="background:var(--bg);border-radius:6px;padding:10px 12px;"><strong>Structural steel</strong> — Severfield (UK) confirmed HPC direct supplier. Billington Structures, Caledonian Modular also active. UK structural steel capacity ~2Mtpa non-residential.</div>
-            <div style="background:var(--bg);border-radius:6px;padding:10px 12px;"><strong>HVAC fans</strong> — VMR 2024: Nuclear Grade Fans $1.2–2.5Bn. Howden (Glasgow) confirmed world-leading nuclear fan supplier with dedicated nuclear product line.</div>
-            <div style="background:var(--bg);border-radius:6px;padding:10px 12px;"><strong>Reactor pressure vessel</strong> — UK capacity set to zero. No current RPV manufacturing in UK. Sheffield Forgemasters (UK Gov-owned since 2021) represents a potential future capability but years from readiness.</div>
-            <div style="background:var(--bg);border-radius:6px;padding:10px 12px;"><strong>Fire detection</strong> — Apollo Fire Detectors (Havant, UK) confirmed nuclear EQ-qualified. C-TEC (UK) also active. High F4N relevance. Capacity rated High confidence.</div>
-          </div>
-
-          <div style="background:rgba(0,168,232,0.06);border-left:4px solid var(--cyan);border-radius:0 6px 6px 0;padding:12px 16px;">
-            <div style="font-size:12px;font-weight:700;color:var(--cyan);margin-bottom:4px;font-family:var(--font-mono);">ℹ CAPACITY vs DEMAND — what the gap means</div>
-            <p style="font-size:13px;line-height:1.6;color:var(--slate);">Where the demand line exceeds the capacity line, this does not automatically mean a crisis — it may mean the UK needs to grow its supply base, qualify new suppliers, or accept some level of import. Where demand is well below capacity, there is headroom and UK manufacturers may be competing for a smaller share of work than they could deliver. The gap analysis is the starting point for NuCCoL's supply chain development and F4N engagement work.</p>
           </div>
         </div>
 
@@ -1068,7 +1028,8 @@ const CONFIG = {
     products:   'DM - Products',
     developers: 'DM - Developers',
     schedules:  'DM - Dev Schedules',
-    chartCache: 'ChartCache'
+    chartCache: 'ChartCache',
+    leadTimes:  'DM - Lead Time By Category'
   }
 };
 
@@ -1217,6 +1178,7 @@ let store = {
   products:   [],
   developers: [],
   schedules:  [],
+  leadTimes:  [],
   buildPlan:  [],
   demandResults: [],
   editingProduct: null,
@@ -1226,11 +1188,13 @@ let store = {
 
 async function loadAllData() {
   try {
-    const [prods, devs, scheds] = await Promise.all([
+    const [prods, devs, scheds, lts] = await Promise.all([
       spGet(CONFIG.lists.products,   'Id,Title,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8', '', 'field_1 asc,Title asc'),
       spGet(CONFIG.lists.developers, 'Id,Title,field_1,field_2,field_3,field_4,field_5', '', 'Title asc'),
-      spGet(CONFIG.lists.schedules,  'Id,Title,field_1,field_2,field_3,field_4', '', 'Title asc')
+      spGet(CONFIG.lists.schedules,  'Id,Title,field_1,field_2,field_3,field_4', '', 'Title asc'),
+      spGet(CONFIG.lists.leadTimes,  'Id,Title,field_1,field_2,field_3,field_4,field_5,field_6', '', 'field_1 asc')
     ]);
+
     store.products   = prods.map(p => ({
       Id:                     p.Id,
       Title:                  p.Title,
@@ -1260,6 +1224,17 @@ async function loadAllData() {
       Quarter:         s.field_3,
       Amount_Absolute: s.field_4,
     }));
+    store.leadTimes  = lts.map(l => ({
+      Id:                   l.Id,
+      Category:             l.Title,
+      Earliest_Start_Months: l.field_1,
+      Latest_End_Months:    l.field_2,
+      Full_Window_Months:   l.field_3,
+      Source_Component_Count: l.field_4,
+      Safety_Classes:       l.field_5,
+      Source_Components:    l.field_6,
+    }));
+
     populateDeveloperDropdown();
     populateSchedFilters();
     renderProducts();
@@ -1395,7 +1370,26 @@ function renderResults() {
 async function viewChart() {
   if (!store.demandResults.length) { toast('Generate demand first', 'error'); return; }
   try {
-    const payload = JSON.stringify(store.demandResults.filter(r=>r.CalYear>0).map(r=>({d:r.Developer,p:r.Product_ID,f:r.Family,y:r.CalYear,a:r.Amount})));
+    // Build demand rows
+    const demandRows = store.demandResults.filter(r=>r.CalYear>0).map(r=>({
+      d: r.Developer,
+      p: r.Product_ID,
+      f: r.Family,
+      y: r.CalYear,
+      a: r.Amount
+    }));
+
+    // Build lead time lookup keyed by category
+    const leadTimeLookup = {};
+    store.leadTimes.forEach(l => {
+      leadTimeLookup[l.Category] = {
+        start: l.Earliest_Start_Months,
+        end:   l.Latest_End_Months,
+        window: l.Full_Window_Months
+      };
+    });
+
+    const payload = JSON.stringify({ rows: demandRows, leadTimes: leadTimeLookup });
     const existing = await spGet(CONFIG.lists.chartCache, 'Id,Title');
     const cacheRow = existing.find(r => r.Title === 'cache');
     if (cacheRow) {
@@ -1449,7 +1443,15 @@ function renderProducts() {
   let html = '';
   for (const [fam, items] of Object.entries(byFamily).sort()) {
     html += `<div style="padding:6px 24px 2px;background:var(--bg);border-bottom:1px solid var(--border);font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--navy);letter-spacing:0.06em;text-transform:uppercase;">${esc(fam)} <span style="font-weight:400;color:var(--muted)">(${items.length})</span></div>`;
-    html += items.map(p => `
+    html += items.map(p => {
+      const lt = store.leadTimes.find(l => l.Category === p.Title);
+      const ltStr = lt
+        ? `${lt.Earliest_Start_Months >= 0 ? '+' : ''}${lt.Earliest_Start_Months}m → +${lt.Latest_End_Months}m`
+        : '—';
+      const ltTitle = lt
+        ? `Procurement window: ${ltStr} rel. to First Nuclear Concrete (${lt.Full_Window_Months} month span)`
+        : 'No lead time data';
+      return `
     <div class="table-row">
       <span class="p-name" style="font-weight:600;font-size:13px;">${esc(p.Title)}</span>
       <span class="p-mat">${nuclearBadge(p.Nuclear_Classification)}</span>
@@ -1457,11 +1459,13 @@ function renderProducts() {
       <span class="p-wt mono-sm" style="text-align:right;">${p.GW_Total != null ? Number(p.GW_Total).toLocaleString('en-GB',{maximumFractionDigits:0}) : '—'}</span>
       <span class="p-lt mono-sm" style="width:130px;">${p.SMR_Total != null ? Number(p.SMR_Total).toLocaleString('en-GB',{maximumFractionDigits:0}) : '—'}</span>
       <span class="p-rate mono-sm" style="text-align:right;width:60px;">${esc(p.Primary_Unit||'—')}</span>
+      <span class="mono-sm" style="width:140px;font-size:11px;color:${lt ? 'var(--amber)' : 'var(--muted)'};" title="${ltTitle}">${ltStr}</span>
       <div class="p-act">
         <button class="btn btn-ghost btn-sm" onclick="openProductForm(${p.Id})">Edit</button>
         <button class="btn btn-danger btn-sm btn-icon" onclick="deleteProduct(${p.Id},'${esc(p.Title)}')">🗑</button>
       </div>
-    </div>`).join('');
+    </div>`;
+    }).join('');
   }
   el.innerHTML = html;
 }
@@ -1496,23 +1500,13 @@ async function saveProduct() {
   const name = document.getElementById('fProdName').value.trim();
   if (!name) { toast('Category name is required', 'error'); return; }
   const body = {
-    Title:   name,
-    field_1: document.getElementById('fProdFamily').value    || null,
-    field_2: document.getElementById('fProdNuclear').value   || null,
-    field_3: parseFloatOrNull(document.getElementById('fProdGWTotal').value),
-    field_4: parseFloatOrNull(document.getElementById('fProdSMRTotal').value),
-    field_5: document.getElementById('fProdUnit').value      || null,
-    field_8: document.getElementById('fProdPlantType').value || null,
-  };
-
-  const friendlyProd = {
     Title:                  name,
-    Commodity_Family:       body.field_1,
-    Nuclear_Classification: body.field_2,
-    GW_Total:               body.field_3,
-    SMR_Total:              body.field_4,
-    Primary_Unit:           body.field_5,
-    Plant_Type:             body.field_8,
+    Commodity_Family:       document.getElementById('fProdFamily').value    || null,
+    Nuclear_Classification: document.getElementById('fProdNuclear').value   || null,
+    Plant_Type:             document.getElementById('fProdPlantType').value || null,
+    GW_Total:               parseFloatOrNull(document.getElementById('fProdGWTotal').value),
+    SMR_Total:              parseFloatOrNull(document.getElementById('fProdSMRTotal').value),
+    Primary_Unit:           document.getElementById('fProdUnit').value      || null
   };
 
   const saving = document.getElementById('productSaving');
@@ -1522,10 +1516,10 @@ async function saveProduct() {
   try {
     if (store.editingProduct) {
       await spPatch(CONFIG.lists.products, store.editingProduct.Id, body);
-      Object.assign(store.editingProduct, friendlyProd);
+      Object.assign(store.editingProduct, body);
     } else {
       const created = await spPost(CONFIG.lists.products, body);
-      store.products.push({ ...friendlyProd, Id: created.Id });
+      store.products.push({ ...body, Id: created.Id });
       store.products.sort((a,b) => (a.Commodity_Family||'').localeCompare(b.Commodity_Family||'') || a.Title.localeCompare(b.Title));
     }
     renderProducts();
@@ -1598,29 +1592,20 @@ async function saveDeveloper() {
   const name = document.getElementById('fDevName').value.trim();
   if (!name) { toast('Developer name is required', 'error'); return; }
   const body = {
-    Title:   name,
-    field_1: document.getElementById('fDevType').value      || null,
-    field_2: document.getElementById('fDevPlantName').value || null,
-    field_3: document.getElementById('fDevTech').value      || null,
-    field_4: document.getElementById('fDevCountry').value   || null,
-    field_5: document.getElementById('fDevStatus').value    || null,
-  };
-  // Also update friendly names in local store after save
-  const friendlyBody = {
-    Title:         name,
-    Type_of_Plant: body.field_1,
-    Name_of_Plant: body.field_2,
-    Technology:    body.field_3,
-    Country:       body.field_4,
-    Status:        body.field_5,
+    Title:          name,
+    Type_of_Plant:  document.getElementById('fDevType').value      || null,
+    Name_of_Plant:  document.getElementById('fDevPlantName').value || null,
+    Country:        document.getElementById('fDevCountry').value   || null,
+    Status:         document.getElementById('fDevStatus').value    || null,
+    Technology:     document.getElementById('fDevTech').value      || null
   };
   try {
     if (store.editingDev) {
       await spPatch(CONFIG.lists.developers, store.editingDev.Id, body);
-      Object.assign(store.editingDev, friendlyBody);
+      Object.assign(store.editingDev, body);
     } else {
       const created = await spPost(CONFIG.lists.developers, body);
-      store.developers.push({ ...friendlyBody, Id: created.Id });
+      store.developers.push({ ...body, Id: created.Id });
       store.developers.sort((a,b) => a.Title.localeCompare(b.Title));
     }
     populateDeveloperDropdown();
