@@ -162,15 +162,8 @@
     </div>
     <div class="filter-divider"></div>
     <div class="filter-group">
-      <label>View</label>
-      <select id="filterView" onchange="applyFilters()">
-        <option value="family">By Family (10)</option>
-        <option value="category">By Category</option>
-      </select>
-    </div>
-    <div class="filter-group">
-      <label>Family</label>
-      <select id="filterFamily" onchange="applyFilters()"><option value="All">All Families</option></select>
+      <label>Product</label>
+      <select id="filterProd" onchange="applyFilters()"><option value="All">All Products</option></select>
     </div>
     <div class="filter-group">
       <label>Year From</label>
@@ -188,6 +181,7 @@
         <button id="btnBar" class="active" onclick="setChartType('bar', this)">▐█ Bar</button>
         <button id="btnArea" onclick="setChartType('area', this)">◿ Area</button>
       </div>
+      <button onclick="showAllSeries()" style="margin-left:8px;padding:4px 12px;font-size:12px;font-family:'Barlow',sans-serif;background:transparent;border:1.5px solid var(--navy);border-radius:6px;color:var(--navy);cursor:pointer;" title="Show all hidden series">Show All</button>
     </div>
     <div id="emptyState"><div class="icon">📊</div><div>No data yet — run Generate Demand in Power Apps first.</div></div>
     <canvas id="demandChart"></canvas>
@@ -217,6 +211,12 @@ let allData = [];
 let chartInstance = null;
 let selectedDevs = new Set(['__all__']); // '__all__' means all selected
 let currentChartType = 'bar';
+
+function showAllSeries() {
+  if (!chartInstance) return;
+  chartInstance.data.datasets.forEach((_, i) => chartInstance.show(i));
+  chartInstance.update();
+}
 
 function setChartType(type, btn) {
   currentChartType = type;
@@ -286,9 +286,8 @@ async function loadData() {
     setStatus(`Loaded ${allData.length} rows successfully.`, true);
     hideSpinner();
     populateFilters();
-    const view = document.getElementById('filterView').value;
-    updateKpis(allData, view);
-    renderChart(allData, view);
+    updateKpis(allData);
+    renderChart(allData);
     document.getElementById('filterBar').style.display = 'flex';
   } catch (err) {
     setStatus("Error: " + err.message, false, true);
@@ -300,12 +299,13 @@ async function loadData() {
 
 // ── FILTERS ───────────────────────────────────────────────────────────────────
 function populateFilters() {
-  const devs     = [...new Set(allData.map(r => r.d))].sort();
-  const families = [...new Set(allData.map(r => r.f).filter(Boolean))].sort();
-  const years    = [...new Set(allData.map(r => r.y))].sort();
+  const devs  = [...new Set(allData.map(r => r.d))].sort();
+  const prods = [...new Set(allData.map(r => r.p))].sort();
+  const years = [...new Set(allData.map(r => r.y))].sort();
 
-  // Developer toggles
+  // Build developer toggle buttons
   const container = document.getElementById('devToggles');
+  // Keep the "All" button, add one per developer
   devs.forEach(dev => {
     const btn = document.createElement('button');
     btn.className = 'dev-toggle';
@@ -314,9 +314,9 @@ function populateFilters() {
     container.appendChild(btn);
   });
 
-  fillSelect('filterFamily',   families, 'All Families');
-  fillSelect('filterYearFrom', years,    'All');
-  fillSelect('filterYearTo',   years,    'All');
+  fillSelect('filterProd',     prods, 'All Products');
+  fillSelect('filterYearFrom', years, 'All');
+  fillSelect('filterYearTo',   years, 'All');
 }
 
 function fillSelect(id, values, allLabel) {
@@ -331,73 +331,96 @@ function fillSelect(id, values, allLabel) {
 
 function toggleDev(dev, btn) {
   const allBtn = document.querySelector('.all-btn');
+
   if (dev === '__all__') {
+    // Click All — deselect everything else, select All
     selectedDevs = new Set(['__all__']);
     document.querySelectorAll('.dev-toggle:not(.all-btn)').forEach(b => b.classList.remove('active'));
     allBtn.classList.add('active');
   } else {
-    if (selectedDevs.has(dev)) { selectedDevs.delete(dev); btn.classList.remove('active'); }
-    else { selectedDevs.add(dev); btn.classList.add('active'); }
+    // Toggle this developer
+    if (selectedDevs.has(dev)) {
+      selectedDevs.delete(dev);
+      btn.classList.remove('active');
+    } else {
+      selectedDevs.add(dev);
+      btn.classList.add('active');
+    }
+    // Remove __all__ when individual devs are chosen
     selectedDevs.delete('__all__');
     allBtn.classList.remove('active');
-    if (selectedDevs.size === 0) { selectedDevs.add('__all__'); allBtn.classList.add('active'); }
+
+    // If nothing selected, revert to All
+    if (selectedDevs.size === 0) {
+      selectedDevs.add('__all__');
+      allBtn.classList.add('active');
+    }
   }
   applyFilters();
 }
 
 function applyFilters() {
-  const view   = document.getElementById('filterView').value;
-  const family = document.getElementById('filterFamily').value;
-  const yFrom  = document.getElementById('filterYearFrom').value;
-  const yTo    = document.getElementById('filterYearTo').value;
+  const prod  = document.getElementById('filterProd').value;
+  const yFrom = document.getElementById('filterYearFrom').value;
+  const yTo   = document.getElementById('filterYearTo').value;
 
   let filtered = allData;
 
+  // Developer multi-select
   if (!selectedDevs.has('__all__')) {
     filtered = filtered.filter(r => selectedDevs.has(r.d));
   }
-  if (family !== 'All') filtered = filtered.filter(r => r.f === family);
-  if (yFrom  !== 'All') filtered = filtered.filter(r => r.y >= +yFrom);
-  if (yTo    !== 'All') filtered = filtered.filter(r => r.y <= +yTo);
+  if (prod  !== 'All') filtered = filtered.filter(r => r.p === prod);
+  if (yFrom !== 'All') filtered = filtered.filter(r => r.y >= +yFrom);
+  if (yTo   !== 'All') filtered = filtered.filter(r => r.y <= +yTo);
 
-  updateKpis(filtered, view);
-  renderChart(filtered, view);
+  updateKpis(filtered);
+  renderChart(filtered);
 }
 
 // ── KPIs ──────────────────────────────────────────────────────────────────────
-function updateKpis(data, view) {
-  const groupKey = view === 'category' ? r => r.p : r => r.f;
+function updateKpis(data) {
   document.getElementById('kpiTotal').textContent    = data.reduce((s,r) => s+(r.a||0), 0).toLocaleString();
-  document.getElementById('kpiProducts').textContent = new Set(data.map(groupKey)).size;
+  document.getElementById('kpiProducts').textContent = new Set(data.map(r=>r.p)).size;
   document.getElementById('kpiYears').textContent    = new Set(data.map(r=>r.y)).size + ' yrs';
   document.getElementById('kpiDevs').textContent     = new Set(data.map(r=>r.d)).size;
 }
 
 // ── CHART ─────────────────────────────────────────────────────────────────────
-function renderChart(data, view) {
+function renderChart(data) {
   if (!data.length) { showEmpty(); return; }
   document.getElementById('emptyState').style.display  = 'none';
   document.getElementById('demandChart').style.display = 'block';
-
   const years    = [...new Set(data.map(r=>r.y))].sort();
-  // Group by family or category depending on view
-  const groupKey = (view === 'category') ? r => r.p : r => (r.f || 'Unknown');
-  const groups   = [...new Set(data.map(groupKey))].sort();
+  const products = [...new Set(data.map(r=>r.p))].sort();
 
   const isArea = currentChartType === 'area';
 
-  const datasets = groups.map((g, i) => {
+  const datasets = products.map((p,i) => {
     const colour = palette[i % palette.length];
     const base = {
-      label: g,
-      data:  years.map(y => data.filter(r => groupKey(r) === g && r.y === y).reduce((s,r) => s+(r.a||0), 0))
+      label: p,
+      data: years.map(y => data.filter(r=>r.p===p&&r.y===y).reduce((s,r)=>s+(r.a||0),0))
     };
     if (isArea) {
-      return { ...base, type:'line', fill:true, tension:0.4, borderColor:colour,
-               backgroundColor:colour+'33', pointBackgroundColor:colour,
-               pointRadius:3, pointHoverRadius:5, borderWidth:2 };
+      return {
+        ...base,
+        type: 'line',
+        fill: true,
+        tension: 0.4,
+        borderColor: colour,
+        backgroundColor: colour + '33', // ~20% opacity
+        pointBackgroundColor: colour,
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        borderWidth: 2
+      };
     } else {
-      return { ...base, backgroundColor:colour, borderRadius:3 };
+      return {
+        ...base,
+        backgroundColor: colour,
+        borderRadius: 3
+      };
     }
   });
 
@@ -408,26 +431,63 @@ function renderChart(data, view) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: {
-        legend: { position:'right', labels:{ font:{family:'Barlow',size:12}, boxWidth:14 } },
-        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()}` } }
+      interaction: {
+        mode: 'index',       // show all series at the hovered x position
+        intersect: false     // trigger even when not directly over a point/bar
       },
-      scales: {
-        x: { title:{display:true,text:'Year',font:{family:'Share Tech Mono',size:12},color:'#6c757d'}, grid:{display:false} },
-        y: {
-          stacked: isArea,
-          title:{display:true,text:'Amount',font:{family:'Share Tech Mono',size:12},color:'#6c757d'},
-          beginAtZero:true,
-          ticks:{ callback: v => v.toLocaleString() }
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: {
+            font: { family: 'Barlow', size: 12 },
+            usePointStyle: true,   // circle marker instead of box
+            pointStyleWidth: 10,
+            padding: 10,
+            // Text only — no box alignment issues
+            generateLabels: chart => chart.data.datasets.map((ds, i) => ({
+              text: ds.label,
+              fillStyle: ds.backgroundColor instanceof Array ? ds.backgroundColor[0] : ds.backgroundColor || ds.borderColor,
+              strokeStyle: ds.borderColor || ds.backgroundColor,
+              lineWidth: 1,
+              pointStyle: 'circle',
+              hidden: !chart.isDatasetVisible(i),
+              datasetIndex: i
+            }))
+          },
+          onClick: (e, legendItem, legend) => {
+            // Toggle this dataset without isolating (default Chart.js hides all others on second click)
+            const idx = legendItem.datasetIndex;
+            const ci  = legend.chart;
+            if (ci.isDatasetVisible(idx)) {
+              ci.hide(idx);
+              legendItem.hidden = true;
+            } else {
+              ci.show(idx);
+              legendItem.hidden = false;
+            }
+          }
+        },
+        tooltip: {
+          mode: 'index',
+          intersect: false,
+          callbacks: {
+            label: ctx => {
+              const val = ctx.parsed.y;
+              if (!val) return null; // hide zero entries from tooltip
+              return ` ${ctx.dataset.label}: ${val.toLocaleString('en-GB', {maximumFractionDigits: 0})}`;
+            }
+          },
+          itemSort: (a, b) => b.parsed.y - a.parsed.y // largest first in tooltip
         }
       },
-      onClick: (evt, elements) => {
-        // Drill down: if viewing families, clicking a bar switches to category view filtered to that family
-        if (view !== 'family' || !elements.length) return;
-        const family = datasets[elements[0].datasetIndex].label;
-        document.getElementById('filterView').value   = 'category';
-        document.getElementById('filterFamily').value = family;
-        applyFilters();
+      scales: {
+        x: { title: { display: true, text: 'Year', font: { family: 'Share Tech Mono', size: 12 }, color: '#6c757d' }, grid: { display: false } },
+        y: {
+          stacked: isArea,
+          title: { display: true, text: 'Amount', font: { family: 'Share Tech Mono', size: 12 }, color: '#6c757d' },
+          beginAtZero: true,
+          ticks: { callback: v => v.toLocaleString() }
+        }
       }
     }
   });
