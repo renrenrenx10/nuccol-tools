@@ -1186,13 +1186,39 @@ let store = {
 async function loadAllData() {
   try {
     const [prods, devs, scheds] = await Promise.all([
-      spGet(CONFIG.lists.products,   'Id,Title,Commodity_Family,Commodity_Category,Nuclear_Classification,GW_Total,SMR_Total,Primary_Unit,Plant_Type,Source_Rows,Tier1_Rows', '', 'Commodity_Family asc,Title asc'),
-      spGet(CONFIG.lists.developers, 'Id,Title,Type_of_Plant,Name_of_Plant,Technology,Country,Status', '', 'Title asc'),
-      spGet(CONFIG.lists.schedules,  'Id,Developer_ID,Product_ID,ScheduleYear,Quarter,Amount_Absolute', '', 'Developer_ID asc')
+      spGet(CONFIG.lists.products,   'Id,Title,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8', '', 'field_1 asc,Title asc'),
+      spGet(CONFIG.lists.developers, 'Id,Title,field_1,field_2,field_3,field_4,field_5', '', 'Title asc'),
+      spGet(CONFIG.lists.schedules,  'Id,Title,field_1,field_2,field_3,field_4', '', 'Title asc')
     ]);
-    store.products   = prods;
-    store.developers = devs;
-    store.schedules  = scheds;
+    store.products   = prods.map(p => ({
+      Id:                     p.Id,
+      Title:                  p.Title,
+      Commodity_Family:       p.field_1,
+      Nuclear_Classification: p.field_2,
+      GW_Total:               p.field_3,
+      SMR_Total:              p.field_4,
+      Primary_Unit:           p.field_5,
+      Source_Rows:            p.field_6,
+      Tier1_Rows:             p.field_7,
+      Plant_Type:             p.field_8,
+    }));
+    store.developers = devs.map(d => ({
+      Id:            d.Id,
+      Title:         d.Title,
+      Type_of_Plant: d.field_1,
+      Name_of_Plant: d.field_2,
+      Technology:    d.field_3,
+      Country:       d.field_4,
+      Status:        d.field_5,
+    }));
+    store.schedules  = scheds.map(s => ({
+      Id:              s.Id,
+      Developer_ID:    s.Title,
+      Product_ID:      s.field_1,
+      ScheduleYear:    s.field_2,
+      Quarter:         s.field_3,
+      Amount_Absolute: s.field_4,
+    }));
     populateDeveloperDropdown();
     populateSchedFilters();
     renderProducts();
@@ -1429,13 +1455,23 @@ async function saveProduct() {
   const name = document.getElementById('fProdName').value.trim();
   if (!name) { toast('Category name is required', 'error'); return; }
   const body = {
+    Title:   name,
+    field_1: document.getElementById('fProdFamily').value    || null,
+    field_2: document.getElementById('fProdNuclear').value   || null,
+    field_3: parseFloatOrNull(document.getElementById('fProdGWTotal').value),
+    field_4: parseFloatOrNull(document.getElementById('fProdSMRTotal').value),
+    field_5: document.getElementById('fProdUnit').value      || null,
+    field_8: document.getElementById('fProdPlantType').value || null,
+  };
+
+  const friendlyProd = {
     Title:                  name,
-    Commodity_Family:       document.getElementById('fProdFamily').value    || null,
-    Nuclear_Classification: document.getElementById('fProdNuclear').value   || null,
-    Plant_Type:             document.getElementById('fProdPlantType').value || null,
-    GW_Total:               parseFloatOrNull(document.getElementById('fProdGWTotal').value),
-    SMR_Total:              parseFloatOrNull(document.getElementById('fProdSMRTotal').value),
-    Primary_Unit:           document.getElementById('fProdUnit').value      || null
+    Commodity_Family:       body.field_1,
+    Nuclear_Classification: body.field_2,
+    GW_Total:               body.field_3,
+    SMR_Total:              body.field_4,
+    Primary_Unit:           body.field_5,
+    Plant_Type:             body.field_8,
   };
 
   const saving = document.getElementById('productSaving');
@@ -1445,10 +1481,10 @@ async function saveProduct() {
   try {
     if (store.editingProduct) {
       await spPatch(CONFIG.lists.products, store.editingProduct.Id, body);
-      Object.assign(store.editingProduct, body);
+      Object.assign(store.editingProduct, friendlyProd);
     } else {
       const created = await spPost(CONFIG.lists.products, body);
-      store.products.push({ ...body, Id: created.Id });
+      store.products.push({ ...friendlyProd, Id: created.Id });
       store.products.sort((a,b) => (a.Commodity_Family||'').localeCompare(b.Commodity_Family||'') || a.Title.localeCompare(b.Title));
     }
     renderProducts();
@@ -1521,20 +1557,29 @@ async function saveDeveloper() {
   const name = document.getElementById('fDevName').value.trim();
   if (!name) { toast('Developer name is required', 'error'); return; }
   const body = {
-    Title:          name,
-    Type_of_Plant:  document.getElementById('fDevType').value      || null,
-    Name_of_Plant:  document.getElementById('fDevPlantName').value || null,
-    Country:        document.getElementById('fDevCountry').value   || null,
-    Status:         document.getElementById('fDevStatus').value    || null,
-    Technology:     document.getElementById('fDevTech').value      || null
+    Title:   name,
+    field_1: document.getElementById('fDevType').value      || null,
+    field_2: document.getElementById('fDevPlantName').value || null,
+    field_3: document.getElementById('fDevTech').value      || null,
+    field_4: document.getElementById('fDevCountry').value   || null,
+    field_5: document.getElementById('fDevStatus').value    || null,
+  };
+  // Also update friendly names in local store after save
+  const friendlyBody = {
+    Title:         name,
+    Type_of_Plant: body.field_1,
+    Name_of_Plant: body.field_2,
+    Technology:    body.field_3,
+    Country:       body.field_4,
+    Status:        body.field_5,
   };
   try {
     if (store.editingDev) {
       await spPatch(CONFIG.lists.developers, store.editingDev.Id, body);
-      Object.assign(store.editingDev, body);
+      Object.assign(store.editingDev, friendlyBody);
     } else {
       const created = await spPost(CONFIG.lists.developers, body);
-      store.developers.push({ ...body, Id: created.Id });
+      store.developers.push({ ...friendlyBody, Id: created.Id });
       store.developers.sort((a,b) => a.Title.localeCompare(b.Title));
     }
     populateDeveloperDropdown();
