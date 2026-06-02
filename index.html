@@ -846,6 +846,47 @@ textarea.form-control { height: 72px; resize: vertical; }
           </div>
         </div>
 
+        <!-- UK Supply Chain Capacity -->
+        <div style="background:white;border-radius:10px;border:1px solid var(--border);padding:24px 28px;">
+          <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:10px;">
+            <span style="font-size:20px;">🏭</span> UK supply chain capacity — how we derived the numbers
+          </div>
+          <p style="font-size:14px;line-height:1.7;color:var(--slate);margin-bottom:16px;">
+            The capacity overlay in the chart shows an estimate of how many units per year the UK supply chain could realistically deliver for each commodity category today. These are not official figures — they are NuCCoL's best estimates, derived from a structured methodology using publicly available market data and known UK supplier positions.
+          </p>
+
+          <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--navy);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em;">The methodology in four steps</div>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
+            ${[
+              ['1', 'Global nuclear production rate', 'For each category we established how many units are produced globally per year across the nuclear industry. This was taken from published market research reports (2024 base year) — for example, QY Research estimates global nuclear heat exchanger production at around 310 units per year excluding steam generators. Where no nuclear-specific figure was available we used broader industrial market data and applied a nuclear share percentage.'],
+              ['2', 'UK share of global production', 'We then estimated the UK\'s current share of that global production, based on known UK manufacturers and their nuclear supply history. The UK represents roughly 2% of the global nuclear fleet by installed capacity, but in some categories — particularly where a UK company is a world leader — the share is significantly higher. For example, Howden (Glasgow) is a major global supplier of nuclear-grade fans, and Prysmian\'s Wrexham facility manufactures nuclear-grade cable. In categories where there is no UK manufacturing capability at all (RPV, steam generators, reactor coolant pumps), capacity is set to zero.'],
+              ['3', 'Scaling to annual units', 'The global production rate × UK share gives an estimated annual output. This is the number shown as the capacity line on the chart — the flat line represents what the UK could supply in a single year at current capability. Where demand exceeds this line, the gap represents either a need for UK supply chain development, or reliance on imports.'],
+              ['4', 'Confidence rating', 'Each capacity figure carries a confidence rating: High (solid line) where the estimate is well-evidenced by known UK supplier data; Medium (dashed line) where the estimate is reasonable but less certain; Low (short-dashed line) where the figure is speculative or where capability is nascent. The confidence rating is shown in the chart legend and tooltip.'],
+            ].map(([n, title, desc]) => `
+              <div style="display:flex;gap:14px;align-items:flex-start;">
+                <div style="background:var(--navy);color:white;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px;">${n}</div>
+                <div><div style="font-size:13px;font-weight:700;color:var(--slate);margin-bottom:3px;">${title}</div><div style="font-size:13px;line-height:1.6;color:var(--muted);">${desc}</div></div>
+              </div>`).join('')}
+          </div>
+
+          <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--navy);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em;">Key sources</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;font-size:12px;color:var(--slate);line-height:1.5;">
+            <div style="background:var(--bg);border-radius:6px;padding:10px 12px;"><strong>Nuclear pump market</strong> — VMR 2024: $2.5Bn total nuclear pump market. Global production ~400–600 nuclear-qualified pumps/yr across all types.</div>
+            <div style="background:var(--bg);border-radius:6px;padding:10px 12px;"><strong>Nuclear valve market</strong> — IntelMarketResearch 2024: $1.57Bn nuclear island valves. Cognitive Market Research: $6.24Bn nuclear grade valve market total.</div>
+            <div style="background:var(--bg);border-radius:6px;padding:10px 12px;"><strong>Nuclear heat exchangers</strong> — QY Research 2024: ~310 units/yr globally (excl. steam generators) at avg $550k/unit = $171M market.</div>
+            <div style="background:var(--bg);border-radius:6px;padding:10px 12px;"><strong>Nuclear cable</strong> — Global Growth Insights 2024: Class 1E instrumentation cable $1.075Bn. Prysmian Wrexham confirmed UK nuclear cable manufacturer.</div>
+            <div style="background:var(--bg);border-radius:6px;padding:10px 12px;"><strong>Structural steel</strong> — Severfield (UK) confirmed HPC direct supplier. Billington Structures, Caledonian Modular also active. UK structural steel capacity ~2Mtpa non-residential.</div>
+            <div style="background:var(--bg);border-radius:6px;padding:10px 12px;"><strong>HVAC fans</strong> — VMR 2024: Nuclear Grade Fans $1.2–2.5Bn. Howden (Glasgow) confirmed world-leading nuclear fan supplier with dedicated nuclear product line.</div>
+            <div style="background:var(--bg);border-radius:6px;padding:10px 12px;"><strong>Reactor pressure vessel</strong> — UK capacity set to zero. No current RPV manufacturing in UK. Sheffield Forgemasters (UK Gov-owned since 2021) represents a potential future capability but years from readiness.</div>
+            <div style="background:var(--bg);border-radius:6px;padding:10px 12px;"><strong>Fire detection</strong> — Apollo Fire Detectors (Havant, UK) confirmed nuclear EQ-qualified. C-TEC (UK) also active. High F4N relevance. Capacity rated High confidence.</div>
+          </div>
+
+          <div style="background:rgba(0,168,232,0.06);border-left:4px solid var(--cyan);border-radius:0 6px 6px 0;padding:12px 16px;">
+            <div style="font-size:12px;font-weight:700;color:var(--cyan);margin-bottom:4px;font-family:var(--font-mono);">ℹ CAPACITY vs DEMAND — what the gap means</div>
+            <p style="font-size:13px;line-height:1.6;color:var(--slate);">Where the demand line exceeds the capacity line, this does not automatically mean a crisis — it may mean the UK needs to grow its supply base, qualify new suppliers, or accept some level of import. Where demand is well below capacity, there is headroom and UK manufacturers may be competing for a smaller share of work than they could deliver. The gap analysis is the starting point for NuCCoL's supply chain development and F4N engagement work.</p>
+          </div>
+        </div>
+
         <!-- Reading results -->
         <div style="background:white;border-radius:10px;border:1px solid var(--border);padding:24px 28px;">
           <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:10px;">
