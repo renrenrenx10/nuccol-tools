@@ -499,13 +499,29 @@ function renderChart(data, view) {
   let isolatedIndex = null;
 
   function isolateDataset(ci, idx) {
+    // Skip if clicking a capacity line directly — isolate its paired demand series instead
+    const clickedDs = ci.data.datasets[idx];
+    if (clickedDs && clickedDs.isCapacityLine) return;
+
     if (isolatedIndex === idx) {
-      // Already isolated — restore all
-      ci.data.datasets.forEach((_, i) => ci.show(i));
+      // Already isolated — restore all, hide capacity lines unless global toggle is on
+      ci.data.datasets.forEach((ds, i) => {
+        if (ds.isCapacityLine && !showCapacity) ci.hide(i);
+        else ci.show(i);
+      });
       isolatedIndex = null;
     } else {
-      // Isolate this one
-      ci.data.datasets.forEach((_, i) => { if (i !== idx) ci.hide(i); else ci.show(i); });
+      // Isolate this demand series + show its matching capacity line, hide everything else
+      const demandLabel = ci.data.datasets[idx].label;
+      ci.data.datasets.forEach((ds, i) => {
+        if (i === idx) {
+          ci.show(i); // the demand series
+        } else if (ds.isCapacityLine && ds.label.startsWith(demandLabel)) {
+          ci.show(i); // its paired capacity line
+        } else {
+          ci.hide(i);
+        }
+      });
       isolatedIndex = idx;
     }
     ci.update();
@@ -517,13 +533,12 @@ function renderChart(data, view) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
+      interaction: { mode: 'nearest', intersect: true }, // only fire on direct hover
       plugins: {
         legend: {
           position: 'right',
           labels: {
             font: { family: 'Barlow', size: 12 },
-            // No usePointStyle — use plain text labels so the full label text is the hit area
             boxWidth: 12,
             boxHeight: 12,
             padding: 12,
@@ -539,30 +554,22 @@ function renderChart(data, view) {
             }))
           },
           onClick: (e, legendItem, legend) => {
-            // Single click = isolate (show only this), click again = show all
             isolateDataset(legend.chart, legendItem.datasetIndex);
           }
         },
         tooltip: {
-          mode: 'index',
-          intersect: false,
+          mode: 'nearest',
+          intersect: true,   // only show when directly over a bar/point
           callbacks: {
             label: ctx => {
               const val = ctx.parsed.y;
               if (!val) return null;
               const ds = ctx.dataset;
               if (ds.isCapacityLine) {
-                return ` ━ ${ds.label}: ${val.toLocaleString('en-GB', {maximumFractionDigits: 0})} (UK capacity/yr)`;
+                return ` ━ UK Capacity: ${val.toLocaleString('en-GB', {maximumFractionDigits: 0})} /yr`;
               }
               return ` ${ds.label}: ${val.toLocaleString('en-GB', {maximumFractionDigits: 0})}`;
-            },
-            afterBody: () => showCapacity ? [] : ['', ' ↖ Click chart to isolate this series']
-          },
-          itemSort: (a, b) => {
-            // Capacity lines go to bottom of tooltip
-            if (a.dataset.isCapacityLine && !b.dataset.isCapacityLine) return 1;
-            if (!a.dataset.isCapacityLine && b.dataset.isCapacityLine) return -1;
-            return b.parsed.y - a.parsed.y;
+            }
           }
         }
       },
@@ -580,11 +587,13 @@ function renderChart(data, view) {
 
         // Drill-down: family view clicking a bar → switch to category
         if (view === 'family' && elements.length) {
-          const family = datasets[elements[0].datasetIndex].label;
-          document.getElementById('filterView').value   = 'category';
-          document.getElementById('filterFamily').value = family;
-          applyFilters();
-          return;
+          const ds = datasets[elements[0].datasetIndex];
+          if (ds && !ds.isCapacityLine) {
+            document.getElementById('filterView').value   = 'category';
+            document.getElementById('filterFamily').value = ds.label;
+            applyFilters();
+            return;
+          }
         }
 
         // Isolate: clicking any bar/point in category view isolates that series
@@ -594,6 +603,14 @@ function renderChart(data, view) {
       }
     }
   });
+
+  // Hide capacity lines on initial render unless global toggle is on
+  if (!showCapacity) {
+    chartInstance.data.datasets.forEach((ds, i) => {
+      if (ds.isCapacityLine) chartInstance.hide(i);
+    });
+    chartInstance.update('none');
+  }
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
