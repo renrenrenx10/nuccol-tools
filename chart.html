@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DangerMouse — Demand Forecast</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/@azure/msal-browser@3.28.0/lib/msal-browser.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --navy:    #0d3b6e;
+      --cyan:    #00a8e8;
+      --bg:      #f4f6f9;
+      --white:   #ffffff;
+      --text:    #1a1a2e;
+      --muted:   #6c757d;
+      --danger:  #e74c3c;
+      --success: #2ecc71;
+      --border:  #dee2e6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }
+    body { font-family: 'Barlow', sans-serif; background: var(--bg); display: flex; flex-direction: column; }
+
+    /* ── NAV — slimmed to 48px ── */
+    nav {
+      background: var(--navy); height: 48px; display: flex; align-items: center;
+      padding: 0 20px; gap: 14px; flex-shrink: 0;
+    }
+    nav .title { font-family: 'Share Tech Mono', monospace; color: #fff; font-size: 15px; flex: 1; }
+    nav .title span { color: var(--cyan); }
+    nav .sign-btn {
+      background: var(--cyan); color: #fff; border: none; padding: 5px 14px;
+      border-radius: 4px; font-family: 'Share Tech Mono', monospace; font-size: 12px;
+      cursor: pointer; transition: opacity .2s;
+    }
+    nav .sign-btn:hover { opacity: .85; }
+    nav .sign-btn.out { background: transparent; border: 1px solid rgba(255,255,255,.3); }
+    #userLabel { font-family: 'Share Tech Mono', monospace; color: rgba(255,255,255,.6); font-size: 11px; }
+
+    /* ── HEADER BAR — single compact row ── */
+    .header-bar {
+      background: var(--white); border-bottom: 1px solid var(--border);
+      padding: 6px 20px; display: flex; align-items: center; gap: 20px; flex-shrink: 0;
+    }
+    .header-bar h1 { font-family: 'Share Tech Mono', monospace; font-size: 16px; color: var(--text); line-height: 1; }
+    .header-bar p  { font-size: 11px; color: var(--muted); margin-left: 6px; }
+    .header-title  { display: flex; align-items: baseline; gap: 0; }
+    .kpis { display: flex; gap: 8px; margin-left: auto; }
+    .kpi  { background: rgba(13,59,110,.06); border-radius: 6px; padding: 4px 12px; text-align: center; min-width: 90px; }
+    .kpi-label { font-size: 9px; color: var(--muted); font-family: 'Share Tech Mono', monospace; text-transform: uppercase; letter-spacing: .04em; }
+    .kpi-value { font-size: 16px; font-weight: 700; color: var(--navy); font-family: 'Share Tech Mono', monospace; }
+
+    /* ── MAIN fills remaining height ── */
+    main { flex: 1; padding: 10px 16px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+
+    #statusBar {
+      display: flex; align-items: center; gap: 10px; padding: 6px 14px;
+      background: var(--white); border-radius: 6px; border-left: 4px solid var(--cyan);
+      font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--muted);
+      flex-shrink: 0;
+    }
+    #statusBar.error  { border-color: var(--danger);  color: var(--danger); }
+    #statusBar.ok     { border-color: var(--success); color: #1a7a4a; }
+
+    .spinner {
+      width: 14px; height: 14px; border: 2px solid var(--border);
+      border-top-color: var(--cyan); border-radius: 50%;
+      animation: spin .7s linear infinite; flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── FILTERS — all on one row ── */
+    .filters {
+      background: var(--white); border-radius: 6px; padding: 8px 14px;
+      display: flex; flex-direction: row; align-items: center; gap: 16px;
+      flex-wrap: wrap; flex-shrink: 0;
+    }
+    .filter-section-label {
+      font-size: 10px; color: var(--muted); font-family: 'Share Tech Mono', monospace;
+      text-transform: uppercase; white-space: nowrap;
+    }
+    .filter-divider { width: 1px; height: 24px; background: var(--border); flex-shrink: 0; }
+    .filter-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .filter-group { display: flex; align-items: center; gap: 6px; }
+    .filter-group label { font-size: 10px; color: var(--muted); font-family: 'Share Tech Mono', monospace; text-transform: uppercase; white-space: nowrap; }
+    .filter-group select {
+      border: 1px solid var(--navy); border-radius: 4px; padding: 4px 8px;
+      font-family: 'Barlow', sans-serif; font-size: 12px; color: var(--text);
+      background: var(--white); cursor: pointer;
+    }
+    .filter-group select:focus { outline: 2px solid var(--cyan); }
+
+    /* Developer toggle pills — compact */
+    .dev-toggles { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .dev-toggle {
+      padding: 3px 12px; border-radius: 20px; border: 1.5px solid var(--navy);
+      background: var(--white); color: var(--navy); font-family: 'Barlow', sans-serif;
+      font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s;
+      user-select: none; white-space: nowrap;
+    }
+    .dev-toggle:hover { background: rgba(13,59,110,.07); }
+    .dev-toggle.active { background: var(--navy); color: #fff; }
+    .dev-toggle.all-btn { border-color: var(--cyan); color: var(--cyan); }
+    .dev-toggle.all-btn.active { background: var(--cyan); color: #fff; }
+
+    /* ── CHART CARD fills all remaining vertical space ── */
+    .chart-card {
+      background: var(--white); border-radius: 8px; padding: 12px 16px;
+      flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0;
+    }
+    .chart-card canvas { flex: 1; min-height: 0; }
+    .chart-toolbar { display: flex; justify-content: flex-end; margin-bottom: 8px; flex-shrink: 0; }
+    .chart-type-toggle { display: flex; border: 1.5px solid var(--navy); border-radius: 6px; overflow: hidden; }
+    .chart-type-toggle button {
+      background: var(--white); color: var(--navy); border: none;
+      padding: 5px 16px; font-family: 'Share Tech Mono', monospace; font-size: 12px;
+      cursor: pointer; transition: all .15s;
+    }
+    .chart-type-toggle button:not(:last-child) { border-right: 1.5px solid var(--navy); }
+    .chart-type-toggle button:hover { background: rgba(13,59,110,.07); }
+    .chart-type-toggle button.active { background: var(--navy); color: #fff; }
+
+    #emptyState {
+      display: none; flex-direction: column; align-items: center; justify-content: center;
+      flex: 1; color: var(--muted); font-family: 'Share Tech Mono', monospace;
+      font-size: 14px; gap: 12px;
+    }
+    #emptyState .icon { font-size: 40px; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="title">☢ &nbsp;<span>DangerMouse</span> — Nuclear Demand Model</div>
+  <span id="userLabel"></span>
+  <button class="sign-btn" id="btnSignIn" onclick="signIn()">Sign in</button>
+  <button class="sign-btn out" id="btnSignOut" onclick="signOut()" style="display:none">Sign out</button>
+</nav>
+
+<div class="header-bar">
+  <div class="header-title">
+    <h1>Demand Forecast</h1>
+    <p>Generated from Power Apps · DangerMouse SharePoint</p>
+  </div>
+  <div class="kpis">
+    <div class="kpi"><div class="kpi-label">Total Demand</div><div class="kpi-value" id="kpiTotal">—</div></div>
+    <div class="kpi"><div class="kpi-label">Products</div><div class="kpi-value" id="kpiProducts">—</div></div>
+    <div class="kpi"><div class="kpi-label">Year Span</div><div class="kpi-value" id="kpiYears">—</div></div>
+    <div class="kpi"><div class="kpi-label">Developers</div><div class="kpi-value" id="kpiDevs">—</div></div>
+  </div>
+</div>
+
+<main>
+  <div id="statusBar"><div class="spinner" id="spinner"></div><span id="statusText">Waiting for sign-in…</span></div>
+
+  <div class="filters" id="filterBar" style="display:none">
+    <span class="filter-section-label">Developer</span>
+    <div class="dev-toggles" id="devToggles">
+      <button class="dev-toggle all-btn active" onclick="toggleDev('__all__', this)">All</button>
+    </div>
+    <div class="filter-divider"></div>
+    <div class="filter-group">
+      <label>View</label>
+      <select id="filterView" onchange="applyFilters()">
+        <option value="family">By Family (10)</option>
+        <option value="category">By Category</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Family</label>
+      <select id="filterFamily" onchange="applyFilters()"><option value="All">All Families</option></select>
+    </div>
+    <div class="filter-group">
+      <label>Year From</label>
+      <select id="filterYearFrom" onchange="applyFilters()"><option value="All">All</option></select>
+    </div>
+    <div class="filter-group">
+      <label>Year To</label>
+      <select id="filterYearTo" onchange="applyFilters()"><option value="All">All</option></select>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-toolbar">
+      <div class="chart-type-toggle">
+        <button id="btnBar" class="active" onclick="setChartType('bar', this)">▐█ Bar</button>
+        <button id="btnArea" onclick="setChartType('area', this)">◿ Area</button>
+      </div>
+    </div>
+    <div id="emptyState"><div class="icon">📊</div><div>No data yet — run Generate Demand in Power Apps first.</div></div>
+    <canvas id="demandChart"></canvas>
+  </div>
+</main>
+
+<script>
+const CLIENT_ID  = "ec0a6806-59e8-4ea9-8ff5-6bdb1ba87baf";
+const TENANT_ID  = "d44192f5-1023-458c-9cb3-9ff7e9c6d4ad";
+const SITE_URL   = "https://nuccol.sharepoint.com/sites/DangerMouse";
+const LIST_NAME  = "ChartCache";
+const ITEM_TITLE = "cache";
+
+const msalInstance = new msal.PublicClientApplication({
+  auth: {
+    clientId: CLIENT_ID,
+    authority: `https://login.microsoftonline.com/${TENANT_ID}`,
+    redirectUri: window.location.href.split('?')[0]
+  },
+  cache: { cacheLocation: "sessionStorage" }
+});
+
+const scopes = ["https://nuccol.sharepoint.com/AllSites.Read"];
+const palette = ['#4e79a7','#f28e2b','#e15759','#76b7b2','#59a14f','#edc948','#b07aa1','#ff9da7','#9c755f','#bab0ac','#1f77b4','#aec7e8','#ffbb78','#98df8a','#d62728'];
+
+let allData = [];
+let chartInstance = null;
+let selectedDevs = new Set(['__all__']); // '__all__' means all selected
+let currentChartType = 'bar';
+
+function setChartType(type, btn) {
+  currentChartType = type;
+  document.querySelectorAll('.chart-type-toggle button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+
+// ── AUTH ──────────────────────────────────────────────────────────────────────
+async function init() {
+  await msalInstance.initialize();
+  const accounts = msalInstance.getAllAccounts();
+  if (accounts.length > 0) {
+    setUser(accounts[0]);
+    await loadData();
+  } else {
+    setStatus("Sign in with your Microsoft 365 account to view the chart.", false);
+    hideSpinner();
+  }
+}
+
+async function signIn() {
+  try {
+    const response = await msalInstance.loginPopup({ scopes });
+    if (response?.account) { setUser(response.account); await loadData(); }
+  } catch (err) {
+    setStatus("Sign-in failed: " + err.message, false, true);
+    console.error(err);
+  }
+}
+
+function signOut() { msalInstance.logoutPopup(); }
+
+function setUser(account) {
+  document.getElementById('userLabel').textContent    = account.username;
+  document.getElementById('btnSignIn').style.display  = 'none';
+  document.getElementById('btnSignOut').style.display = 'inline-block';
+}
+
+async function getToken() {
+  const accounts = msalInstance.getAllAccounts();
+  if (!accounts.length) throw new Error("Not signed in");
+  try {
+    const r = await msalInstance.acquireTokenSilent({ scopes, account: accounts[0] });
+    return r.accessToken;
+  } catch {
+    const r = await msalInstance.acquireTokenPopup({ scopes });
+    return r.accessToken;
+  }
+}
+
+// ── DATA ──────────────────────────────────────────────────────────────────────
+async function loadData() {
+  setStatus("Fetching data from SharePoint…", false);
+  try {
+    const token = await getToken();
+    const url = `${SITE_URL}/_api/web/lists/getbytitle('${LIST_NAME}')/items?$filter=Title eq '${ITEM_TITLE}'&$select=ChartData&$top=1`;
+    const resp = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}`, Accept: "application/json;odata=nometadata" }
+    });
+    if (!resp.ok) throw new Error(`SharePoint error ${resp.status}: ${resp.statusText}`);
+    const json = await resp.json();
+    if (!json.value?.length) throw new Error("No 'cache' item found in ChartCache list.");
+    const raw = json.value[0].ChartData;
+    if (!raw) throw new Error("ChartData is empty — run Generate Demand in Power Apps first.");
+    allData = JSON.parse(raw);
+    setStatus(`Loaded ${allData.length} rows successfully.`, true);
+    hideSpinner();
+    populateFilters();
+    const view = document.getElementById('filterView').value;
+    updateKpis(allData, view);
+    renderChart(allData, view);
+    document.getElementById('filterBar').style.display = 'flex';
+  } catch (err) {
+    setStatus("Error: " + err.message, false, true);
+    hideSpinner();
+    showEmpty();
+    console.error(err);
+  }
+}
+
+// ── FILTERS ───────────────────────────────────────────────────────────────────
+function populateFilters() {
+  const devs     = [...new Set(allData.map(r => r.d))].sort();
+  const families = [...new Set(allData.map(r => r.f).filter(Boolean))].sort();
+  const years    = [...new Set(allData.map(r => r.y))].sort();
+
+  // Developer toggles
+  const container = document.getElementById('devToggles');
+  devs.forEach(dev => {
+    const btn = document.createElement('button');
+    btn.className = 'dev-toggle';
+    btn.textContent = dev;
+    btn.onclick = () => toggleDev(dev, btn);
+    container.appendChild(btn);
+  });
+
+  fillSelect('filterFamily',   families, 'All Families');
+  fillSelect('filterYearFrom', years,    'All');
+  fillSelect('filterYearTo',   years,    'All');
+}
+
+function fillSelect(id, values, allLabel) {
+  const sel = document.getElementById(id);
+  sel.innerHTML = `<option value="All">${allLabel}</option>`;
+  values.forEach(v => {
+    const o = document.createElement('option');
+    o.value = v; o.textContent = v;
+    sel.appendChild(o);
+  });
+}
+
+function toggleDev(dev, btn) {
+  const allBtn = document.querySelector('.all-btn');
+  if (dev === '__all__') {
+    selectedDevs = new Set(['__all__']);
+    document.querySelectorAll('.dev-toggle:not(.all-btn)').forEach(b => b.classList.remove('active'));
+    allBtn.classList.add('active');
+  } else {
+    if (selectedDevs.has(dev)) { selectedDevs.delete(dev); btn.classList.remove('active'); }
+    else { selectedDevs.add(dev); btn.classList.add('active'); }
+    selectedDevs.delete('__all__');
+    allBtn.classList.remove('active');
+    if (selectedDevs.size === 0) { selectedDevs.add('__all__'); allBtn.classList.add('active'); }
+  }
+  applyFilters();
+}
+
+function applyFilters() {
+  const view   = document.getElementById('filterView').value;
+  const family = document.getElementById('filterFamily').value;
+  const yFrom  = document.getElementById('filterYearFrom').value;
+  const yTo    = document.getElementById('filterYearTo').value;
+
+  let filtered = allData;
+
+  if (!selectedDevs.has('__all__')) {
+    filtered = filtered.filter(r => selectedDevs.has(r.d));
+  }
+  if (family !== 'All') filtered = filtered.filter(r => r.f === family);
+  if (yFrom  !== 'All') filtered = filtered.filter(r => r.y >= +yFrom);
+  if (yTo    !== 'All') filtered = filtered.filter(r => r.y <= +yTo);
+
+  updateKpis(filtered, view);
+  renderChart(filtered, view);
+}
+
+// ── KPIs ──────────────────────────────────────────────────────────────────────
+function updateKpis(data, view) {
+  const groupKey = view === 'category' ? r => r.p : r => r.f;
+  document.getElementById('kpiTotal').textContent    = data.reduce((s,r) => s+(r.a||0), 0).toLocaleString();
+  document.getElementById('kpiProducts').textContent = new Set(data.map(groupKey)).size;
+  document.getElementById('kpiYears').textContent    = new Set(data.map(r=>r.y)).size + ' yrs';
+  document.getElementById('kpiDevs').textContent     = new Set(data.map(r=>r.d)).size;
+}
+
+// ── CHART ─────────────────────────────────────────────────────────────────────
+function renderChart(data, view) {
+  if (!data.length) { showEmpty(); return; }
+  document.getElementById('emptyState').style.display  = 'none';
+  document.getElementById('demandChart').style.display = 'block';
+
+  const years    = [...new Set(data.map(r=>r.y))].sort();
+  // Group by family or category depending on view
+  const groupKey = (view === 'category') ? r => r.p : r => (r.f || 'Unknown');
+  const groups   = [...new Set(data.map(groupKey))].sort();
+
+  const isArea = currentChartType === 'area';
+
+  const datasets = groups.map((g, i) => {
+    const colour = palette[i % palette.length];
+    const base = {
+      label: g,
+      data:  years.map(y => data.filter(r => groupKey(r) === g && r.y === y).reduce((s,r) => s+(r.a||0), 0))
+    };
+    if (isArea) {
+      return { ...base, type:'line', fill:true, tension:0.4, borderColor:colour,
+               backgroundColor:colour+'33', pointBackgroundColor:colour,
+               pointRadius:3, pointHoverRadius:5, borderWidth:2 };
+    } else {
+      return { ...base, backgroundColor:colour, borderRadius:3 };
+    }
+  });
+
+  if (chartInstance) chartInstance.destroy();
+  chartInstance = new Chart(document.getElementById('demandChart').getContext('2d'), {
+    type: isArea ? 'line' : 'bar',
+    data: { labels: years, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position:'right', labels:{ font:{family:'Barlow',size:12}, boxWidth:14 } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()}` } }
+      },
+      scales: {
+        x: { title:{display:true,text:'Year',font:{family:'Share Tech Mono',size:12},color:'#6c757d'}, grid:{display:false} },
+        y: {
+          stacked: isArea,
+          title:{display:true,text:'Amount',font:{family:'Share Tech Mono',size:12},color:'#6c757d'},
+          beginAtZero:true,
+          ticks:{ callback: v => v.toLocaleString() }
+        }
+      },
+      onClick: (evt, elements) => {
+        // Drill down: if viewing families, clicking a bar switches to category view filtered to that family
+        if (view !== 'family' || !elements.length) return;
+        const family = datasets[elements[0].datasetIndex].label;
+        document.getElementById('filterView').value   = 'category';
+        document.getElementById('filterFamily').value = family;
+        applyFilters();
+      }
+    }
+  });
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function setStatus(msg, ok, err) {
+  const bar = document.getElementById('statusBar');
+  bar.className = err ? 'error' : ok ? 'ok' : '';
+  document.getElementById('statusText').textContent = msg;
+}
+function hideSpinner() { document.getElementById('spinner').style.display = 'none'; }
+function showEmpty() {
+  document.getElementById('emptyState').style.display  = 'flex';
+  document.getElementById('demandChart').style.display = 'none';
+}
+
+init();
+</script>
+</body>
+</html>
