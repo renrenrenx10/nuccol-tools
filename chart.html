@@ -465,11 +465,25 @@ function renderChart(data, view) {
       data:  years.map(y => data.filter(r => groupKey(r) === g && r.y === y).reduce((s,r) => s+(r.a||0), 0))
     };
     if (isArea) {
-      return { ...base, type:'line', fill:true, tension:0.4, borderColor:colour,
-               backgroundColor:colour+'33', pointBackgroundColor:colour,
-               pointRadius:3, pointHoverRadius:5, borderWidth:2 };
+      return { ...base,
+        type: 'line',
+        fill: true,
+        tension: 0.4,
+        borderColor: colour,
+        backgroundColor: colour + '55',
+        pointBackgroundColor: colour,
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        borderWidth: 2,
+        order: i + 100  // draw demand lines behind capacity/lead time
+      };
     } else {
-      return { ...base, backgroundColor:colour, borderRadius:3 };
+      return { ...base,
+        type: 'bar',
+        backgroundColor: colour,
+        borderRadius: 3,
+        order: i + 100
+      };
     }
   });
 
@@ -608,12 +622,12 @@ function renderChart(data, view) {
   }
 
   chartInstance = new Chart(document.getElementById('demandChart').getContext('2d'), {
-    type: isArea ? 'line' : 'bar',
+    type: 'bar',  // always use bar as base — area datasets override with type:'line' per dataset
     data: { labels: years, datasets },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      interaction: { mode: 'nearest', intersect: true }, // only fire on direct hover
+      interaction: { mode: 'nearest', intersect: true },
       plugins: {
         legend: {
           position: 'right',
@@ -639,7 +653,7 @@ function renderChart(data, view) {
         },
         tooltip: {
           mode: 'nearest',
-          intersect: true,   // only show when directly over a bar/point
+          intersect: true,
           callbacks: {
             label: ctx => {
               const val = ctx.parsed.y;
@@ -654,7 +668,11 @@ function renderChart(data, view) {
         }
       },
       scales: {
-        x: { title:{display:true,text:'Year',font:{family:'Share Tech Mono',size:12},color:'#6c757d'}, grid:{display:false} },
+        x: {
+          title:{display:true,text:'Year',font:{family:'Share Tech Mono',size:12},color:'#6c757d'},
+          grid:{display:false},
+          stacked: isArea  // stack x-axis only in area mode
+        },
         y: {
           stacked: isArea,
           title:{display:true,text:'Amount',font:{family:'Share Tech Mono',size:12},color:'#6c757d'},
@@ -665,10 +683,16 @@ function renderChart(data, view) {
       onClick: (evt, elements) => {
         if (!chartInstance) return;
 
-        // Drill-down: family view clicking a bar → switch to category
-        if (view === 'family' && elements.length) {
-          const ds = datasets[elements[0].datasetIndex];
-          if (ds && !ds.isCapacityLine) {
+        // Use getElementsAtEventForMode for more reliable hit detection on bars
+        const hits = chartInstance.getElementsAtEventForMode(evt, 'nearest', { intersect: false }, false);
+        if (!hits.length) return;
+
+        const currentView = document.getElementById('filterView').value;
+
+        // Drill-down: family view → switch to category view for clicked family
+        if (currentView === 'family') {
+          const ds = datasets[hits[0].datasetIndex];
+          if (ds && !ds.isCapacityLine && !ds.isLeadTimeLine) {
             document.getElementById('filterView').value   = 'category';
             document.getElementById('filterFamily').value = ds.label;
             applyFilters();
@@ -676,9 +700,9 @@ function renderChart(data, view) {
           }
         }
 
-        // Isolate: clicking any bar/point in category view isolates that series
-        if (elements.length) {
-          isolateDataset(chartInstance, elements[0].datasetIndex);
+        // Isolate in category view
+        if (currentView === 'category') {
+          isolateDataset(chartInstance, hits[0].datasetIndex);
         }
       }
     }
