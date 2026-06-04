@@ -189,13 +189,6 @@
         <button id="btnArea" onclick="setChartType('area', this)">◿ Area</button>
       </div>
       <button onclick="showAllSeries()" style="margin-left:8px;padding:4px 12px;font-size:12px;font-family:'Barlow',sans-serif;background:transparent;border:1.5px solid var(--navy);border-radius:6px;color:var(--navy);cursor:pointer;">Show All</button>
-      <button id="btnCapacity" onclick="toggleCapacity(this)" style="display:none;margin-left:8px;padding:4px 12px;font-size:12px;font-family:'Barlow',sans-serif;background:transparent;border:1.5px solid #e74c3c;border-radius:6px;color:#e74c3c;cursor:pointer;align-items:center;gap:5px;">
-        <span>━</span> UK Capacity
-      </button>
-      <button id="btnLeadTime" onclick="toggleLeadTime(this)" style="display:none;margin-left:8px;padding:4px 12px;font-size:12px;font-family:'Barlow',sans-serif;background:transparent;border:1.5px solid #8e44ad;border-radius:6px;color:#8e44ad;cursor:pointer;align-items:center;gap:5px;">
-        <span>◈</span> Lead Time
-      </button>
-      <span style="margin-left:auto;font-size:11px;color:var(--muted);font-family:'Barlow',sans-serif;">Click = isolate &nbsp;·&nbsp; Double-click = drill down / back up</span>
     </div>
     <div id="emptyState"><div class="icon">📊</div><div>No data yet — run Generate Demand in Power Apps first.</div></div>
     <canvas id="demandChart"></canvas>
@@ -223,53 +216,14 @@ const palette = ['#4e79a7','#f28e2b','#e15759','#76b7b2','#59a14f','#edc948','#b
 
 let allData = [];
 let chartInstance = null;
-let selectedDevs = new Set(['__all__']);
+let selectedDevs = new Set(['__all__']); // '__all__' means all selected
 let currentChartType = 'bar';
-let isolatedIndex = null;  // module-level so it persists across renders
-let _clickTimer   = null;
-const DBLCLICK_MS = 280;
-let capacityData  = {};
-let leadTimeData  = {};
-let showCapacity  = false;
-let showLeadTime  = false;
-
-function isolateDataset(ci, idx) {
-  const clickedDs = ci.data.datasets[idx];
-  if (clickedDs && (clickedDs.isCapacityLine || clickedDs.isLeadTimeLine)) return;
-  if (isolatedIndex === idx) {
-    ci.data.datasets.forEach((ds, i) => {
-      if ((ds.isCapacityLine && !showCapacity) || (ds.isLeadTimeLine && !showLeadTime)) ci.hide(i);
-      else ci.show(i);
-    });
-    isolatedIndex = null;
-  } else {
-    const demandLabel = ci.data.datasets[idx].label;
-    ci.data.datasets.forEach((ds, i) => {
-      if (i === idx) ci.show(i);
-      else if (ds.isCapacityLine && ds.label.startsWith(demandLabel)) ci.show(i);
-      else ci.hide(i);
-    });
-    isolatedIndex = idx;
-  }
-  ci.update();
-}
-
-function toggleCapacity(btn) {
-  showCapacity = !showCapacity;
-  btn.style.background = showCapacity ? '#e74c3c' : 'transparent';
-  btn.style.color      = showCapacity ? '#fff'    : '#e74c3c';
-  applyFilters();
-}
-
-function toggleLeadTime(btn) {
-  showLeadTime = !showLeadTime;
-  btn.style.background = showLeadTime ? '#8e44ad' : 'transparent';
-  btn.style.color      = showLeadTime ? '#fff'    : '#8e44ad';
-  applyFilters();
-}
 
 function showAllSeries() {
-  isolatedIndex = null;
+  if (!chartInstance) return;
+  chartInstance.data.datasets.forEach((_, i) => chartInstance.show(i));
+  chartInstance.update();
+  // Re-render to reset isolatedIndex closure
   applyFilters();
 }
 
@@ -336,39 +290,10 @@ async function loadData() {
     const json = await resp.json();
     if (!json.value?.length) throw new Error("No 'cache' item found in ChartCache list.");
     const raw = json.value[0].ChartData;
-    if (!raw) throw new Error("ChartData is empty — run Generate Demand in DangerMouse first.");
-    const parsed = JSON.parse(raw);
-    allData = Array.isArray(parsed) ? parsed : (parsed.rows || []);
-    // Pick up lead time data if included in payload
-    if (!Array.isArray(parsed) && parsed.leadTimes) {
-      leadTimeData = parsed.leadTimes || {};
-      if (Object.keys(leadTimeData).length) {
-        document.getElementById('btnLeadTime').style.display = 'inline-flex';
-      }
-    }
+    if (!raw) throw new Error("ChartData is empty — run Generate Demand in Power Apps first.");
+    allData = JSON.parse(raw);
     setStatus(`Loaded ${allData.length} rows successfully.`, true);
     hideSpinner();
-    // Load capacity from SharePoint (non-fatal)
-    try {
-      const capUrl = `${SITE_URL}/_api/web/lists/getbytitle('DM - Capacity')/items?$select=Title,field_1,field_2,field_3,field_4,field_5&$top=500`;
-      const capResp = await fetch(capUrl, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json;odata=nometadata' } });
-      if (capResp.ok) {
-        const capJson = await capResp.json();
-        capacityData = {};
-        (capJson.value || []).forEach(row => {
-          capacityData[row.Title] = {
-            family:     row.field_1 || '',
-            capacity:   parseFloat(row.field_2) || 0,
-            unit:       row.field_3 || '',
-            confidence: row.field_4 || 'Unknown',
-            notes:      row.field_5 || ''
-          };
-        });
-        if (Object.keys(capacityData).length) {
-          document.getElementById('btnCapacity').style.display = 'inline-flex';
-        }
-      }
-    } catch(e) { console.warn('Capacity data not available:', e.message); }
     populateFilters();
     const view = document.getElementById('filterView').value;
     updateKpis(allData, view);
@@ -485,74 +410,76 @@ function renderChart(data, view) {
     }
   });
 
-  // ── Capacity overlay datasets ─────────────────────────────────────────────
-  if (showCapacity && Object.keys(capacityData).length) {
-    groups.forEach((g, i) => {
-      const colour = palette[i % palette.length];
-      let capValue = 0, confidenceLevel = 'Unknown';
-      if (view === 'category') {
-        const cap = capacityData[g];
-        if (cap) { capValue = cap.capacity; confidenceLevel = cap.confidence; }
-      } else {
-        const familyCats = Object.entries(capacityData).filter(([, d]) => d.family === g);
-        capValue = familyCats.reduce((s, [, d]) => s + (d.capacity || 0), 0);
-        const confs = familyCats.map(([, d]) => d.confidence);
-        confidenceLevel = confs.includes('Low') ? 'Low' : confs.includes('Medium') ? 'Medium' : 'High';
-      }
-      if (capValue > 0) {
-        const dashStyle = confidenceLevel === 'High' ? [] : confidenceLevel === 'Medium' ? [6, 3] : [3, 6];
-        datasets.push({
-          label: `${g} — UK Capacity`,
-          data:  years.map(() => capValue),
-          type:  'line', fill: false,
-          borderColor: colour, backgroundColor: 'transparent',
-          borderWidth: 2, borderDash: dashStyle,
-          pointRadius: 0, pointHoverRadius: 4, tension: 0,
-          isCapacityLine: true,
-        });
-      }
-    });
+  if (chartInstance) chartInstance.destroy();
+
+  // Track isolated state — null means nothing isolated, otherwise the isolated dataset index
+  let isolatedIndex = null;
+
+  function getLeadTimeForLabel(dsLabel) {
+    const match = allData.find(r => r.p === dsLabel && r.lt != null);
+    return match ? { months: parseFloat(match.lt), label: `Lead Time (${match.lt} mths)` } : null;
   }
 
-  if (chartInstance) chartInstance.destroy();
-  isolatedIndex = null;  // reset on fresh render
+  function removeLeadTimeLine(ci) {
+    const idx = ci.data.datasets.findIndex(d => d._isLeadTime);
+    if (idx !== -1) ci.data.datasets.splice(idx, 1);
+    delete ci.options.scales.yLT;
+  }
 
-  // Attach canvas click handler for single/double-click detection
-  const canvas = document.getElementById('demandChart');
-  if (canvas._dmClick) canvas.removeEventListener('click', canvas._dmClick);
-  canvas._dmClick = function(evt) {
-    if (!chartInstance) return;
-    const hits = chartInstance.getElementsAtEventForMode(evt, 'nearest', {intersect:false}, false);
-    if (!hits.length) return;
-    const dsIdx = hits[0].datasetIndex;
-    const currentView = document.getElementById('filterView').value;
+  function addLeadTimeLine(ci, dsLabel, chartYears) {
+    removeLeadTimeLine(ci);
+    const lt = getLeadTimeForLabel(dsLabel);
+    if (!lt) return;
 
-    if (_clickTimer) {
-      // Double click
-      clearTimeout(_clickTimer);
-      _clickTimer = null;
+    ci.data.datasets.push({
+      _isLeadTime: true,
+      type: 'line',
+      label: lt.label,
+      data: chartYears.map(() => lt.months),
+      borderColor: '#e74c3c',
+      backgroundColor: 'transparent',
+      borderWidth: 2,
+      borderDash: [6, 4],
+      pointRadius: 0,
+      pointHoverRadius: 0,
+      fill: false,
+      tension: 0,
+      yAxisID: 'yLT',
+      order: -1
+    });
+
+    ci.options.scales.yLT = {
+      type: 'linear',
+      position: 'right',
+      title: { display: true, text: 'Lead Time (weeks)', font: { family: 'Share Tech Mono', size: 11 }, color: '#e74c3c' },
+      ticks: { color: '#e74c3c', font: { size: 11 } },
+      grid: { drawOnChartArea: false },
+      beginAtZero: true
+    };
+    // Don't call ci.update() here — caller handles it
+  }
+
+  function isolateDataset(ci, idx) {
+    if (isolatedIndex === idx) {
+      // Already isolated — restore all and remove lead time line
+      removeLeadTimeLine(ci);
+      ci.data.datasets.forEach((_, i) => { if (!ci.data.datasets[i]._isLeadTime) ci.show(i); });
       isolatedIndex = null;
-      if (currentView === 'family') {
-        const label = chartInstance.data.datasets[dsIdx].label;
-        document.getElementById('filterView').value   = 'category';
-        document.getElementById('filterFamily').value = label;
-        applyFilters();
-      } else {
-        document.getElementById('filterView').value   = 'family';
-        document.getElementById('filterFamily').value = 'All';
-        applyFilters();
-      }
+      ci.update();
     } else {
-      // Single click — wait to confirm not a double click
-      _clickTimer = setTimeout(() => {
-        _clickTimer = null;
-        isolateDataset(chartInstance, dsIdx);
-      }, DBLCLICK_MS);
+      // Isolate this one; also remove any stale lead time line first
+      removeLeadTimeLine(ci);
+      ci.data.datasets.forEach((_, i) => { if (i !== idx) ci.hide(i); else ci.show(i); });
+      isolatedIndex = idx;
+      // Add lead time line only in category view
+      if (view === 'category') {
+        addLeadTimeLine(ci, datasets[idx].label, years);
+      }
+      ci.update();
     }
-  };
-  canvas.addEventListener('click', canvas._dmClick);
+  }
 
-  chartInstance = new Chart(canvas.getContext('2d'), {
+  chartInstance = new Chart(document.getElementById('demandChart').getContext('2d'), {
     type: isArea ? 'line' : 'bar',
     data: { labels: years, datasets },
     options: {
@@ -569,16 +496,17 @@ function renderChart(data, view) {
             boxHeight: 12,
             padding: 12,
             generateLabels: chart => chart.data.datasets.map((ds, i) => ({
-              text:        ds.isCapacityLine ? `━ ${ds.label}` : ds.label,
-              fillStyle:   Array.isArray(ds.backgroundColor) ? ds.backgroundColor[0] : (ds.backgroundColor || ds.borderColor),
+              text: ds.label,
+              fillStyle: Array.isArray(ds.backgroundColor) ? ds.backgroundColor[0] : (ds.backgroundColor || ds.borderColor),
               strokeStyle: ds.borderColor || ds.backgroundColor,
-              lineWidth:   ds.isCapacityLine ? 2 : 1,
-              lineDash:    ds.borderDash || [],
-              hidden:      !chart.isDatasetVisible(i),
+              lineWidth: 1,
+              hidden: !chart.isDatasetVisible(i),
               datasetIndex: i
             }))
           },
           onClick: (e, legendItem, legend) => {
+            // Don't allow isolating the lead time line via legend click
+            if (legend.chart.data.datasets[legendItem.datasetIndex]?._isLeadTime) return;
             // Single click = isolate (show only this), click again = show all
             isolateDataset(legend.chart, legendItem.datasetIndex);
           }
@@ -588,19 +516,33 @@ function renderChart(data, view) {
           intersect: false,
           callbacks: {
             label: ctx => {
+              if (ctx.dataset._isLeadTime) return null;
               const val = ctx.parsed.y;
               if (!val) return null;
-              const ds = ctx.dataset;
-              if (ds.isCapacityLine) return ` ━ UK Capacity: ${val.toLocaleString('en-GB', {maximumFractionDigits: 0})} /yr`;
-              return ` ${ds.label}: ${val.toLocaleString('en-GB', {maximumFractionDigits: 0})}`;
+              return ` ${ctx.dataset.label}: ${val.toLocaleString('en-GB', {maximumFractionDigits: 0})}`;
             },
-            afterBody: () => ['', ' ↖ Click chart to isolate this series']
+            afterBody: (items) => {
+              // If isolated, show capacity and lead time context for that category
+              if (isolatedIndex !== null && items.length) {
+                const dsLabel = datasets[isolatedIndex]?.label;
+                const capRow  = allData.find(r => r.p === dsLabel && r.cap != null);
+                const ltRow   = allData.find(r => r.p === dsLabel && r.lt  != null);
+                const lines   = [''];
+                if (capRow) {
+                  const conf = capRow.capConf ? ` [${capRow.capConf}]` : '';
+                  lines.push(` 🏭 UK Capacity: ${capRow.cap?.toLocaleString()} ${capRow.capUnit || ''}${conf} / yr`);
+                }
+                if (ltRow) lines.push(` ⏱ Lead Time: ${ltRow.lt} months`);
+                if (lines.length > 1) return lines;
+              }
+              return ['', ' ↖ Click chart to isolate series'];
+            }
           },
           itemSort: (a, b) => b.parsed.y - a.parsed.y
         }
       },
       scales: {
-        x: { stacked: isArea, title:{display:true,text:'Year',font:{family:'Share Tech Mono',size:12},color:'#6c757d'}, grid:{display:false} },
+        x: { title:{display:true,text:'Year',font:{family:'Share Tech Mono',size:12},color:'#6c757d'}, grid:{display:false} },
         y: {
           stacked: isArea,
           title:{display:true,text:'Amount',font:{family:'Share Tech Mono',size:12},color:'#6c757d'},
@@ -608,17 +550,28 @@ function renderChart(data, view) {
           ticks:{ callback: v => v.toLocaleString() }
         }
       },
-      // clicks handled by canvas._dmClick listener above
+      onClick: (evt, elements) => {
+        if (!chartInstance) return;
+
+        // Drill-down: family view clicking a bar → switch to category
+        if (view === 'family' && elements.length) {
+          const family = datasets[elements[0].datasetIndex].label;
+          document.getElementById('filterView').value   = 'category';
+          document.getElementById('filterFamily').value = family;
+          applyFilters();
+          return;
+        }
+
+        // Isolate: clicking any bar/point in category view isolates that series
+        if (elements.length) {
+          const idx = elements[0].datasetIndex;
+          if (!chartInstance.data.datasets[idx]?._isLeadTime) {
+            isolateDataset(chartInstance, idx);
+          }
+        }
+      }
     }
   });
-
-  // Hide capacity lines on initial render unless toggle is on
-  if (!showCapacity) {
-    chartInstance.data.datasets.forEach((ds, i) => {
-      if (ds.isCapacityLine) chartInstance.hide(i);
-    });
-    chartInstance.update('none');
-  }
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────

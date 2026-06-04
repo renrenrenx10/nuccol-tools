@@ -685,13 +685,12 @@ textarea.form-control { height: 72px; resize: vertical; }
       <span class="count-badge" id="prodCount">— products</span>
     </div>
     <div class="table-header">
-      <span class="th p-name">Category</span>
-      <span class="th p-mat">Classification</span>
-      <span class="th p-res" style="width:100px;">Plant Type</span>
-      <span class="th p-wt" style="text-align:right;">GW Total</span>
-      <span class="th p-lt" style="width:130px;">SMR Total</span>
-      <span class="th p-rate" style="text-align:right;width:60px;">Unit</span>
-      <span class="th" style="width:140px;">Procurement Window</span>
+      <span class="th p-name">Product Name</span>
+      <span class="th p-mat">Material Type</span>
+      <span class="th p-res">Resource Type</span>
+      <span class="th p-wt">Weight</span>
+      <span class="th p-lt">Lead Time</span>
+      <span class="th p-rate">Prod. Rate</span>
     </div>
     <div class="table-wrap" id="productsBody">
       <div class="loading-row"><div class="spinner"></div> Loading products…</div>
@@ -1025,11 +1024,13 @@ const CONFIG = {
   siteUrl:    'https://nuccol.sharepoint.com/sites/DangerMouse',
   scopes:     ['https://nuccol.sharepoint.com/.default'],
   lists: {
-    products:   'DM - Products',
-    developers: 'DM - Developers',
-    schedules:  'DM - Dev Schedules',
-    chartCache: 'ChartCache',
-    leadTimes:  'DM - Lead Time By Category'
+    products:        'DM - Products',
+    developers:      'DM - Developers',
+    schedules:       'DM - Dev Schedules',
+    chartCache:      'ChartCache',
+    capacity:        'DM - Capacity',
+    leadTimes:       'DM - Lead Times',
+    leadTimeByCategory: 'DM - Lead Time By Category'
   }
 };
 
@@ -1178,7 +1179,9 @@ let store = {
   products:   [],
   developers: [],
   schedules:  [],
-  leadTimes:  [],
+  capacity:   [],          // DM - Capacity: UK supply capacity by category
+  leadTimes:  [],          // DM - Lead Times: per-component lead time detail
+  leadTimeByCategory: [],  // DM - Lead Time By Category: rolled-up lead time window per category
   buildPlan:  [],
   demandResults: [],
   editingProduct: null,
@@ -1188,13 +1191,14 @@ let store = {
 
 async function loadAllData() {
   try {
-    const [prods, devs, scheds, lts] = await Promise.all([
+    const [prods, devs, scheds, cap, lt, ltCat] = await Promise.all([
       spGet(CONFIG.lists.products,   'Id,Title,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8', '', 'field_1 asc,Title asc'),
       spGet(CONFIG.lists.developers, 'Id,Title,field_1,field_2,field_3,field_4,field_5', '', 'Title asc'),
       spGet(CONFIG.lists.schedules,  'Id,Title,field_1,field_2,field_3,field_4', '', 'Title asc'),
-      spGet(CONFIG.lists.leadTimes,  'Id,Title,field_1,field_2,field_3,field_4,field_5,field_6', '', 'field_1 asc')
+      spGet(CONFIG.lists.capacity,   'Id,Title,field_1,field_2,field_3,field_4,field_5', '', 'Title asc'),
+      spGet(CONFIG.lists.leadTimes,  'Id,Title,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8,field_9,field_10,field_11,field_12,field_13,field_14', '', 'Title asc'),
+      spGet(CONFIG.lists.leadTimeByCategory, 'Id,Title,field_1,field_2,field_3,field_4,field_5,field_6', '', 'Title asc')
     ]);
-
     store.products   = prods.map(p => ({
       Id:                     p.Id,
       Title:                  p.Title,
@@ -1224,17 +1228,43 @@ async function loadAllData() {
       Quarter:         s.field_3,
       Amount_Absolute: s.field_4,
     }));
-    store.leadTimes  = lts.map(l => ({
-      Id:                   l.Id,
-      Category:             l.Title,
-      Earliest_Start_Months: l.field_1,
-      Latest_End_Months:    l.field_2,
-      Full_Window_Months:   l.field_3,
-      Source_Component_Count: l.field_4,
-      Safety_Classes:       l.field_5,
-      Source_Components:    l.field_6,
+    store.capacity = cap.map(c => ({
+      Id:                  c.Id,
+      Category:            c.Title,
+      Commodity_Family:    c.field_1,
+      UK_Capacity_Per_Year: parseFloat(c.field_2) || 0,
+      Unit:                c.field_3,
+      Confidence:          c.field_4,
+      Notes:               c.field_5,
     }));
-
+    store.leadTimes = lt.map(r => ({
+      Id:               r.Id,
+      Title:            r.Title,
+      Section:          r.field_1,
+      Safety_Class:     r.field_2,
+      Category_Code:    r.field_3,
+      Category_Name:    r.field_4,
+      MF_Start_Months:  parseFloat(r.field_5),
+      MF_End_Months:    parseFloat(r.field_6),
+      Lead_Time_Months: parseFloat(r.field_7),
+      Qty_Per_GW_EPR:   r.field_8,
+      Qty_Per_GW_AP1000: r.field_9,
+      Units:            r.field_10,
+      UK_Mfg_Pct_EPR:   r.field_11,
+      UK_Mfg_Pct_AP1000: r.field_12,
+      Source:           r.field_13,
+      Notes:            r.field_14,
+    }));
+    store.leadTimeByCategory = ltCat.map(r => ({
+      Id:                    r.Id,
+      Category:              r.Title,
+      Earliest_Start_Months: parseFloat(r.field_1),
+      Latest_End_Months:     parseFloat(r.field_2),
+      Full_Window_Months:    parseFloat(r.field_3),
+      Source_Component_Count: parseInt(r.field_4) || 0,
+      Safety_Classes:        r.field_5,
+      Source_Components:     r.field_6,
+    }));
     populateDeveloperDropdown();
     populateSchedFilters();
     renderProducts();
@@ -1370,26 +1400,23 @@ function renderResults() {
 async function viewChart() {
   if (!store.demandResults.length) { toast('Generate demand first', 'error'); return; }
   try {
-    // Build demand rows
-    const demandRows = store.demandResults.filter(r=>r.CalYear>0).map(r=>({
-      d: r.Developer,
-      p: r.Product_ID,
-      f: r.Family,
-      y: r.CalYear,
-      a: r.Amount
-    }));
+    // Build lookups for lead time and capacity, keyed by Category (= product Title)
+    const ltLookup  = {};
+    store.leadTimeByCategory.forEach(r => { ltLookup[r.Category] = r.Full_Window_Months || null; });
+    const capLookup = {};
+    store.capacity.forEach(r => { capLookup[r.Category] = { cap: r.UK_Capacity_Per_Year, unit: r.Unit, conf: r.Confidence }; });
 
-    // Build lead time lookup keyed by category
-    const leadTimeLookup = {};
-    store.leadTimes.forEach(l => {
-      leadTimeLookup[l.Category] = {
-        start: l.Earliest_Start_Months,
-        end:   l.Latest_End_Months,
-        window: l.Full_Window_Months
-      };
-    });
-
-    const payload = JSON.stringify({ rows: demandRows, leadTimes: leadTimeLookup });
+    const payload = JSON.stringify(store.demandResults.filter(r=>r.CalYear>0).map(r=>({
+      d:  r.Developer,
+      p:  r.Product_ID,
+      f:  r.Family,
+      y:  r.CalYear,
+      a:  r.Amount,
+      lt: ltLookup[r.Product_ID] || null,
+      cap: capLookup[r.Product_ID]?.cap ?? null,
+      capUnit: capLookup[r.Product_ID]?.unit || null,
+      capConf: capLookup[r.Product_ID]?.conf || null
+    })));
     const existing = await spGet(CONFIG.lists.chartCache, 'Id,Title');
     const cacheRow = existing.find(r => r.Title === 'cache');
     if (cacheRow) {
@@ -1443,15 +1470,7 @@ function renderProducts() {
   let html = '';
   for (const [fam, items] of Object.entries(byFamily).sort()) {
     html += `<div style="padding:6px 24px 2px;background:var(--bg);border-bottom:1px solid var(--border);font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--navy);letter-spacing:0.06em;text-transform:uppercase;">${esc(fam)} <span style="font-weight:400;color:var(--muted)">(${items.length})</span></div>`;
-    html += items.map(p => {
-      const lt = store.leadTimes.find(l => l.Category === p.Title);
-      const ltStr = lt
-        ? `${lt.Earliest_Start_Months >= 0 ? '+' : ''}${lt.Earliest_Start_Months}m → +${lt.Latest_End_Months}m`
-        : '—';
-      const ltTitle = lt
-        ? `Procurement window: ${ltStr} rel. to First Nuclear Concrete (${lt.Full_Window_Months} month span)`
-        : 'No lead time data';
-      return `
+    html += items.map(p => `
     <div class="table-row">
       <span class="p-name" style="font-weight:600;font-size:13px;">${esc(p.Title)}</span>
       <span class="p-mat">${nuclearBadge(p.Nuclear_Classification)}</span>
@@ -1459,13 +1478,11 @@ function renderProducts() {
       <span class="p-wt mono-sm" style="text-align:right;">${p.GW_Total != null ? Number(p.GW_Total).toLocaleString('en-GB',{maximumFractionDigits:0}) : '—'}</span>
       <span class="p-lt mono-sm" style="width:130px;">${p.SMR_Total != null ? Number(p.SMR_Total).toLocaleString('en-GB',{maximumFractionDigits:0}) : '—'}</span>
       <span class="p-rate mono-sm" style="text-align:right;width:60px;">${esc(p.Primary_Unit||'—')}</span>
-      <span class="mono-sm" style="width:140px;font-size:11px;color:${lt ? 'var(--amber)' : 'var(--muted)'};" title="${ltTitle}">${ltStr}</span>
       <div class="p-act">
         <button class="btn btn-ghost btn-sm" onclick="openProductForm(${p.Id})">Edit</button>
         <button class="btn btn-danger btn-sm btn-icon" onclick="deleteProduct(${p.Id},'${esc(p.Title)}')">🗑</button>
       </div>
-    </div>`;
-    }).join('');
+    </div>`).join('');
   }
   el.innerHTML = html;
 }
@@ -1500,13 +1517,23 @@ async function saveProduct() {
   const name = document.getElementById('fProdName').value.trim();
   if (!name) { toast('Category name is required', 'error'); return; }
   const body = {
+    Title:   name,
+    field_1: document.getElementById('fProdFamily').value    || null,
+    field_2: document.getElementById('fProdNuclear').value   || null,
+    field_3: parseFloatOrNull(document.getElementById('fProdGWTotal').value),
+    field_4: parseFloatOrNull(document.getElementById('fProdSMRTotal').value),
+    field_5: document.getElementById('fProdUnit').value      || null,
+    field_8: document.getElementById('fProdPlantType').value || null,
+  };
+
+  const friendlyProd = {
     Title:                  name,
-    Commodity_Family:       document.getElementById('fProdFamily').value    || null,
-    Nuclear_Classification: document.getElementById('fProdNuclear').value   || null,
-    Plant_Type:             document.getElementById('fProdPlantType').value || null,
-    GW_Total:               parseFloatOrNull(document.getElementById('fProdGWTotal').value),
-    SMR_Total:              parseFloatOrNull(document.getElementById('fProdSMRTotal').value),
-    Primary_Unit:           document.getElementById('fProdUnit').value      || null
+    Commodity_Family:       body.field_1,
+    Nuclear_Classification: body.field_2,
+    GW_Total:               body.field_3,
+    SMR_Total:              body.field_4,
+    Primary_Unit:           body.field_5,
+    Plant_Type:             body.field_8,
   };
 
   const saving = document.getElementById('productSaving');
@@ -1516,10 +1543,10 @@ async function saveProduct() {
   try {
     if (store.editingProduct) {
       await spPatch(CONFIG.lists.products, store.editingProduct.Id, body);
-      Object.assign(store.editingProduct, body);
+      Object.assign(store.editingProduct, friendlyProd);
     } else {
       const created = await spPost(CONFIG.lists.products, body);
-      store.products.push({ ...body, Id: created.Id });
+      store.products.push({ ...friendlyProd, Id: created.Id });
       store.products.sort((a,b) => (a.Commodity_Family||'').localeCompare(b.Commodity_Family||'') || a.Title.localeCompare(b.Title));
     }
     renderProducts();
@@ -1592,20 +1619,29 @@ async function saveDeveloper() {
   const name = document.getElementById('fDevName').value.trim();
   if (!name) { toast('Developer name is required', 'error'); return; }
   const body = {
-    Title:          name,
-    Type_of_Plant:  document.getElementById('fDevType').value      || null,
-    Name_of_Plant:  document.getElementById('fDevPlantName').value || null,
-    Country:        document.getElementById('fDevCountry').value   || null,
-    Status:         document.getElementById('fDevStatus').value    || null,
-    Technology:     document.getElementById('fDevTech').value      || null
+    Title:   name,
+    field_1: document.getElementById('fDevType').value      || null,
+    field_2: document.getElementById('fDevPlantName').value || null,
+    field_3: document.getElementById('fDevTech').value      || null,
+    field_4: document.getElementById('fDevCountry').value   || null,
+    field_5: document.getElementById('fDevStatus').value    || null,
+  };
+  // Also update friendly names in local store after save
+  const friendlyBody = {
+    Title:         name,
+    Type_of_Plant: body.field_1,
+    Name_of_Plant: body.field_2,
+    Technology:    body.field_3,
+    Country:       body.field_4,
+    Status:        body.field_5,
   };
   try {
     if (store.editingDev) {
       await spPatch(CONFIG.lists.developers, store.editingDev.Id, body);
-      Object.assign(store.editingDev, body);
+      Object.assign(store.editingDev, friendlyBody);
     } else {
       const created = await spPost(CONFIG.lists.developers, body);
-      store.developers.push({ ...body, Id: created.Id });
+      store.developers.push({ ...friendlyBody, Id: created.Id });
       store.developers.sort((a,b) => a.Title.localeCompare(b.Title));
     }
     populateDeveloperDropdown();
