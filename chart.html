@@ -458,77 +458,49 @@ function updateKpis(data) {
 }
 
 // ── CHART ────────────────────────────────────────────────────────────────────
-function renderChart(data) {
-  if (!data.length) { showEmpty(); return; }
-  document.getElementById('emptyState').style.display  = 'none';
-  document.getElementById('demandChart').style.display = 'block';
+// currentChartData holds the filtered data used for the current render
+// so overlay/info functions can reference it without rebuilding
+let currentChartData = [];
 
-  // Apply family drill filter
-  let chartData = data;
-  if (currentView === 'category' && currentFamily !== 'All') {
-    chartData = data.filter(r => r.f === currentFamily);
+function buildOverlayDatasets(dsLabel, years, demandDatasets) {
+  const overlays = [];
+
+  if (overlayState.cap) {
+    const capRow = currentChartData.find(r => r.p === dsLabel && r.cap != null);
+    if (capRow) {
+      overlays.push({
+        _overlay: 'cap',
+        type: 'line',
+        label: `UK Capacity (${Number(capRow.cap).toLocaleString()} ${capRow.capUnit||''}/yr)`,
+        data: years.map(() => capRow.cap),
+        borderColor: '#27ae60',
+        backgroundColor: 'transparent',
+        borderWidth: 2.5,
+        borderDash: [8, 4],
+        pointRadius: 0,
+        fill: false,
+        tension: 0,
+        yAxisID: 'yCap'
+      });
+    }
   }
 
-  const years    = [...new Set(chartData.map(r=>r.y))].sort();
-  const groupKey = currentView === 'category' ? r => r.p : r => (r.f || 'Unknown');
-  const groups   = [...new Set(chartData.map(groupKey))].sort();
-  const isArea   = currentChartType === 'area';
-
-  const demandDatasets = groups.map((g, i) => {
-    const colour = palette[i % palette.length];
-    const base = {
-      label: g,
-      data: years.map(y => chartData.filter(r => groupKey(r) === g && r.y === y).reduce((s,r)=>s+(r.a||0),0))
-    };
-    if (isArea) return { ...base, type:'line', fill:true, tension:0.4, borderColor:colour, backgroundColor:colour+'33', pointBackgroundColor:colour, pointRadius:3, pointHoverRadius:5, borderWidth:2 };
-    return { ...base, backgroundColor:colour, borderRadius:3 };
-  });
-
-  // Build overlay datasets (capacity / lead time) if active and isolated
-  const overlayDatasets = [];
-  if (isolatedIndex !== null && isolatedIndex < demandDatasets.length) {
-    const dsLabel = demandDatasets[isolatedIndex].label;
-
-    if (overlayState.cap) {
-      const capRow = chartData.find(r => r.p === dsLabel && r.cap != null);
-      if (capRow) {
-        overlayDatasets.push({
-          _overlay: 'cap',
-          type: 'line',
-          label: `UK Capacity (${capRow.cap} ${capRow.capUnit||''}/yr)`,
-          data: years.map(() => capRow.cap),
-          borderColor: '#27ae60',
-          backgroundColor: 'transparent',
-          borderWidth: 2.5,
-          borderDash: [8, 4],
-          pointRadius: 0,
-          fill: false,
-          tension: 0,
-          yAxisID: 'yCap'
+  if (overlayState.lt) {
+    const ltRow = currentChartData.find(r => r.p === dsLabel && r.lt != null);
+    if (ltRow) {
+      const shiftYears  = ltRow.lt / 12;
+      const demandRow   = demandDatasets.find(d => d.label === dsLabel);
+      if (demandRow) {
+        const shiftedData = years.map((y) => {
+          const futureY    = y + shiftYears;
+          const aboveIdx   = years.findIndex(yr => yr >= futureY);
+          if (aboveIdx === -1) return null;
+          if (years[aboveIdx] === futureY) return demandRow.data[aboveIdx];
+          if (aboveIdx === 0) return demandRow.data[0];
+          const t = (futureY - years[aboveIdx-1]) / (years[aboveIdx] - years[aboveIdx-1]);
+          return demandRow.data[aboveIdx-1] * (1-t) + demandRow.data[aboveIdx] * t;
         });
-      }
-    }
-
-    if (overlayState.lt) {
-      const ltRow = chartData.find(r => r.p === dsLabel && r.lt != null);
-      if (ltRow) {
-        // Lead time overlay: shift the demand curve left by Full_Window_Months converted to years
-        const shiftYears = ltRow.lt / 12;
-        const demandRow = demandDatasets[isolatedIndex];
-        const shiftedData = years.map((y, i) => {
-          // Find what demand exists shiftYears from now
-          const futureY = y + shiftYears;
-          // Interpolate between two nearest year values
-          const above = years.find(yr => yr >= futureY);
-          const aboveIdx = years.indexOf(above);
-          if (above == null) return null;
-          if (above === futureY) return demandRow.data[aboveIdx];
-          const below = aboveIdx > 0 ? years[aboveIdx - 1] : null;
-          if (below == null) return demandRow.data[aboveIdx];
-          const t = (futureY - below) / (above - below);
-          return demandRow.data[aboveIdx - 1] * (1 - t) + demandRow.data[aboveIdx] * t;
-        });
-        overlayDatasets.push({
+        overlays.push({
           _overlay: 'lt',
           type: 'line',
           label: `Procurement Window (${ltRow.lt} mths lead)`,
@@ -546,14 +518,47 @@ function renderChart(data) {
     }
   }
 
-  const allDatasets = [...demandDatasets, ...overlayDatasets];
+  return overlays;
+}
 
-  if (chartInstance) chartInstance.destroy();
-  isolatedIndex = null; // reset after destroy — will be re-applied below if needed
+function renderChart(data) {
+  if (!data.length) { showEmpty(); return; }
+  document.getElementById('emptyState').style.display  = 'none';
+  document.getElementById('demandChart').style.display = 'block';
+
+  // Apply family drill filter in category view
+  currentChartData = (currentView === 'category' && currentFamily !== 'All')
+    ? data.filter(r => r.f === currentFamily)
+    : data;
+
+  const years    = [...new Set(currentChartData.map(r=>r.y))].sort();
+  const groupKey = currentView === 'category' ? r => r.p : r => (r.f || 'Unknown');
+  const groups   = [...new Set(currentChartData.map(groupKey))].sort();
+  const isArea   = currentChartType === 'area';
+
+  const demandDatasets = groups.map((g, i) => {
+    const colour = palette[i % palette.length];
+    const base = {
+      label: g,
+      data: years.map(y => currentChartData.filter(r => groupKey(r) === g && r.y === y).reduce((s,r)=>s+(r.a||0),0))
+    };
+    if (isArea) return { ...base, type:'line', fill:true, tension:0.4, borderColor:colour, backgroundColor:colour+'33', pointBackgroundColor:colour, pointRadius:3, pointHoverRadius:5, borderWidth:2 };
+    return { ...base, backgroundColor:colour, borderRadius:3 };
+  });
+
+  // Resolve isolated label before destroying chart
+  const preservedLabel = (isolatedIndex !== null && isolatedIndex < demandDatasets.length)
+    ? demandDatasets[isolatedIndex].label : null;
+
+  // Build overlays only if something is isolated
+  const overlayDatasets = preservedLabel
+    ? buildOverlayDatasets(preservedLabel, years, demandDatasets) : [];
+
+  const allDatasets = [...demandDatasets, ...overlayDatasets];
 
   // Extra right-axis for capacity overlay
   const extraScales = {};
-  if (overlayState.cap && overlayDatasets.find(d => d._overlay === 'cap')) {
+  if (overlayDatasets.find(d => d._overlay === 'cap')) {
     extraScales.yCap = {
       type: 'linear', position: 'right',
       title: { display: true, text: 'UK Capacity / yr', font: { family: 'Share Tech Mono', size: 11 }, color: '#27ae60' },
@@ -563,7 +568,14 @@ function renderChart(data) {
     };
   }
 
-  // Double-click detection
+  if (chartInstance) chartInstance.destroy();
+
+  // Restore isolatedIndex to the correct position after rebuild (label-based lookup)
+  if (preservedLabel) {
+    isolatedIndex = demandDatasets.findIndex(d => d.label === preservedLabel);
+  }
+
+  // Double-click detection vars (per render, closed over by event handlers)
   let lastClickTime = 0;
   let lastClickIdx  = -1;
 
@@ -573,9 +585,9 @@ function renderChart(data) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
+      animation: false,
       plugins: {
-        tooltip: { enabled: false },  // tooltips off per request
+        tooltip: { enabled: false },
         legend: {
           position: 'right',
           labels: {
@@ -592,15 +604,20 @@ function renderChart(data) {
           },
           onClick: (e, legendItem) => {
             const idx = legendItem.datasetIndex;
-            if (chartInstance.data.datasets[idx]?._overlay) return; // ignore overlay clicks
-            handleSeriesClick(idx);
+            if (chartInstance.data.datasets[idx]?._overlay) return;
+            if (currentView === 'family') {
+              // legend click in family view drills down
+              drillToCategory(demandDatasets[idx].label);
+              return;
+            }
+            // category view: legend click isolates (no double-click needed here)
+            isolateInPlace(idx);
           }
         }
       },
       scales: {
-        x: { title:{display:true,text:'Year',font:{family:'Share Tech Mono',size:12},color:'#6c757d'}, grid:{display:false}, stacked: isArea },
+        x: { title:{display:true,text:'Year',font:{family:'Share Tech Mono',size:12},color:'#6c757d'}, grid:{display:false} },
         y: {
-          stacked: isArea,
           title:{display:true,text:'Amount',font:{family:'Share Tech Mono',size:12},color:'#6c757d'},
           beginAtZero:true,
           ticks:{ callback: v => v >= 1000 ? (v/1000).toFixed(0)+'k' : v.toLocaleString() }
@@ -614,58 +631,76 @@ function renderChart(data) {
 
         // Family view: single click drills down
         if (currentView === 'family') {
-          const family = demandDatasets[idx].label;
-          drillToCategory(family);
+          drillToCategory(demandDatasets[idx].label);
           return;
         }
 
         // Category view: single click isolates, double-click opens info panel
         const now = Date.now();
-        if (now - lastClickTime < 400 && lastClickIdx === idx) {
-          // Double-click
-          openInfoPanel(demandDatasets[idx].label, chartData);
+        if (now - lastClickTime < 450 && lastClickIdx === idx) {
+          // Double-click — open info panel (series already isolated)
+          openInfoPanel(demandDatasets[idx].label);
           lastClickTime = 0; lastClickIdx = -1;
         } else {
-          // Single click
           lastClickTime = now; lastClickIdx = idx;
-          handleSeriesClick(idx);
+          isolateInPlace(idx);
         }
       }
     }
   });
 
+  // Apply isolation visibility immediately after chart creation
+  if (isolatedIndex !== null) {
+    applyIsolationVisibility();
+  }
+
   updateBreadcrumb();
 }
 
-// ── DRILL / ISOLATE ───────────────────────────────────────────────────────────
+// ── ISOLATE IN PLACE (no rebuild) ────────────────────────────────────────────
+function isolateInPlace(idx) {
+  if (!chartInstance) return;
+
+  if (isolatedIndex === idx) {
+    // Toggle off — show all demand datasets
+    isolatedIndex = null;
+    chartInstance.data.datasets.forEach((ds, i) => {
+      if (!ds._overlay) chartInstance.show(i);
+    });
+    // Remove overlays
+    overlayState = { cap: false, lt: false };
+    resetOverlayButtons();
+    disableOverlayButtons();
+    closeInfoPanel();
+    chartInstance.update();
+  } else {
+    isolatedIndex = idx;
+    applyIsolationVisibility();
+    enableOverlayButtons();
+    updateBreadcrumb();
+  }
+}
+
+function applyIsolationVisibility() {
+  if (!chartInstance || isolatedIndex === null) return;
+  chartInstance.data.datasets.forEach((ds, i) => {
+    if (ds._overlay) return;
+    if (i === isolatedIndex) chartInstance.show(i);
+    else chartInstance.hide(i);
+  });
+  chartInstance.update();
+}
+
+// ── DRILL / RESET ─────────────────────────────────────────────────────────────
 function drillToCategory(family) {
   currentView   = 'category';
   currentFamily = family;
   isolatedIndex = null;
   overlayState  = { cap: false, lt: false };
   resetOverlayButtons();
+  disableOverlayButtons();
   closeInfoPanel();
-  applyFilters();
-}
-
-function handleSeriesClick(idx) {
-  if (isolatedIndex === idx) {
-    // Click again = un-isolate
-    isolatedIndex = null;
-    overlayState  = { cap: false, lt: false };
-    resetOverlayButtons();
-    disableOverlayButtons();
-    closeInfoPanel();
-  } else {
-    isolatedIndex = idx;
-    enableOverlayButtons();
-    overlayState  = { cap: false, lt: false };
-    resetOverlayButtons();
-    // Re-render with isolation
-    applyFilters();
-    return; // applyFilters will re-render
-  }
-  applyFilters();
+  applyFilters(); // full rebuild needed — different view level
 }
 
 function showAllSeries() {
@@ -674,34 +709,18 @@ function showAllSeries() {
   resetOverlayButtons();
   disableOverlayButtons();
   closeInfoPanel();
-  // Go back to family view if in category
   currentView   = 'family';
   currentFamily = 'All';
-  document.getElementById('filterFamily').value = 'All';
   applyFilters();
 }
 
-// After re-render we need to re-apply isolation visibility
-function applyIsolation() {
-  if (!chartInstance || isolatedIndex === null) return;
-  chartInstance.data.datasets.forEach((ds, i) => {
-    if (ds._overlay) return;
-    if (i !== isolatedIndex) chartInstance.hide(i);
-    else chartInstance.show(i);
-  });
-  chartInstance.update('none');
-}
-
-// Override applyFilters to call applyIsolation after render
-const _origApplyFilters = applyFilters;
-// We redefine slightly below after renderChart is callable
-
-// ── OVERLAYS ─────────────────────────────────────────────────────────────────
+// ── OVERLAYS (rebuild needed to add/remove overlay datasets) ─────────────────
 function toggleOverlay(type) {
+  if (isolatedIndex === null) return; // shouldn't happen — buttons disabled — but guard anyway
   overlayState[type] = !overlayState[type];
   const btn = type === 'cap' ? document.getElementById('btnCapacity') : document.getElementById('btnLeadTime');
   btn.classList.toggle('active', overlayState[type]);
-  applyFilters(); // re-render with/without overlay
+  applyFilters(); // rebuild with/without overlay dataset
 }
 
 function enableOverlayButtons() {
@@ -728,13 +747,12 @@ function updateBreadcrumb() {
 }
 
 // ── INFO PANEL ────────────────────────────────────────────────────────────────
-function openInfoPanel(categoryLabel, chartData) {
+function openInfoPanel(categoryLabel) {
   const panel = document.getElementById('infoPanel');
   panel.classList.add('visible');
   document.getElementById('infoCategoryName').textContent = categoryLabel;
 
-  // Demand stats
-  const rows = chartData.filter(r => r.p === categoryLabel);
+  const rows  = currentChartData.filter(r => r.p === categoryLabel);
   const total = rows.reduce((s,r) => s+(r.a||0), 0);
   const byYear = {};
   rows.forEach(r => { byYear[r.y] = (byYear[r.y]||0) + (r.a||0); });
