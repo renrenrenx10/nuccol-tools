@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Frankie — F4N Intelligence by NucCol</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#08111f;
+  --surface:#0d1e35;
+  --surface2:#112440;
+  --border:rgba(41,182,232,0.15);
+  --cyan:#29b6e8;
+  --purple:#7c3aed;
+  --amber:#f59e0b;
+  --text:rgba(232,238,246,0.9);
+  --muted:rgba(232,238,246,0.45);
+  --pro-gate:rgba(245,158,11,0.12);
+}
+body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px}
+.wrap{width:100%;max-width:780px;background:var(--surface);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;height:min(680px,calc(100vh - 32px));box-shadow:0 24px 80px rgba(0,0,0,0.6),0 0 0 1px var(--border)}
+
+/* HEADER */
+.hdr{background:var(--surface2);border-bottom:1px solid var(--border);padding:12px 18px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.avatar{width:46px;height:46px;flex-shrink:0}
+.hdr-text{flex:1;min-width:0}
+.hdr-name{font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--cyan);line-height:1;display:flex;align-items:center;gap:8px}
+.hdr-name span.tag{font-size:.6rem;font-weight:700;letter-spacing:.12em;background:var(--purple);color:#fff;padding:2px 7px;border-radius:2px;vertical-align:middle}
+.hdr-sub{font-size:.67rem;color:var(--muted);margin-top:2px;letter-spacing:.02em}
+.tier-row{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.tier-btn{font-family:'Barlow Condensed',sans-serif;font-size:.67rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:3px;cursor:pointer;border:none;transition:all .15s}
+.btn-free{background:rgba(41,182,232,.1);color:var(--cyan);border:1px solid rgba(41,182,232,.3)}
+.btn-pro{background:var(--cyan);color:var(--bg)}
+.btn-inactive{opacity:.4}
+
+/* DISCLAIMER */
+.disc{background:rgba(41,182,232,.05);border-bottom:1px solid rgba(41,182,232,.1);padding:5px 18px;font-size:.66rem;color:var(--muted);display:flex;align-items:center;gap:6px;flex-shrink:0}
+.disc::before{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--amber);flex-shrink:0}
+
+/* MESSAGES */
+.msgs{flex:1;overflow-y:auto;padding:14px 18px;display:flex;flex-direction:column;gap:10px;scrollbar-width:thin;scrollbar-color:rgba(41,182,232,.15) transparent}
+.row{display:flex;gap:8px;max-width:96%}
+.row.user{align-self:flex-end;flex-direction:row-reverse}
+.ico{width:26px;height:26px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:2px}
+.ico.bot{background:var(--surface2);border:1px solid rgba(41,182,232,.22)}
+.ico.bot svg{width:16px;height:16px}
+.ico.usr{background:rgba(41,182,232,.12);color:var(--cyan);font-size:9px;font-weight:700;letter-spacing:.02em;font-family:'Barlow Condensed',sans-serif}
+.bub{padding:9px 13px;border-radius:7px;font-size:.8rem;line-height:1.65}
+.bub.bot{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:2px 7px 7px 7px}
+.bub.usr{background:var(--cyan);color:var(--bg);font-weight:500;border-radius:7px 2px 7px 7px}
+.bub.gate{background:var(--surface2);border:1px solid rgba(245,158,11,.2);color:var(--muted);border-radius:2px 7px 7px 7px}
+.bub b,.bub strong{color:var(--cyan);font-weight:600;font-style:normal}
+.bub em{color:var(--muted);font-size:.74rem}
+
+/* SUGGESTIONS */
+.sugs{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.sug{background:rgba(41,182,232,.07);border:1px solid rgba(41,182,232,.17);color:var(--cyan);font-size:.73rem;padding:5px 9px;border-radius:4px;cursor:pointer;text-align:left;font-family:'Barlow',sans-serif;transition:background .12s;line-height:1.4}
+.sug:hover{background:rgba(41,182,232,.14)}
+
+/* VIDEO CARDS */
+.vids{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.vid-card{display:flex;align-items:center;gap:7px;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.2);border-radius:5px;padding:5px 9px;text-decoration:none;color:var(--text);font-size:.72rem;transition:background .12s;max-width:280px}
+.vid-card:hover{background:rgba(124,58,237,.2)}
+.vid-card .play{width:20px;height:20px;background:var(--purple);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.vid-card .play svg{width:10px;height:10px;fill:#fff;margin-left:1px}
+.vid-label{font-size:.69rem;color:var(--muted);line-height:1.3}
+
+/* LINKS */
+.link-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.ext-link{font-size:.72rem;color:var(--cyan);background:rgba(41,182,232,.07);border:1px solid rgba(41,182,232,.2);border-radius:4px;padding:3px 8px;text-decoration:none;transition:background .12s}
+.ext-link:hover{background:rgba(41,182,232,.15)}
+
+/* UPGRADE PROMPT */
+.upg{background:var(--pro-gate);border:1px solid rgba(245,158,11,.18);border-radius:5px;padding:9px 12px;margin-top:7px;font-size:.73rem;color:rgba(255,200,80,.85)}
+.upg-btn{background:var(--amber);color:var(--bg);border:none;border-radius:3px;font-family:'Barlow Condensed',sans-serif;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;cursor:pointer;margin-top:6px;display:inline-block}
+
+/* TYPING */
+.typing{display:flex;gap:3px;align-items:center;padding:5px 0}
+.typing span{width:5px;height:5px;background:var(--cyan);border-radius:50%;animation:dk 1.2s infinite;opacity:.3}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes dk{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+
+/* INPUT */
+.inp-row{border-top:1px solid var(--border);padding:12px 18px;display:flex;gap:8px;flex-shrink:0;background:var(--bg)}
+.inp{flex:1;background:var(--surface2);border:1px solid rgba(41,182,232,.2);border-radius:4px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.8rem;padding:9px 12px;outline:none;transition:border-color .2s}
+.inp:focus{border-color:var(--cyan)}
+.inp::placeholder{color:var(--muted)}
+.send{background:var(--cyan);border:none;border-radius:4px;color:var(--bg);font-family:'Barlow Condensed',sans-serif;font-size:.82rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:0 16px;cursor:pointer;transition:background .15s;flex-shrink:0;white-space:nowrap}
+.send:hover{background:#1a96c8}
+.send:disabled{opacity:.35;cursor:not-allowed}
+
+/* SECTION BADGE */
+.sec-badge{display:inline-block;font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 6px;border-radius:2px;margin-bottom:5px}
+.sec-be{background:rgba(41,182,232,.15);color:var(--cyan)}
+.sec-nuc{background:rgba(239,68,68,.15);color:#f87171}
+.sec-hub{background:rgba(124,58,237,.15);color:#a78bfa}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="hdr">
+    <div class="avatar">
+      <svg viewBox="0 0 46 46" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="46" height="46" rx="7" fill="#0d1e35"/>
+        <rect x="4" y="3" width="3.5" height="6" rx="1.5" fill="#29b6e8"/>
+        <rect x="38.5" y="3" width="3.5" height="6" rx="1.5" fill="#7c3aed"/>
+        <rect x="7" y="7.5" width="32" height="24" rx="4" fill="#112240" stroke="#29b6e8" stroke-width=".8"/>
+        <rect x="12" y="13.5" width="8" height="5" rx="1" fill="#08111f"/>
+        <rect x="26" y="13.5" width="8" height="5" rx="1" fill="#08111f"/>
+        <rect x="13.5" y="15" width="5" height="2" rx="1" fill="#29b6e8"/>
+        <rect x="27.5" y="15" width="5" height="2" rx="1" fill="#7c3aed"/>
+        <path d="M15 22 Q23 26 31 22" stroke="#29b6e8" stroke-width="1.3" stroke-linecap="round" fill="none"/>
+        <rect x="19.5" y="9" width="7" height="2.5" rx="1" fill="#29b6e8" opacity=".3"/>
+        <rect x="2.5" y="11.5" width="4.5" height="2.8" rx="1.4" fill="#112240" stroke="#29b6e8" stroke-width=".7"/>
+        <rect x="39" y="11.5" width="4.5" height="2.8" rx="1.4" fill="#112240" stroke="#7c3aed" stroke-width=".7"/>
+        <rect x="16" y="31.5" width="5" height="8" rx="2" fill="#112240" stroke="#29b6e8" stroke-width=".7"/>
+        <rect x="25" y="31.5" width="5" height="8" rx="2" fill="#112240" stroke="#7c3aed" stroke-width=".7"/>
+        <circle cx="16" cy="16" r="1.1" fill="#29b6e8" opacity=".9"/>
+        <circle cx="29" cy="16" r="1.1" fill="#a78bfa" opacity=".9"/>
+      </svg>
+    </div>
+    <div class="hdr-text">
+      <div class="hdr-name">Frankie <span class="tag">F4N Intelligence</span></div>
+      <div class="hdr-sub">Nuclear supply chain · Business Excellence · Regulatory guidance · Sector intelligence</div>
+    </div>
+    <div class="tier-row">
+      <button class="tier-btn btn-free" id="bFree" onclick="setTier('free')">Free</button>
+      <button class="tier-btn btn-pro btn-inactive" id="bPro" onclick="setTier('pro')">Member</button>
+    </div>
+  </div>
+  <div class="disc">Frankie is assembled from many sources. Always verify critical decisions with your SCC and current regulatory guidance.</div>
+  <div class="msgs" id="msgs"></div>
+  <div class="inp-row">
+    <input class="inp" id="inp" placeholder="Ask Frankie about F4N, nuclear standards, sector intelligence..." onkeydown="handleKey(event)"/>
+    <button class="send" id="snd" onclick="sendMsg()">Send</button>
+  </div>
+</div>
+
+<script>
+const KB = {"be_handbook":{"strategy":{"label":"Strategy & Leadership","videos":["Z4_YNeVsZhw","1nYaB53rT-U","NTxYojPyer8"],"chapters":[{"id":"STR01","title":"Communication of Strategy","summary":"To ensure that key business information is communicated effectively throughout an organisation and that employees are engaged, it\u2019s crucial to implement a structured communication strategy. Here are detailed recommendations for achieving this: Establish Clear Communication Channels Multiple Channels Intranet: Create a centralised intranet platform where employees can access business updates, performance metrics, and company news. Ensure the intranet is user-friendly and regularly updated. Notice Boards: Use physical notice boards in common areas to display key information, such as company anno","videos":[]},{"id":"STR02","title":"Leadership Development","summary":"To effectively review and enhance the leadership development process, ensure that leaders are appraised and developed effectively, and address any skills gaps, a structured approach is essential. Here\u2019s a set of recommendations to achieve these goals: Review Leadership Development Processes Assessment of Current Processes Process Mapping: Map out the current leadership development process to understand how leaders are identified, developed, and supported. Document each stage, from initial assessment to ongoing development. Benchmarking: Compare your leadership development practices with indust","videos":[]},{"id":"STR03","title":"Leadership Roles & Responsibilities","summary":"To ensure that leadership roles and responsibilities are well-defined throughout an organisation, particularly in relation to continuous improvement (CI) and performance culture, it\u2019s important to implement a structured approach. Here\u2019s a set of recommendations to achieve this: Define and Document Roles and Responsibilities Clear Role Definitions Job Descriptions: Develop comprehensive job descriptions for all management and leadership positions that clearly outline roles, responsibilities, and expectations related to continuous improvement and performance management. Role Clarity: Ensure that","videos":[]},{"id":"STR04","title":"Leading Change","summary":"Establishing a robust framework for involving employees in Continuous Sustainable Improvement Plans (CSIP) and ensuring these plans are aligned with the organisation\u2019s strategic objectives requires a systematic approach. Here\u2019s a comprehensive set of recommendations on how to achieve this Establish a Framework for CSIP Define CSIP Objectives Alignment with Strategy: Ensure that the CSIP objectives are clearly aligned with the organisation\u2019s strategic goals. For instance, if the strategic objective is to enhance customer satisfaction, a CSIP objective might focus on improving service delivery p","videos":[]},{"id":"STR05","title":"Mission, Vision & Values","summary":"To develop and implement comprehensive mission, vision, and values (MVV) statements that are fully embraced by the Senior Leadership Team (SLT) and supported by employees, consider the following steps Define the Purpose and Scope A Mission Statement should Clearly articulate the company\u2019s purpose. Focus on what the company does, for whom, and the value it provides. A Vision Statement should Describe the long-term aspirations and what the company aims to achieve. Inspire and provide a clear picture of the future. A Values Statement should Outline the core principles and ethical standards guidin","videos":[]},{"id":"STR06","title":"Strategic Objectives","summary":"For a company to ensure that the Senior Leadership Team (SLT) and management team are fully equipped and involved in the development and adoption of strategic objectives, it\u2019s important to follow a structured approach. This involves targeted training, practical tools, and active participation. Training and Skill Development for the SLT Leadership Development Programs Executive Education: Enroll SLT members in executive education programs from reputable business schools that focus on strategic planning and leadership. Workshops and Seminars: Host workshops on strategic management, decision-maki","videos":[]},{"id":"STR07","title":"Strategic Plan","summary":"For an organisation aiming to develop a comprehensive strategic plan with a focus on nuclear energy growth and export opportunities, it is essential to follow a structured approach that ensures alignment across all levels of the organisation. Developing the Strategic Plan External Analysis Market Research: Conduct thorough market research to understand global demand for nuclear energy, regulatory landscapes, and potential export markets. PESTEL Analysis: Analyse Political, Economic, Social, Technological, Environmental, and Legal factors affecting the nuclear energy sector. Competitor Analysis","videos":[]},{"id":"STR08","title":"Strategic Reviews","summary":"For an effective strategy review process, it is essential to establish a structured and regular review mechanism that involves key stakeholders from various levels of the organization. The process should include comprehensive strategic analysis tools like PESTLE, SWOT, and TOWS, and cover both regular and exceptional event reviews. Here are detailed recommendations: Strategy Review Process Regular Review Frequency Semi-Annual Reviews (Every 6 Months) Purpose: Evaluate progress towards strategic objectives, address any emerging issues, and adjust plans as necessary. Duration: Typically, 1-2 day","videos":[]},{"id":"STR09","title":"Visible Senior Leadership Team","summary":"For a Senior Leadership Team (SLT) to effectively support and lead change, their visibility, capability, and approachability are crucial. Here\u2019s a set of recommendations to ensure SLT members are actively involved in coaching and mentoring employees, developing leadership, and driving organisational goals and objectives. Enhancing SLT Visibility and Approachability Regular Interaction Office Hours: Implement regular office hours where SLT members are available for informal discussions and mentoring. This encourages employees to seek guidance and share ideas. Site Visits: Schedule regular visit","videos":[]},{"id":"STR10","title":"Strategy Deployment","summary":"To effectively deploy and review a strategic plan across all departments in an organisation, it is crucial to ensure that departmental objectives are aligned with the overall strategic goals. Using tools like X-diagrams (also known as X-matrix) or Hoshin Kanri can facilitate this alignment. Here\u2019s a structured approach to deploying and reviewing strategic objectives across the organisation: Strategic Deployment Process Define Strategic Objectives Corporate-Level Objectives Develop Strategic Goals: Start by clearly defining high-level strategic goals for the organisation. SMART Objectives: Ensu","videos":[]}]},"design":{"label":"Design & Project Management","videos":["T1-i0vBmU-E","mWuLX0h0cg4","NE9BLvfoSiA"],"chapters":[{"id":"DES01","title":"Design for Manufacture","summary":"To effectively implement Design for Manufacturing (DFM), it\u2019s essential for a company to establish a robust process that bridges design and manufacturing to optimise cost, quality, and ease of production. Here\u2019s a comprehensive set of recommendations to achieve this, ensuring that DFM is fully understood, documented, and applied effectively: Establish a Clear Understanding of DFM Training and Awareness Educational Programs: Provide training for design and manufacturing teams on DFM principles. Ensure that all relevant personnel understand the impact of design decisions on manufacturing cost an","videos":[]},{"id":"DES02","title":"Design & Specification Systems","summary":"To effectively establish the type of design undertaken by a company, particularly in relation to ISO 9001 standards, and to assess the design systems deployed, here\u2019s a structured approach with recommendations: Define the Scope of Design Identify Design Scope Scope Assessment: Determine if design activities fall within the scope of your ISO 9001 certification. Review the scope of the ISO 9001 certification to confirm whether it includes design and development processes. Design Requirements: Clearly define the types of design undertaken (e.g., product design, service design, process design) and","videos":[]},{"id":"DES03","title":"Design & Specification FMEA","summary":"To effectively manage risk as part of the design/specification process, it\u2019s essential for a company to implement structured methodologies and practices. Here\u2019s a set of recommendations for establishing how well risk is managed, particularly with regard to using Failure Mode and Effects Analysis (FMEA) or equivalent processes. Understand and Implement FMEA or Equivalent Adopt FMEA Methodology Training and Awareness: Ensure that all relevant team members understand the principles of Failure Mode and Effects Analysis (FMEA) or equivalent risk assessment methodologies. Provide training on how to ","videos":[]},{"id":"DES04","title":"Design & Specification Capability","summary":"To effectively implement design/specification requirements and control processes for managing changes, it\u2019s essential to establish a robust framework that integrates well with your Quality Management System (QMS) or Integrated Management System (IMS). Here\u2019s a structured approach with recommendations. Establish a Comprehensive Design/Specification Control Process Document Control Centralised Repository: Use a centralised document management system (DMS) to store and control all design and specification documents. Ensure that this system is accessible to relevant teams and has version control f","videos":[]},{"id":"DES05","title":"Project Closure & Review","summary":"To effectively manage project closure and review, ensuring that all relevant parties are involved, and lessons learned are documented and Utilised, consider the following recommendations. Establish a Formal Project Closure Process Documented Closure Procedures Formal Process: Develop a formal, documented process for closing out projects. This should include detailed work plans that outline the steps required for closure, such as finalising deliverables, closing contracts, and conducting reviews. Checklist: Use a closure checklist to ensure that all necessary tasks are completed before official","videos":[]},{"id":"DES06","title":"Project Definition & Objectives","summary":"To ensure that project objectives are clearly defined, and deadlines are met effectively, while managing risks through formal processes and risk registers, follow these recommendations. Clearly Define Project Objectives Specific and Measurable Objectives SMART Criteria: Ensure that project objectives are Specific, Measurable, Achievable, Relevant, and Time-bound (SMART). This provides clarity and focus. Document Objectives: Document the objectives in a project charter or project plan. Include detailed descriptions of what the project aims to achieve and how success will be measured. Alignment ","videos":[]},{"id":"DES07","title":"Project Planning & Control","summary":"To effectively implement projects with detailed work plans and ensure quality and cost control, consider the following recommendations. Develop Detailed Work Plans and Schedules Work Plan Development Detailed Breakdown: Create detailed work plans that break down the project into manageable tasks and activities. Use Work Breakdown Structures (WBS) to Organise tasks hierarchically. Task Dependencies: Define dependencies between tasks to understand how delays in one task might affect others. Scheduling Gantt Charts: Use Gantt charts or project management software to create and maintain schedules.","videos":[]},{"id":"DES08","title":"Risk Management & Information Security","summary":"To establish a formal managed system for overseeing project activities and risk management, and to integrate with IMS/BMS and MRP/ERP systems, consider the following recommendations. Establish a Formal Planning System Integrated with IMS/BMS and MRP/ERP Integrated Systems Integrate IMS/BMS with MRP/ERP: Ensure that the Integrated Management System (IMS) or Business Management System (BMS) is fully integrated with Material Requirements Planning (MRP) and Enterprise Resource Planning (ERP) systems. This integration ensures seamless flow of information between project management, resource plannin","videos":[]}]},"people":{"label":"People Excellence","videos":["iaQmkUafc1g","lCAB_uCE4lg","y4nwoZ02AJM"],"chapters":[{"id":"PEO01","title":"Employee Awareness","summary":"To ensure that all employees are fully aware of the organisation\u2019s mission, vision, and values, and to align their objectives with the organisation\u2019s strategy, consider the following comprehensive recommendations: Enhance Awareness of Mission, Vision, and Values Communication Strategy Onboarding: Integrate the organisation\u2019s mission, vision, and values into the onboarding process for new employees. Ensure that they understand these elements from the start of their employment. Regular Updates: Use multiple communication channels (e.g., newsletters, intranet, posters) to regularly remind employe","videos":[]},{"id":"PEO02","title":"Employee Development","summary":"To ensure that employees are fully qualified, continuously developing, and aligned with the organisation\u2019s vision, mission, and values, consider implementing the following recommendations. Implement Comprehensive Appraisal and Development Systems Structured Appraisal System Regular Appraisals: Conduct regular performance appraisals (e.g., annually, or bi-annually) for all employees. Ensure that appraisals are structured to evaluate performance, identify development needs, and align with organisational objectives. Clear Criteria: Define clear appraisal criteria linked to the organisation\u2019s visi","videos":[]},{"id":"PEO03","title":"Employee Engagement","summary":"To ensure that employees engage in and take responsibility for delivering continuous improvement, it is crucial to foster a supportive environment, provide the necessary resources, and empower employees to drive and implement change. Here are recommendations for achieving this. Establish Formal Continuous Improvement Groups Formation of Groups Create Groups: Establish formal continuous improvement (CI) groups with defined roles and responsibilities. Ensure these groups have the authority and resources to drive improvement initiatives. Diverse Representation: Include employees from various depa","videos":[]},{"id":"PEO04","title":"Employee Objectives","summary":"To ensure that objectives are effectively linked to the business strategy and cascaded to employees at both individual and team levels, follow these recommendations Develop and Implement a Strategy Deployment System Strategy Deployment Framework Establish a Framework: Create a clear strategy deployment framework that outlines how the business strategy will be translated into actionable objectives for various levels of the organisation. This framework should detail the process for cascading objectives from the top down. Use Tools and Methods: Implement tools such as Hoshin Kanri (Policy Deploym","videos":[]},{"id":"PEO05","title":"Health, Welfare & Wellbeing","summary":"To ensure your company recognises and fulfils its moral duty to employee health and wellbeing, it should adopt a proactive and comprehensive approach to occupational health and surveillance. Here are detailed recommendations for establishing such a system: Implement a Comprehensive Occupational Health Scheme Health Surveillance Program Regular Health Check-ups: Offer regular health screenings and check-ups for all employees to monitor and maintain their physical health. Mental Health Monitoring: Include mental health assessments as part of the regular health surveillance program. Tailored Prog","videos":[]},{"id":"PEO06","title":"HR Records","summary":"To ensure that your company effectively develops its staff through training, increasing responsibilities, and succession planning, you can implement the following recommendations. Develop a Comprehensive Training Plan Training Needs Assessment Conduct Assessments: Regularly assess training needs across the organisation by gathering input from employees, managers, and department heads. Identify skills gaps and future training requirements. Align with Goals: Ensure that the training needs assessment aligns with the organisation\u2019s strategic objectives and future goals. Create a Structured Trainin","videos":[]},{"id":"PEO07","title":"HR Skills & Competence (SQEP)","summary":"To ensure that your company has Suitably Qualified and Experienced Person (SQEP) employees in all key areas, and to effectively manage skills and competence to meet both current and future organisational plans, consider implementing the following recommendations. Establish a Comprehensive Skills and Competence Assessment Process Conduct Skills Assessment Regular Assessments: Implement a systematic skills assessment process to regularly evaluate the skills and competencies of all employees. Alignment with Strategy: Ensure the assessment aligns with the organisation\u2019s strategic plan and identifi","videos":[]},{"id":"PEO08","title":"Ideas & Suggestions","summary":"To effectively maximise employee ideas and suggestions as part of a continuous improvement drive, your company should implement a structured process that encourages contributions, evaluates suggestions, and integrates them into the Continuous Sustainable Improvement Plan (CSIP). Here are the detailed recommendations. Establish a Formal Process for Collecting Ideas and Suggestions Create an Idea Management System Centralised Platform: Implement a centralised digital platform where employees can easily submit their ideas and suggestions. This platform should be accessible to all employees. Anony","videos":[]},{"id":"PEO09","title":"Resource Planning","summary":"To ensure your company effectively plans and manages its human resources to align with and support its business strategy, consider implementing the following comprehensive recommendations: Establish a Robust Succession Planning Process Identify Key Roles Critical Positions: Identify key positions that are critical to the company\u2019s operations and future growth. Potential Successors: Identify potential successors for these roles through a thorough assessment of current employees\u2019 skills, performance, and potential. Develop Successor Profiles Skills and Competencies: Develop detailed profiles for","videos":[]}]},"process":{"label":"Process Excellence","videos":["muK6bmuvuN4","b5couoRZTPA","f1h2SaGw0ag"],"chapters":[{"id":"PRO01","title":"Product & Specification Control","summary":"To ensure effective product and specification control, especially regarding job cards/travellers and changes to product specifications, here are detailed recommendations for your company: Establish Robust Job Control Systems Job Cards/Travellers Management Digital Integration: Utilise digital systems to manage job cards/travellers. Ensure that these documents are integrated with your IMS/BMS and ERP/MRP systems for real-time tracking and updates. Standardisation: Develop standardised formats for job cards/travellers to ensure consistency. Include essential information such as product specifica","videos":[]},{"id":"PRO02","title":"5S Workplace Organisation","summary":"Implementing a robust 5S workplace organisation system is fundamental for driving continuous improvement and operational excellence. Here are recommendations for ensuring a sustainable 5S process across all areas of the company, with a focus on control and sustainability through employee engagement. Initial Implementation Training and Awareness Training Programs: Conduct comprehensive training sessions on 5S principles (Sort, Set in Order, Shine, Standardise, Sustain) for all employees. Awareness Campaigns: Use posters, emails, and workshops to raise awareness about the importance of 5S and it","videos":[]},{"id":"PRO03","title":"Managing Value & Waste","summary":"MANAGING VALUE AND WASTE 1.1 Value Stream Mapping (VSM) Current State Mapping: Conduct Value Stream Mapping (VSM) sessions to analyse and document the current state of product/service/digital value streams. Future State Mapping: Develop future state maps that outline the ideal processes with minimised waste and optimised value. 1.2 Identify and Address Waste (TIMWOODS) Transportation: Minimise unnecessary movement of materials or products between processes. Inventory: Reduce excess inventory that ties up capital and storage space. Motion: Eliminate unnecessary employee movements that do not ad","videos":[]},{"id":"PRO04","title":"Operational Communication","summary":"To establish an effective operational communication process that enhances engagement and ensures key operational information is effectively disseminated, consider the following recommendations: Implement Structured Communication Channels Pre-Job Briefings Purpose: Conduct pre-job briefings to outline daily objectives, safety considerations, and any changes in procedures. Ensure all team members understand their roles and responsibilities for the day. Execution: Standardise the briefing format and make it a mandatory part of daily routines. Utilise checklists to ensure all critical points are c","videos":[]},{"id":"PRO05","title":"Performance Measurement","summary":"To ensure your company effectively drives efficiency and productivity through performance management and key performance indicators (KPIs), the following comprehensive recommendations are designed to establish, deploy, and utilise KPIs to engage employees and support Continuous Sustainable Improvement Plan (CSIP) projects: Develop Relevant KPIs Identify Key Metrics Organisational Goals Alignment: Ensure KPIs align with the company\u2019s strategic objectives and key metrics such as quality, cost, delivery, and safety. Balanced Scorecard Approach: Use a balanced scorecard to develop KPIs across vari","videos":[]},{"id":"PRO06","title":"Planned Maintenance & Machine Availability","summary":"Ensuring equipment reliability and availability is critical for meeting demanding schedules and delivering consistent quality. Effective planned maintenance, accurate record-keeping, and involving operators in asset care are key components of a successful maintenance strategy. Here are detailed recommendations for establishing and optimising your planned maintenance and machine availability processes: Development of a Robust Planned Maintenance Program Establish Maintenance Schedules Routine Maintenance: Implement a structured routine maintenance schedule for all critical equipment. Define mai","videos":[]},{"id":"PRO07","title":"Process Control","summary":"To ensure that your company has robust process control capabilities that meet customer requirements and maintain high-quality standards, consider the following recommendations: Establish Clear Process Capabilities and Quality Levels Define Process Capabilities Capability Assessment: Perform regular assessments of process capabilities to ensure they meet customer requirements. Use techniques such as Process Capability Index (Cp, Cpk) and Statistical Process Control (SPC) to evaluate capability. Documentation: Document process capabilities and ensure that they are aligned with product specificat","videos":[]},{"id":"PRO08","title":"Process Improvement & Problem Solving","summary":"To foster a culture of continuous improvement, it\u2019s crucial to provide comprehensive training in process improvement, problem-solving skills, and root cause analysis. Here are detailed recommendations for implementing this training effectively and ensuring its deployment and utilisation across the organisation: Develop a Comprehensive Training Program Identify Training Needs Skills Assessment: Conduct a skills assessment to determine current capabilities and identify gaps in process improvement and problem-solving skills. Training Objectives: Define clear objectives for the training program, a","videos":[]},{"id":"PRO09","title":"Products & Service Strategy","summary":"To ensure your company achieves world-class performance through a well-defined products and services strategy, here are comprehensive recommendations that align with your organisation\u2019s strategy and Continuous Sustainable Improvement Plan (CSIP): Develop a Comprehensive Products and Services Strategy Align with Organisational Vision and Strategy Vision and Mission Integration: Ensure the products and services strategy is fully aligned with the organisation\u2019s vision, mission, and long-term strategic objectives. CSIP Integration: Embed the strategy within the Continuous Sustainable Improvement P","videos":[]},{"id":"PRO10","title":"Standard Operating Procedures","summary":"Standard Operating Procedures (SOPs) and Safe Systems of Work (SSOW) are critical for ensuring that products and services meet specification, quality, and cost requirements. Proper implementation of SOPs/SSOW also supports training, quality control, problem-solving, and process control disciplines. Here are recommendations for establishing effective SOPs/SSOW in your company. Development of SOPs/SSOW Identification of Key Processes Process Mapping: Identify all critical processes within the organisation that require SOPs/SSOW. Use process mapping to visualise each step. Stakeholder Involvement","videos":[]}]},"qhse":{"label":"QHSE","videos":["gsVFL5D_8BU","nhw3XDhlNP8","9yhJDL5ttSU"],"chapters":[{"id":"QHS01","title":"Continuous Improvement","summary":"Establish a Formal Continuous Improvement Process Define the CI Framework Select a Methodology: Adopt a formal continuous improvement methodology such as Kaizen, Six Sigma, Lean, or a combination of these approaches. Ensure that the chosen methodology aligns with your organisation\u2019s goals and needs. Process Documentation: Document the continuous improvement process, including the steps for identifying opportunities, implementing changes, and reviewing outcomes. This should include roles, responsibilities, and procedures for each phase. Form CI Groups or Teams Create CI Teams: Establish formal ","videos":[]},{"id":"QHS02","title":"Health, Safety & Environmental Risk Management","summary":"To effectively manage health, safety, and environmental (HSE) risks, and ensure compliance with ISO 45001 or similar standards, your company should establish robust processes for documentation, internal auditing, and safe systems of work (SSOW). Here are detailed recommendations for managing these aspects: Documents and Records Control Establish Document Control Procedures Documentation Standards: Develop and implement standards for document control, including procedures for creation, review, approval, distribution, and archiving. Access and Security: Ensure that all HSE-related documents and ","videos":[]},{"id":"QHS03","title":"Management Commitment","summary":"Demonstrate Visible Leadership and Commitment Leadership Involvement Integration into SLT Agendas Set Clear Direction and Expectations Communicate Expectations Risk Management Proactive Culture Development Performance Monitoring Continuous Improvement Action Plans: Develop and implement action plans based on performance reviews and feedback. Ensure that these plans are tracked and reviewed regularly. Provide Resources and Support Allocate Resources Support Systems Example Implementation Plan Demonstrate Visible Leadership and Commitment Timeline: Immediate and ongoing Set Clear Direction and E","videos":[]},{"id":"QHS04","title":"Objectives, Targets & Goals","summary":"Define Specific Objectives Quality: Set objectives related to product/service quality, such as reducing defect rates, improving customer satisfaction scores, or achieving specific quality certifications. Health and Safety: Define objectives to enhance safety culture, reduce incident rates, or improve employee safety training. Environmental: Establish objectives for reducing waste, minimising energy consumption, or achieving sustainability certifications. Align with Strategic Goals Communication: Clearly communicate these objectives across all levels to ensure alignment. Set SMART Goals Specifi","videos":[]},{"id":"QHS05","title":"QHSE Competence","summary":"Training Programs Advanced Training: Offer certifications such as IOSH Managing Safely or NEBOSH. Refresher Courses: Regularly update employees on new standards. Training Delivery Internal and External Training: Use both in-house expertise and accredited trainers. Interactive Learning: Incorporate simulations, workshops, and case studies. Evaluate and Refresh Training Effectiveness Training Evaluation Feedback Mechanisms: Collect participant feedback through surveys and assessments. Performance Metrics: Measure impact on incident rates, compliance, and quality. Continuous Improvement Review an","videos":[]},{"id":"QHS06","title":"QHSE Policy & Strategy","summary":"Ensure Certification Compliance ISO 9001 (Quality Management): Maintain ISO 9001 certification to ensure consistent quality in products and services. Regularly review and update quality management processes to align with the latest standards. ISO 14001 (Environmental Management): Sustain ISO 14001 certification to manage environmental impacts effectively. Implement and monitor practices that reduce environmental footprints. ISO 45001 (Occupational Health and Safety): Keep ISO 45001 certification to manage health and safety risks. Regularly assess and update safety procedures to ensure a safe w","videos":[]},{"id":"QHS07","title":"Quality Plans","summary":"To ensure effective quality management and compliance with customer requirements, your company should develop comprehensive Quality Plans. These plans will outline the standards, practices, and processes required to deliver consistent, high-quality products and services. Here are the recommendations for developing and implementing robust Quality Plans: Develop Comprehensive Quality Plans Define Objectives Quality Goals: Establish clear, measurable quality objectives aligned with customer requirements and company goals. Objectives should cover aspects such as product performance, reliability, a","videos":[]},{"id":"QHS08","title":"Safety Culture","summary":"To establish and maintain a robust nuclear health and safety culture where safety is the top priority, it\u2019s essential to create an environment that fosters proactive engagement and personal responsibility. Here\u2019s a detailed set of recommendations to achieve this: Establish Safety as a Core Organisational Value Leadership Commitment Visible Support: Ensure that Senior Leadership Team (SLT) members visibly support and champion the safety culture. Safety as Priority: Integrate safety considerations into business strategies and daily operations. Communicate Safety Values Clear Messaging: Regularly","videos":[]},{"id":"QHS09","title":"Traceability & Non-Conforming Products","summary":"To ensure effective management of traceability and non-conforming products/services in line with ISO 9001 and other relevant standards, your company should establish and maintain robust processes for traceability, handling non-conformances, and managing Counterfeit, Fraudulent, and Suspect Items (CFSI). Here are detailed recommendations: Traceability Process Implement a Traceability System Tracking System: Develop a comprehensive traceability system that tracks all materials, components, and products through each stage of production. Use barcoding, RFID, or similar technologies to enhance trac","videos":[]}]},"scsv":{"label":"Supply Chain & Social Values","videos":["YkxnOlF30us","Q9GiMhMQjbI","98m5XPJDLzQ"],"chapters":[{"id":"SCS01","title":"Cost Analysis","summary":"To effectively manage supply chain cost analysis and ensure best value, a company should integrate both quantitative and qualitative assessments into its decision-making processes. Here\u2019s a structured approach to achieving comprehensive supply chain cost analysis: Define Cost Categories Unit Cost Definition: The cost per individual unit of product or service. Components: Include material costs, direct labour, and any direct overheads. Total Cost Definition: The sum of all costs associated with a product or service throughout its lifecycle. Components: o Direct Costs: Material, labour, and dire","videos":[]},{"id":"SCS02","title":"Digital Transformation","summary":"To effectively leverage digital transformation within the supply chain, a company should implement technologies and processes that enhance efficiency, visibility, and collaboration both internally and with external partners. Here are detailed recommendations for integrating digital technologies into supply chain operations: Adopt Advanced Digital Technologies Enterprise Resource Planning (ERP) Systems Implement an ERP System: Deploy a comprehensive ERP system that integrates all supply chain functions, including inventory management, procurement, logistics, and order fulfilment. Ensure the ERP","videos":[]},{"id":"SCS03","title":"Supply Chain Performance Metrics","summary":"To effectively manage and enhance your supply chain, it\u2019s essential to implement a comprehensive set of performance metrics. These metrics will facilitate benchmarking, effectiveness assessment, and continuous improvement, supporting both internal and external stakeholders. Here\u2019s a detailed guide on how to develop and implement robust supply chain performance metrics: Define Key Performance Metrics Internal Metrics Inventory Turnover Ratio: Measures how efficiently inventory is managed by comparing the cost of goods sold to average inventory. Order Fulfilment Rate: Indicates the percentage of","videos":[]},{"id":"SCS04","title":"Supply Chain Relationships","summary":"Establishing and maintaining effective supply chain relationships is crucial for enhancing performance, fostering collaboration, and driving mutual success. Here\u2019s a structured approach to developing and documenting robust supply chain relationships, Categorised by their level and type: Categorise Relationship Levels Transactional Relationships Nature: Focus on individual transactions with minimal engagement beyond order placement and fulfilment. Frequency: Occasional or as-needed interactions. Intent: Primarily operational, ensuring that basic transactional needs are met. Documentation: Purch","videos":[]},{"id":"SCS05","title":"Supply Chain Risk Management","summary":"To effectively manage supply chain risk, a company must implement a comprehensive risk management strategy that incorporates criteria for approving suppliers and actively monitors and mitigates risks associated with them. Here\u2019s a structured approach to managing supply chain risk: Develop Risk Management Criteria for Approved Suppliers Risk Assessment Criteria Financial Stability: Evaluate the financial health of suppliers to ensure they are capable of meeting contractual obligations. Use financial statements, credit ratings, and industry reports. Compliance and Certifications: Check for compl","videos":[]},{"id":"SCS06","title":"Community Engagement","summary":"To continuously improve community engagement, demonstrating a strong commitment to supporting and collaborating with the local community, consider the following steps: Develop a Community Engagement Strategy Define the Scope Clearly articulate the organisation\u2019s purpose for community engagement. Focus on the target communities, the needs the organisation aims to address, and the value it intends to provide. Example: \u201cTo empower the local community by providing access to education, skills development, and employment opportunities, contributing to social and economic development.\u201d Establish Obje","videos":[]},{"id":"SCS07","title":"Diversity & Inclusion","summary":"To continuously improve diversity and inclusion, demonstrating a commitment to creating an inclusive workplace where everyone feels valued and respected, consider the following steps: Develop a Diversity and Inclusion Strategy Define Diversity and Inclusion Clearly define what diversity and inclusion mean for the organisation, encompassing various dimensions such as race, ethnicity, gender, sexual orientation, age, disability, religion, and background. Example: \u201cOur organisation values diversity in all its forms and is committed to creating an inclusive workplace where everyone feels welcome a","videos":[]},{"id":"SCS08","title":"Environmental Sustainability","summary":"To continuously improve environmental sustainability, demonstrating a commitment to minimizing environmental impact and promoting sustainable practices, consider the following steps: Develop an Environmental Sustainability Strategy Environmental Policy Develop a comprehensive environmental policy that outlines the organisation\u2019s commitment to environmental sustainability, including its goals, objectives, and guiding principles. Example: \u201cOur organisation is committed to reducing our carbon footprint, conserving water resources, and minimising waste generation.\u201d Materiality Assessment Conduct a","videos":[]},{"id":"SCS09","title":"Ethical Sourcing","summary":"To continuously improve ethical sourcing practices, demonstrating a commitment to responsible sourcing throughout the supply chain, consider the following steps: Develop an Ethical Sourcing Policy Define Ethical Standards Clearly define the organisation\u2019s ethical standards for sourcing, encompassing labour practices, environmental protection, human rights, and anti-corruption. Example: \u201cOur suppliers must comply with all applicable labour laws, including those relating to wages, working hours, and health and safety.\u201d Scope of Policy Specify the scope of the ethical sourcing policy, including t","videos":[]},{"id":"SCS10","title":"Labour Standards","summary":"To continuously improve labour standards, demonstrating a commitment to fair and ethical treatment of employees, consider the following steps: Develop a Labour Standards Policy Legal Compliance Ensure full compliance with all applicable labour laws and regulations, including those relating to wages, working hours, health and safety, and non-discrimination. Example: \u201cOur organisation complies with all applicable minimum wage laws and ensures that employees are paid for overtime work.\u201d International Labour Standards Adhere to international labour standards, such as those set by the International","videos":[]}]}},"nuclear_handbook":{"safety_culture":{"label":"Nuclear Safety Culture","chapters":[{"id":"SAF01","title":"Continuous Improvement in Safety Culture","summary":"A great safety culture isn\u2019t a one-and-done job \u2014 it\u2019s a constant work in progress. To score a 10, your organisation must show that it actively monitors, reflects, and adapts its safety culture over time. That means learning, listening, adjusting \u2014 and never assuming \u201cgood enough\u201d is good enough. Assess Culture Regularly and Honestly Run structured safety culture assessments at planned intervals \u2014 not just when an audit\u2019s looming. Use Anonymous staff surveys Interviews and focus groups Culture maturity models or behavioural audits Don\u2019t just tick boxes \u2014 aim to uncover what people really think"},{"id":"SAF02","title":"Incident and Near Miss Learning","summary":"Have a Robust Learning System \u2014 Not Just a Reporting System Ensure you have a clear process for Logging and categorising incidents and near misses Investigating and identifying root causes (not just surface errors) Capturing lessons learned in a way that\u2019s accessible and relevant Include both nuclear and non-nuclear events if the lessons are transferable \u2014 safety learning is safety learning. Investigate Without Blame Promote a just culture approach to incident analysis Focus on system weaknesses, not scapegoats Use recognised tools (e.g. 5 Whys, fishbone diagrams, human performance models) Ens"},{"id":"SAF03","title":"Just and Reporting Culture","summary":"In a nuclear environment, silence isn\u2019t golden \u2014 it\u2019s dangerous. A strong just and reporting culture means your people feel safe to speak up, confident that issues will be dealt with fairly, and motivated to share concerns before they become problems. To score well here, your organisation must prove it\u2019s built on openness, accountability, and trust \u2014 not fear or blame. Define What \u2018Just Culture\u2019 Means \u2014 and Live It Create clear guidance on what behaviours are Acceptable Unacceptable Honest mistakes versus reckless choices Communicate that accountability is fair and consistent, not knee-jerk or"},{"id":"SAF04","title":"Leadership and Behaviour for Safety","summary":"Lead by Example \u2014 Always Senior leaders must be present and visible in safety-critical environments \u2014 not just during audits or campaigns. Examples of visible leadership include Participation in safety stand-downs and pre\u2011job briefs Regular site walkdowns with front-line teams Addressing safety issues in town halls, even when uncomfortable Demonstrate Nuclear-Specific Behaviours Leadership should actively demonstrate behaviours aligned with nuclear expectations, such as: Respect for procedure Challenge and accountability culture Consideration of long\u2011term impacts Encourage leaders to explain w"},{"id":"SAF05","title":"Principles of a Strong Safety Culture","summary":"A strong nuclear safety culture isn\u2019t built by chance \u2014 it\u2019s shaped, reinforced, and lived every day. To demonstrate full maturity here, your organisation must show that it understands what safety culture looks like, why it matters, and how it\u2019s actively embedded across the business. Define What Safety Culture Means in Practice Make the key principles of safety culture visible and memorable Personal accountability Questioning attitude Effective communication Leadership engagement Continuous learning Translate these into behaviours expected at every level, from boardroom to shop floor. Build Aw"}]},"industry_fund":{"label":"Nuclear Industry Fundamentals","chapters":[{"id":"IND01","title":"Nuclear Risk Awareness","summary":"In the nuclear industry, risk awareness isn\u2019t optional \u2014 it\u2019s foundational. To earn a top score, your organisation must go beyond simply listing risks. It must demonstrate a living, breathing understanding of the unique threats posed by nuclear operations \u2014 and how those risks are actively managed, communicated, and embedded into decision-making. Identify and Define Nuclear-Specific Risks Build and maintain a nuclear-specific risk register that clearly addresses Radiological risks (e.g. exposure, contamination) Operational risks (e.g. system failure, procedural non-conformance) Environmental r"},{"id":"IND02","title":"Nuclear Safety Culture","summary":"Ensure every role has a clear connection to nuclear safety \u2014 from the managing director to the maintenance tech. Incorporate nuclear safety culture expectations into job descriptions, performance reviews, and team objectives. Train, Educate, and Reinforce Constantly Deliver targeted nuclear safety culture training for staff at all levels. Use real examples from industry (and your own operations) to explain how culture has helped or hindered outcomes. Encourage a \u201cthink before you act\u201d mindset \u2014 especially when under pressure. Lead by Example Leaders must visibly champion nuclear safety \u2014 not j"},{"id":"IND03","title":"Nuclear Safety Principles","summary":"Core nuclear safety principles are more than academic \u2014 they are what keep people safe, reputations intact, and operations legally compliant. Scoring a 10 here means your organisation doesn\u2019t just know the buzzwords \u2014 it actively uses them to guide its decisions, shape behaviours, and engineer out risk. Define and Embed the Big Three Defence in Depth: Ensure your people understand this as a multi-layered system of controls \u2014 not a single silver bullet. Document where the layers are and test how well they work independently and together. ALARP: ALARP should be reflected in all design, procureme"},{"id":"IND04","title":"Nuclear Sector & Regulatory Landscape","summary":"If you want to operate in nuclear, you need to know the landscape \u2014 not just your own patch. Scoring a 10 here means demonstrating a well-rounded understanding of the UK nuclear industry, its major players, and the expectations of its regulatory bodies. It\u2019s about seeing the bigger picture \u2014 and showing where your business fits in. Understand the Structure of the UK Nuclear Sector Identify the main components of the sector, such as Civil nuclear power generation (e.g. EDF, Hinkley Point C) Decommissioning and legacy clean-up (e.g. Sellafield, NDA) Defence nuclear (where applicable) Nuclear new"},{"id":"IND05","title":"Risk & Responsibility","summary":"Supplying to the nuclear industry isn\u2019t just business \u2014 it\u2019s a public trust. A top-performing organisation understands that the consequences of failure stretch far beyond the factory floor. To hit a score of 10, you must show that your business takes its responsibility seriously \u2014 not just to the customer, but to society. Recognise the Broader Risk Landscape Understand that in nuclear, technical risk is only part of the story. There\u2019s also: Reputational risk \u2014 for you and your client. Public confidence risk \u2014 where any incident can affect perception of the entire industry. Societal risk \u2014 incl"},{"id":"IND06","title":"Regulatory Framework","summary":"Understanding the regulatory landscape isn\u2019t just about knowing who the ONR or EA are \u2014 it\u2019s about embedding those expectations into the DNA of how your organisation operates. To achieve the highest level of maturity, regulatory alignment needs to show up everywhere from policy to shopfloor practice. Establish Clear Regulatory Awareness Ensure that your organisation understands the roles and requirements of key regulators, including: Office for Nuclear Regulation (ONR) Environment Agency (EA) Nuclear Decommissioning Authority (NDA) (where relevant) Create an accessible overview of applicable r"},{"id":"IND07","title":"Safety","summary":"Operationalise Core Safety Principles ALARP in Action: Ensure \u201cas low as reasonably practicable\u201d is applied consistently in design decisions, risk assessments, and operational planning. Document how ALARP judgements are made and reviewed. Defence in Depth: Apply layered controls across engineering, procedural, and human factors. Demonstrate how barriers and redundancy are built into processes to prevent and mitigate failures. Safety Case Awareness: Staff at all levels \u2014 particularly technical, supervisory, and leadership \u2014 should understand the function of a Safety Case and how their work link"},{"id":"IND08","title":"Stakeholder Engagement Strategy","summary":"In the nuclear sector, stakeholder engagement isn\u2019t just PR \u2014 it\u2019s part of how you build confidence, demonstrate transparency, and uphold your licence to operate. Achieving a top score means your organisation engages proactively, honestly, and consistently with all relevant parties \u2014 from customers and regulators to supply chain partners and even the local community. Define Your Stakeholders Clearly Identify who your stakeholders are in the context of nuclear operations Regulators and clients Internal workforce Suppliers and subcontractors Local communities (if applicable) Map out stakeholder "}]},"human_perf":{"label":"Human Performance","chapters":[{"id":"HUM01","title":"Competence Management System for Safety-Critical Roles","summary":"Define Safety-Critical Roles Systematically Identify and document which roles are safety-critical, based on Impact on the safety case ALARP-related decisions Quality-affecting tasks (e.g. inspection, welding, software, maintenance) Review this list regularly with quality, safety, and engineering leads. Set Competence Requirements by Role For each role, define Qualifications and certifications required (e.g. CSWIP, ECITB, NEBOSH) Skills and behavioural expectations Refresher/reassessment cycles Include both technical and human performance expectations. Assess and Authorise Competence Implement "},{"id":"HUM02","title":"Fatigue Management & Workload Control","summary":"You can\u2019t trust judgment that\u2019s clouded by fatigue. To achieve a 10, your organisation must actively manage workload, shift design, and fatigue risk, recognising that performance, decision-making, and safety all collapse when people are running on empty. Design Work Patterns With Fatigue in Mind Set clear limits for Working hours per day/week Rest breaks and shift lengths Night shifts and rotation cycles Follow HSE and sector-specific fatigue management guidance. Monitor Actual Workload in Real Time Track hours worked and overtime Include travel, on-call duties, and shift overruns in fatigue a"},{"id":"HUM03","title":"Human Performance Tools & Error Prevention","summary":"STAR (Stop, Think, Act, Review) Three-way communication Pre-job briefs and post-job reviews Peer checks / independent verification Time outs / stop work authority Build them into procedures and daily routines. Tailor HPTs to Role and Environment Adapt tools to fit Shop floor vs engineering vs admin staff Repetitive tasks vs critical one-offs High-pressure vs steady-state work Make them practical, not theoretical \u2014 give real examples. Measure and Reinforce Usage Supervisors should observe and give feedback on Use of pre-job briefs Communication discipline Situational awareness Include HPTs in a"},{"id":"HUM04","title":"Monitoring Human Performance","summary":"Procedural adherence Communication discipline Use of HPTs Safety-first decision-making Observe Performance Proactively Use methods like Supervisor observation and coaching Peer review of high-risk tasks Human performance walkdowns or audits Log both positive behaviours and early warning signs of drift Analyse Data From Incidents and Routine Work Track Near misses Behavioural trends (e.g. rule-bending, last-minute workarounds) Human error types Use trends to focus improvement plans Engage Staff in Self-Assessment Ask teams \u201cWhere are we most likely to make mistakes?\u201d \u201cWhat behaviours do we see "},{"id":"HUM05","title":"Training, Authorisation & Qualification Processes","summary":"In nuclear, training isn\u2019t just a box to tick \u2014 it\u2019s your first line of defence. To achieve a top score, your organisation must deliver clear, role-specific training that leads to formal authorisation and qualification, and ensures everyone is ready for the work they do. Align Training With Role Risk and Complexity Define training needs based on Safety and quality criticality Regulatory expectations Equipment, process, or system complexity Include both Core training (e.g. nuclear awareness, safety culture) Role-specific training (e.g. welding, NDT, procurement, QA) Control and Track Training R"}]},"supply_chain":{"label":"Supply Chain Readiness","chapters":[{"id":"SUP01","title":"Approved Supplier List with Qualification & Audit","summary":"In nuclear, you\u2019re only as strong as your weakest supplier \u2014 and \u201cwe\u2019ve used them before\u201d doesn\u2019t cut it. Scoring a 10 here means your organisation operates a rigorous, risk-based supplier approval and monitoring system, with formal pre-qualification, audit, and reapproval processes \u2014 all tailored to nuclear expectations. Maintain a Controlled Approved Supplier List (ASL) ASL Controls Centrally managed list with nuclear-capable suppliers Scope, certification, and approval tracking Flags for restrictions, conditions, or risk levels No safety-significant purchases from outside the ASL \u2014 no excep"},{"id":"SUP02","title":"Flow Down of Nuclear Requirements to Subcontractors","summary":"In the nuclear world, ignorance isn\u2019t a defence \u2014 and that includes subcontractors. To achieve a top score here, your organisation must explicitly and effectively cascade nuclear requirements through every level of the supply chain, ensuring that subcontractors understand exactly what\u2019s expected of them, and why it matters. Define What Needs to Be Flowed Down \u2014 and To Whom Include Technical specs and standards (e.g. ISO 19443, RCC-M) Inspection, testing, and traceability Documentation and retention obligations Safety culture and human performance Apply to Tier 1 and their subcontractors. Embed"},{"id":"SUP03","title":"Nuclear-Specific Procurement & Supply Chain Requirements","summary":"Procurement in nuclear isn\u2019t just about getting the right price \u2014 it\u2019s about getting the right thing, from the right place, with the right pedigree. To hit a 10 here, your organisation must demonstrate that it applies a nuclear-grade approach to supply chain management, from sourcing through to delivery, with quality, traceability, and safety built in. Understand What Makes Nuclear Procurement Different Key Expectations Traceability of materials and services Counterfeit item prevention (CFSI) Regulatory compliance with client-specific requirements (e.g. Sellafield, Hinkley Point C, ONR guidanc"},{"id":"SUP04","title":"Regular Inspection & Surveillance of Nuclear Work","summary":"Define Safety-Critical Roles Systematically Identify and document which roles are safety-critical, based on Impact on the safety case ALARP-related decisions Quality-affecting tasks (e.g. inspection, welding, software, maintenance) Review this list regularly with quality, safety, and engineering leads. Set Competence Requirements by Role For each role, define Qualifications and certifications required (e.g. CSWIP, ECITB, NEBOSH) Skills and behavioural expectations Refresher/reassessment cycles Include both technical and human performance expectations. Assess and Authorise Competence Implement "}]},"quality_comp":{"label":"Quality and Compliance","chapters":[{"id":"QUA01","title":"CFSI Risk Management","summary":"In most industries, counterfeit parts are a nuisance. In nuclear, they\u2019re a catastrophe waiting to happen. To hit a 10 here, your organisation must have airtight controls to detect, prevent, and deal with CFSI risks \u2014 from the supply chain to the shop floor. This isn\u2019t about box-ticking \u2014 it\u2019s about vigilance, traceability, and knowing who (and what) you\u2019re buying. Understand the Threat \u2014 and Communicate It Clearly Train staff to recognise the reality and risks of Counterfeit items: Intentionally misrepresented (e.g. fake certs) Fraudulent items: Authentic, but knowingly misused (e.g. expired "},{"id":"QUA02","title":"Introduction to ISO 19443 and Standards","summary":"ISO 19443 isn\u2019t just a quality badge \u2014 it\u2019s a nuclear-specific mindset. To hit top marks here, your organisation must demonstrate a deep, operational understanding of ISO 19443 (and other relevant standards), with those expectations built into daily practice \u2014 not just paperwork. Understand What ISO 19443 Actually Requires Train key staff to understand The structure and intent of ISO 19443:2018 How it builds on ISO 9001 but adds nuclear-specific demands (e.g. safety culture, graded approach, traceability, counterfeit avoidance) The concept of nuclear-grade quality management Extend awareness t"},{"id":"QUA03","title":"Non-Conformance and Deviation Management","summary":"Things go wrong \u2014 that\u2019s inevitable. But in nuclear, what matters is how quickly you catch it, how well you respond, and whether you can prove it was all done under control. A top score here means your organisation doesn\u2019t bury non-conformances \u2014 it manages them with transparency, rigour, and urgency. Define Non-Conformance, Deviation, and Waiver \u2014 and Use Them Properly Establish clear definitions and processes for Non-conformance: The product, service, or process didn\u2019t meet spec. Deviation: A planned, pre-approved departure from requirements. Concession/Waiver: Formal client agreement to acc"},{"id":"QUA04","title":"QA and QC in Nuclear Projects","summary":"Separate QA and QC \u2014 and Make Them Both Strong QA = System \u2014 how you plan, manage, and prevent problems. QC = Inspection \u2014 how you verify what you built/delivered is correct. Both must be Defined Documented Auditable Staff must understand the distinction \u2014 if they confuse them, your clients and regulators won\u2019t be impressed. Develop Nuclear-Grade Quality Plans For every nuclear or safety-significant project, develop a project-specific Quality Plan that includes: Roles and responsibilities Inspection and Test Plans (ITPs) Hold and witness points Supplier quality requirements Reference relevant "},{"id":"QUA05","title":"Traceability and Documentation","summary":"In nuclear, if you didn\u2019t record it, it didn\u2019t happen \u2014 and if you can\u2019t trace it, you can\u2019t trust it. Achieving full marks here means your organisation has airtight systems that track who did what, when, how \u2014 and with what material \u2014 from cradle to grave, with no gaps or guesswork. Establish Full Lifecycle Traceability Ensure you can trace Materials (heat numbers, batch IDs, mill certs) Components (serial numbers, supplier origin, design versions) Processes (who did it, when, under what procedure or condition) Changes and deviations (documented approvals, version control) You should be able "}]},"leadership_gov":{"label":"Leadership and Governance","chapters":[{"id":"LEA01","title":"Governance, Oversight & Accountabilities","summary":"Nuclear organisations can\u2019t afford confusion. To score a 10 here, you need to show that governance is structured, roles are understood, and responsibility is owned. Everyone must know exactly what they\u2019re responsible for, who they report to, and how safety-critical decisions are made and reviewed \u2014 without ambiguity or guesswork. Establish a Clear Organisational Structure Develop and maintain organisation charts that clearly show Lines of authority Decision-making responsibilities Interfaces between functions (e.g. engineering \u2194 QA \u2194 operations) For nuclear projects, map specific roles for Lic"},{"id":"LEA02","title":"Role of Leadership in Setting Nuclear Safety Expectations","summary":"If your leaders aren\u2019t setting the standard for nuclear safety, who is? Earning a top score here means your leadership team is actively and consistently shaping safety expectations, not just approving them. This is about clarity, visibility, and credibility \u2014 and whether safety is genuinely driving business decisions. Make Safety a Non-Negotiable Value Go beyond slogans and statements \u2014 demonstrate that nuclear safety is Core to your organisational identity Prioritised above cost, schedule, or convenience Non-negotiable, even when pressure\u2019s on Leaders must back this with action, not just word"},{"id":"LEA03","title":"Visible Leadership & Nuclear-Specific Behaviours","summary":"Leadership in nuclear isn\u2019t about sitting in an office issuing memos \u2014 it\u2019s about being visible, being credible, and setting a standard people can follow. To score top marks, your leaders must routinely demonstrate behaviours that show they understand the unique expectations of the nuclear environment \u2014 and act accordingly. Be Present in Safety-Critical Environments Leadership must get out of the boardroom and onto the floor. That means Participating in site walkdowns and inspections Attending toolbox talks and team briefs Visiting suppliers and subcontractors The goal? Be seen, be approachabl"}]}},"hub":{"pipeline":[{"programme":"AGRs","sector":"Existing fleet","confidence":"High","comment":"Torness end of generation = 2028. Heysham 1 = 2026. Heysham 2 = 2028. Hartlepool = March 2026"},{"programme":"Sizewell B","sector":"Existing fleet","confidence":"High","comment":"Estimated end of generation = 2035"},{"programme":"HPC","sector":"GW New Build","confidence":"High","comment":"Estimated start of generation = 2030. R1\u2013R2 no firm generation date."},{"programme":"Sizewell C","sector":"GW New Build","confidence":"High","comment":"No formal start of generation. Assumed 2035\u201336 with 12-year construction phase."},{"programme":"TBC (3rd site)","sector":"GW New Build","confidence":"Medium","comment":"No clear plans. Wylfa and Oldbury identified as potential sites. Subject to DESNZ pursuit."},{"programme":"TBC (4th site)","sector":"GW New Build","confidence":"Medium","comment":"Nuclear roadmap: aiming to secure 3\u20137 GW every five years from 2030 to 2044."},{"programme":"SMR Tech Selection Wave 1","sector":"SMR New Build","confidence":"Medium","comment":"4 selected for next tender stage \u2014 competition completion expected spring 2025. FID target 2029."},{"programme":"SMR Tech Selection Wave 2","sector":"SMR New Build","confidence":"Medium","comment":"Subsequent waves subject to Government commitment to 3\u20137 GW per 5-year window."},{"programme":"SMR Tech Selection Wave 3","sector":"SMR New Build","confidence":"Medium","comment":"As above"},{"programme":"AMR RD&D","sector":"HTGR demonstrator","confidence":"Low","comment":"AMR demonstrator looking to be established by early 2030s to support AMR deployment in early 2050s."},{"programme":"X Energy / Cavendish","sector":"AMR New Build","confidence":"Low","comment":"FNEF Funding announced April 2024. Intention: 12-reactor unit Hartlepool, up to 40 XE-100 reactors."},{"programme":"Newcleo","sector":"AMR New Build","confidence":"Low","comment":"Newcleo recently moved HQ to Paris but remain committed to a UK reactor by 2033."},{"programme":"TBC AMR","sector":"AMR New Build","confidence":"Low","comment":"No confirmed programme. Dependent on AMR RD&D demonstrator success."},{"programme":"Last Energy","sector":"Micro Reactor","confidence":"Low","comment":"Last Energy aiming for 4 micro reactors in Bridgend, Wales operating by 2027. Delivery timescale considered optimistic."},{"programme":"TBC Micro","sector":"Micro reactor","confidence":"Medium","comment":"Funded from multiple sources including space and defence. NSIP funding award of \u00a34.8m."},{"programme":"JET Decommissioning","sector":"Fusion","confidence":"High","comment":"JET repurposed end 2023, ready for decommissioning. Decommissioning runs to ~2040."},{"programme":"STEP","sector":"Fusion","confidence":"Medium","comment":"Construction estimated to begin 2032. First operations targeted early 2040s. Aims to demonstrate net energy from fusion."},{"programme":"UKAEA Operations","sector":"Fusion","confidence":"High","comment":"Ongoing HMG programme."},{"programme":"AWE","sector":"Defence","confidence":"High","comment":"Future Material Campus (FMC) and Future Infrastructure Program (FIP). Combined funding ~\u00a3900m."},{"programme":"Vanguard class","sector":"Defence","confidence":"High","comment":"HMS Victorious refitted 2024 with expected life well into the 2030s."},{"programme":"Astute class","sector":"Defence","confidence":"High","comment":"Construction and handover of boat 7 estimated complete 2026."},{"programme":"Dreadnought class","sector":"Defence","confidence":"High","comment":"20-year build phase \u2014 due to complete 2030s."},{"programme":"SDP \u2013 Subs Dismantling","sector":"Defence","confidence":"High","comment":"Long-term commitment to recycling RN submarines. Goal: repeatable method for all successor classes."},{"programme":"AUKUS","sector":"Defence","confidence":"High","comment":"Delivery of Astute class replacement submarines. RN commitment + Australia to procure 5 boats."},{"programme":"Site Decommissioning & Remediation","sector":"Decomm","confidence":"High","comment":"NDA estate \u2014 ongoing operations and evolving strategy."},{"programme":"Spent Fuel & Waste Management","sector":"Decomm","confidence":"High","comment":"Ongoing operations. Some liabilities will transfer to GDF."},{"programme":"Containers (\u00a330bn)","sector":"Decomm","confidence":"High","comment":"Major container manufacturing programme."},{"programme":"GDF (Geological Disposal Facility)","sector":"Decomm","confidence":"Medium","comment":"Construction starts only when suitable site confirmed. ILW available ~2050\u201360. HLW from ~2075."}],"stakeholders":[{"name":"ADS","cat":"Trade Associations","url":"https://www.adsgroup.org.uk/","desc":"Represents aerospace, defence, security and space industries, including companies operating in defence nuclear programmes. Advocates for industrial capability, innovation and skills."},{"name":"Alan Turing Institute","cat":"Research and Development","url":"https://www.turing.ac.uk/","desc":"UK national institute for data science and AI. In nuclear, supports digital twins, predictive maintenance, safety case analytics, and complex system modelling."},{"name":"Association for Project Management (APM)","cat":"Professional Bodies","url":"https://www.apm.org.uk/","desc":"Promotes project management professionalism. In nuclear, supports delivery of complex, high-hazard, long-lifecycle programmes."},{"name":"Cabinet Office","cat":"Government","url":"https://www.gov.uk/government/organisations/cabinet-office","desc":"Sets collective government policy, including decisions on nuclear energy, defence, decommissioning and skills investment."},{"name":"Cogent Skills","cat":"Skills Development Bodies","url":"https://cogentskills.com/","desc":"Former Sector Skills Council for nuclear, chemicals and pharmaceuticals. Parent company of NSAN. End Point Assessment Service for science-based apprenticeships."},{"name":"Cost Assurance & Analysis Service (CAAS)","cat":"Government","url":"https://www.gov.uk/government/organisations/cost-assurance-and-analysis-service","desc":"Provides independent cost scrutiny of major government projects including nuclear infrastructure and decommissioning programmes."},{"name":"Defence Nuclear Safety Regulator (DNSR)","cat":"Regulators","url":"https://www.gov.uk/government/organisations/defence-nuclear-safety-regulator","desc":"Regulates nuclear safety within the UK defence nuclear enterprise, including submarine reactors and defence nuclear facilities."},{"name":"Defence Suppliers Forum (DSF)","cat":"Government","url":"https://www.gov.uk/government/groups/defence-suppliers-forum","desc":"Represents companies supplying the UK defence sector, including nuclear-qualified suppliers supporting the submarine and weapons programmes."},{"name":"Department for Business and Trade (DBT)","cat":"Government","url":"https://www.gov.uk/government/organisations/department-for-business-and-trade","desc":"Supports economic growth, exports and industrial capability, including nuclear supply chain promotion and inward investment."},{"name":"Department for Energy Security and Net Zero (DESNZ)","cat":"Government","url":"https://www.gov.uk/government/organisations/department-for-energy-security-and-net-zero","desc":"Leads UK policy on nuclear power as a cornerstone of energy security and net zero delivery. Sets strategic direction for new build, SMRs, fusion and legacy management."},{"name":"EDF Energy","cat":"Existing Generation","url":"https://www.edfenergy.com/","desc":"UK's largest nuclear power operator. Responsible for the existing AGR fleet and leading delivery of HPC and SZC. Central role in energy security and net zero strategy."},{"name":"EPSRC","cat":"Research and Development","url":"https://www.ukri.org/councils/epsrc/","desc":"Primary UK research council funding engineering and physical sciences. Funds university research, doctoral training, and national facilities across fission, fusion, materials, robotics, and decommissi"},{"name":"Environment Agency (EA)","cat":"Regulators","url":"https://www.gov.uk/government/organisations/environment-agency","desc":"Regulates environmental protection at nuclear sites in England, covering radioactive discharges, waste management and land quality."},{"name":"GMB","cat":"Trade Unions","url":"https://www.gmb.org.uk/","desc":"One of the UK's largest trade unions, representing workers across civil nuclear, defence nuclear and energy infrastructure. Engages on pay, safety, skills and industrial relations."},{"name":"Health & Safety Executive (HSE)","cat":"Regulators","url":"https://www.hse.gov.uk/","desc":"UK's national regulator for workplace health and safety. Hosts the Office for Nuclear Regulation as a statutory function."},{"name":"Henry Royce Institute","cat":"Research and Development","url":"https://royce.ac.uk/","desc":"UK's national institute for advanced materials research. Significant role in nuclear materials including steels, ceramics, and composites used in reactors, fusion devices, and waste containment."},{"name":"HM Treasury (HMT)","cat":"Government","url":"https://www.gov.uk/government/organisations/hm-treasury","desc":"Controls public spending and investment decisions affecting nuclear energy, decommissioning and defence. Pivotal in determining funding models and long-term affordability."},{"name":"Imperial College","cat":"University Technology Centres (UTCs)","url":"https://www.imperial.ac.uk/","desc":"Leading research university with strengths in nuclear engineering, materials, thermal hydraulics, and fusion science."},{"name":"Innovate UK","cat":"Research and Development","url":"https://www.ukri.org/councils/innovate-uk/","desc":"UK's innovation agency, supporting business-led R&D. Funds technology development, demonstration, and commercialisation across new build, SMRs, fusion, decommissioning, and digital technologies."},{"name":"IChemE","cat":"Professional Bodies","url":"https://www.icheme.org/","desc":"Supports chemical engineering disciplines critical to nuclear fuel cycles, reprocessing, waste treatment, and safety case development."},{"name":"IET","cat":"Professional Bodies","url":"https://www.theiet.org/","desc":"Supports electrical, electronic, and systems engineering, all essential to nuclear plant design, control, and safety systems."},{"name":"IMechE","cat":"Professional Bodies","url":"https://www.imeche.org/","desc":"Represents mechanical engineers across industries. Contributes to nuclear standards, skills development, and independent technical challenge."},{"name":"IAEA","cat":"Government","url":"https://www.iaea.org/","desc":"UN's global authority on nuclear safety, security and safeguards. Sets international standards and supports peaceful use of nuclear technology."},{"name":"Local Enterprise Partnerships (LEPs)","cat":"Regional Organisations","url":"https://www.lepnetwork.net/","desc":"Support regional economic development and skills, often aligned to nuclear clusters such as Cumbria, Somerset and Derbyshire."},{"name":"Magnox","cat":"Existing Generation","url":"https://www.gov.uk/government/organisations/magnox-ltd","desc":"NDA-owned site licence company responsible for decommissioning the UK's first generation of nuclear power stations. Focused on hazard reduction, site remediation and workforce transition."},{"name":"Manufacturing Technology Association (MTA)","cat":"Trade Associations","url":"https://www.mta.org.uk/","desc":"Represents UK manufacturing technology suppliers, many of whom support nuclear-grade manufacturing. Promotes advanced manufacturing capability critical to nuclear quality."},{"name":"Ministry of Defence (MOD)","cat":"Government","url":"https://www.gov.uk/government/organisations/ministry-of-defence","desc":"Responsible for the UK's defence nuclear enterprise, including the Continuous At-Sea Deterrent and nuclear-powered submarines."},{"name":"National College for Nuclear (NCfN)","cat":"Skills Development Bodies","url":"https://www.ncfn.ac.uk/","desc":"Specialist FE institution delivering technical and leadership training for nuclear. Hubs in Cumbria and Somerset. Operates hub-and-spoke model with staff seconded from industry."},{"name":"National Nuclear User Facility (NNUF)","cat":"Research and Development","url":"https://www.nnu-facility.co.uk/","desc":"UKRI-funded programme providing access to specialist nuclear research infrastructure. Enables experimental work on irradiated materials, fuels, and radioactive substances."},{"name":"Nuclear Decommissioning Authority (NDA)","cat":"Government","url":"https://www.gov.uk/government/organisations/nuclear-decommissioning-authority","desc":"Responsible for decommissioning and clean-up of the UK's civil nuclear legacy. Manages ~17 sites and the UK's largest environmental restoration programme."},{"name":"Nuclear Industry Association (NIA)","cat":"Trade Associations","url":"https://www.niauk.org/","desc":"Trade association for the UK's civil nuclear industry, supporting over 280 member companies across the supply chain."},{"name":"Nuclear Institute","cat":"Professional Bodies","url":"https://www.nuclearinst.com/","desc":"The only professional membership body dedicated to the nuclear sector. Facilitates CPD, accreditation of nuclear professionals, and routes to chartership."},{"name":"National Skills Academy Nuclear (NSAN)","cat":"Skills Development Bodies","url":"https://www.nsan.co.uk/","desc":"Skills-for-nuclear membership organisation led by nuclear sector employers. Provides EPA for nuclear apprenticeships and has a large training provider network."},{"name":"Office for Nuclear Regulation (ONR)","cat":"Regulators","url":"https://www.onr.org.uk/","desc":"Statutory function of HSE. Regulates nuclear safety, security, safeguards, and transport across the UK civil nuclear sector."},{"name":"Rolls-Royce SMR","cat":"New Build Developers","url":"https://www.rolls-royce-smr.com/","desc":"Lead developer of the UK SMR programme. Targeting FID by 2029. Each unit estimated at \u00a31.8\u20132.2bn. Fleet ambition of 10\u201316 units."},{"name":"Sellafield Ltd","cat":"Existing Generation","url":"https://www.gov.uk/government/organisations/sellafield-ltd","desc":"Responsible for the safe and efficient operation and decommissioning of Sellafield \u2014 the UK's most complex nuclear site. ~\u00a32bn annual programme."},{"name":"UKAEA","cat":"Research and Development","url":"https://www.gov.uk/government/organisations/uk-atomic-energy-authority","desc":"Responsible for fusion energy research and development in the UK, including STEP prototype power plant and international collaborations."},{"name":"Great British Nuclear (GBN)","cat":"Government","url":"https://www.gov.uk/government/organisations/great-british-nuclear","desc":"Delivers the UK's nuclear new build programme, including the SMR technology selection process and support for nuclear investment decisions."}],"funding":[{"org":"Innovate UK (UKRI)","value":"Typically \u00a325k\u2013\u00a31m+ (up to ~70% costs)","summary":"Innovation grants \u2014 historically supported high-impact R&D across all sectors. Smart Grants paused 2025; new pilot schemes emerging. Requires UK-registered businesses delivering UK innovation.","url":"https://www.ukri.org/councils/innovate-uk/"},{"org":"Innovate UK Business Growth","value":"Fully/heavily subsidised advisory","summary":"Advisory and scale-up support (non-grant but critical funding enabler). Helps SMEs access funding, commercialise innovation, and scale. Rolling open support.","url":"https://iuk-business-connect.org.uk/"},{"org":"DESNZ","value":"Typically \u00a35k\u2013\u00a3500k+","summary":"Energy transition and net zero funding schemes (heat pumps, EV infrastructure, industrial decarbonisation). SMEs eligible where aligned to energy/clean growth.","url":"https://www.gov.uk/government/organisations/department-for-energy-security-and-net-zero"},{"org":"UK Shared Prosperity Fund (UKSPF)","value":"Typically \u00a310k\u2013\u00a3500k (region dependent)","summary":"Regional growth funding supporting SME investment, productivity, innovation, and place-based development. Criteria vary by region. Runs to ~2025/26 (extensions likely).","url":"https://www.gov.uk/government/publications/uk-shared-prosperity-fund-prospectus"},{"org":"Made Smarter","value":"Up to ~\u00a320k\u2013\u00a3100k match-funded","summary":"Digital transformation grants for manufacturing SMEs. Supports adoption of robotics, automation, AI etc. Eligibility: manufacturing SMEs. Rolling regional calls.","url":"https://www.madesmarter.uk/"},{"org":"Combined Authorities (WMCA, GMCA etc.)","value":"Typically \u00a35k\u2013\u00a3250k","summary":"Regional business support funds \u2014 capital grants, innovation vouchers, and skills programmes. SME must be in region and demonstrate economic impact. Time-limited calls.","url":"https://www.wmca.org.uk/"},{"org":"Catapult Network","value":"Typically \u00a310k\u2013\u00a350k per SME + in-kind","summary":"Innovation accelerator programmes and testbeds \u2014 SMEs get funding and technical/commercial support to trial solutions. Often sector-specific (transport, cities, net zero).","url":"https://cp.catapult.org.uk/smes/"},{"org":"Knowledge Transfer Partnerships (KTPs)","value":"Up to 75% KTP associate costs funded","summary":"Links businesses to academic expertise via a KTP associate. Strong track record, less competitive than direct grants. Ideal for specific innovation challenges.","url":"https://www.ukri.org/our-work/innovate-uk/innovation-funding/knowledge-transfer-partnerships/"},{"org":"R&D Tax Relief (HMRC)","value":"Enhanced tax credit on qualifying spend","summary":"SMEs can claim enhanced relief on qualifying R&D expenditure. Since April 2024, can be combined with grant funding. Up to 33p per \u00a31 spent for loss-making SMEs.","url":"https://www.gov.uk/guidance/corporation-tax-research-and-development-tax-relief-for-small-and-medium-sized-enterprises"},{"org":"Start Up Loans","value":"\u00a3500\u2013\u00a325,000 personal loan","summary":"Government-backed startup loans for new businesses or those trading under 3 years. Fixed 6% interest rate, free mentoring included.","url":"https://www.startuploans.co.uk/"},{"org":"Nuclear Sector Deal Programmes","value":"Varies by programme","summary":"Sector-specific support through Nuclear Sector Deal including workforce development, supply chain capability building, and collaborative R&D initiatives.","url":"https://www.gov.uk/government/publications/nuclear-sector-deal"}],"portals":[{"name":"Contracts Finder","url":"https://www.contractsfinder.service.gov.uk","desc":"Official free UK government portal for finding public sector contracts in England above set thresholds, plus recent contract awards."},{"name":"Find a Tender (FTS)","url":"https://www.find-tender.service.gov.uk","desc":"Search and apply for high value contracts (>\u00a3139,668) in UK public and utilities sectors. Useful for PIAs, market engagement notices, and large framew"},{"name":"EDF Hinkley Point C Supplier Portal","url":"https://www.hinkleysupplychain.co.uk/","desc":"Hinkley Point C dedicated supplier registration and opportunity portal."},{"name":"EDF Sizewell C Supplier Portal","url":"https://www.sizewellc.com/building-sizewell-c/our-suppliers/","desc":"Sizewell C supplier registration and supply chain engagement portal."},{"name":"EDF Energy Supplier Management (HICX)","url":"https://edf.hicx.net/edf/hicxesm-portal/","desc":"EDF Energy supplier management and pre-qualification portal."},{"name":"Rolls-Royce SMR Supplier Portal","url":"https://suppliers.rolls-royce-smr.com/","desc":"Supplier registration and opportunity portal for the Rolls-Royce SMR programme."},{"name":"Magnox / Sellafield (EU Supply)","url":"https://sharedsystems.eu-supply.com/","desc":"EU Supply registration portal used for Magnox and Sellafield procurement."},{"name":"Babcock Extranet","url":"https://extranet.babcock.co.za/Account/Register","desc":"Babcock International supplier registration and extranet portal."},{"name":"Jacobs Supplier Portal","url":"https://www.jacobs.com/suppliers","desc":"Jacobs Engineering Group supplier portal for registration and opportunity access."},{"name":"Tenderbase","url":"https://tenderbase.co.uk/","desc":"Commercial platform aggregating public sector tenders (UK & Ireland) with advanced search, tracking, and alert features."},{"name":"BidStats","url":"https://app.bidstats.uk/","desc":"Aggregates notices from thousands of UK public tender portals including live opportunities, historical data, contract awards, and analytics."},{"name":"D3 Tenders","url":"https://d3tenders.com/","desc":"Free UK tender aggregator including local councils and smaller tenders."},{"name":"Delta eSourcing","url":"https://www.delta-esourcing.com/delta","desc":"e-Tendering portal used by many UK public sector organisations. Register as a supplier to search and respond."},{"name":"Mercell Procurement Platform","url":"https://info.mercell.com/en","desc":"Commercial tender platform used by public and private buyers across Europe including the UK. Suppliers register to search and receive alerts."},{"name":"Proactis / Due North","url":"https://procontract.due-north.com/SupplierRegistration/Register","desc":"Supplier portal used by many UK local authorities and public bodies. Includes Derbyshire County Council below-threshold works."},{"name":"Public Contracts Scotland","url":"https://www.publiccontractsscotland.gov.uk/","desc":"Main procurement portal for Scottish public sector opportunities including tenders and contract notices."},{"name":"eTenders NI","url":"https://etendersni.gov.uk/epps/home.do","desc":"Central portal for Northern Ireland public sector tenders. Registration required to view and respond."},{"name":"Constructionline","url":"https://www.constructionline.co.uk/","desc":"National pre-qualification scheme to ease public sector access for construction and engineering suppliers."},{"name":"CERN Procurement","url":"https://procurement.cern.ch","desc":"CERN procurement portal for suppliers wishing to work on international science infrastructure."},{"name":"Altrad Doosan (Scanmarket)","url":"https://login.scanmarket.com/","desc":"Scanmarket portal used by Altrad Doosan for supplier management and tendering."},{"name":"Balfour Beatty (BravoSolution)","url":"https://balfourbeatty.bravosolution.co.uk/web/login.html","desc":"Balfour Beatty BravoSolution supplier and tender management portal."},{"name":"Requis Supply Chain Portal","url":"https://supplychain.requis.com","desc":"Supply chain management and procurement portal."},{"name":"Ivalua (Uniper)","url":"https://uniper-supplier.ivalua.app/","desc":"Uniper supplier management portal using the Ivalua platform."},{"name":"IntegrityNext (RWE)","url":"https://app.integritynext.com/registration","desc":"RWE supplier sustainability and compliance registration portal."},{"name":"ESB eTenders","url":"https://www.gov.ie/en/publication/9a109-etenders-is-changing-updates-for-businesses/","desc":"Irish government eTenders platform for public procurement opportunities."},{"name":"Nova Scotia Power (Bonfire)","url":"https://nspower.bonfirehub.ca/portal/","desc":"Nova Scotia Power procurement portal using Bonfire platform."},{"name":"North East Chamber of Commerce","url":"https://members.neechamber.co.uk/","desc":"Member portal for North East England Chamber of Commerce."},{"name":"EstimateOne","url":"https://estimateone.com/en-gb/tender-search/","desc":"UK and Ireland construction tender noticeboard. Main contractors advertise packages and subcontractor opportunities."},{"name":"R&D Funding Opportunities (UKRI)","url":"https://cloud.email.comms.iuk.ukri.org/iuk-sign-up","desc":"Sign up for latest Innovate UK funding opportunities and UKRI Challenge Fund updates."},{"name":"ISA (Morgan Sindall / Huddle)","url":"https://login.huddle.net/user/?subdomain=isa","desc":"Morgan Sindall procurement portal using the Huddle platform."}],"sellafield":[{"product":"HFC (High Force Compaction)","demand":[{"year":"2023","lower":0,"base":600,"upper":600},{"year":"2024","lower":600,"base":600,"upper":600},{"year":"2025","lower":600,"base":600,"upper":600},{"year":"2026","lower":600,"base":600,"upper":600},{"year":"2027","lower":600,"base":600,"upper":800},{"year":"2028","lower":630,"base":630,"upper":800},{"year":"2029","lower":630,"base":630,"upper":800},{"year":"2030","lower":600,"base":600,"upper":800},{"year":"2031","lower":600,"base":600,"upper":800},{"year":"2032","lower":0,"base":600,"upper":800}],"sub":"600 per annum","note":"New contract required from 2028"},{"product":"3m\u00b3 Boxes","demand":[{"year":"2023","lower":42,"base":100,"upper":180},{"year":"2024","lower":144,"base":172,"upper":218},{"year":"2025","lower":153,"base":157,"upper":187},{"year":"2026","lower":198,"base":221,"upper":260},{"year":"2027","lower":123,"base":355,"upper":410},{"year":"2028","lower":154,"base":355,"upper":410},{"year":"2029","lower":314,"base":378,"upper":543},{"year":"2030","lower":375,"base":456,"upper":603},{"year":"2031","lower":475,"base":580,"upper":709},{"year":"2032","lower":538,"base":657,"upper":767},{"year":"2033","lower":595,"base":721,"upper":714},{"year":"2034","lower":654,"base":733,"upper":923}],"sub":"12\u201320 per week","note":"MPO NPI phases 2\u20136 through to 2030. Multiple tranche contract transitions."},{"product":"SSBs (Self Shielded Boxes)","demand":[{"year":"2023","lower":25,"base":36,"upper":45},{"year":"2024","lower":60,"base":72,"upper":90},{"year":"2025","lower":70,"base":89,"upper":90},{"year":"2026","lower":70,"base":90,"upper":90},{"year":"2027","lower":50,"base":61,"upper":70},{"year":"2028","lower":7,"base":11,"upper":15},{"year":"2029","lower":8,"base":12,"upper":16},{"year":"2030","lower":3,"base":6,"upper":9},{"year":"2031","lower":3,"base":6,"upper":9},{"year":"2032","lower":6,"base":9,"upper":12},{"year":"2033","lower":65,"base":75,"upper":85},{"year":"2034","lower":35,"base":39,"upper":43}],"sub":"Produced one at a time","note":"Strategic decision pending on SNM programme (additional 450 from 2038). Possible reuse vs grout."},{"product":"200L Waste Containers","demand":[{"year":"2023","lower":329,"base":512,"upper":732},{"year":"2024","lower":600,"base":800,"upper":1698},{"year":"2025","lower":600,"base":800,"upper":1937},{"year":"2026","lower":600,"base":800,"upper":2066},{"year":"2027","lower":600,"base":800,"upper":1973},{"year":"2028","lower":600,"base":800,"upper":1899},{"year":"2029","lower":600,"base":800,"upper":3078},{"year":"2030","lower":600,"base":800,"upper":4006},{"year":"2031","lower":600,"base":800,"upper":4010},{"year":"2032","lower":600,"base":800,"upper":4940},{"year":"2033","lower":600,"base":800,"upper":4838},{"year":"2034","lower":600,"base":800,"upper":4577}],"sub":"800 per annum","note":"New contract required. Upper scenario includes significant programme uplift."},{"product":"Hybrid 2 Can Racks","demand":[{"year":"2023","lower":40,"base":40,"upper":40},{"year":"2024","lower":40,"base":40,"upper":40},{"year":"2025","lower":40,"base":40,"upper":40},{"year":"2026","lower":40,"base":40,"upper":40},{"year":"2027","lower":0,"base":20,"upper":40},{"year":"2028","lower":0,"base":0,"upper":40},{"year":"2029","lower":0,"base":0,"upper":40},{"year":"2030","lower":0,"base":0,"upper":40}],"sub":"Produced to order","note":"Additional demand of 200 from 2028 dependent on strategic decisions within Sellafield Ltd."},{"product":"DCC (CHILW Container)","demand":[{"year":"2033","lower":30,"base":175,"upper":840},{"year":"2034","lower":30,"base":175,"upper":1090},{"year":"2035","lower":45,"base":225,"upper":1090},{"year":"2036","lower":45,"base":225,"upper":1090},{"year":"2037","lower":45,"base":250,"upper":1340},{"year":"2038","lower":30,"base":200,"upper":1000},{"year":"2039","lower":50,"base":200,"upper":1000},{"year":"2040","lower":100,"base":250,"upper":1250}],"sub":"NPI phases 2\u20136","note":"NPI phase 6 start at 2033. Full production commences from mid-2030s."},{"product":"Overpacks (Type 1)","demand":[{"year":"2028","lower":300,"base":300,"upper":600},{"year":"2029","lower":300,"base":300,"upper":600},{"year":"2030","lower":300,"base":300,"upper":600},{"year":"2031","lower":0,"base":300,"upper":600},{"year":"2032","lower":0,"base":300,"upper":600},{"year":"2033","lower":0,"base":300,"upper":600},{"year":"2034","lower":0,"base":300,"upper":300}],"sub":"Produced to order","note":"Contracts required from 2028 onwards."}],"skills":[{"name":"Nuclear Industry Association (NIA)","what":"Trade association for the UK's civil nuclear industry. Supports over 280 member companies across the supply chain.","offers":"Industry representation, information sharing, networking, government consultations, events and conferences, business groups.","url":"https://www.niauk.org/"},{"name":"National Skills Academy Nuclear (NSAN)","what":"Skills-for-nuclear focused membership organisation led by nuclear sector employers. Provides valuable and practical skills solutions for organisations","offers":"EPA for nuclear apprenticeships, skills expertise, large training provider network, courses aimed at 'skills for nuclear'.","url":"https://www.nsan.co.uk/"},{"name":"Nuclear Skills Delivery Group","what":"Employer-led Nuclear Industry Skills lead. Provides 'one voice' to government on skills issues. Runs enabling forums and task & finish groups across 1","offers":"Industry-wide expertise, strategic direction for civil nuclear skills, enabling forums, task & finish group leadership.","url":"https://nuclearskillsdeliverygroup.com/"},{"name":"Destination Nuclear","what":"Aimed at bringing new people to the nuclear sector by explaining the benefits and roles available in the industry.","offers":"Role descriptions, case studies, careers portal, job listings across the nuclear sector by category and location.","url":"https://www.destinationnuclear.com/"},{"name":"National College for Nuclear (NCfN)","what":"Develops and maintains scarce and specialist skills. Operates on a hub-and-spoke model with hubs in Cumbria and Somerset. Staff seconded from industry","offers":"Short courses and apprenticeships from Level 2 to Level 5. Courses aimed at 'nuclear skills'.","url":"https://www.ncfn.ac.uk/"},{"name":"Nuclear Institute","what":"Only professional membership body dedicated to the nuclear sector. Facilitates CPD, recognition and accreditation of nuclear professionals, and routes","offers":"Membership scales by career stage, training and CPD, chartered status support, 9 regional networks, Young Generation Network.","url":"https://www.nuclearinst.com/"},{"name":"Cogent Skills","what":"Not-for-profit organisation supporting skills needs across UK science and technology sector. End Point Assessment Service for science-based apprentice","offers":"EPA for science-based apprenticeships, graduate recruitment, apprenticeship programme development, short science-based courses.","url":"https://cogentskills.com/"},{"name":"ECITB","what":"Employer-led skills, standards and qualifications body for engineering construction workforce. Arms-length body of government. Invests ~\u00a325m/year (\u00a35m","offers":"Apprenticeships, approved provider network, Levy distribution, National Occupational Standards for engineering construction.","url":"https://www.ecitb.org.uk/"},{"name":"CITB","what":"Industry training board for construction sector in England, Scotland, and Wales. Supports the industry to have a skilled, competent and inclusive work","offers":"Apprenticeships via approved providers, Levy distribution, short courses, National Occupational Standards for construction.","url":"https://www.citb.co.uk/"}],"regional":[]}};
+
+let tier = 'free', busy = false;
+
+// ── AVATAR SVG ──
+function avSvg(){
+  return `<svg viewBox="0 0 46 46" fill="none"><rect width="46" height="46" rx="5" fill="#08111f"/>
+  <rect x="7" y="7.5" width="32" height="24" rx="3" fill="#112240" stroke="#29b6e8" stroke-width=".7"/>
+  <rect x="12" y="13.5" width="8" height="5" rx="1" fill="#08111f"/>
+  <rect x="26" y="13.5" width="8" height="5" rx="1" fill="#08111f"/>
+  <rect x="13.5" y="15" width="5" height="2" rx="1" fill="#29b6e8"/>
+  <rect x="27.5" y="15" width="5" height="2" rx="1" fill="#7c3aed"/>
+  <path d="M15 22 Q23 26 31 22" stroke="#29b6e8" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+  </svg>`;
+}
+
+// ── TIER ──
+function setTier(t){
+  tier = t;
+  document.getElementById('bFree').className = 'tier-btn btn-free' + (t==='free' ? '' : ' btn-inactive');
+  document.getElementById('bPro').className = 'tier-btn btn-pro' + (t==='pro' ? '' : ' btn-inactive');
+  if(t==='pro') addMsg({bot:true, badge:'sec-hub', badgeLabel:'Member Access',
+    text:'<b>Member access unlocked.</b> You now have full access to both handbooks, implementation guidance for all 86 F4N questions, nuclear sector intelligence, funding sources, pipeline data, and video resources.',
+    sugs:['How do I implement CFSI controls?','What does SAF01 require for safety culture?','Show me UK nuclear funding sources']
+  });
+}
+
+// ── RENDERING ──
+function makeVidCard(ytId){
+  return `<a class="vid-card" href="https://www.youtube.com/watch?v=${ytId}" target="_blank" rel="noopener">
+    <div class="play"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div>
+    <span class="vid-label">Watch on YouTube</span>
+  </a>`;
+}
+
+function makeLinkCard(url, label){
+  return `<a class="ext-link" href="${url}" target="_blank" rel="noopener">${label} ↗</a>`;
+}
+
+function addMsg(msg){
+  const c = document.getElementById('msgs');
+  const row = document.createElement('div');
+  row.className = 'row' + (msg.bot ? '' : ' user');
+
+  const ico = document.createElement('div');
+  ico.className = 'ico ' + (msg.bot ? 'bot' : 'usr');
+  ico.innerHTML = msg.bot ? avSvg() : 'YOU';
+
+  const bub = document.createElement('div');
+  bub.className = 'bub ' + (msg.gate ? 'gate' : msg.bot ? 'bot' : 'usr');
+
+  let html = '';
+  if(msg.badge) html += `<div class="sec-badge ${msg.badge}">${msg.badgeLabel}</div>`;
+  if(msg.gate){
+    html += `🔒 This is member-only content — the full handbook guidance, implementation detail, and video resources for this topic.<div class="upg">F4N members get Frankie as part of their £3k/year subscription — including both handbooks, all 86 question guides, sector intelligence, and video resources.<br><button class="upg-btn" onclick="setTier('pro')">Unlock Member Access</button></div>`;
+  } else {
+    html += (msg.text||'').replace(/\n/g,'<br/>');
+    if(msg.vids && msg.vids.length){
+      html += '<div class="vids">' + msg.vids.map(makeVidCard).join('') + '</div>';
+    }
+    if(msg.links && msg.links.length){
+      html += '<div class="link-row">' + msg.links.map(l => makeLinkCard(l.url, l.label)).join('') + '</div>';
+    }
+    if(msg.sugs && msg.sugs.length){
+      const sd = document.createElement('div');
+      sd.className = 'sugs';
+      // We'll append this after setting innerHTML
+      bub.innerHTML = html;
+      msg.sugs.forEach(s => {
+        const btn = document.createElement('button');
+        btn.className = 'sug';
+        btn.textContent = '↳ ' + s;
+        btn.onclick = () => { document.getElementById('inp').value = s; sendMsg(); };
+        sd.appendChild(btn);
+      });
+      bub.appendChild(sd);
+      row.appendChild(ico);
+      row.appendChild(bub);
+      c.appendChild(row);
+      c.scrollTop = c.scrollHeight;
+      return;
+    }
+  }
+  bub.innerHTML = html;
+  row.appendChild(ico);
+  row.appendChild(bub);
+  c.appendChild(row);
+  c.scrollTop = c.scrollHeight;
+}
+
+function showTyping(){
+  const c = document.getElementById('msgs');
+  const row = document.createElement('div'); row.className='row'; row.id='typ';
+  const ico = document.createElement('div'); ico.className='ico bot'; ico.innerHTML=avSvg();
+  const bub = document.createElement('div'); bub.className='bub bot';
+  bub.innerHTML='<div class="typing"><span></span><span></span><span></span></div>';
+  row.appendChild(ico); row.appendChild(bub); c.appendChild(row);
+  c.scrollTop = c.scrollHeight;
+}
+function removeTyping(){ const e=document.getElementById('typ'); if(e)e.remove(); }
+
+// ── KNOWLEDGE MATCHING ──
+function searchBE(q){
+  const t = q.toLowerCase();
+  // Check each category and chapter
+  for(const [catKey, cat] of Object.entries(KB.be_handbook)){
+    if(t.includes(cat.label.toLowerCase())) return {type:'be_cat', catKey, cat};
+    for(const ch of cat.chapters){
+      const id = (ch.id||'').toLowerCase();
+      const title = ch.title.toLowerCase();
+      if(t.includes(id) || title.split(' ').filter(w=>w.length>4).some(w=>t.includes(w))){
+        return {type:'be_ch', catKey, cat, ch};
+      }
+    }
+  }
+  return null;
+}
+
+function searchNuclear(q){
+  const t = q.toLowerCase();
+  for(const [catKey, cat] of Object.entries(KB.nuclear_handbook)){
+    if(t.includes(cat.label.toLowerCase())) return {type:'nuc_cat', catKey, cat};
+    for(const ch of cat.chapters){
+      const id = (ch.id||'').toLowerCase();
+      const title = ch.title.toLowerCase();
+      if(t.includes(id) || title.split(' ').filter(w=>w.length>4).some(w=>t.includes(w))){
+        return {type:'nuc_ch', catKey, cat, ch};
+      }
+    }
+  }
+  return null;
+}
+
+function searchHub(q){
+  const t = q.toLowerCase();
+  const results = {};
+  
+  // Pipeline
+  if(t.match(/pipeline|programme|project|hinkley|sizewell|sellafield|smr|rolls.royce|wylfa|dreadnought|decommission|step|fusion/)){
+    results.pipeline = KB.hub.pipeline.filter(p => 
+      t.includes(p.programme.toLowerCase()) || 
+      t.includes(p.sector.toLowerCase()) ||
+      t.match(/pipeline|programme|all programme/)
+    ).slice(0, 6);
+    if(!results.pipeline.length) results.pipeline = KB.hub.pipeline.slice(0,6);
+  }
+  
+  // Stakeholders
+  if(t.match(/organisation|stakeholder|association|body|institute|who is|who does|contact|directory/)){
+    results.stakeholders = KB.hub.stakeholders.filter(s =>
+      t.includes(s.name.toLowerCase()) ||
+      t.includes((s.cat||'').toLowerCase()) ||
+      t.match(/stakeholder|all org/)
+    ).slice(0,5);
+    if(!results.stakeholders.length) results.stakeholders = KB.hub.stakeholders.slice(0,5);
+  }
+  
+  // Funding
+  if(t.match(/fund|grant|money|finance|invest|ukri|innovate|desnz/)){
+    results.funding = KB.hub.funding.slice(0,5);
+  }
+  
+  // Skills
+  if(t.match(/skill|training|workforce|apprentice|nia|cogent/)){
+    results.skills = KB.hub.skills.slice(0,4);
+  }
+  
+  // Sellafield
+  if(t.match(/sellafield|product demand|hfc|compaction/)){
+    results.sellafield = KB.hub.sellafield;
+  }
+  
+  // Portals
+  if(t.match(/portal|contract|tender|procurement|find work|bid/)){
+    results.portals = KB.hub.portals.slice(0,5);
+  }
+  
+  return Object.keys(results).length ? results : null;
+}
+
+function getIntent(q){
+  const t = q.toLowerCase();
+  
+  // Core F4N programme questions (free)
+  if(t.match(/what is f4n|fit for nuclear|about f4n|f4n programme|tell me about/)) return 'f4n_overview';
+  if(t.match(/stage|journey|8 stage|process step|how long/)) return 'stages';
+  if(t.match(/triple.?85|granting criter|85.?per/)) return 'triple85';
+  if(t.match(/scor|0.*2.*7.*10|scoring system|how.*score/)) return 'scoring';
+  if(t.match(/cost|price|how much|£3k|subscribe|annual fee|maintain/)) return 'cost';
+  if(t.match(/impact|track.?record|contract.*won|£2.1|jobs.*creat|proven/)) return 'impact';
+  if(t.match(/granting panel|panel.*assess|what.*panel/)) return 'granting_panel';
+
+  // BE Handbook (pro)
+  const beMatch = searchBE(q);
+  if(beMatch) return {type:'be', match:beMatch};
+  
+  // Nuclear Handbook (pro)
+  const nucMatch = searchNuclear(q);
+  if(nucMatch) return {type:'nuclear', match:nucMatch};
+  
+  // Hub intelligence (pro)
+  const hubMatch = searchHub(q);
+  if(hubMatch) return {type:'hub', match:hubMatch};
+  
+  // Core knowledge (free)
+  if(t.match(/sqep|qualified.*experience|competence.*people/)) return 'sqep';
+  if(t.match(/cfsi|counterfeit|fraudulent|suspect.item/)) return 'cfsi';
+  if(t.match(/osv|on.?site.?verif|site visit/)) return 'osv';
+  if(t.match(/iso|19443|9001|45001|14001|ukas/)) return 'iso';
+  if(t.match(/onr|office.*nuclear|regulat|tag.?77|alarp|graded approach/)) return 'onr';
+  if(t.match(/nss|nuclear.*sector.*spec|safety.culture assess/)) return 'nss';
+  if(t.match(/action.?plan|improvement.?plan/)) return 'action_plan';
+  if(t.match(/portal|dashboard|upload|submit.*(portal|assessment)/)) return 'portal';
+  if(t.match(/hinkley|sizewell|rolls.royce|smr|sellafield|nda|dreadnought|programme|new build/)) return 'programmes';
+  
+  return 'fallback';
+}
+
+// ── CORE KNOWLEDGE ──
+const CORE = {
+  f4n_overview:{
+    badge:'sec-be', badgeLabel:'About F4N',
+    text:`<b>Fit for Nuclear (F4N)</b> is a long-term business development programme that builds capability, capacity, and competitiveness in manufacturing and engineering companies wanting to enter or grow in the nuclear sector.
+
+Originally developed by Nuclear AMRC, it's now delivered by <b>NucCol</b> — the successor organisation. F4N is a <b>development journey</b>, not a pass/fail test. It covers the full business — "from strategy to torque wrench" — and includes a nuclear safety culture layer no other programme provides.
+
+<b>Key facts:</b> Over 1,000 companies assessed · £2.1bn in contracts won · 100% would recommend`,
+    sugs:['What are the 8 stages?','What is the Triple 85?','What does F4N cost?']
+  },
+  stages:{
+    badge:'sec-be', badgeLabel:'F4N Journey',
+    text:`The F4N journey has <b>8 stages</b> (typically 12–18 months):
+
+<b>1. NCQ</b> — Nuclear Capability Questionnaire. Mandatory pre-qualification.
+<b>2. Self-Assessment</b> — 60 Business Excellence questions, scored 0/2/7/10.
+<b>3. OSV</b> — On-Site Verification. Full-day visit by your SCC.
+<b>4. Action Plan</b> — SMART improvement plan from OSV findings.
+<b>5. NSS Assessment</b> — Nuclear Sector Specific — introduced ~3–4 months before granting.
+<b>6. Pre-Granting Visit</b> — SCC verifies Triple 85 with real evidence.
+<b>7. Granting Panel</b> — Formal review by NucCol senior team.
+<b>8. Maintain & Sustain</b> — Annual £3k subscription, twice-yearly SCC visits.`,
+    sugs:['What is the Triple 85?','What happens at the OSV?','What is the NSS assessment?']
+  },
+  triple85:{
+    badge:'sec-be', badgeLabel:'Granting Criteria',
+    text:`To qualify for F4N Granted status, you must hit all three <b>Triple 85</b> thresholds:
+
+• <b>85%</b> overall Business Excellence score (Design Factor applied if no design function)
+• <b>85%</b> in Health & Safety (QHSE subset)
+• <b>85%</b> action plan completion — with evidence uploaded to the portal
+
+The Triple 85 is the <b>floor, not the ceiling</b>. The Granting Panel looks for genuine readiness. SQEP records must be complete, CFSI embedded in practice, NSS populated thoughtfully, and the F4N Charter and Benefits Statement uploaded.
+
+<em>Meeting the numbers isn't enough if the SCC isn't satisfied the evidence is real.</em>`,
+    sugs:['What is SQEP?','What is CFSI?','What happens at the Granting Panel?']
+  },
+  scoring:{
+    badge:'sec-be', badgeLabel:'Scoring System',
+    text:`Every F4N question uses a <b>four-level scoring system</b>:
+
+<b>0 — None.</b> Nothing in place.
+<b>2 — Informal.</b> Activity exists but undocumented, inconsistent, or person-dependent.
+<b>7 — Formal.</b> Documented, working, evidence available. <b>This is the granting threshold.</b>
+<b>10 — Best Practice.</b> Fully embedded, often UKAS-certified, CI actively driving improvement.
+
+<b>Common mistakes:</b>
+• Scoring 10 because a policy exists (policy alone = 2)
+• Scoring 7 when the process only exists for the visit
+• Not understanding you need 7, not 10, in most areas
+
+<em>If you can't show the SCC evidence on the day, the score isn't what you think it is.</em>`,
+    sugs:['What are the 6 BE categories?','What does SQEP require to score 7?','What does CFSI need to reach 7?']
+  },
+  sqep:{
+    badge:'sec-be', badgeLabel:'SQEP',
+    text:`<b>SQEP — Suitably Qualified and Experienced Person</b> — is one of the most important and most over-scored elements in F4N.
+
+SQEP means every person performing safety-relevant work must be <b>demonstrably</b> qualified and experienced for that specific task.
+
+<b>Scoring 7 on SQEP requires:</b>
+• A defined list of all safety-relevant roles
+• Documented qualification and experience requirements per role
+• Verified evidence that current post-holders meet those requirements
+• A skills matrix actively maintained and reviewed
+
+<b>What it does NOT mean:</b> having job descriptions, some training records, or assuming someone is qualified because they've done the job for years.
+
+<em>SCCs consistently report SQEP as the most over-scored element in the entire programme.</em>`,
+    sugs:['What is CFSI?','What ISO standards support SQEP evidence?','What happens if SQEP gaps aren't resolved before granting?']
+  },
+  cfsi:{
+    badge:'sec-be', badgeLabel:'CFSI',
+    text:`<b>CFSI — Counterfeit, Fraudulent and Suspect Items</b> — is a non-negotiable granting requirement.
+
+A CFSI entering a safety-critical system could invalidate part of a nuclear safety case. This is why the standard is so high.
+
+<b>To score 7 on CFSI you need:</b>
+• A documented CFSI procedure covering identification, quarantine, and reporting
+• Buying team who can explain CFSI when raising POs
+• Goods-in staff who can identify and quarantine a suspect item
+• A marked quarantine area on the shopfloor
+• Traceability maintained for safety-relevant materials
+
+<b>The SCC test:</b> Ask the person who raises POs what CFSI means. Ask goods-in how they'd identify a suspect item. If they can't answer, the procedure isn't implemented — the score is 2.
+
+<em>Unresolved CFSI gaps will delay granting. It's a Granting Panel red flag.</em>`,
+    sugs:['What ISO standards relate to traceability?','What does the OSV look for in QHSE?','How does CFSI link to ONR requirements?']
+  },
+  osv:{
+    badge:'sec-be', badgeLabel:'On-Site Verification',
+    text:`The <b>On-Site Verification (OSV)</b> is a full-day structured visit by your SCC. It's not a pass/fail exam — it's a diagnostic.
+
+<b>Standard agenda:</b>
+09:00 Meet & introductions (directors must attend)
+09:30 Strategy & Leadership review
+10:15 Facility tour
+11:00 Design & Project Management
+11:45 Process Excellence
+12:30 Working lunch
+13:00 People Excellence
+13:45 QHSE
+14:15 Supply Chain
+14:45 Initial feedback
+15:00 Finish
+
+<b>Key points:</b> Directors must attend. Prepare evidence in advance. The SCC's verified scores may differ from your self-assessment — this is normal. Written report within 14 working days.`,
+    sugs:['What evidence should I prepare for the OSV?','How does the action plan work after the OSV?','What triggers a score being adjusted down?']
+  },
+  iso:{
+    badge:'sec-be', badgeLabel:'ISO Standards',
+    text:`F4N expects companies to hold or be working towards these certifications:
+
+<b>ISO 9001:2015</b> — QMS baseline. Must be <b>UKAS-accredited</b>.
+<b>ISO 19443:2018</b> — Nuclear-specific QMS. Increasingly required by tier-1s. F4N maps directly to its clauses.
+<b>ISO 45001:2018</b> — Occupational H&S. UKAS-certified = score 10. Working towards = score 7.
+<b>ISO 14001:2015</b> — Environmental. Relevant to QHSE and Supply Chain categories.
+
+<b>UKAS accreditation is critical</b> — always verify on ukas.com. Unaccredited certificates are common and score lower.
+
+<b>F4N vs ISO 19443:</b> Complementary, not competing. F4N builds culture and maturity; ISO 19443 certifies it.`,
+    sugs:['How does F4N relate to ISO 19443?','What is the graded approach?','What does ONR TAG 77 require?']
+  },
+  onr:{
+    badge:'sec-nuc', badgeLabel:'ONR Regulation',
+    text:`The <b>Office for Nuclear Regulation (ONR)</b> oversees 37 nuclear licensed sites through 36 Site Licence Conditions.
+
+<b>ONR TAG 77</b> — Supply Chain Management Arrangements — is the most important ONR document for suppliers. The F4N NSS assessment aligns directly with TAG 77 requirements covering: supply chain strategy, intelligent customer capability, SQEP, QMS, CFSI prevention, and supply chain oversight.
+
+<b>Three principles every supplier must understand:</b>
+• <b>Defence in Depth</b> — multiple independent safety layers
+• <b>ALARP</b> — risks reduced As Low As Reasonably Practicable
+• <b>Graded Approach</b> — controls proportionate to safety significance
+
+<em>A company that scores well on the NSS is demonstrating it meets ONR's supply chain expectations.</em>`,
+    sugs:['What is the NSS assessment?','What is the graded approach?','Which UK nuclear programmes can I target?']
+  },
+  nss:{
+    badge:'sec-nuc', badgeLabel:'NSS Assessment',
+    text:`The <b>Nuclear Sector Specific (NSS) Assessment</b> is introduced ~3–4 months before your expected granting date.
+
+<b>What it covers:</b>
+• Nuclear safety culture (WANO traits, INPO 14-005)
+• ONR regulatory framework and licence conditions
+• CFSI controls in practice
+• SQEP for safety-relevant roles
+• Supply chain flow-down
+• Quality management to nuclear standards
+• Human performance and error prevention
+• Security of information
+
+<b>Same 0/2/7/10 scoring.</b> The SCC reviews NSS entries with the same rigour as BE scores.
+
+<em>The NSS isn't a box-tick at the end — it's proof that nuclear-specific thinking is genuinely embedded.</em>`,
+    sugs:['What is nuclear safety culture?','What happens at the pre-granting visit?','What does the Granting Panel assess?']
+  },
+  action_plan:{
+    badge:'sec-be', badgeLabel:'Action Plan',
+    text:`The <b>action plan</b> is managed through the NucCol portal and is the primary vehicle for reaching Triple 85.
+
+<b>How it works:</b>
+• For each BE question below 10, create a SMART action targeting a higher score
+• Completing an action at 100% recalculates your BE score automatically
+• Each action needs a named owner (not a department)
+• Evidence uploaded as you go — not stockpiled at the end
+
+<b>Common mistakes:</b> "Improve safety culture" is not an action. Moving CFSI from 0→7 needs procedure + training + embedded practice + evidence — not just a procedure review. Submitting for SCC review monthly is expected.
+
+<em>Your SCC aims to provide feedback within 10 working days of submission.</em>`,
+    sugs:['How do I use the NucCol portal?','What is the CSIP?','When should I expect to be ready for pre-granting?']
+  },
+  portal:{
+    badge:'sec-be', badgeLabel:'NucCol Portal',
+    text:`The <b>NucCol portal</b> manages your entire F4N journey. Key steps:
+
+<b>Self-assessment:</b> Select your dashboard, click "Complete the self assessment", read each question, select the best-fit statement (turns green), complete all 10 per section.
+
+<b>Action plan:</b> After OSV, click "Start Action Plan". For each question, either add a SMART target action or select "Maintain on-site score" with reason.
+
+<b>Updating progress:</b> Click "Update progress", add description, update % complete, attach evidence. Submit for SCC review.
+
+<b>Pre-granting documents to upload:</b> Signed F4N Charter · Benefits Statement · CSIP · Impact Statement
+
+<em>Once submitted, a CQ or self-assessment can't be changed. Contact your SCC for a reset.</em>`,
+    sugs:['What is the Benefits Statement?','How do I know if I'm ready for granting?','What is the CSIP?']
+  },
+  programmes:{
+    badge:'sec-hub', badgeLabel:'UK Nuclear Programmes',
+    text:`F4N prepares companies for the full UK nuclear sector:
+
+<b>New Build:</b> Hinkley Point C (EDF/CGN, Somerset, ~2030) · Sizewell C (EDF/GBN, Suffolk) · STEP fusion (UKAEA, West Burton)
+
+<b>SMRs:</b> Rolls-Royce SMR (470MWe, factory-built) · GE-Hitachi BWRX-300 (selected for Wylfa) · Westinghouse AP300
+
+<b>Defence:</b> Dreadnought submarines (Rolls-Royce reactor, BAE hull — programme to 2060s)
+
+<b>Decommissioning:</b> NDA (17 legacy sites) · Sellafield (programme to 2120s)
+
+<b>Research:</b> UKAEA STEP · National Nuclear Laboratory
+
+<em>NucCol works directly with Rolls-Royce SMR, Holtec, Sizewell C, GE Vernova Hitachi and NAMRC.</em>`,
+    sugs:['Show me the full pipeline','What funding is available for nuclear companies?','Which organisations should I know about?']
+  },
+  impact:{
+    badge:'sec-be', badgeLabel:'Proven Impact',
+    text:`<b>F4N track record:</b>
+
+• <b>£2.1 billion</b> in new contracts won by F4N companies
+• <b>3,049 jobs</b> created or safeguarded
+• <b>£43 million</b> additional investment generated
+• <b>100%</b> of surveyed companies would recommend it
+• <b>70%</b> expect turnover growth after engaging
+• Over <b>1,000 companies</b> have taken the self-assessment
+• Over <b>100 companies</b> currently hold Granted status
+
+<b>NucCol/Nuclear AMRC overall:</b>
+£3.57bn in contracts · £161m investment · 12,591 jobs
+
+<b>F4N Granted status delivers:</b> Nuclear Supplier Database listing · F4N brand use · Recognition by EDF, Rolls-Royce SMR, Sellafield, NDA · NucCol events & networking access`,
+    sugs:['How do I start F4N?','What does it cost?','What is Maintain and Sustain?']
+  },
+  cost:{
+    badge:'sec-be', badgeLabel:'Costs',
+    text:`<b>F4N programme costs:</b>
+
+The core assessment programme up to Granting is <b>funded</b> — your investment is primarily time and internal resource.
+
+<b>Maintain & Sustain (post-granting):</b> <b>£3,000/year</b>
+• Twice-yearly SCC review visits
+• Continued SCC access by email and phone
+• Training modules and NucCol webinars
+• Nuclear Supplier Database listing
+• Exclusive events and networking
+
+<b>Without an active M&S subscription:</b> F4N Granted status cannot be retained after the first year.
+
+<b>Budget internally for:</b> Staff time for self-assessment · Management time for OSV and pre-granting · Action plan improvement work · ISO certification costs if upgrades needed (UKAS-accredited ISO 9001/45001)`,
+    sugs:['How do I get started?','What is the NucCol contact?','How long does F4N take?']
+  },
+  granting_panel:{
+    badge:'sec-be', badgeLabel:'Granting Panel',
+    text:`The <b>Granting Panel</b> is a formal review by NucCol's senior team. To reach it you must have:
+
+• Triple 85 met (overall BE, H&S, action plan completion)
+• Pre-granting visit completed with SCC sign-off
+• NSS assessment fully populated
+• All ISO external audit NCs closed with evidence
+• SQEP records complete and current
+• CFSI controls embedded and demonstrable in practice
+• F4N Charter signed and uploaded
+• Benefits Statement on headed paper, signed by a senior leader
+• CSIP uploaded
+
+The Panel looks beyond the numbers. They're assessing whether the company is <b>genuinely ready</b> to work in the nuclear supply chain — not just whether the spreadsheet says 85%.
+
+<em>The Panel can defer, approve conditionally, or approve. Deferral comes with specific requirements to address.</em>`,
+    sugs:['What is the pre-granting visit?','What is the Benefits Statement?','How do I know if I'm ready?']
+  }
+};
+
+// ── RESPONSE BUILDER ──
+function buildBEResponse(match){
+  if(match.type === 'be_cat'){
+    const cat = match.cat;
+    const vids = cat.videos && cat.videos.length ? cat.videos : [];
+    const chList = cat.chapters.map(ch => `• <b>${ch.id}</b>: ${ch.title}`).join('\n');
+    return {
+      badge:'sec-be', badgeLabel: cat.label,
+      text:`<b>${cat.label}</b> — Business Excellence Handbook\n\nThis category covers ${cat.chapters.length} areas. Here's what's included:\n\n${chList}\n\n<em>Ask me about any specific topic for full implementation guidance.</em>`,
+      vids: vids.slice(0,2),
+      sugs: cat.chapters.slice(0,3).map(ch => `How do I implement ${ch.title}?`)
+    };
+  }
+  if(match.type === 'be_ch'){
+    const ch = match.ch;
+    const cat = match.cat;
+    const vids = ch.videos && ch.videos.length ? ch.videos : (cat.videos ? cat.videos.slice(0,2) : []);
+    return {
+      badge:'sec-be', badgeLabel: `BE · ${ch.id}`,
+      text:`<b>${ch.title}</b>\n\n${ch.summary.slice(0,800)}${ch.summary.length > 800 ? '...' : ''}`,
+      vids,
+      sugs:[
+        `What evidence does an SCC need for ${ch.title}?`,
+        `How do I score 7 on ${ch.title}?`,
+        `What are common mistakes in ${ch.title}?`
+      ]
+    };
+  }
+}
+
+function buildNuclearResponse(match){
+  if(match.type === 'nuc_cat'){
+    const cat = match.cat;
+    const chList = cat.chapters.map(ch => `• <b>${ch.id}</b>: ${ch.title}`).join('\n');
+    return {
+      badge:'sec-nuc', badgeLabel: cat.label,
+      text:`<b>${cat.label}</b> — Nuclear Sector Handbook\n\nThis section covers ${cat.chapters.length} topics:\n\n${chList}\n\n<em>Ask me about any specific topic for full nuclear guidance.</em>`,
+      sugs: cat.chapters.slice(0,3).map(ch => `Tell me about ${ch.title}`)
+    };
+  }
+  if(match.type === 'nuc_ch'){
+    const ch = match.ch;
+    return {
+      badge:'sec-nuc', badgeLabel: `Nuclear · ${ch.id}`,
+      text:`<b>${ch.title}</b>\n\n${ch.summary.slice(0,800)}${ch.summary.length > 800 ? '...' : ''}`,
+      sugs:[
+        `What does ONR expect for ${ch.title}?`,
+        `How does this link to the NSS assessment?`,
+        `What evidence is needed for ${ch.title}?`
+      ]
+    };
+  }
+}
+
+function buildHubResponse(match){
+  let text = '';
+  let links = [];
+  let sugs = [];
+  
+  if(match.pipeline && match.pipeline.length){
+    text += '<b>UK Nuclear Pipeline</b>\n\n';
+    match.pipeline.forEach(p => {
+      text += `<b>${p.programme}</b> (${p.sector}) — Confidence: ${p.confidence}\n`;
+      if(p.comment) text += `<em>${p.comment}</em>\n`;
+      text += '\n';
+    });
+    sugs.push('What funding is available for nuclear companies?','Which organisations should I know about?');
+  }
+  
+  if(match.stakeholders && match.stakeholders.length){
+    if(text) text += '\n';
+    text += '<b>Key Organisations</b>\n\n';
+    match.stakeholders.forEach(s => {
+      text += `<b>${s.name}</b> (${s.cat})\n${s.desc}\n\n`;
+      if(s.url) links.push({url: s.url, label: s.name});
+    });
+    sugs.push('Show me funding sources','What portals can I find contracts on?');
+  }
+  
+  if(match.funding && match.funding.length){
+    if(text) text += '\n';
+    text += '<b>Funding Sources</b>\n\n';
+    match.funding.forEach(f => {
+      text += `<b>${f.org}</b> — ${f.value}\n${f.summary}\n\n`;
+      if(f.url) links.push({url: f.url, label: f.org});
+    });
+    sugs.push('What portals can I find contracts on?','Tell me about Sellafield product demand');
+  }
+  
+  if(match.skills && match.skills.length){
+    if(text) text += '\n';
+    text += '<b>Skills & Training Organisations</b>\n\n';
+    match.skills.forEach(s => {
+      text += `<b>${s.name}</b>\n${s.what}\n<em>Offers: ${s.offers}</em>\n\n`;
+      if(s.url) links.push({url: s.url, label: s.name});
+    });
+  }
+  
+  if(match.sellafield && match.sellafield.length){
+    if(text) text += '\n';
+    text += '<b>Sellafield Product Demand</b>\n\n';
+    match.sellafield.forEach(s => {
+      text += `<b>${s.product}</b>\nDemand: ${s.sub||''}  ${s.demand||''}\n${s.note ? `<em>${s.note}</em>` : ''}\n\n`;
+    });
+    sugs.push('Tell me about the full nuclear pipeline','What funding is available?');
+  }
+  
+  if(match.portals && match.portals.length){
+    if(text) text += '\n';
+    text += '<b>Contract & Procurement Portals</b>\n\n';
+    match.portals.forEach(p => {
+      text += `<b>${p.name}</b>\n${p.desc}\n\n`;
+      if(p.url) links.push({url: p.url, label: p.name});
+    });
+    sugs.push('Tell me about funding sources','What organisations are in the sector?');
+  }
+  
+  if(!text) return null;
+  
+  return {
+    badge:'sec-hub', badgeLabel:'Sector Intelligence',
+    text: text.trim(),
+    links: links.slice(0,6),
+    sugs: sugs.slice(0,3)
+  };
+}
+
+// ── MAIN RESPONSE ──
+function getResponse(q){
+  const intent = getIntent(q);
+  
+  // String intents = core knowledge (free)
+  if(typeof intent === 'string'){
+    if(CORE[intent]) return {gated: false, data: CORE[intent]};
+    
+    // Fallback
+    if(tier === 'free'){
+      return {gated: false, data:{
+        text:`Good question. On the free tier I can cover F4N programme fundamentals — what it is, the 8 stages, granting criteria, scoring, SQEP, CFSI, ISO standards and ONR context.
+
+For specific implementation guidance on all 86 F4N questions, nuclear sector handbook, sector intelligence, pipeline data, funding sources, and video resources — that's in the member area.
+
+What would you like to know about the core programme?`,
+        sugs:['What is F4N?','What are the 8 stages?','What is the Triple 85?']
+      }};
+    }
+    
+    return {gated: false, data:{
+      text:`I have detailed knowledge across the F4N programme, Business Excellence handbook, Nuclear sector handbook, and UK nuclear sector intelligence. Try asking about a specific area — a BE question ID like "STR04", a nuclear topic like "safety culture" or "human performance", or sector questions like "funding sources" or "UK pipeline".`,
+      sugs:['Show me the BE handbook categories','What does SAF01 cover?','What funding is available for nuclear companies?']
+    }};
+  }
+  
+  // Object intents = handbook/hub (pro only on free tier)
+  if(tier === 'free'){
+    return {gated: true};
+  }
+  
+  // Build the response
+  if(intent.type === 'be'){
+    const resp = buildBEResponse(intent.match);
+    if(resp) return {gated: false, data: resp};
+  }
+  if(intent.type === 'nuclear'){
+    const resp = buildNuclearResponse(intent.match);
+    if(resp) return {gated: false, data: resp};
+  }
+  if(intent.type === 'hub'){
+    const resp = buildHubResponse(intent.match);
+    if(resp) return {gated: false, data: resp};
+  }
+  
+  // Pro fallback
+  return {gated: false, data:{
+    badge:'sec-be', badgeLabel:'F4N Intelligence',
+    text:`I have the full F4N handbook, nuclear sector guidance, and sector intelligence loaded. Try asking about a specific question (e.g. "STR04 Leading Change", "QHS05 CFSI", "SAF01 Safety Culture"), a category ("Process Excellence"), or intelligence topics ("UK funding sources", "nuclear pipeline", "key stakeholders").`,
+    sugs:['Show me the nuclear handbook categories','What does CFSI implementation require?','Show me UK nuclear funding sources']
+  }};
+}
+
+// ── SEND ──
+function handleKey(e){ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendMsg(); } }
+
+function sendMsg(){
+  if(busy) return;
+  const inp = document.getElementById('inp');
+  const q = inp.value.trim();
+  if(!q) return;
+  inp.value = '';
+  addMsg({bot: false, text: q});
+  busy = true;
+  document.getElementById('snd').disabled = true;
+  showTyping();
+  setTimeout(() => {
+    removeTyping();
+    const resp = getResponse(q);
+    if(resp.gated){
+      addMsg({bot: true, gate: true});
+    } else {
+      addMsg({bot: true, ...resp.data});
+    }
+    busy = false;
+    document.getElementById('snd').disabled = false;
+  }, 600 + Math.random()*500);
+}
+
+// ── WELCOME ──
+addMsg({bot: true, badge:'sec-be', badgeLabel:'Welcome',
+  text:`Hello — I'm Frankie. I'm built from a lot of different parts: NucCol's full F4N programme documentation, the Business Excellence and Nuclear sector handbooks, and UK nuclear sector intelligence.
+
+That means I can cover a lot of ground. But I'm assembled, not omniscient — <b>always verify critical decisions with your SCC</b> and current regulatory guidance.
+
+What can I help you with?`,
+  sugs:[
+    'What is F4N and how does it work?',
+    'What are the 8 stages of the journey?',
+    'What is the Triple 85 granting criteria?'
+  ]
+});
+</script>
+</body>
+</html>
