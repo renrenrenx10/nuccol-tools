@@ -17,13 +17,13 @@
       --muted:   #6c757d;
       --danger:  #e74c3c;
       --success: #2ecc71;
+      --amber:   #e67e22;
       --border:  #dee2e6;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; overflow: hidden; }
     body { font-family: 'Barlow', sans-serif; background: var(--bg); display: flex; flex-direction: column; }
 
-    /* ── NAV — slimmed to 48px ── */
     nav {
       background: var(--navy); height: 48px; display: flex; align-items: center;
       padding: 0 20px; gap: 14px; flex-shrink: 0;
@@ -39,20 +39,18 @@
     nav .sign-btn.out { background: transparent; border: 1px solid rgba(255,255,255,.3); }
     #userLabel { font-family: 'Share Tech Mono', monospace; color: rgba(255,255,255,.6); font-size: 11px; }
 
-    /* ── HEADER BAR — single compact row ── */
     .header-bar {
       background: var(--white); border-bottom: 1px solid var(--border);
       padding: 6px 20px; display: flex; align-items: center; gap: 20px; flex-shrink: 0;
     }
     .header-bar h1 { font-family: 'Share Tech Mono', monospace; font-size: 16px; color: var(--text); line-height: 1; }
     .header-bar p  { font-size: 11px; color: var(--muted); margin-left: 6px; }
-    .header-title  { display: flex; align-items: baseline; gap: 0; }
+    .header-title  { display: flex; align-items: baseline; }
     .kpis { display: flex; gap: 8px; margin-left: auto; }
     .kpi  { background: rgba(13,59,110,.06); border-radius: 6px; padding: 4px 12px; text-align: center; min-width: 90px; }
     .kpi-label { font-size: 9px; color: var(--muted); font-family: 'Share Tech Mono', monospace; text-transform: uppercase; letter-spacing: .04em; }
     .kpi-value { font-size: 16px; font-weight: 700; color: var(--navy); font-family: 'Share Tech Mono', monospace; }
 
-    /* ── MAIN fills remaining height ── */
     main { flex: 1; padding: 10px 16px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
 
     #statusBar {
@@ -71,10 +69,10 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── FILTERS — all on one row ── */
+    /* ── FILTER BAR ── */
     .filters {
       background: var(--white); border-radius: 6px; padding: 8px 14px;
-      display: flex; flex-direction: row; align-items: center; gap: 16px;
+      display: flex; flex-direction: row; align-items: center; gap: 14px;
       flex-wrap: wrap; flex-shrink: 0;
     }
     .filter-section-label {
@@ -82,7 +80,6 @@
       text-transform: uppercase; white-space: nowrap;
     }
     .filter-divider { width: 1px; height: 24px; background: var(--border); flex-shrink: 0; }
-    .filter-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
     .filter-group { display: flex; align-items: center; gap: 6px; }
     .filter-group label { font-size: 10px; color: var(--muted); font-family: 'Share Tech Mono', monospace; text-transform: uppercase; white-space: nowrap; }
     .filter-group select {
@@ -90,9 +87,8 @@
       font-family: 'Barlow', sans-serif; font-size: 12px; color: var(--text);
       background: var(--white); cursor: pointer;
     }
-    .filter-group select:focus { outline: 2px solid var(--cyan); }
 
-    /* Developer toggle pills — compact */
+    /* Developer pills */
     .dev-toggles { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
     .dev-toggle {
       padding: 3px 12px; border-radius: 20px; border: 1.5px solid var(--navy);
@@ -105,22 +101,56 @@
     .dev-toggle.all-btn { border-color: var(--cyan); color: var(--cyan); }
     .dev-toggle.all-btn.active { background: var(--cyan); color: #fff; }
 
-    /* ── CHART CARD fills all remaining vertical space ── */
+    /* Overlay toggles — Capacity & Lead Time */
+    .overlay-toggles { display: flex; gap: 6px; align-items: center; }
+    .overlay-btn {
+      padding: 3px 14px; border-radius: 20px; border: 1.5px solid var(--border);
+      background: var(--white); font-family: 'Barlow', sans-serif;
+      font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s;
+      user-select: none; white-space: nowrap; color: var(--muted);
+    }
+    .overlay-btn:hover { opacity: .8; }
+    .overlay-btn.cap-btn  { border-color: var(--success); color: var(--success); }
+    .overlay-btn.cap-btn.active  { background: var(--success); color: #fff; }
+    .overlay-btn.lt-btn   { border-color: var(--amber); color: var(--amber); }
+    .overlay-btn.lt-btn.active   { background: var(--amber); color: #fff; }
+    .overlay-btn:disabled { opacity: .3; cursor: not-allowed; }
+
+    /* ── MAIN BODY: chart + info panel side by side when isolated ── */
+    .chart-body {
+      flex: 1; display: flex; gap: 10px; overflow: hidden; min-height: 0;
+    }
+
     .chart-card {
       background: var(--white); border-radius: 8px; padding: 12px 16px;
       flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0;
     }
     .chart-card canvas { flex: 1; min-height: 0; }
-    .chart-toolbar { display: flex; justify-content: flex-end; margin-bottom: 8px; flex-shrink: 0; }
+    .chart-toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-shrink: 0; }
+    .chart-toolbar .breadcrumb {
+      flex: 1; font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--muted);
+    }
+    .chart-toolbar .breadcrumb .crumb-link {
+      color: var(--cyan); cursor: pointer; text-decoration: none;
+    }
+    .chart-toolbar .breadcrumb .crumb-link:hover { text-decoration: underline; }
+
     .chart-type-toggle { display: flex; border: 1.5px solid var(--navy); border-radius: 6px; overflow: hidden; }
     .chart-type-toggle button {
       background: var(--white); color: var(--navy); border: none;
-      padding: 5px 16px; font-family: 'Share Tech Mono', monospace; font-size: 12px;
+      padding: 5px 14px; font-family: 'Share Tech Mono', monospace; font-size: 12px;
       cursor: pointer; transition: all .15s;
     }
     .chart-type-toggle button:not(:last-child) { border-right: 1.5px solid var(--navy); }
     .chart-type-toggle button:hover { background: rgba(13,59,110,.07); }
     .chart-type-toggle button.active { background: var(--navy); color: #fff; }
+
+    .btn-ghost {
+      padding: 4px 12px; font-size: 12px; font-family: 'Barlow', sans-serif;
+      background: transparent; border: 1.5px solid var(--navy); border-radius: 6px;
+      color: var(--navy); cursor: pointer; white-space: nowrap;
+    }
+    .btn-ghost:hover { background: rgba(13,59,110,.07); }
 
     #emptyState {
       display: none; flex-direction: column; align-items: center; justify-content: center;
@@ -128,6 +158,58 @@
       font-size: 14px; gap: 12px;
     }
     #emptyState .icon { font-size: 40px; }
+
+    /* ── INFO PANEL ── */
+    #infoPanel {
+      width: 300px; flex-shrink: 0;
+      background: var(--white); border-radius: 8px; padding: 16px;
+      display: none; flex-direction: column; gap: 12px; overflow-y: auto;
+      border: 1px solid var(--border);
+    }
+    #infoPanel.visible { display: flex; }
+
+    .info-header {
+      font-family: 'Share Tech Mono', monospace; font-size: 13px; font-weight: 700;
+      color: var(--navy); border-bottom: 1px solid var(--border); padding-bottom: 8px;
+      line-height: 1.4;
+    }
+    .info-section-label {
+      font-size: 9px; font-weight: 700; color: var(--muted); text-transform: uppercase;
+      letter-spacing: .06em; font-family: 'Share Tech Mono', monospace;
+      margin-bottom: 4px;
+    }
+    .info-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+    .info-key { font-size: 12px; color: var(--muted); flex: 1; }
+    .info-val { font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--text); font-weight: 600; text-align: right; }
+    .info-val.good   { color: var(--success); }
+    .info-val.warn   { color: var(--amber); }
+    .info-val.bad    { color: var(--danger); }
+    .info-val.none   { color: var(--muted); font-weight: 400; font-style: italic; }
+
+    .info-block { display: flex; flex-direction: column; }
+
+    .conf-badge {
+      display: inline-block; padding: 1px 8px; border-radius: 20px;
+      font-size: 11px; font-weight: 600;
+    }
+    .conf-high   { background: rgba(46,204,113,.12); color: #1a7a4a; }
+    .conf-medium { background: rgba(230,126,34,.12);  color: #9a4f00; }
+    .conf-low    { background: rgba(231,76,60,.10);   color: var(--danger); }
+
+    .component-list {
+      font-size: 11px; color: var(--muted); line-height: 1.6;
+      background: var(--bg); border-radius: 4px; padding: 6px 8px;
+      font-family: 'Share Tech Mono', monospace;
+    }
+
+    .info-hint {
+      font-size: 11px; color: var(--muted); text-align: center;
+      font-style: italic; margin-top: auto; padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+    .no-data-msg {
+      font-size: 12px; color: var(--muted); font-style: italic; text-align: center; padding: 16px 0;
+    }
   </style>
 </head>
 <body>
@@ -142,11 +224,11 @@
 <div class="header-bar">
   <div class="header-title">
     <h1>Demand Forecast</h1>
-    <p>Generated from Power Apps · DangerMouse SharePoint</p>
+    <p style="margin-left:10px;">DangerMouse · NuCCoL</p>
   </div>
   <div class="kpis">
     <div class="kpi"><div class="kpi-label">Total Demand</div><div class="kpi-value" id="kpiTotal">—</div></div>
-    <div class="kpi"><div class="kpi-label">Products</div><div class="kpi-value" id="kpiProducts">—</div></div>
+    <div class="kpi"><div class="kpi-label">Categories</div><div class="kpi-value" id="kpiProducts">—</div></div>
     <div class="kpi"><div class="kpi-label">Year Span</div><div class="kpi-value" id="kpiYears">—</div></div>
     <div class="kpi"><div class="kpi-label">Developers</div><div class="kpi-value" id="kpiDevs">—</div></div>
   </div>
@@ -155,19 +237,13 @@
 <main>
   <div id="statusBar"><div class="spinner" id="spinner"></div><span id="statusText">Waiting for sign-in…</span></div>
 
+  <!-- Filter bar -->
   <div class="filters" id="filterBar" style="display:none">
     <span class="filter-section-label">Developer</span>
     <div class="dev-toggles" id="devToggles">
       <button class="dev-toggle all-btn active" onclick="toggleDev('__all__', this)">All</button>
     </div>
     <div class="filter-divider"></div>
-    <div class="filter-group">
-      <label>View</label>
-      <select id="filterView" onchange="applyFilters()">
-        <option value="family">By Family (10)</option>
-        <option value="category">By Category</option>
-      </select>
-    </div>
     <div class="filter-group">
       <label>Family</label>
       <select id="filterFamily" onchange="applyFilters()"><option value="All">All Families</option></select>
@@ -180,18 +256,60 @@
       <label>Year To</label>
       <select id="filterYearTo" onchange="applyFilters()"><option value="All">All</option></select>
     </div>
+    <div class="filter-divider"></div>
+    <!-- Overlay toggles — only enabled when a category is isolated -->
+    <span class="filter-section-label">Overlays</span>
+    <div class="overlay-toggles">
+      <button class="overlay-btn cap-btn" id="btnCapacity" onclick="toggleOverlay('cap')" disabled title="Isolate a category first">🏭 Capacity</button>
+      <button class="overlay-btn lt-btn"  id="btnLeadTime" onclick="toggleOverlay('lt')"  disabled title="Isolate a category first">⏱ Lead Time</button>
+    </div>
+    <div class="filter-divider"></div>
+    <div class="chart-type-toggle" style="margin-left:0;">
+      <button id="btnBar" class="active" onclick="setChartType('bar', this)">▐█ Bar</button>
+      <button id="btnArea" onclick="setChartType('area', this)">◿ Area</button>
+    </div>
+    <button class="btn-ghost" onclick="showAllSeries()">Show All</button>
   </div>
 
-  <div class="chart-card">
-    <div class="chart-toolbar">
-      <div class="chart-type-toggle">
-        <button id="btnBar" class="active" onclick="setChartType('bar', this)">▐█ Bar</button>
-        <button id="btnArea" onclick="setChartType('area', this)">◿ Area</button>
+  <!-- Chart body: canvas + info panel -->
+  <div class="chart-body">
+    <div class="chart-card">
+      <div class="chart-toolbar">
+        <div class="breadcrumb" id="breadcrumb">
+          <span id="crumbFamily"></span>
+        </div>
       </div>
-      <button onclick="showAllSeries()" style="margin-left:8px;padding:4px 12px;font-size:12px;font-family:'Barlow',sans-serif;background:transparent;border:1.5px solid var(--navy);border-radius:6px;color:var(--navy);cursor:pointer;">Show All</button>
+      <div id="emptyState"><div class="icon">📊</div><div>No data yet — run Generate Demand first.</div></div>
+      <canvas id="demandChart" style="display:none;"></canvas>
     </div>
-    <div id="emptyState"><div class="icon">📊</div><div>No data yet — run Generate Demand in Power Apps first.</div></div>
-    <canvas id="demandChart"></canvas>
+
+    <!-- Info panel — shown when a category is isolated -->
+    <div id="infoPanel">
+      <div class="info-header" id="infoCategoryName">—</div>
+      <!-- Demand block -->
+      <div class="info-block">
+        <div class="info-section-label">Demand</div>
+        <div class="info-row"><span class="info-key">Total (this view)</span><span class="info-val" id="infoDemandTotal">—</span></div>
+        <div class="info-row"><span class="info-key">Peak year demand</span><span class="info-val" id="infoPeakDemand">—</span></div>
+        <div class="info-row"><span class="info-key">Unit</span><span class="info-val" id="infoUnit">—</span></div>
+      </div>
+      <!-- Capacity block -->
+      <div class="info-block">
+        <div class="info-section-label">UK Supply Capacity</div>
+        <div id="infoCapBlock"><div class="no-data-msg">No capacity data</div></div>
+      </div>
+      <!-- Lead time block -->
+      <div class="info-block">
+        <div class="info-section-label">Lead Time &amp; Schedule</div>
+        <div id="infoLtBlock"><div class="no-data-msg">No lead time data</div></div>
+      </div>
+      <!-- Components block -->
+      <div class="info-block" id="infoCompBlock" style="display:none;">
+        <div class="info-section-label">Source Components (<span id="infoCompCount">0</span>)</div>
+        <div class="component-list" id="infoCompList"></div>
+      </div>
+      <div class="info-hint">Double-click a bar to open this panel</div>
+    </div>
   </div>
 </main>
 
@@ -214,128 +332,89 @@ const msalInstance = new msal.PublicClientApplication({
 const scopes = ["https://nuccol.sharepoint.com/AllSites.Read"];
 const palette = ['#4e79a7','#f28e2b','#e15759','#76b7b2','#59a14f','#edc948','#b07aa1','#ff9da7','#9c755f','#bab0ac','#1f77b4','#aec7e8','#ffbb78','#98df8a','#d62728'];
 
-let allData = [];
-let chartInstance = null;
-let selectedDevs = new Set(['__all__']); // '__all__' means all selected
+let allData        = [];   // demand rows {d,p,f,y,a,lt,cap,capUnit,capConf}
+let chartInstance  = null;
+let selectedDevs   = new Set(['__all__']);
 let currentChartType = 'bar';
 
-function showAllSeries() {
-  if (!chartInstance) return;
-  chartInstance.data.datasets.forEach((_, i) => chartInstance.show(i));
-  chartInstance.update();
-  // Re-render to reset isolatedIndex closure
-  applyFilters();
-}
+// State: drill level
+let currentView    = 'family';   // 'family' | 'category'
+let currentFamily  = 'All';      // which family is drilled into
+let isolatedIndex  = null;       // dataset index currently isolated, null = none
+let overlayState   = { cap: false, lt: false };
 
-function setChartType(type, btn) {
-  currentChartType = type;
-  document.querySelectorAll('.chart-type-toggle button').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  applyFilters();
-}
-
-// ── AUTH ──────────────────────────────────────────────────────────────────────
+// ── AUTH ─────────────────────────────────────────────────────────────────────
 async function init() {
   await msalInstance.initialize();
   const accounts = msalInstance.getAllAccounts();
-  if (accounts.length > 0) {
-    setUser(accounts[0]);
-    await loadData();
-  } else {
-    setStatus("Sign in with your Microsoft 365 account to view the chart.", false);
-    hideSpinner();
-  }
+  if (accounts.length > 0) { setUser(accounts[0]); await loadData(); }
+  else { setStatus("Sign in with your Microsoft 365 account to view the chart.", false); hideSpinner(); }
 }
-
 async function signIn() {
   try {
-    const response = await msalInstance.loginPopup({ scopes });
-    if (response?.account) { setUser(response.account); await loadData(); }
-  } catch (err) {
-    setStatus("Sign-in failed: " + err.message, false, true);
-    console.error(err);
-  }
+    const r = await msalInstance.loginPopup({ scopes });
+    if (r?.account) { setUser(r.account); await loadData(); }
+  } catch(e) { setStatus("Sign-in failed: " + e.message, false, true); }
 }
-
 function signOut() { msalInstance.logoutPopup(); }
-
 function setUser(account) {
   document.getElementById('userLabel').textContent    = account.username;
   document.getElementById('btnSignIn').style.display  = 'none';
   document.getElementById('btnSignOut').style.display = 'inline-block';
 }
-
 async function getToken() {
   const accounts = msalInstance.getAllAccounts();
   if (!accounts.length) throw new Error("Not signed in");
-  try {
-    const r = await msalInstance.acquireTokenSilent({ scopes, account: accounts[0] });
-    return r.accessToken;
-  } catch {
-    const r = await msalInstance.acquireTokenPopup({ scopes });
-    return r.accessToken;
-  }
+  try { const r = await msalInstance.acquireTokenSilent({ scopes, account: accounts[0] }); return r.accessToken; }
+  catch { const r = await msalInstance.acquireTokenPopup({ scopes }); return r.accessToken; }
 }
 
-// ── DATA ──────────────────────────────────────────────────────────────────────
+// ── DATA ─────────────────────────────────────────────────────────────────────
 async function loadData() {
   setStatus("Fetching data from SharePoint…", false);
   try {
     const token = await getToken();
-    const url = `${SITE_URL}/_api/web/lists/getbytitle('${LIST_NAME}')/items?$filter=Title eq '${ITEM_TITLE}'&$select=ChartData&$top=1`;
-    const resp = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}`, Accept: "application/json;odata=nometadata" }
-    });
-    if (!resp.ok) throw new Error(`SharePoint error ${resp.status}: ${resp.statusText}`);
-    const json = await resp.json();
-    if (!json.value?.length) throw new Error("No 'cache' item found in ChartCache list.");
-    const raw = json.value[0].ChartData;
-    if (!raw) throw new Error("ChartData is empty — run Generate Demand in Power Apps first.");
+    const url   = `${SITE_URL}/_api/web/lists/getbytitle('${LIST_NAME}')/items?$filter=Title eq '${ITEM_TITLE}'&$select=ChartData&$top=1`;
+    const resp  = await fetch(url, { headers: { Authorization: `Bearer ${token}`, Accept: "application/json;odata=nometadata" } });
+    if (!resp.ok) throw new Error(`SharePoint ${resp.status}`);
+    const json  = await resp.json();
+    if (!json.value?.length) throw new Error("No cache item found — run Generate Demand first.");
+    const raw   = json.value[0].ChartData;
+    if (!raw) throw new Error("ChartData empty — run Generate Demand first.");
     allData = JSON.parse(raw);
-    setStatus(`Loaded ${allData.length} rows successfully.`, true);
+    setStatus(`Loaded ${allData.length} rows.`, true);
     hideSpinner();
     populateFilters();
-    const view = document.getElementById('filterView').value;
-    updateKpis(allData, view);
-    renderChart(allData, view);
+    applyFilters();
     document.getElementById('filterBar').style.display = 'flex';
-  } catch (err) {
-    setStatus("Error: " + err.message, false, true);
-    hideSpinner();
-    showEmpty();
-    console.error(err);
+  } catch(e) {
+    setStatus("Error: " + e.message, false, true);
+    hideSpinner(); showEmpty();
   }
 }
 
-// ── FILTERS ───────────────────────────────────────────────────────────────────
+// ── FILTERS ──────────────────────────────────────────────────────────────────
 function populateFilters() {
-  const devs     = [...new Set(allData.map(r => r.d))].sort();
-  const families = [...new Set(allData.map(r => r.f).filter(Boolean))].sort();
-  const years    = [...new Set(allData.map(r => r.y))].sort();
+  const devs     = [...new Set(allData.map(r=>r.d))].sort();
+  const families = [...new Set(allData.map(r=>r.f).filter(Boolean))].sort();
+  const years    = [...new Set(allData.map(r=>r.y))].sort();
 
-  // Developer toggles
   const container = document.getElementById('devToggles');
   devs.forEach(dev => {
     const btn = document.createElement('button');
-    btn.className = 'dev-toggle';
-    btn.textContent = dev;
+    btn.className = 'dev-toggle'; btn.textContent = dev;
     btn.onclick = () => toggleDev(dev, btn);
     container.appendChild(btn);
   });
-
   fillSelect('filterFamily',   families, 'All Families');
-  fillSelect('filterYearFrom', years,    'All');
-  fillSelect('filterYearTo',   years,    'All');
+  fillSelect('filterYearFrom', years, 'All');
+  fillSelect('filterYearTo',   years, 'All');
 }
 
 function fillSelect(id, values, allLabel) {
   const sel = document.getElementById(id);
   sel.innerHTML = `<option value="All">${allLabel}</option>`;
-  values.forEach(v => {
-    const o = document.createElement('option');
-    o.value = v; o.textContent = v;
-    sel.appendChild(o);
-  });
+  values.forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; sel.appendChild(o); });
 }
 
 function toggleDev(dev, btn) {
@@ -347,234 +426,379 @@ function toggleDev(dev, btn) {
   } else {
     if (selectedDevs.has(dev)) { selectedDevs.delete(dev); btn.classList.remove('active'); }
     else { selectedDevs.add(dev); btn.classList.add('active'); }
-    selectedDevs.delete('__all__');
-    allBtn.classList.remove('active');
+    selectedDevs.delete('__all__'); allBtn.classList.remove('active');
     if (selectedDevs.size === 0) { selectedDevs.add('__all__'); allBtn.classList.add('active'); }
   }
   applyFilters();
 }
 
 function applyFilters() {
-  const view   = document.getElementById('filterView').value;
   const family = document.getElementById('filterFamily').value;
   const yFrom  = document.getElementById('filterYearFrom').value;
   const yTo    = document.getElementById('filterYearTo').value;
 
   let filtered = allData;
-
-  if (!selectedDevs.has('__all__')) {
-    filtered = filtered.filter(r => selectedDevs.has(r.d));
-  }
+  if (!selectedDevs.has('__all__')) filtered = filtered.filter(r => selectedDevs.has(r.d));
   if (family !== 'All') filtered = filtered.filter(r => r.f === family);
   if (yFrom  !== 'All') filtered = filtered.filter(r => r.y >= +yFrom);
   if (yTo    !== 'All') filtered = filtered.filter(r => r.y <= +yTo);
 
-  updateKpis(filtered, view);
-  renderChart(filtered, view);
+  // If family filter changed externally and we're in category view, respect it
+  updateKpis(filtered);
+  renderChart(filtered);
 }
 
-// ── KPIs ──────────────────────────────────────────────────────────────────────
-function updateKpis(data, view) {
-  const groupKey = view === 'category' ? r => r.p : r => r.f;
-  document.getElementById('kpiTotal').textContent    = data.reduce((s,r) => s+(r.a||0), 0).toLocaleString();
+// ── KPIs ─────────────────────────────────────────────────────────────────────
+function updateKpis(data) {
+  const groupKey = currentView === 'category' ? r => r.p : r => r.f;
+  document.getElementById('kpiTotal').textContent    = data.reduce((s,r)=>s+(r.a||0),0).toLocaleString('en-GB',{maximumFractionDigits:0});
   document.getElementById('kpiProducts').textContent = new Set(data.map(groupKey)).size;
   document.getElementById('kpiYears').textContent    = new Set(data.map(r=>r.y)).size + ' yrs';
   document.getElementById('kpiDevs').textContent     = new Set(data.map(r=>r.d)).size;
 }
 
-// ── CHART ─────────────────────────────────────────────────────────────────────
-function renderChart(data, view) {
+// ── CHART ────────────────────────────────────────────────────────────────────
+function renderChart(data) {
   if (!data.length) { showEmpty(); return; }
   document.getElementById('emptyState').style.display  = 'none';
   document.getElementById('demandChart').style.display = 'block';
 
-  const years    = [...new Set(data.map(r=>r.y))].sort();
-  // Group by family or category depending on view
-  const groupKey = (view === 'category') ? r => r.p : r => (r.f || 'Unknown');
-  const groups   = [...new Set(data.map(groupKey))].sort();
+  // Apply family drill filter
+  let chartData = data;
+  if (currentView === 'category' && currentFamily !== 'All') {
+    chartData = data.filter(r => r.f === currentFamily);
+  }
 
-  const isArea = currentChartType === 'area';
+  const years    = [...new Set(chartData.map(r=>r.y))].sort();
+  const groupKey = currentView === 'category' ? r => r.p : r => (r.f || 'Unknown');
+  const groups   = [...new Set(chartData.map(groupKey))].sort();
+  const isArea   = currentChartType === 'area';
 
-  const datasets = groups.map((g, i) => {
+  const demandDatasets = groups.map((g, i) => {
     const colour = palette[i % palette.length];
     const base = {
       label: g,
-      data:  years.map(y => data.filter(r => groupKey(r) === g && r.y === y).reduce((s,r) => s+(r.a||0), 0))
+      data: years.map(y => chartData.filter(r => groupKey(r) === g && r.y === y).reduce((s,r)=>s+(r.a||0),0))
     };
-    if (isArea) {
-      return { ...base, type:'line', fill:true, tension:0.4, borderColor:colour,
-               backgroundColor:colour+'33', pointBackgroundColor:colour,
-               pointRadius:3, pointHoverRadius:5, borderWidth:2 };
-    } else {
-      return { ...base, backgroundColor:colour, borderRadius:3 };
-    }
+    if (isArea) return { ...base, type:'line', fill:true, tension:0.4, borderColor:colour, backgroundColor:colour+'33', pointBackgroundColor:colour, pointRadius:3, pointHoverRadius:5, borderWidth:2 };
+    return { ...base, backgroundColor:colour, borderRadius:3 };
   });
 
+  // Build overlay datasets (capacity / lead time) if active and isolated
+  const overlayDatasets = [];
+  if (isolatedIndex !== null && isolatedIndex < demandDatasets.length) {
+    const dsLabel = demandDatasets[isolatedIndex].label;
+
+    if (overlayState.cap) {
+      const capRow = chartData.find(r => r.p === dsLabel && r.cap != null);
+      if (capRow) {
+        overlayDatasets.push({
+          _overlay: 'cap',
+          type: 'line',
+          label: `UK Capacity (${capRow.cap} ${capRow.capUnit||''}/yr)`,
+          data: years.map(() => capRow.cap),
+          borderColor: '#27ae60',
+          backgroundColor: 'transparent',
+          borderWidth: 2.5,
+          borderDash: [8, 4],
+          pointRadius: 0,
+          fill: false,
+          tension: 0,
+          yAxisID: 'yCap'
+        });
+      }
+    }
+
+    if (overlayState.lt) {
+      const ltRow = chartData.find(r => r.p === dsLabel && r.lt != null);
+      if (ltRow) {
+        // Lead time overlay: shift the demand curve left by Full_Window_Months converted to years
+        const shiftYears = ltRow.lt / 12;
+        const demandRow = demandDatasets[isolatedIndex];
+        const shiftedData = years.map((y, i) => {
+          // Find what demand exists shiftYears from now
+          const futureY = y + shiftYears;
+          // Interpolate between two nearest year values
+          const above = years.find(yr => yr >= futureY);
+          const aboveIdx = years.indexOf(above);
+          if (above == null) return null;
+          if (above === futureY) return demandRow.data[aboveIdx];
+          const below = aboveIdx > 0 ? years[aboveIdx - 1] : null;
+          if (below == null) return demandRow.data[aboveIdx];
+          const t = (futureY - below) / (above - below);
+          return demandRow.data[aboveIdx - 1] * (1 - t) + demandRow.data[aboveIdx] * t;
+        });
+        overlayDatasets.push({
+          _overlay: 'lt',
+          type: 'line',
+          label: `Procurement Window (${ltRow.lt} mths lead)`,
+          data: shiftedData,
+          borderColor: '#e67e22',
+          backgroundColor: 'rgba(230,126,34,0.08)',
+          borderWidth: 2,
+          borderDash: [5, 5],
+          pointRadius: 0,
+          fill: false,
+          tension: 0.3,
+          yAxisID: 'y'
+        });
+      }
+    }
+  }
+
+  const allDatasets = [...demandDatasets, ...overlayDatasets];
+
   if (chartInstance) chartInstance.destroy();
+  isolatedIndex = null; // reset after destroy — will be re-applied below if needed
 
-  // Track isolated state — null means nothing isolated, otherwise the isolated dataset index
-  let isolatedIndex = null;
-
-  function getLeadTimeForLabel(dsLabel) {
-    const match = allData.find(r => r.p === dsLabel && r.lt != null);
-    return match ? { months: parseFloat(match.lt), label: `Lead Time (${match.lt} mths)` } : null;
-  }
-
-  function removeLeadTimeLine(ci) {
-    const idx = ci.data.datasets.findIndex(d => d._isLeadTime);
-    if (idx !== -1) ci.data.datasets.splice(idx, 1);
-    delete ci.options.scales.yLT;
-  }
-
-  function addLeadTimeLine(ci, dsLabel, chartYears) {
-    removeLeadTimeLine(ci);
-    const lt = getLeadTimeForLabel(dsLabel);
-    if (!lt) return;
-
-    ci.data.datasets.push({
-      _isLeadTime: true,
-      type: 'line',
-      label: lt.label,
-      data: chartYears.map(() => lt.months),
-      borderColor: '#e74c3c',
-      backgroundColor: 'transparent',
-      borderWidth: 2,
-      borderDash: [6, 4],
-      pointRadius: 0,
-      pointHoverRadius: 0,
-      fill: false,
-      tension: 0,
-      yAxisID: 'yLT',
-      order: -1
-    });
-
-    ci.options.scales.yLT = {
-      type: 'linear',
-      position: 'right',
-      title: { display: true, text: 'Lead Time (weeks)', font: { family: 'Share Tech Mono', size: 11 }, color: '#e74c3c' },
-      ticks: { color: '#e74c3c', font: { size: 11 } },
+  // Extra right-axis for capacity overlay
+  const extraScales = {};
+  if (overlayState.cap && overlayDatasets.find(d => d._overlay === 'cap')) {
+    extraScales.yCap = {
+      type: 'linear', position: 'right',
+      title: { display: true, text: 'UK Capacity / yr', font: { family: 'Share Tech Mono', size: 11 }, color: '#27ae60' },
+      ticks: { color: '#27ae60', font: { size: 11 } },
       grid: { drawOnChartArea: false },
       beginAtZero: true
     };
-    // Don't call ci.update() here — caller handles it
   }
 
-  function isolateDataset(ci, idx) {
-    if (isolatedIndex === idx) {
-      // Already isolated — restore all and remove lead time line
-      removeLeadTimeLine(ci);
-      ci.data.datasets.forEach((_, i) => { if (!ci.data.datasets[i]._isLeadTime) ci.show(i); });
-      isolatedIndex = null;
-      ci.update();
-    } else {
-      // Isolate this one; also remove any stale lead time line first
-      removeLeadTimeLine(ci);
-      ci.data.datasets.forEach((_, i) => { if (i !== idx) ci.hide(i); else ci.show(i); });
-      isolatedIndex = idx;
-      // Add lead time line only in category view
-      if (view === 'category') {
-        addLeadTimeLine(ci, datasets[idx].label, years);
-      }
-      ci.update();
-    }
-  }
+  // Double-click detection
+  let lastClickTime = 0;
+  let lastClickIdx  = -1;
 
   chartInstance = new Chart(document.getElementById('demandChart').getContext('2d'), {
     type: isArea ? 'line' : 'bar',
-    data: { labels: years, datasets },
+    data: { labels: years, datasets: allDatasets },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
+        tooltip: { enabled: false },  // tooltips off per request
         legend: {
           position: 'right',
           labels: {
             font: { family: 'Barlow', size: 12 },
-            // No usePointStyle — use plain text labels so the full label text is the hit area
-            boxWidth: 12,
-            boxHeight: 12,
-            padding: 12,
+            boxWidth: 12, boxHeight: 12, padding: 12,
             generateLabels: chart => chart.data.datasets.map((ds, i) => ({
               text: ds.label,
               fillStyle: Array.isArray(ds.backgroundColor) ? ds.backgroundColor[0] : (ds.backgroundColor || ds.borderColor),
               strokeStyle: ds.borderColor || ds.backgroundColor,
-              lineWidth: 1,
+              lineWidth: ds._overlay ? 2 : 1,
               hidden: !chart.isDatasetVisible(i),
               datasetIndex: i
             }))
           },
-          onClick: (e, legendItem, legend) => {
-            // Don't allow isolating the lead time line via legend click
-            if (legend.chart.data.datasets[legendItem.datasetIndex]?._isLeadTime) return;
-            // Single click = isolate (show only this), click again = show all
-            isolateDataset(legend.chart, legendItem.datasetIndex);
+          onClick: (e, legendItem) => {
+            const idx = legendItem.datasetIndex;
+            if (chartInstance.data.datasets[idx]?._overlay) return; // ignore overlay clicks
+            handleSeriesClick(idx);
           }
-        },
-        tooltip: {
-          mode: 'index',
-          intersect: false,
-          callbacks: {
-            label: ctx => {
-              if (ctx.dataset._isLeadTime) return null;
-              const val = ctx.parsed.y;
-              if (!val) return null;
-              return ` ${ctx.dataset.label}: ${val.toLocaleString('en-GB', {maximumFractionDigits: 0})}`;
-            },
-            afterBody: (items) => {
-              // If isolated, show capacity and lead time context for that category
-              if (isolatedIndex !== null && items.length) {
-                const dsLabel = datasets[isolatedIndex]?.label;
-                const capRow  = allData.find(r => r.p === dsLabel && r.cap != null);
-                const ltRow   = allData.find(r => r.p === dsLabel && r.lt  != null);
-                const lines   = [''];
-                if (capRow) {
-                  const conf = capRow.capConf ? ` [${capRow.capConf}]` : '';
-                  lines.push(` 🏭 UK Capacity: ${capRow.cap?.toLocaleString()} ${capRow.capUnit || ''}${conf} / yr`);
-                }
-                if (ltRow) lines.push(` ⏱ Lead Time: ${ltRow.lt} months`);
-                if (lines.length > 1) return lines;
-              }
-              return ['', ' ↖ Click chart to isolate series'];
-            }
-          },
-          itemSort: (a, b) => b.parsed.y - a.parsed.y
         }
       },
       scales: {
-        x: { title:{display:true,text:'Year',font:{family:'Share Tech Mono',size:12},color:'#6c757d'}, grid:{display:false} },
+        x: { title:{display:true,text:'Year',font:{family:'Share Tech Mono',size:12},color:'#6c757d'}, grid:{display:false}, stacked: isArea },
         y: {
           stacked: isArea,
           title:{display:true,text:'Amount',font:{family:'Share Tech Mono',size:12},color:'#6c757d'},
           beginAtZero:true,
-          ticks:{ callback: v => v.toLocaleString() }
-        }
+          ticks:{ callback: v => v >= 1000 ? (v/1000).toFixed(0)+'k' : v.toLocaleString() }
+        },
+        ...extraScales
       },
       onClick: (evt, elements) => {
-        if (!chartInstance) return;
+        if (!elements.length) return;
+        const idx = elements[0].datasetIndex;
+        if (chartInstance.data.datasets[idx]?._overlay) return;
 
-        // Drill-down: family view clicking a bar → switch to category
-        if (view === 'family' && elements.length) {
-          const family = datasets[elements[0].datasetIndex].label;
-          document.getElementById('filterView').value   = 'category';
-          document.getElementById('filterFamily').value = family;
-          applyFilters();
+        // Family view: single click drills down
+        if (currentView === 'family') {
+          const family = demandDatasets[idx].label;
+          drillToCategory(family);
           return;
         }
 
-        // Isolate: clicking any bar/point in category view isolates that series
-        if (elements.length) {
-          const idx = elements[0].datasetIndex;
-          if (!chartInstance.data.datasets[idx]?._isLeadTime) {
-            isolateDataset(chartInstance, idx);
-          }
+        // Category view: single click isolates, double-click opens info panel
+        const now = Date.now();
+        if (now - lastClickTime < 400 && lastClickIdx === idx) {
+          // Double-click
+          openInfoPanel(demandDatasets[idx].label, chartData);
+          lastClickTime = 0; lastClickIdx = -1;
+        } else {
+          // Single click
+          lastClickTime = now; lastClickIdx = idx;
+          handleSeriesClick(idx);
         }
       }
     }
   });
+
+  updateBreadcrumb();
+}
+
+// ── DRILL / ISOLATE ───────────────────────────────────────────────────────────
+function drillToCategory(family) {
+  currentView   = 'category';
+  currentFamily = family;
+  isolatedIndex = null;
+  overlayState  = { cap: false, lt: false };
+  resetOverlayButtons();
+  closeInfoPanel();
+  applyFilters();
+}
+
+function handleSeriesClick(idx) {
+  if (isolatedIndex === idx) {
+    // Click again = un-isolate
+    isolatedIndex = null;
+    overlayState  = { cap: false, lt: false };
+    resetOverlayButtons();
+    disableOverlayButtons();
+    closeInfoPanel();
+  } else {
+    isolatedIndex = idx;
+    enableOverlayButtons();
+    overlayState  = { cap: false, lt: false };
+    resetOverlayButtons();
+    // Re-render with isolation
+    applyFilters();
+    return; // applyFilters will re-render
+  }
+  applyFilters();
+}
+
+function showAllSeries() {
+  isolatedIndex = null;
+  overlayState  = { cap: false, lt: false };
+  resetOverlayButtons();
+  disableOverlayButtons();
+  closeInfoPanel();
+  // Go back to family view if in category
+  currentView   = 'family';
+  currentFamily = 'All';
+  document.getElementById('filterFamily').value = 'All';
+  applyFilters();
+}
+
+// After re-render we need to re-apply isolation visibility
+function applyIsolation() {
+  if (!chartInstance || isolatedIndex === null) return;
+  chartInstance.data.datasets.forEach((ds, i) => {
+    if (ds._overlay) return;
+    if (i !== isolatedIndex) chartInstance.hide(i);
+    else chartInstance.show(i);
+  });
+  chartInstance.update('none');
+}
+
+// Override applyFilters to call applyIsolation after render
+const _origApplyFilters = applyFilters;
+// We redefine slightly below after renderChart is callable
+
+// ── OVERLAYS ─────────────────────────────────────────────────────────────────
+function toggleOverlay(type) {
+  overlayState[type] = !overlayState[type];
+  const btn = type === 'cap' ? document.getElementById('btnCapacity') : document.getElementById('btnLeadTime');
+  btn.classList.toggle('active', overlayState[type]);
+  applyFilters(); // re-render with/without overlay
+}
+
+function enableOverlayButtons() {
+  document.getElementById('btnCapacity').disabled = false;
+  document.getElementById('btnLeadTime').disabled = false;
+}
+function disableOverlayButtons() {
+  document.getElementById('btnCapacity').disabled = true;
+  document.getElementById('btnLeadTime').disabled = true;
+}
+function resetOverlayButtons() {
+  document.getElementById('btnCapacity').classList.remove('active');
+  document.getElementById('btnLeadTime').classList.remove('active');
+}
+
+// ── BREADCRUMB ────────────────────────────────────────────────────────────────
+function updateBreadcrumb() {
+  const el = document.getElementById('crumbFamily');
+  if (currentView === 'family') {
+    el.innerHTML = 'All Families — click a bar to drill down';
+  } else {
+    el.innerHTML = `<a class="crumb-link" onclick="showAllSeries()">All Families</a> › ${currentFamily}${isolatedIndex !== null ? ' › <strong>Isolated</strong>' : ''}`;
+  }
+}
+
+// ── INFO PANEL ────────────────────────────────────────────────────────────────
+function openInfoPanel(categoryLabel, chartData) {
+  const panel = document.getElementById('infoPanel');
+  panel.classList.add('visible');
+  document.getElementById('infoCategoryName').textContent = categoryLabel;
+
+  // Demand stats
+  const rows = chartData.filter(r => r.p === categoryLabel);
+  const total = rows.reduce((s,r) => s+(r.a||0), 0);
+  const byYear = {};
+  rows.forEach(r => { byYear[r.y] = (byYear[r.y]||0) + (r.a||0); });
+  const peak = Math.max(...Object.values(byYear), 0);
+  const unit = rows.find(r => r.capUnit)?.capUnit || '—';
+
+  document.getElementById('infoDemandTotal').textContent = total.toLocaleString('en-GB',{maximumFractionDigits:0});
+  document.getElementById('infoPeakDemand').textContent  = peak.toLocaleString('en-GB',{maximumFractionDigits:0}) + ' / yr';
+  document.getElementById('infoUnit').textContent        = unit;
+
+  // Capacity block
+  const capRow = rows.find(r => r.cap != null);
+  const capEl  = document.getElementById('infoCapBlock');
+  if (capRow) {
+    const confClass = { High:'conf-high', Medium:'conf-medium', Low:'conf-low' }[capRow.capConf] || '';
+    const gap = peak > 0 && capRow.cap != null ? capRow.cap / peak : null;
+    const gapClass = gap == null ? '' : gap >= 1 ? 'good' : gap >= 0.5 ? 'warn' : 'bad';
+    const gapText  = gap == null ? '—' : (gap*100).toFixed(0)+'% of peak';
+    capEl.innerHTML = `
+      <div class="info-row"><span class="info-key">UK Capacity / yr</span><span class="info-val">${Number(capRow.cap).toLocaleString('en-GB')} ${capRow.capUnit||''}</span></div>
+      <div class="info-row"><span class="info-key">vs Peak demand</span><span class="info-val ${gapClass}">${gapText}</span></div>
+      <div class="info-row"><span class="info-key">Confidence</span><span class="info-val"><span class="conf-badge ${confClass}">${capRow.capConf||'—'}</span></span></div>`;
+  } else {
+    capEl.innerHTML = '<div class="no-data-msg">No capacity data available</div>';
+  }
+
+  // Lead time block
+  const ltRow = rows.find(r => r.lt != null);
+  const ltEl  = document.getElementById('infoLtBlock');
+  if (ltRow) {
+    const earliest = ltRow.ltEarliest != null ? ltRow.ltEarliest + ' mths' : '—';
+    const latest   = ltRow.ltLatest   != null ? ltRow.ltLatest   + ' mths' : '—';
+    ltEl.innerHTML = `
+      <div class="info-row"><span class="info-key">Lead time (full window)</span><span class="info-val">${ltRow.lt} months</span></div>
+      <div class="info-row"><span class="info-key">Earliest procurement start</span><span class="info-val">${earliest}</span></div>
+      <div class="info-row"><span class="info-key">Latest procurement end</span><span class="info-val">${latest}</span></div>`;
+  } else {
+    ltEl.innerHTML = '<div class="no-data-msg">No lead time data available</div>';
+  }
+
+  // Source components from leadTimeByCategory
+  const compRow = rows.find(r => r.srcCount != null);
+  const compBlock = document.getElementById('infoCompBlock');
+  if (compRow && compRow.srcCount > 0) {
+    compBlock.style.display = 'flex';
+    document.getElementById('infoCompCount').textContent = compRow.srcCount;
+    document.getElementById('infoCompList').textContent  = compRow.srcComponents || '—';
+  } else {
+    compBlock.style.display = 'none';
+  }
+}
+
+function closeInfoPanel() {
+  document.getElementById('infoPanel').classList.remove('visible');
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
+function setChartType(type, btn) {
+  currentChartType = type;
+  document.querySelectorAll('.chart-type-toggle button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+
 function setStatus(msg, ok, err) {
   const bar = document.getElementById('statusBar');
   bar.className = err ? 'error' : ok ? 'ok' : '';

@@ -1402,20 +1402,32 @@ async function viewChart() {
   try {
     // Build lookups for lead time and capacity, keyed by Category (= product Title)
     const ltLookup  = {};
-    store.leadTimeByCategory.forEach(r => { ltLookup[r.Category] = r.Full_Window_Months || null; });
+    store.leadTimeByCategory.forEach(r => {
+      ltLookup[r.Category] = {
+        full:       r.Full_Window_Months   || null,
+        earliest:   r.Earliest_Start_Months != null ? r.Earliest_Start_Months : null,
+        latest:     r.Latest_End_Months    != null ? r.Latest_End_Months    : null,
+        srcCount:   r.Source_Component_Count || 0,
+        srcComponents: r.Source_Components || null
+      };
+    });
     const capLookup = {};
     store.capacity.forEach(r => { capLookup[r.Category] = { cap: r.UK_Capacity_Per_Year, unit: r.Unit, conf: r.Confidence }; });
 
     const payload = JSON.stringify(store.demandResults.filter(r=>r.CalYear>0).map(r=>({
-      d:  r.Developer,
-      p:  r.Product_ID,
-      f:  r.Family,
-      y:  r.CalYear,
-      a:  r.Amount,
-      lt: ltLookup[r.Product_ID] || null,
-      cap: capLookup[r.Product_ID]?.cap ?? null,
-      capUnit: capLookup[r.Product_ID]?.unit || null,
-      capConf: capLookup[r.Product_ID]?.conf || null
+      d:             r.Developer,
+      p:             r.Product_ID,
+      f:             r.Family,
+      y:             r.CalYear,
+      a:             r.Amount,
+      lt:            ltLookup[r.Product_ID]?.full        ?? null,
+      ltEarliest:    ltLookup[r.Product_ID]?.earliest    ?? null,
+      ltLatest:      ltLookup[r.Product_ID]?.latest      ?? null,
+      srcCount:      ltLookup[r.Product_ID]?.srcCount    ?? null,
+      srcComponents: ltLookup[r.Product_ID]?.srcComponents ?? null,
+      cap:           capLookup[r.Product_ID]?.cap        ?? null,
+      capUnit:       capLookup[r.Product_ID]?.unit       || null,
+      capConf:       capLookup[r.Product_ID]?.conf       || null
     })));
     const existing = await spGet(CONFIG.lists.chartCache, 'Id,Title');
     const cacheRow = existing.find(r => r.Title === 'cache');
