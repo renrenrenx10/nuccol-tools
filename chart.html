@@ -24,7 +24,7 @@
       --border:    #dde3ea;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; overflow: hidden; font-family: 'Barlow', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
+    html, html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Barlow', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
 
     /* ── NAV ── */
     nav {
@@ -127,7 +127,7 @@
       padding: 1px 8px; font-size: 11px; font-weight: 700;
     }
     .chart-wrap {
-      flex: 1; min-height: 0; position: relative;
+      flex: 1; min-height: 0; position: relative; overflow: hidden;
     }
     #demandChart { width: 100% !important; height: 100% !important; }
     #emptyState {
@@ -596,10 +596,11 @@ function renderChart(data) {
         legend: { display: false },
         tooltip: { enabled: false }
       },
+      layout: { padding: { bottom: 10 } },
       layout: { padding: { bottom: 8 } },
       scales: {
         x: { title:{display:true,text:'Year',font:{family:'Share Tech Mono',size:12},color:'#9aa3af'}, grid:{display:false} },
-        y: { title:{display:true,text:'Amount',font:{family:'Share Tech Mono',size:12},color:'#9aa3af'}, beginAtZero:true,
+        y: { title:{display:true,text:'Amount',font:{family:'Share Tech Mono',size:12},color:'#9aa3af'}, beginAtZero:true, grace:'5%',
              grace: '5%',
              ticks:{ callback: v => v>=1000?(v/1000).toFixed(0)+'k':v.toLocaleString() } },
         ...extraScales
