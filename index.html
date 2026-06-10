@@ -1024,10 +1024,12 @@ const CONFIG = {
   siteUrl:    'https://nuccol.sharepoint.com/sites/DangerMouse',
   scopes:     ['https://nuccol.sharepoint.com/.default'],
   lists: {
-    products:   'DM - Products',
-    developers: 'DM - Developers',
-    schedules:  'DM - Dev Schedules',
-    chartCache: 'ChartCache'
+    products:      'DM - Products',
+    developers:    'DM - Developers',
+    schedules:     'DM - Dev Schedules',
+    chartCache:    'ChartCache',
+    capacity:      'DM - Capacity',
+    leadTimeByCat: 'DM - Lead Time By Category'
   }
 };
 
@@ -1173,10 +1175,12 @@ async function spDelete(listName, id) {
 // DATA STORE
 // ══════════════════════════════════════════════════════
 let store = {
-  products:   [],
-  developers: [],
-  schedules:  [],
-  buildPlan:  [],
+  products:      [],
+  developers:    [],
+  schedules:     [],
+  capacity:      [],
+  leadTimes:     [],
+  buildPlan:     [],
   demandResults: [],
   editingProduct: null,
   editingDev: null,
@@ -1185,15 +1189,17 @@ let store = {
 
 async function loadAllData() {
   try {
-    const [prods, devs, scheds] = await Promise.all([
-      spGet(CONFIG.lists.products,   'Id,Title,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8', '', 'field_1 asc,Title asc'),
-      spGet(CONFIG.lists.developers, 'Id,Title,field_1,field_2,field_3,field_4,field_5', '', 'Title asc'),
-      spGet(CONFIG.lists.schedules,  'Id,Title,field_1,field_2,field_3,field_4', '', 'Title asc')
+    const [prods, devs, scheds, caps, lts] = await Promise.all([
+      spGet(CONFIG.lists.products,      'Id,Title,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8', '', 'field_1 asc,Title asc'),
+      spGet(CONFIG.lists.developers,    'Id,Title,field_1,field_2,field_3,field_4,field_5', '', 'Title asc'),
+      spGet(CONFIG.lists.schedules,     'Id,Title,field_1,field_2,field_3,field_4', '', 'Title asc'),
+      spGet(CONFIG.lists.capacity,      'Title,field_1,field_2,field_3,field_4', '', 'Title asc'),
+      spGet(CONFIG.lists.leadTimeByCat, 'Title,field_1,field_2,field_3,field_4,field_5,field_6', '', 'Title asc')
     ]);
     store.products   = prods.map(p => ({
       Id:                     p.Id,
       Title:                  p.Title,
-      Unified_Family:       p.field_1,
+      Unified_Family:         p.field_1,
       Nuclear_Classification: p.field_2,
       GW_Total:               p.field_3,
       SMR_Total:              p.field_4,
@@ -1201,6 +1207,23 @@ async function loadAllData() {
       Source_Rows:            p.field_6,
       Tier1_Rows:             p.field_7,
       Plant_Type:             p.field_8,
+    }));
+    // capacity: Title=Category, field_2=UK_Capacity_Per_Year, field_3=Unit, field_4=Confidence
+    store.capacity = caps.map(c => ({
+      Category: c.Title,
+      Cap:      c.field_2 != null ? parseFloat(c.field_2) : null,
+      CapUnit:  c.field_3 || null,
+      CapConf:  c.field_4 || null,
+    }));
+    // leadTimeByCat: Title=Category, field_1=Earliest_Start_Months, field_2=Latest_End_Months,
+    //                field_3=Full_Window_Months, field_4=Source_Component_Count, field_6=Source_Components
+    store.leadTimes = lts.map(l => ({
+      Category:   l.Title,
+      LtEarliest: l.field_1 != null ? parseFloat(l.field_1) : null,
+      LtLatest:   l.field_2 != null ? parseFloat(l.field_2) : null,
+      Lt:         l.field_3 != null ? parseFloat(l.field_3) : null,
+      SrcCount:   l.field_4 != null ? parseInt(l.field_4)   : null,
+      SrcComps:   l.field_6 || null,
     }));
     store.developers = devs.map(d => ({
       Id:            d.Id,
@@ -1354,7 +1377,27 @@ function renderResults() {
 async function viewChart() {
   if (!store.demandResults.length) { toast('Generate demand first', 'error'); return; }
   try {
-    const payload = JSON.stringify(store.demandResults.filter(r=>r.CalYear>0).map(r=>({d:r.Developer,p:r.Product_ID,f:r.Family,y:r.CalYear,a:r.Amount})));
+    const payload = JSON.stringify(
+      store.demandResults.filter(r => r.CalYear > 0).map(r => {
+        const capRow = store.capacity.find(c => c.Category === r.Product_ID);
+        const ltRow  = store.leadTimes.find(l => l.Category === r.Product_ID);
+        return {
+          d:            r.Developer,
+          p:            r.Product_ID,
+          f:            r.Family,
+          y:            r.CalYear,
+          a:            r.Amount,
+          cap:          capRow ? capRow.Cap      : null,
+          capUnit:      capRow ? capRow.CapUnit  : null,
+          capConf:      capRow ? capRow.CapConf  : null,
+          lt:           ltRow  ? ltRow.Lt        : null,
+          ltEarliest:   ltRow  ? ltRow.LtEarliest: null,
+          ltLatest:     ltRow  ? ltRow.LtLatest  : null,
+          srcCount:     ltRow  ? ltRow.SrcCount  : null,
+          srcComponents:ltRow  ? ltRow.SrcComps  : null,
+        };
+      })
+    );
     const existing = await spGet(CONFIG.lists.chartCache, 'Id,Title');
     const cacheRow = existing.find(r => r.Title === 'cache');
     if (cacheRow) {
