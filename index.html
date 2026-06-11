@@ -1288,71 +1288,77 @@ function clearAll() {
 // EXPORT
 // ══════════════════════════════════════════════════════
 function exportCSV(mode) {
-  const rows = store.demandResults.filter(r => r.CalYear > 0);
+  var rows = store.demandResults.filter(function(r){ return r.CalYear > 0; });
   if (!rows.length) { toast('No results to export — generate demand first', 'error'); return; }
 
-  let csv, filename;
+  var csv, filename;
+  var CRLF = '\r\n';
 
   if (mode === 'raw') {
-    // ── Raw: one row per demand entry ──────────────────────────────────────
-    const headers = ['Developer', 'Product', 'Family', 'Year', 'Quarter', 'Amount', 'From Baseline'];
-    const lines   = rows.map(r => [
-      csvVal(r.Developer),
-      csvVal(r.Product_ID),
-      csvVal(r.Family || r.MaterialType || ''),
-      r.CalYear,
-      csvVal(r.Quarter),
-      r.Amount,
-      r.FromBaseline ? 'Yes' : 'No'
-    ].join(','));
-    csv      = [headers.join(','), ...lines].join('
-');
-    filename = `DangerMouse_Raw_${datestamp()}.csv`;
+    var headers = ['Developer','Product','Family','Year','Quarter','Amount','From Baseline'];
+    var lines = rows.map(function(r) {
+      return [
+        csvVal(r.Developer),
+        csvVal(r.Product_ID),
+        csvVal(r.Family || r.MaterialType || ''),
+        r.CalYear,
+        csvVal(r.Quarter),
+        r.Amount,
+        r.FromBaseline ? 'Yes' : 'No'
+      ].join(',');
+    });
+    csv = [headers.join(',')].concat(lines).join(CRLF);
+    filename = 'DangerMouse_Raw_' + datestamp() + '.csv';
 
   } else {
-    // ── Pivot: years as rows, Developer×Family as columns ─────────────────
-    // Aggregate: sum amount by Developer + Family + Year
-    const agg = {};
-    for (const r of rows) {
-      const col = `${r.Developer} — ${r.Family || r.MaterialType || 'Unknown'}`;
-      const key = `${r.CalYear}|${col}`;
+    var agg = {};
+    rows.forEach(function(r) {
+      var col = r.Developer + ' — ' + (r.Family || r.MaterialType || 'Unknown');
+      var key = r.CalYear + '|' + col;
       agg[key] = (agg[key] || 0) + (r.Amount || 0);
-    }
-
-    const years = [...new Set(rows.map(r => r.CalYear))].sort((a,b) => a-b);
-    const cols  = [...new Set(rows.map(r => `${r.Developer} — ${r.Family || r.MaterialType || 'Unknown'}`))].sort();
-
-    const header = ['Year', ...cols.map(csvVal)].join(',');
-    const dataRows = years.map(y => {
-      const cells = cols.map(c => agg[`${y}|${c}`] || 0);
-      return [y, ...cells].join(',');
     });
-    csv      = [header, ...dataRows].join('
-');
-    filename = `DangerMouse_Pivot_${datestamp()}.csv`;
+    var years = [];
+    rows.forEach(function(r){ if (years.indexOf(r.CalYear) === -1) years.push(r.CalYear); });
+    years.sort(function(a,b){ return a-b; });
+    var cols = [];
+    rows.forEach(function(r){
+      var c = r.Developer + ' — ' + (r.Family || r.MaterialType || 'Unknown');
+      if (cols.indexOf(c) === -1) cols.push(c);
+    });
+    cols.sort();
+    var header = ['Year'].concat(cols.map(csvVal)).join(',');
+    var dataRows = years.map(function(y) {
+      return [y].concat(cols.map(function(c){ return agg[y + '|' + c] || 0; })).join(',');
+    });
+    csv = [header].concat(dataRows).join(CRLF);
+    filename = 'DangerMouse_Pivot_' + datestamp() + '.csv';
   }
 
-  // Trigger download
-  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
+  var BOM = '\uFEFF';
+  var blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
   a.href = url; a.download = filename;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  toast(`Exported ${filename}`, 'success');
+  toast('Exported ' + filename, 'success');
 }
 
 function csvVal(v) {
-  const s = String(v ?? '');
-  return s.includes(',') || s.includes('"') || s.includes('
-') ? `"${s.replace(/"/g, '""')}"` : s;
+  var s = String(v == null ? '' : v);
+  if (s.indexOf(',') !== -1 || s.indexOf('"') !== -1 || s.indexOf('\n') !== -1) {
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  return s;
 }
 
 function datestamp() {
-  const d = new Date();
-  return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+  var d = new Date();
+  return d.getFullYear() + '' +
+    String(d.getMonth() + 1).padStart(2, '0') +
+    String(d.getDate()).padStart(2, '0');
 }
 
 // ══════════════════════════════════════════════════════
