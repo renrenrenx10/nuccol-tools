@@ -1082,7 +1082,7 @@ async function loadAllData() {
   try {
     const [prods, devs, scheds, caps, lts] = await Promise.all([
       spGet(CONFIG.lists.products,      'Id,Title,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8', '', 'field_1 asc,Title asc'),
-      spGet(CONFIG.lists.developers,    'Id,Title,field_1,field_2,field_3,field_4,field_5,field_6', '', 'Title asc'),
+      spGet(CONFIG.lists.developers,    'Id,Title,field_1,field_2,field_3,field_4,field_5,Baseline_Plant', '', 'Title asc'),
       spGet(CONFIG.lists.schedules,     'Id,Title,field_1,field_2,field_3,field_4', '', 'Title asc'),
       spGet(CONFIG.lists.capacity,      'Title,field_1,field_2,field_3,field_4', '', 'Title asc'),
       spGet(CONFIG.lists.leadTimeByCat, 'Title,field_1,field_2,field_3,field_4,field_5,field_6', '', 'Title asc')
@@ -1121,7 +1121,7 @@ async function loadAllData() {
       Technology:    d.field_3,
       Country:       d.field_4,
       Status:        d.field_5,
-      Baseline_Plant:d.field_6 || '',
+      Baseline_Plant:d.Baseline_Plant || '',
     }));
     store.schedules  = scheds.map(s => ({
       Id:              s.Id,
@@ -1557,7 +1557,7 @@ async function saveDeveloper() {
     field_3:        document.getElementById('fDevTech').value      || null,
     field_4:        document.getElementById('fDevCountry').value   || null,
     field_5:        document.getElementById('fDevStatus').value    || null,
-    field_6:        document.getElementById('fDevBaseline').value  || null,
+    Baseline_Plant: document.getElementById('fDevBaseline').value  || null,
   };
   const friendlyDev = {
     Title:          name,
@@ -1566,7 +1566,7 @@ async function saveDeveloper() {
     Technology:     body.field_3,
     Country:        body.field_4,
     Status:         body.field_5,
-    Baseline_Plant: body.field_6,
+    Baseline_Plant: body.Baseline_Plant,
   };
   try {
     if (store.editingDev) {
