@@ -563,7 +563,6 @@ textarea.form-control { height: 72px; resize: vertical; }
       <button class="nav-btn" onclick="navigate('products')">Products</button>
       <button class="nav-btn" onclick="navigate('developers')">Developers</button>
       <button class="nav-btn" onclick="navigate('schedules')">Schedules</button>
-      <button class="nav-btn" onclick="navigate('about')">About</button>
     </div>
     <div class="nav-user">
       <div class="nav-avatar" id="navAvatar">?</div>
@@ -581,7 +580,7 @@ textarea.form-control { height: 72px; resize: vertical; }
       </div>
       <div class="kpi-row">
         <div class="kpi"><div class="kpi-label">Total Demand</div><div class="kpi-value" id="kpiTotal">—</div></div>
-        <div class="kpi"><div class="kpi-label">Families</div><div class="kpi-value" id="kpiProducts">—</div></div>
+        <div class="kpi"><div class="kpi-label">Products</div><div class="kpi-value" id="kpiProducts">—</div></div>
         <div class="kpi"><div class="kpi-label">Year Span</div><div class="kpi-value" id="kpiYears">—</div></div>
       </div>
     </div>
@@ -639,12 +638,14 @@ textarea.form-control { height: 72px; resize: vertical; }
           <span id="demandNotify" style="font-size:12px;color:var(--green);font-family:var(--font-mono);"></span>
           <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
             <input class="filter-input" type="text" id="resultsSearch" placeholder="Filter results..." style="width:180px;height:30px;" oninput="renderResults()" />
+            <button class="btn btn-ghost btn-sm" onclick="exportCSV('raw')"    title="Every row as generated — Developer, Product, Family, Year, Quarter, Amount">⬇ Raw CSV</button>
+            <button class="btn btn-ghost btn-sm" onclick="exportCSV('pivot')"  title="Aggregated by Year — one column per Developer × Family combination">⬇ Pivot CSV</button>
           </div>
         </div>
         <div class="results-col-header">
           <span class="th c-dev">Developer</span>
-          <span class="th c-prod">Category</span>
-          <span class="th c-mt">Family</span>
+          <span class="th c-prod">Product</span>
+          <span class="th c-mt">Material Type</span>
           <span class="th c-year">Year</span>
           <span class="th c-qtr">Qtr</span>
           <span class="th c-amt">Amount</span>
@@ -671,15 +672,15 @@ textarea.form-control { height: 72px; resize: vertical; }
     </div>
     <div class="filter-bar">
       <input class="filter-input" type="text" id="prodSearch" placeholder="Search products…" style="width:240px;" oninput="renderProducts()" />
-      <select class="filter-select" id="prodFamilyFilter" onchange="renderProducts()">
-        <option value="">All Families</option>
-        <option>Electrical</option><option>HVAC</option><option>HX</option>
-        <option>IC</option><option>Other</option><option>Piping</option>
-        <option>Pump</option><option>Steel_Civil</option><option>Tanks_Vessels</option><option>Valve</option>
+      <select class="filter-select" id="prodMatFilter" onchange="renderProducts()">
+        <option value="">All Types</option>
+        <option>Alloy Steel</option><option>Carbon Steel</option>
+        <option>Stainless Steel</option><option>Copper</option><option>Specialty Steels</option>
+        <option>Titanium</option><option>Concrete</option><option>Other</option>
       </select>
-      <select class="filter-select" id="prodNuclearFilter" onchange="renderProducts()">
-        <option value="">All Classifications</option>
-        <option>🔴 Nuclear-only</option><option>🟡 Nuclear-grade</option><option>🟢 General industrial</option>
+      <select class="filter-select" id="prodResFilter" onchange="renderProducts()">
+        <option value="">All Resources</option>
+        <option>Material</option><option>Component</option><option>Service</option><option>Facility</option>
       </select>
       <div class="filter-spacer"></div>
       <span class="count-badge" id="prodCount">— products</span>
@@ -750,132 +751,6 @@ textarea.form-control { height: 72px; resize: vertical; }
     </div>
   </div>
 
-  <!-- ══ SCREEN: ABOUT ══ -->
-  <div class="screen" id="screenAbout">
-    <div class="page-header">
-      <div class="page-header-text">
-        <div class="page-title">About DangerMouse</div>
-        <div class="page-subtitle">How the model works, where the data comes from, and how to interpret results</div>
-      </div>
-      <span style="font-family:var(--font-mono);font-size:11px;color:var(--muted);">v2.0 · Updated June 2026 · NuCCoL</span>
-    </div>
-    <div style="flex:1;overflow-y:auto;padding:24px 32px;">
-      <div style="max-width:860px;display:flex;flex-direction:column;gap:28px;">
-
-        <!-- What is DangerMouse -->
-        <div style="background:white;border-radius:10px;border:1px solid var(--border);padding:24px 28px;">
-          <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:10px;">
-            <span style="font-size:20px;">☢</span> What is DangerMouse?
-          </div>
-          <p style="font-size:14px;line-height:1.7;color:var(--slate);margin-bottom:10px;">
-            DangerMouse is NuCCoL's nuclear supply chain demand model. It takes a construction programme — one or more reactor developers, each with a start date, number of concurrent builds, and number of consecutive builds — and calculates how much of each commodity the UK supply chain will need to deliver, and when.
-          </p>
-          <p style="font-size:14px;line-height:1.7;color:var(--slate);">
-            The output is a quarterly demand profile across the full build timeline, broken down by commodity family (e.g. Pumps, Valves, Steel &amp; Civil) and category (e.g. Reactor Coolant Pumps, Motor-Operated Valves). This helps NuCCoL identify where supply chain gaps are likely to emerge and when intervention may be needed.
-          </p>
-        </div>
-
-        <!-- Data sources -->
-        <div style="background:white;border-radius:10px;border:1px solid var(--border);padding:24px 28px;">
-          <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:10px;">
-            <span style="font-size:20px;">📂</span> Where does the data come from?
-          </div>
-          <p style="font-size:14px;line-height:1.7;color:var(--slate);margin-bottom:16px;">
-            The commodity demand data was compiled by NuCCoL from a wide range of nuclear construction programmes and reactor vendor documentation. Two reference plant datasets underpin the model:
-          </p>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
-            <div style="background:var(--bg);border-radius:8px;padding:16px 18px;border-left:4px solid var(--navy);">
-              <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--navy);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">GW Plant Baseline</div>
-              <p style="font-size:13px;line-height:1.6;color:var(--slate);">Represents a large-scale gigawatt-class pressurised water reactor. Demand figures are drawn from GW-scale construction programme data, reconciled and validated across multiple sources. Build duration: <strong>10 years / 40 quarters</strong>.</p>
-            </div>
-            <div style="background:var(--bg);border-radius:8px;padding:16px 18px;border-left:4px solid var(--cyan);">
-              <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--cyan);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">SMR Plant Baseline</div>
-              <p style="font-size:13px;line-height:1.6;color:var(--slate);">Represents a small modular reactor of approximately 300–470 MWe. Where real SMR-specific data existed it was used directly. Where gaps remained, GW figures were scaled down using a validated scaling methodology. Build duration: <strong>7 years / 28 quarters</strong>.</p>
-            </div>
-          </div>
-          <p style="font-size:13px;line-height:1.6;color:var(--muted);">
-            Both datasets were compiled entirely by NuCCoL. All sources have been reviewed, normalised, and quality-checked. Data is stored in SharePoint and loaded into DangerMouse at runtime.
-          </p>
-        </div>
-
-        <!-- Taxonomy -->
-        <div style="background:white;border-radius:10px;border:1px solid var(--border);padding:24px 28px;">
-          <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:10px;">
-            <span style="font-size:20px;">🗂</span> How is the data organised?
-          </div>
-          <p style="font-size:14px;line-height:1.7;color:var(--slate);margin-bottom:14px;">
-            NuCCoL developed a bespoke taxonomy to normalise thousands of individual commodity lines from different sources into a consistent, searchable structure. Everything in the model sits within this hierarchy:
-          </p>
-          <div style="display:flex;align-items:center;gap:0;margin-bottom:16px;flex-wrap:wrap;">
-            <div style="background:var(--navy);color:white;border-radius:8px;padding:10px 18px;font-family:var(--font-mono);font-size:12px;font-weight:700;">10 Families</div>
-            <div style="font-size:20px;color:var(--muted);padding:0 8px;">→</div>
-            <div style="background:var(--navy-mid);color:white;border-radius:8px;padding:10px 18px;font-family:var(--font-mono);font-size:12px;font-weight:700;">105 Categories</div>
-            <div style="font-size:20px;color:var(--muted);padding:0 8px;">→</div>
-            <div style="background:var(--bg);color:var(--slate);border-radius:8px;padding:10px 18px;font-family:var(--font-mono);font-size:12px;font-weight:700;border:1px solid var(--border);">3,691 Commodity Lines</div>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px;">
-            ${['Bearings & Seals','Construction & Site Services','Design Basis (not a commodity)','Electrical','Fasteners & Fixings','Fire Protection','HVAC','Heat Exchangers','I&C','Materials','Piping','Process Systems','Pumps','Reactor Internals','Shielding','Site & Handling Equipment','Steel & Civil','Tanks & Vessels','Turbine & Power Generation','Valves','Waste Management'].map(f =>
-              `<div style="background:var(--cyan-dim);color:var(--navy);border-radius:6px;padding:6px 10px;font-size:12px;font-weight:600;text-align:center;">${f}</div>`
-            ).join('')}
-          </div>
-          <p style="font-size:13px;line-height:1.6;color:var(--muted);">
-            Each category also carries a <strong>nuclear classification</strong>: 🔴 Nuclear-only (safety-critical, highest specification), 🟡 Nuclear-grade (elevated specification), or 🟢 General industrial (standard commercial supply chain). This classification helps identify where supply chain risk is concentrated.
-          </p>
-        </div>
-
-        <!-- How the model works -->
-        <div style="background:white;border-radius:10px;border:1px solid var(--border);padding:24px 28px;">
-          <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:10px;">
-            <span style="font-size:20px;">⚙️</span> How does the model calculate demand?
-          </div>
-          <p style="font-size:14px;line-height:1.7;color:var(--slate);margin-bottom:16px;">
-            When you run a demand search, DangerMouse follows these steps:
-          </p>
-          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
-            ${[
-              ['1', 'Select baseline', 'Each developer in your build plan is matched to either the GW or SMR baseline dataset depending on their plant type. This determines which demand numbers and which construction timeline are used.'],
-              ['2', 'Apply construction schedule', 'Baseline demand for each commodity category is spread across the build timeline using a quarterly construction schedule. Categories are active during the periods when they are typically procured and installed — concrete is front-loaded, electrical and I&C are mid-to-late programme, fuel and casks are at the end.'],
-              ['3', 'Scale by concurrent builds', 'If a developer is building multiple reactors simultaneously (concurrent), all demand figures are multiplied accordingly. Two concurrent SMR builds means twice the quarterly demand for every category.'],
-              ['4', 'Offset consecutive builds', 'If a developer plans consecutive builds (one after another), each subsequent build starts after the previous one completes — offset by 6 years for SMR or 10 years for GW. Demand from all builds is then summed into a single timeline.'],
-              ['5', 'Aggregate across developers', 'If multiple developers are in your plan, their demand profiles are combined. You can view total demand or filter by individual developer to see their contribution.'],
-            ].map(([n, title, desc]) => `
-              <div style="display:flex;gap:14px;align-items:flex-start;">
-                <div style="background:var(--navy);color:white;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px;">${n}</div>
-                <div><div style="font-size:13px;font-weight:700;color:var(--slate);margin-bottom:3px;">${title}</div><div style="font-size:13px;line-height:1.6;color:var(--muted);">${desc}</div></div>
-              </div>`).join('')}
-          </div>
-        </div>
-
-        <!-- Reading results -->
-        <div style="background:white;border-radius:10px;border:1px solid var(--border);padding:24px 28px;">
-          <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:10px;">
-            <span style="font-size:20px;">📊</span> How do I read the results?
-          </div>
-          <p style="font-size:14px;line-height:1.7;color:var(--slate);margin-bottom:12px;">
-            Demand results show the amount of each commodity category required per quarter per calendar year. The chart view (accessed via View Chart) shows this as a stacked bar chart grouped by commodity family — 10 bars at the top level. Clicking a family bar drills into its constituent categories.
-          </p>
-          <p style="font-size:14px;line-height:1.7;color:var(--slate);margin-bottom:12px;">
-            <strong>Units vary by category</strong> — pumps are counted in units (No.), concrete in cubic metres (m³), steel in tonnes (t), cable in metres (m). The unit for each category is shown in the Products screen. Do not add totals across categories with different units — the KPI total shown is a raw sum for indicative scale only.
-          </p>
-          <div style="background:rgba(230,126,34,0.08);border-left:4px solid var(--amber);border-radius:0 6px 6px 0;padding:12px 16px;">
-            <div style="font-size:12px;font-weight:700;color:var(--amber);margin-bottom:4px;font-family:var(--font-mono);">⚠ IMPORTANT — Model limitations</div>
-            <p style="font-size:13px;line-height:1.6;color:var(--slate);">DangerMouse is a planning and horizon-scanning tool, not a procurement specification. Demand figures represent NuCCoL's best estimate based on available data and are subject to change as programme information matures. Figures should be treated as indicative order-of-magnitude estimates only. Always validate against the latest developer programme data before using for commercial decisions.</p>
-          </div>
-        </div>
-
-        <!-- Version -->
-        <div style="background:var(--bg);border-radius:8px;padding:14px 18px;font-family:var(--font-mono);font-size:11px;color:var(--muted);display:flex;gap:24px;flex-wrap:wrap;">
-          <span>DangerMouse v2.0</span>
-          <span>Data updated: June 2026</span>
-          <span>GW baseline: 3,691 commodity lines</span>
-          <span>SMR baseline: 3,691 commodity lines</span>
-          <span>Built by NuCCoL</span>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
 </div><!-- #app -->
 
 <!-- ══════════════════════════════════
@@ -889,47 +764,54 @@ textarea.form-control { height: 72px; resize: vertical; }
     <div class="modal-title" id="productModalTitle">Add New Product</div>
     <div class="modal-grid">
       <div class="form-group">
-        <label class="form-label" for="fProdName">Category Name *</label>
-        <input class="form-control" id="fProdName" placeholder="e.g. Structural Concrete (Nuclear Island)" />
+        <label class="form-label" for="fProdName">Product Name *</label>
+        <input class="form-control" id="fProdName" placeholder="e.g. Steel (structural)" />
       </div>
       <div class="form-group">
-        <label class="form-label" for="fProdFamily">Commodity Family</label>
-        <select class="form-control" id="fProdFamily" style="height:36px;">
+        <label class="form-label" for="fProdMat">Material Type</label>
+        <select class="form-control" id="fProdMat" style="height:36px;">
           <option value="">— select —</option>
-          <option>Electrical</option><option>HVAC</option><option>HX</option>
-          <option>IC</option><option>Other</option><option>Piping</option>
-          <option>Pump</option><option>Steel_Civil</option><option>Tanks_Vessels</option><option>Valve</option>
+          <option>Alloy Steel</option><option>Carbon Steel</option>
+          <option>Stainless Steel</option><option>Copper</option><option>Specialty Steels</option>
+          <option>Titanium</option><option>Concrete</option><option>Other</option>
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label" for="fProdNuclear">Nuclear Classification</label>
-        <select class="form-control" id="fProdNuclear" style="height:36px;">
+        <label class="form-label" for="fProdRes">Resource Type</label>
+        <select class="form-control" id="fProdRes" style="height:36px;">
           <option value="">— select —</option>
-          <option>🔴 Nuclear-only</option>
-          <option>🟡 Nuclear-grade</option>
-          <option>🟢 General industrial</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="fProdPlantType">Plant Type</label>
-        <select class="form-control" id="fProdPlantType" style="height:36px;">
-          <option value="">— select —</option>
-          <option>GW</option><option>SMR</option><option>Both</option>
+          <option>Material</option><option>Component</option><option>Service</option><option>Facility</option>
         </select>
       </div>
       <div class="form-row">
         <div class="form-col form-group">
-          <label class="form-label" for="fProdGWTotal">GW Total</label>
-          <input class="form-control" id="fProdGWTotal" type="number" step="0.0001" placeholder="0" />
+          <label class="form-label" for="fProdWeight">Weight</label>
+          <input class="form-control" id="fProdWeight" type="number" step="0.0001" placeholder="0.0000" />
         </div>
         <div class="form-col form-group">
-          <label class="form-label" for="fProdSMRTotal">SMR Total</label>
-          <input class="form-control" id="fProdSMRTotal" type="number" step="0.0001" placeholder="0" />
+          <label class="form-label" for="fProdUnit">Unit</label>
+          <input class="form-control" id="fProdUnit" placeholder="e.g. tonnes" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-col form-group">
+          <label class="form-label" for="fProdLeadTime">Lead Time</label>
+          <input class="form-control" id="fProdLeadTime" type="number" placeholder="0" />
+        </div>
+        <div class="form-col form-group">
+          <label class="form-label" for="fProdLeadUnit">Lead Time Unit</label>
+          <select class="form-control" id="fProdLeadUnit" style="height:36px;">
+            <option>Months</option><option>Quarters</option><option>Years</option>
+          </select>
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label" for="fProdUnit">Primary Unit</label>
-        <input class="form-control" id="fProdUnit" placeholder="e.g. No., t, m³" />
+        <label class="form-label" for="fProdRate">Production Rate</label>
+        <input class="form-control" id="fProdRate" type="number" step="0.01" placeholder="0.00" />
+      </div>
+      <div class="form-group modal-full">
+        <label class="form-label" for="fProdAssumptions">Assumptions</label>
+        <textarea class="form-control" id="fProdAssumptions" placeholder="Any notes or assumptions…"></textarea>
       </div>
     </div>
     <div class="modal-footer">
@@ -992,6 +874,15 @@ textarea.form-control { height: 72px; resize: vertical; }
         </select>
       </div>
     </div>
+      <div class="form-group">
+        <label class="form-label" for="fDevBaseline">Baseline Plant (for schedule fallback)</label>
+        <select class="form-control" id="fDevBaseline" style="height:36px;">
+          <option value="">— none —</option>
+          <option>GW Plant Baseline</option>
+          <option>SMR Plant Baseline</option>
+        </select>
+      </div>
+    </div>
     <div class="modal-footer">
       <button class="btn btn-primary btn-xl" onclick="saveDeveloper()">Save Developer</button>
       <button class="btn btn-ghost btn-xl" onclick="closeModal('devModal')">Cancel</button>
@@ -1024,12 +915,10 @@ const CONFIG = {
   siteUrl:    'https://nuccol.sharepoint.com/sites/DangerMouse',
   scopes:     ['https://nuccol.sharepoint.com/.default'],
   lists: {
-    products:      'DM - Products',
-    developers:    'DM - Developers',
-    schedules:     'DM - Dev Schedules',
-    chartCache:    'ChartCache',
-    capacity:      'DM - Capacity',
-    leadTimeByCat: 'DM - Lead Time By Category'
+    products:   'DM - Products',
+    developers: 'DM - Developers',
+    schedules:  'DM - Dev Schedules',
+    chartCache: 'ChartCache'
   }
 };
 
@@ -1175,12 +1064,10 @@ async function spDelete(listName, id) {
 // DATA STORE
 // ══════════════════════════════════════════════════════
 let store = {
-  products:      [],
-  developers:    [],
-  schedules:     [],
-  capacity:      [],
-  leadTimes:     [],
-  buildPlan:     [],
+  products:   [],
+  developers: [],
+  schedules:  [],
+  buildPlan:  [],
   demandResults: [],
   editingProduct: null,
   editingDev: null,
@@ -1189,59 +1076,23 @@ let store = {
 
 async function loadAllData() {
   try {
-    const [prods, devs, scheds, caps, lts] = await Promise.all([
-      spGet(CONFIG.lists.products,      'Id,Title,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8', '', 'field_1 asc,Title asc'),
-      spGet(CONFIG.lists.developers,    'Id,Title,field_1,field_2,field_3,field_4,field_5', '', 'Title asc'),
-      spGet(CONFIG.lists.schedules,     'Id,Title,field_1,field_2,field_3,field_4', '', 'Title asc'),
-      spGet(CONFIG.lists.capacity,      'Title,field_1,field_2,field_3,field_4', '', 'Title asc'),
-      spGet(CONFIG.lists.leadTimeByCat, 'Title,field_1,field_2,field_3,field_4,field_5,field_6', '', 'Title asc')
+    const [prods, devs, scheds] = await Promise.all([
+      spGet(CONFIG.lists.products,   'Id,Title,MaterialType,ResourceType,Weight,Unit,LeadTime,LeadTimeUnit,ProductionRate', '', 'Title asc'),
+      spGet(CONFIG.lists.developers, 'Id,Title,field_1,field_2,field_3,field_4,field_5,field_6', '', 'Title asc'),
+      spGet(CONFIG.lists.schedules,  'Id,Developer_ID,Product_ID,ScheduleYear,Quarter,Amount_Absolute', '', 'Developer_ID asc')
     ]);
-    store.products   = prods.map(p => ({
-      Id:                     p.Id,
-      Title:                  p.Title,
-      Unified_Family:         p.field_1,
-      Nuclear_Classification: p.field_2,
-      GW_Total:               p.field_3,
-      SMR_Total:              p.field_4,
-      Primary_Unit:           p.field_5,
-      Source_Rows:            p.field_6,
-      Tier1_Rows:             p.field_7,
-      Plant_Type:             p.field_8,
-    }));
-    // capacity: Title=Category, field_2=UK_Capacity_Per_Year, field_3=Unit, field_4=Confidence
-    store.capacity = caps.map(c => ({
-      Category: c.Title,
-      Cap:      c.field_2 != null ? parseFloat(c.field_2) : null,
-      CapUnit:  c.field_3 || null,
-      CapConf:  c.field_4 || null,
-    }));
-    // leadTimeByCat: Title=Category, field_1=Earliest_Start_Months, field_2=Latest_End_Months,
-    //                field_3=Full_Window_Months, field_4=Source_Component_Count, field_6=Source_Components
-    store.leadTimes = lts.map(l => ({
-      Category:   l.Title,
-      LtEarliest: l.field_1 != null ? parseFloat(l.field_1) : null,
-      LtLatest:   l.field_2 != null ? parseFloat(l.field_2) : null,
-      Lt:         l.field_3 != null ? parseFloat(l.field_3) : null,
-      SrcCount:   l.field_4 != null ? parseInt(l.field_4)   : null,
-      SrcComps:   l.field_6 || null,
-    }));
+    store.products   = prods;
     store.developers = devs.map(d => ({
-      Id:            d.Id,
-      Title:         d.Title,
-      Type_of_Plant: d.field_1,
-      Name_of_Plant: d.field_2,
-      Technology:    d.field_3,
-      Country:       d.field_4,
-      Status:        d.field_5,
+      Id:             d.Id,
+      Title:          d.Title,
+      Type_of_Plant:  d.field_1 || d.Type_of_Plant || '',
+      Name_of_Plant:  d.field_2 || d.Name_of_Plant || '',
+      Technology:     d.field_3 || d.Technology    || '',
+      Country:        d.field_4 || d.Country       || '',
+      Status:         d.field_5 || d.Status        || '',
+      Baseline_Plant: d.field_6 || d.Baseline_Plant|| '',
     }));
-    store.schedules  = scheds.map(s => ({
-      Id:              s.Id,
-      Developer_ID:    s.Title,
-      Product_ID:      s.field_1,
-      ScheduleYear:    s.field_2,
-      Quarter:         s.field_3,
-      Amount_Absolute: s.field_4,
-    }));
+    store.schedules  = scheds;
     populateDeveloperDropdown();
     populateSchedFilters();
     renderProducts();
@@ -1258,8 +1109,8 @@ async function loadAllData() {
 function navigate(screen) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  const map = { demand: 'screenDemand', products: 'screenProducts', developers: 'screenDevelopers', schedules: 'screenSchedules', about: 'screenAbout' };
-  const btnMap = { demand: 0, products: 1, developers: 2, schedules: 3, about: 4 };
+  const map = { demand: 'screenDemand', products: 'screenProducts', developers: 'screenDevelopers', schedules: 'screenSchedules' };
+  const btnMap = { demand: 0, products: 1, developers: 2, schedules: 3 };
   document.getElementById(map[screen]).classList.add('active');
   document.querySelectorAll('.nav-btn')[btnMap[screen]].classList.add('active');
 }
@@ -1309,9 +1160,25 @@ async function generateDemand() {
 
   try {
     for (const planRow of store.buildPlan) {
-      const startYear  = new Date(planRow.StartDate).getFullYear();
-      const devScheds  = store.schedules.filter(s => s.Developer_ID === planRow.Developer);
-      const consOffset = consecutiveOffsetForDev(planRow.Developer);
+      const startYear = new Date(planRow.StartDate).getFullYear();
+      const devObj    = store.developers.find(d => d.Title === planRow.Developer);
+
+      // Use developer's own schedules; fall back to baseline if none exist
+      let devScheds    = store.schedules.filter(s => s.Developer_ID === planRow.Developer);
+      let usingBaseline = false;
+      if (!devScheds.length && devObj?.Baseline_Plant) {
+        devScheds     = store.schedules.filter(s => s.Developer_ID === devObj.Baseline_Plant);
+        usingBaseline = true;
+      }
+
+      if (!devScheds.length) {
+        toast(`No schedule found for ${planRow.Developer} — skipping`, 'error');
+        continue;
+      }
+
+      // GW builds: 10-year consecutive offset; SMR: 6 years
+      const isGW      = devObj?.Type_of_Plant === 'Large Reactor';
+      const consOffset = isGW ? 10 : 6;
 
       for (let seq = 0; seq < planRow.Consecutive; seq++) {
         for (const sched of devScheds) {
@@ -1322,10 +1189,12 @@ async function generateDemand() {
           store.demandResults.push({
             Developer:    planRow.Developer,
             Product_ID:   sched.Product_ID,
-            Family:       prod ? (prod.Unified_Family || '') : '',
+            MaterialType: prod ? (prod.MaterialType || '') : '',
             CalYear:      calYear,
             Quarter:      sched.Quarter || '',
-            Amount:       amount * planRow.Concurrent
+            Amount:       amount * planRow.Concurrent,
+            IsLeadtime:   false,
+            FromBaseline: usingBaseline
           });
         }
       }
@@ -1344,12 +1213,12 @@ async function generateDemand() {
 }
 
 function updateKPIs() {
-  const rows    = store.demandResults.filter(r => r.CalYear > 0);
-  const total   = rows.reduce((s, r) => s + (r.Amount || 0), 0);
-  const families = new Set(rows.map(r => r.Family)).size;
-  const years   = new Set(rows.map(r => r.CalYear)).size;
+  const rows = store.demandResults.filter(r => r.CalYear > 0);
+  const total = rows.reduce((s, r) => s + (r.Amount || 0), 0);
+  const prods = new Set(rows.map(r => r.Product_ID)).size;
+  const years = new Set(rows.map(r => r.CalYear)).size;
   document.getElementById('kpiTotal').textContent    = total.toLocaleString('en-GB', {maximumFractionDigits:0});
-  document.getElementById('kpiProducts').textContent = families;
+  document.getElementById('kpiProducts').textContent = prods;
   document.getElementById('kpiYears').textContent    = years + ' yrs';
 }
 
@@ -1367,7 +1236,7 @@ function renderResults() {
     <div class="results-row">
       <span class="c-dev" style="font-size:12px;font-weight:600;">${esc(r.Developer)}</span>
       <span class="c-prod mono-sm">${esc(r.Product_ID)}</span>
-      <span class="c-mt">${r.Family ? `<span class="badge badge-cyan">${esc(r.Family)}</span>` : '<span style="color:#ccc">—</span>'}</span>
+      <span class="c-mt">${r.MaterialType ? `<span class="badge badge-cyan">${esc(r.MaterialType)}</span>` : '<span style="color:#ccc">—</span>'}</span>
       <span class="c-year mono" style="color:var(--navy);text-align:center;">${r.CalYear}</span>
       <span class="c-qtr mono" style="color:var(--cyan);font-weight:700;text-align:center;">${esc(r.Quarter)}</span>
       <span class="c-amt mono" style="text-align:right;">${r.Amount.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
@@ -1377,26 +1246,18 @@ function renderResults() {
 async function viewChart() {
   if (!store.demandResults.length) { toast('Generate demand first', 'error'); return; }
   try {
+    // Overlay data (capacity, lead times) is loaded directly by chart.html from SharePoint.
+    // Cache only carries the slim demand rows to stay well within SP column size limits.
     const payload = JSON.stringify(
-      store.demandResults.filter(r => r.CalYear > 0).map(r => {
-        const capRow = store.capacity.find(c => c.Category === r.Product_ID);
-        const ltRow  = store.leadTimes.find(l => l.Category === r.Product_ID);
-        return {
-          d:            r.Developer,
-          p:            r.Product_ID,
-          f:            r.Family,
-          y:            r.CalYear,
-          a:            r.Amount,
-          cap:          capRow ? capRow.Cap      : null,
-          capUnit:      capRow ? capRow.CapUnit  : null,
-          capConf:      capRow ? capRow.CapConf  : null,
-          lt:           ltRow  ? ltRow.Lt        : null,
-          ltEarliest:   ltRow  ? ltRow.LtEarliest: null,
-          ltLatest:     ltRow  ? ltRow.LtLatest  : null,
-          srcCount:     ltRow  ? ltRow.SrcCount  : null,
-          srcComponents:ltRow  ? ltRow.SrcComps  : null,
-        };
-      })
+      store.demandResults
+        .filter(r => r.CalYear > 0)
+        .map(r => ({
+          d: r.Developer,
+          p: r.Product_ID,
+          f: r.Family || r.MaterialType || '',
+          y: r.CalYear,
+          a: r.Amount
+        }))
     );
     const existing = await spGet(CONFIG.lists.chartCache, 'Id,Title');
     const cacheRow = existing.find(r => r.Title === 'cache');
@@ -1405,7 +1266,7 @@ async function viewChart() {
     } else {
       await spPost(CONFIG.lists.chartCache, { Title: 'cache', ChartData: payload });
     }
-    window.open('https://renrenrenx10.github.io/nuccol-tools/chart.html', '_blank');
+    window.open('https://renrenrenx10.github.io/dangermouse-chart/', '_blank');
   } catch(e) {
     toast('Chart export failed: ' + e.message, 'error');
   }
@@ -1424,16 +1285,87 @@ function clearAll() {
 }
 
 // ══════════════════════════════════════════════════════
+// EXPORT
+// ══════════════════════════════════════════════════════
+function exportCSV(mode) {
+  const rows = store.demandResults.filter(r => r.CalYear > 0);
+  if (!rows.length) { toast('No results to export — generate demand first', 'error'); return; }
+
+  let csv, filename;
+
+  if (mode === 'raw') {
+    // ── Raw: one row per demand entry ──────────────────────────────────────
+    const headers = ['Developer', 'Product', 'Family', 'Year', 'Quarter', 'Amount', 'From Baseline'];
+    const lines   = rows.map(r => [
+      csvVal(r.Developer),
+      csvVal(r.Product_ID),
+      csvVal(r.Family || r.MaterialType || ''),
+      r.CalYear,
+      csvVal(r.Quarter),
+      r.Amount,
+      r.FromBaseline ? 'Yes' : 'No'
+    ].join(','));
+    csv      = [headers.join(','), ...lines].join('
+');
+    filename = `DangerMouse_Raw_${datestamp()}.csv`;
+
+  } else {
+    // ── Pivot: years as rows, Developer×Family as columns ─────────────────
+    // Aggregate: sum amount by Developer + Family + Year
+    const agg = {};
+    for (const r of rows) {
+      const col = `${r.Developer} — ${r.Family || r.MaterialType || 'Unknown'}`;
+      const key = `${r.CalYear}|${col}`;
+      agg[key] = (agg[key] || 0) + (r.Amount || 0);
+    }
+
+    const years = [...new Set(rows.map(r => r.CalYear))].sort((a,b) => a-b);
+    const cols  = [...new Set(rows.map(r => `${r.Developer} — ${r.Family || r.MaterialType || 'Unknown'}`))].sort();
+
+    const header = ['Year', ...cols.map(csvVal)].join(',');
+    const dataRows = years.map(y => {
+      const cells = cols.map(c => agg[`${y}|${c}`] || 0);
+      return [y, ...cells].join(',');
+    });
+    csv      = [header, ...dataRows].join('
+');
+    filename = `DangerMouse_Pivot_${datestamp()}.csv`;
+  }
+
+  // Trigger download
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast(`Exported ${filename}`, 'success');
+}
+
+function csvVal(v) {
+  const s = String(v ?? '');
+  return s.includes(',') || s.includes('"') || s.includes('
+') ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+function datestamp() {
+  const d = new Date();
+  return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+}
+
+// ══════════════════════════════════════════════════════
 // PRODUCTS
 // ══════════════════════════════════════════════════════
 function renderProducts() {
-  const q      = (document.getElementById('prodSearch').value || '').toLowerCase();
-  const family = document.getElementById('prodFamilyFilter').value;
-  const nucl   = document.getElementById('prodNuclearFilter').value;
-  let rows = store.products.filter(p =>
-    (!q      || p.Title.toLowerCase().includes(q) || (p.Commodity_Category||'').toLowerCase().includes(q)) &&
-    (!family || (p.Unified_Family||'') === family) &&
-    (!nucl   || (p.Nuclear_Classification||'').startsWith(nucl.charAt(0)))
+  const q   = (document.getElementById('prodSearch').value || '').toLowerCase();
+  const mat = document.getElementById('prodMatFilter').value;
+  const res = document.getElementById('prodResFilter').value;
+  let rows  = store.products.filter(p =>
+    (!q   || p.Title.toLowerCase().includes(q)) &&
+    (!mat || (p.MaterialType||'') === mat) &&
+    (!res || (p.ResourceType||'') === res)
   );
   document.getElementById('prodCount').textContent = rows.length + ' products';
   const el = document.getElementById('productsBody');
@@ -1441,42 +1373,23 @@ function renderProducts() {
     el.innerHTML = `<div class="empty-state"><div class="empty-icon">📦</div><div class="empty-title">No products found</div></div>`;
     return;
   }
-  // Group by family for display
-  const byFamily = {};
-  rows.forEach(p => {
-    const f = p.Unified_Family || 'Uncategorised';
-    if (!byFamily[f]) byFamily[f] = [];
-    byFamily[f].push(p);
-  });
-  let html = '';
-  for (const [fam, items] of Object.entries(byFamily).sort()) {
-    html += `<div style="padding:6px 24px 2px;background:var(--bg);border-bottom:1px solid var(--border);font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--navy);letter-spacing:0.06em;text-transform:uppercase;">${esc(fam)} <span style="font-weight:400;color:var(--muted)">(${items.length})</span></div>`;
-    html += items.map(p => `
+  el.innerHTML = rows.map(p => `
     <div class="table-row">
       <span class="p-name" style="font-weight:600;font-size:13px;">${esc(p.Title)}</span>
-      <span class="p-mat">${nuclearBadge(p.Nuclear_Classification)}</span>
-      <span class="p-res" style="width:100px;">${p.Plant_Type ? `<span class="badge badge-grey">${esc(p.Plant_Type)}</span>` : ''}</span>
-      <span class="p-wt mono-sm" style="text-align:right;">${p.GW_Total != null ? Number(p.GW_Total).toLocaleString('en-GB',{maximumFractionDigits:0}) : '—'}</span>
-      <span class="p-lt mono-sm" style="width:130px;">${p.SMR_Total != null ? Number(p.SMR_Total).toLocaleString('en-GB',{maximumFractionDigits:0}) : '—'}</span>
-      <span class="p-rate mono-sm" style="text-align:right;width:60px;">${esc(p.Primary_Unit||'—')}</span>
+      <span class="p-mat">${p.MaterialType ? `<span class="badge badge-cyan">${esc(p.MaterialType)}</span>` : '<span class="badge badge-grey">—</span>'}</span>
+      <span class="p-res">${resBadge(p.ResourceType)}</span>
+      <span class="p-wt mono-sm" style="text-align:right;">${p.Weight != null ? Number(p.Weight).toLocaleString('en-GB',{maximumFractionDigits:4}) : '—'}</span>
+      <span class="p-lt mono-sm">${p.LeadTime != null ? p.LeadTime + ' ' + (p.LeadTimeUnit||'') : '—'}</span>
+      <span class="p-rate mono-sm" style="text-align:right;">${p.ProductionRate != null ? Number(p.ProductionRate).toLocaleString('en-GB',{maximumFractionDigits:2}) : '—'}</span>
       <div class="p-act">
         <button class="btn btn-ghost btn-sm" onclick="openProductForm(${p.Id})">Edit</button>
         <button class="btn btn-danger btn-sm btn-icon" onclick="deleteProduct(${p.Id},'${esc(p.Title)}')">🗑</button>
       </div>
     </div>`).join('');
-  }
-  el.innerHTML = html;
 }
 
-function nuclearBadge(v) {
-  if (!v) return '<span class="badge badge-grey">—</span>';
-  const first = v.charAt(0);
-  const cls = first === '🔴' ? 'badge-red' : first === '🟡' ? 'badge-amber' : 'badge-green';
-  return `<span class="badge ${cls}">${esc(v)}</span>`;
-}
-
-function plantTypeBadge(v) {
-  const map = { GW:'badge-purple', SMR:'badge-cyan', Both:'badge-green' };
+function resBadge(v) {
+  const map = { Material:'badge-green', Component:'badge-amber', Service:'badge-purple', Facility:'badge-red' };
   return v ? `<span class="badge ${map[v]||'badge-grey'}">${esc(v)}</span>` : '<span class="badge badge-grey">—</span>';
 }
 
@@ -1484,37 +1397,30 @@ function openProductForm(id = null) {
   store.editingProduct = id ? store.products.find(p => p.Id === id) : null;
   const p = store.editingProduct;
   document.getElementById('productModalTitle').textContent = p ? `Edit: ${p.Title}` : 'Add New Product';
-  document.getElementById('fProdName').value        = p ? p.Title                        : '';
-  document.getElementById('fProdFamily').value      = p ? (p.Unified_Family||'')       : '';
-  document.getElementById('fProdNuclear').value     = p ? (p.Nuclear_Classification||'') : '';
-  document.getElementById('fProdPlantType').value   = p ? (p.Plant_Type||'')             : '';
-  document.getElementById('fProdGWTotal').value     = p ? (p.GW_Total ?? '')             : '';
-  document.getElementById('fProdSMRTotal').value    = p ? (p.SMR_Total ?? '')            : '';
-  document.getElementById('fProdUnit').value        = p ? (p.Primary_Unit||'')           : '';
+  document.getElementById('fProdName').value        = p ? p.Title            : '';
+  document.getElementById('fProdMat').value         = p ? (p.MaterialType||'') : '';
+  document.getElementById('fProdRes').value         = p ? (p.ResourceType||'') : '';
+  document.getElementById('fProdWeight').value      = p ? (p.Weight ?? '')   : '';
+  document.getElementById('fProdUnit').value        = p ? (p.Unit||'')       : '';
+  document.getElementById('fProdLeadTime').value    = p ? (p.LeadTime ?? '') : '';
+  document.getElementById('fProdLeadUnit').value    = p ? (p.LeadTimeUnit||'Months') : 'Months';
+  document.getElementById('fProdRate').value        = p ? (p.ProductionRate ?? '') : '';
+  document.getElementById('fProdAssumptions').value = p ? (p.Assumptions||'') : '';
   openModal('productModal');
 }
 
 async function saveProduct() {
   const name = document.getElementById('fProdName').value.trim();
-  if (!name) { toast('Category name is required', 'error'); return; }
+  if (!name) { toast('Product name is required', 'error'); return; }
   const body = {
-    Title:   name,
-    field_1: document.getElementById('fProdFamily').value    || null,
-    field_2: document.getElementById('fProdNuclear').value   || null,
-    field_3: parseFloatOrNull(document.getElementById('fProdGWTotal').value),
-    field_4: parseFloatOrNull(document.getElementById('fProdSMRTotal').value),
-    field_5: document.getElementById('fProdUnit').value      || null,
-    field_8: document.getElementById('fProdPlantType').value || null,
-  };
-
-  const friendlyProd = {
-    Title:                  name,
-    Unified_Family:       body.field_1,
-    Nuclear_Classification: body.field_2,
-    GW_Total:               body.field_3,
-    SMR_Total:              body.field_4,
-    Primary_Unit:           body.field_5,
-    Plant_Type:             body.field_8,
+    Title:          name,
+    MaterialType:   document.getElementById('fProdMat').value || null,
+    ResourceType:   document.getElementById('fProdRes').value || null,
+    Weight:         parseFloatOrNull(document.getElementById('fProdWeight').value),
+    Unit:           document.getElementById('fProdUnit').value || null,
+    LeadTime:       parseFloatOrNull(document.getElementById('fProdLeadTime').value),
+    LeadTimeUnit:   document.getElementById('fProdLeadUnit').value || null,
+    ProductionRate: parseFloatOrNull(document.getElementById('fProdRate').value)
   };
 
   const saving = document.getElementById('productSaving');
@@ -1524,11 +1430,11 @@ async function saveProduct() {
   try {
     if (store.editingProduct) {
       await spPatch(CONFIG.lists.products, store.editingProduct.Id, body);
-      Object.assign(store.editingProduct, friendlyProd);
+      Object.assign(store.editingProduct, body);
     } else {
       const created = await spPost(CONFIG.lists.products, body);
-      store.products.push({ ...friendlyProd, Id: created.Id });
-      store.products.sort((a,b) => (a.Unified_Family||'').localeCompare(b.Unified_Family||'') || a.Title.localeCompare(b.Title));
+      store.products.push({ ...body, Id: created.Id });
+      store.products.sort((a,b) => a.Title.localeCompare(b.Title));
     }
     renderProducts();
     closeModal('productModal');
@@ -1574,7 +1480,7 @@ function renderDevelopers() {
       <span style="width:180px;flex-shrink:0;font-size:12px;color:var(--muted);">${esc(d.Name_of_Plant||'—')}</span>
       <span style="width:100px;flex-shrink:0;font-size:12px;">${esc(d.Country||'—')}</span>
       <span style="width:140px;flex-shrink:0;">${d.Status ? `<span class="badge ${statusColour[d.Status]||'badge-grey'}">${esc(d.Status)}</span>` : '—'}</span>
-      <span class="d-count" style="text-align:center;"><span class="badge badge-cyan">${schedCount}</span></span>
+      <span class="d-count" style="text-align:center;"><span class="badge badge-cyan">${schedCount}</span>${schedCount === 0 && d.Baseline_Plant ? ` <span class="badge badge-grey" title="Uses ${esc(d.Baseline_Plant)}">↗ ${esc(d.Baseline_Plant)}</span>` : ''}</span>
       <div class="d-act">
         <button class="btn btn-ghost btn-sm" onclick="openDevForm(${d.Id})">Edit</button>
         <button class="btn btn-danger btn-sm btn-icon" onclick="deleteDeveloper(${d.Id},'${esc(d.Title)}')">🗑</button>
@@ -1593,6 +1499,7 @@ function openDevForm(id = null) {
   document.getElementById('fDevCountry').value   = d ? (d.Country||'')      : '';
   document.getElementById('fDevStatus').value    = d ? (d.Status||'')       : '';
   document.getElementById('fDevTech').value      = d ? (d.Technology||'')   : '';
+  document.getElementById('fDevBaseline').value  = d ? (d.Baseline_Plant||'') : '';
   openModal('devModal');
 }
 
@@ -1600,29 +1507,30 @@ async function saveDeveloper() {
   const name = document.getElementById('fDevName').value.trim();
   if (!name) { toast('Developer name is required', 'error'); return; }
   const body = {
-    Title:   name,
-    field_1: document.getElementById('fDevType').value      || null,
-    field_2: document.getElementById('fDevPlantName').value || null,
-    field_3: document.getElementById('fDevTech').value      || null,
-    field_4: document.getElementById('fDevCountry').value   || null,
-    field_5: document.getElementById('fDevStatus').value    || null,
+    Title:          name,
+    field_1:        document.getElementById('fDevType').value      || null,
+    field_2:        document.getElementById('fDevPlantName').value || null,
+    field_3:        document.getElementById('fDevTech').value      || null,
+    field_4:        document.getElementById('fDevCountry').value   || null,
+    field_5:        document.getElementById('fDevStatus').value    || null,
+    field_6:        document.getElementById('fDevBaseline').value  || null,
   };
-  // Also update friendly names in local store after save
-  const friendlyBody = {
-    Title:         name,
-    Type_of_Plant: body.field_1,
-    Name_of_Plant: body.field_2,
-    Technology:    body.field_3,
-    Country:       body.field_4,
-    Status:        body.field_5,
+  const friendlyDev = {
+    Title:          name,
+    Type_of_Plant:  body.field_1,
+    Name_of_Plant:  body.field_2,
+    Technology:     body.field_3,
+    Country:        body.field_4,
+    Status:         body.field_5,
+    Baseline_Plant: body.field_6,
   };
   try {
     if (store.editingDev) {
       await spPatch(CONFIG.lists.developers, store.editingDev.Id, body);
-      Object.assign(store.editingDev, friendlyBody);
+      Object.assign(store.editingDev, friendlyDev);
     } else {
       const created = await spPost(CONFIG.lists.developers, body);
-      store.developers.push({ ...friendlyBody, Id: created.Id });
+      store.developers.push({ ...friendlyDev, Id: created.Id });
       store.developers.sort((a,b) => a.Title.localeCompare(b.Title));
     }
     populateDeveloperDropdown();
@@ -1651,21 +1559,8 @@ async function deleteDeveloper(id, name) {
 // ══════════════════════════════════════════════════════
 // SCHEDULES — PIVOT GRID
 // ══════════════════════════════════════════════════════
-const SMR_YEARS = [1,2,3,4,5,6,7];
-const GW_YEARS  = [1,2,3,4,5,6,7,8,9,10];
-const QUARTERS  = ['Q1','Q2','Q3','Q4'];
-
-function yearsForDev(devTitle) {
-  const dev = store.developers.find(d => d.Title === devTitle);
-  if (!dev) return SMR_YEARS;
-  return dev.Type_of_Plant === 'Large Reactor' ? GW_YEARS : SMR_YEARS;
-}
-
-function consecutiveOffsetForDev(devTitle) {
-  const dev = store.developers.find(d => d.Title === devTitle);
-  if (!dev) return 6;
-  return dev.Type_of_Plant === 'Large Reactor' ? 10 : 6;
-}
+const YEARS = [1,2,3,4,5,6,7];
+const QUARTERS = ['Q1','Q2','Q3','Q4'];
 
 function populateSchedFilters() {
   const devSel = document.getElementById('schedDevFilter');
@@ -1710,8 +1605,6 @@ function renderSchedules() {
     wrap.innerHTML = `<div class="empty-state" style="padding:64px;"><div class="empty-icon">📅</div><div class="empty-title">No schedule entries for ${esc(dev)}</div></div>`;
     return;
   }
-
-  const YEARS = yearsForDev(dev);
 
   // Build column headers: Year header row + Q header row
   let yrHeaders = `<th class="product-col-header" rowspan="2">Product</th>`;

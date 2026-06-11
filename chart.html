@@ -431,18 +431,63 @@ async function getToken() {
 }
 
 // ── DATA ─────────────────────────────────────────────────────────────────────
+
+// Generic SharePoint GET helper (reuses existing MSAL token)
+async function spFetch(listName, select, top = 5000) {
+  const token = await getToken();
+  const url   = `${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(listName)}')/items?$top=${top}&$select=${select}`;
+  const resp  = await fetch(url, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json;odata=nometadata' } });
+  if (!resp.ok) throw new Error(`SP ${listName} ${resp.status}`);
+  return (await resp.json()).value;
+}
+
 async function loadData() {
   showSbStatus('Fetching from SharePoint…', false);
   try {
     const token = await getToken();
-    const url   = `${SITE_URL}/_api/web/lists/getbytitle('${LIST_NAME}')/items?$filter=Title eq '${ITEM_TITLE}'&$select=ChartData&$top=1`;
-    const resp  = await fetch(url, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json;odata=nometadata' } });
-    if (!resp.ok) throw new Error(`SharePoint ${resp.status}`);
-    const json  = await resp.json();
-    if (!json.value?.length) throw new Error('No cache item — run Generate Demand first.');
-    const raw = json.value[0].ChartData;
+
+    // Fetch cache + overlay tables in parallel
+    const cacheUrl = `${SITE_URL}/_api/web/lists/getbytitle('${LIST_NAME}')/items?$filter=Title eq '${ITEM_TITLE}'&$select=ChartData&$top=1`;
+    const [cacheResp, capRows, ltRows] = await Promise.all([
+      fetch(cacheUrl, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json;odata=nometadata' } }),
+      spFetch('DM - Capacity',            'Title,field_2,field_3,field_4'),
+      spFetch('DM - Lead Time By Category','Title,field_1,field_2,field_3,field_4,field_6')
+    ]);
+
+    if (!cacheResp.ok) throw new Error(`SharePoint ${cacheResp.status}`);
+    const cacheJson = await cacheResp.json();
+    if (!cacheJson.value?.length) throw new Error('No cache item — run Generate Demand first.');
+    const raw = cacheJson.value[0].ChartData;
     if (!raw) throw new Error('ChartData empty — run Generate Demand first.');
-    allData = JSON.parse(raw);
+
+    // Build overlay lookup keyed by category name
+    const capLookup = {};
+    for (const c of capRows) {
+      capLookup[c.Title] = {
+        cap:     c.field_2 != null ? parseFloat(c.field_2) : null,
+        capUnit: c.field_3 || null,
+        capConf: c.field_4 || null
+      };
+    }
+    const ltLookup = {};
+    for (const l of ltRows) {
+      ltLookup[l.Title] = {
+        lt:           l.field_3 != null ? parseFloat(l.field_3) : null,
+        ltEarliest:   l.field_1 != null ? parseFloat(l.field_1) : null,
+        ltLatest:     l.field_2 != null ? parseFloat(l.field_2) : null,
+        srcCount:     l.field_4 != null ? parseInt(l.field_4)   : null,
+        srcComponents:l.field_6 || null
+      };
+    }
+
+    // Merge overlay data onto each demand row by category (r.p)
+    const slim = JSON.parse(raw);
+    allData = slim.map(r => {
+      const cap = capLookup[r.p] || {};
+      const lt  = ltLookup[r.p]  || {};
+      return { ...r, ...cap, ...lt };
+    });
+
     hideSbStatus();
     populateFilters();
     applyFilters();
