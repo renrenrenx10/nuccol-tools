@@ -1404,20 +1404,48 @@ function renderResults() {
 async function viewChart() {
   if (!store.demandResults.length) { toast('Generate demand first', 'error'); return; }
   try {
-    // Overlay data (capacity, lead times) is loaded directly by chart.html.
-    // Cache carries slim demand rows only to stay within SP column size limits.
-    const payload = JSON.stringify(
-      store.demandResults
-        .filter(r => r.CalYear > 0)
-        .map(r => ({ d: r.Developer, p: r.Product_ID, f: r.Family, y: r.CalYear, a: r.Amount }))
-    );
+    // Slim rows only — overlays loaded by chart.html direct from SharePoint
+    const rows = store.demandResults
+      .filter(r => r.CalYear > 0)
+      .map(r => ({ d: r.Developer, p: r.Product_ID, f: r.Family, y: r.CalYear, a: r.Amount }));
+
+    // Split into ~300KB chunks to stay under the 2MB SP REST body limit
+    const CHUNK = 300_000;
+    const full  = JSON.stringify(rows);
+    const chunks = [];
+    for (let i = 0; i < full.length; i += CHUNK) chunks.push(full.slice(i, i + CHUNK));
+
+    // Read existing cache items
     const existing = await spGet(CONFIG.lists.chartCache, 'Id,Title');
-    const cacheRow = existing.find(r => r.Title === 'cache');
-    if (cacheRow) {
-      await spPatch(CONFIG.lists.chartCache, cacheRow.Id, { ChartData: payload });
-    } else {
-      await spPost(CONFIG.lists.chartCache, { Title: 'cache', ChartData: payload });
+
+    // Write each chunk as cache_0, cache_1, …
+    for (let i = 0; i < chunks.length; i++) {
+      const title   = `cache_${i}`;
+      const current = existing.find(r => r.Title === title);
+      if (current) {
+        await spPatch(CONFIG.lists.chartCache, current.Id, { ChartData: chunks[i] });
+      } else {
+        await spPost(CONFIG.lists.chartCache, { Title: title, ChartData: chunks[i] });
+      }
     }
+
+    // Delete any leftover chunks from a previous larger run
+    for (const item of existing) {
+      const m = item.Title.match(/^cache_(\d+)$/);
+      if (m && parseInt(m[1]) >= chunks.length) {
+        await spDelete(CONFIG.lists.chartCache, item.Id);
+      }
+    }
+
+    // Also write a manifest so chart.html knows how many chunks to expect
+    const manifest = JSON.stringify({ chunks: chunks.length });
+    const mRow = existing.find(r => r.Title === 'cache_meta');
+    if (mRow) {
+      await spPatch(CONFIG.lists.chartCache, mRow.Id, { ChartData: manifest });
+    } else {
+      await spPost(CONFIG.lists.chartCache, { Title: 'cache_meta', ChartData: manifest });
+    }
+
     window.open('https://renrenrenx10.github.io/nuccol-tools/chart.html', '_blank');
   } catch(e) {
     toast('Chart export failed: ' + e.message, 'error');

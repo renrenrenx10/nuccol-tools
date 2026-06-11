@@ -431,7 +431,6 @@ async function getToken() {
 }
 
 // ── DATA ─────────────────────────────────────────────────────────────────────
-
 async function spFetch(listName, select, top = 5000) {
   const token = await getToken();
   const url   = `${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(listName)}')/items?$top=${top}&$select=${select}`;
@@ -445,28 +444,40 @@ async function loadData() {
   try {
     const token = await getToken();
 
-    // Fetch cache + overlay tables in parallel
-    const cacheUrl = `${SITE_URL}/_api/web/lists/getbytitle('${LIST_NAME}')/items?$filter=Title eq '${ITEM_TITLE}'&$select=ChartData&$top=1`;
-    const [cacheResp, capRows, ltRows] = await Promise.all([
-      fetch(cacheUrl, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json;odata=nometadata' } }),
+    // Read manifest to find chunk count, then fetch all chunks + overlays in parallel
+    const metaUrl = `${SITE_URL}/_api/web/lists/getbytitle('${LIST_NAME}')/items?$filter=Title eq 'cache_meta'&$select=ChartData&$top=1`;
+    const metaResp = await fetch(metaUrl, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json;odata=nometadata' } });
+    if (!metaResp.ok) throw new Error(`SharePoint ${metaResp.status}`);
+    const metaJson = await metaResp.json();
+    if (!metaJson.value?.length) throw new Error('No cache — run Generate Demand first.');
+    const meta = JSON.parse(metaJson.value[0].ChartData);
+    const numChunks = meta.chunks || 1;
+
+    // Fetch all chunks + overlay tables in parallel
+    const chunkFetches = [];
+    for (let i = 0; i < numChunks; i++) {
+      const url = `${SITE_URL}/_api/web/lists/getbytitle('${LIST_NAME}')/items?$filter=Title eq 'cache_${i}'&$select=ChartData&$top=1`;
+      chunkFetches.push(fetch(url, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json;odata=nometadata' } }));
+    }
+    const [capRows, ltRows, ...chunkResps] = await Promise.all([
       spFetch('DM - Capacity',             'Title,field_2,field_3,field_4'),
-      spFetch('DM - Lead Time By Category','Title,field_1,field_2,field_3,field_4,field_6')
+      spFetch('DM - Lead Time By Category','Title,field_1,field_2,field_3,field_4,field_6'),
+      ...chunkFetches
     ]);
 
-    if (!cacheResp.ok) throw new Error(`SharePoint ${cacheResp.status}`);
-    const cacheJson = await cacheResp.json();
-    if (!cacheJson.value?.length) throw new Error('No cache item — run Generate Demand first.');
-    const raw = cacheJson.value[0].ChartData;
-    if (!raw) throw new Error('ChartData empty — run Generate Demand first.');
+    // Reassemble chunks
+    let raw = '';
+    for (const resp of chunkResps) {
+      if (!resp.ok) throw new Error(`Chunk fetch failed: ${resp.status}`);
+      const j = await resp.json();
+      if (!j.value?.length) throw new Error('Missing cache chunk — re-run Generate Demand.');
+      raw += j.value[0].ChartData;
+    }
 
     // Build overlay lookups keyed by category name
     const capLookup = {};
     for (const c of capRows) {
-      capLookup[c.Title] = {
-        cap:     c.field_2 != null ? parseFloat(c.field_2) : null,
-        capUnit: c.field_3 || null,
-        capConf: c.field_4 || null
-      };
+      capLookup[c.Title] = { cap: c.field_2 != null ? parseFloat(c.field_2) : null, capUnit: c.field_3 || null, capConf: c.field_4 || null };
     }
     const ltLookup = {};
     for (const l of ltRows) {
@@ -481,11 +492,7 @@ async function loadData() {
 
     // Merge overlay data onto each demand row by category (r.p)
     const slim = JSON.parse(raw);
-    allData = slim.map(r => {
-      const cap = capLookup[r.p] || {};
-      const lt  = ltLookup[r.p]  || {};
-      return { ...r, ...cap, ...lt };
-    });
+    allData = slim.map(r => ({ ...r, ...(capLookup[r.p] || {}), ...(ltLookup[r.p] || {}) }));
 
     hideSbStatus();
     populateFilters();
