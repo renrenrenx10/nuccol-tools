@@ -432,7 +432,6 @@ async function getToken() {
 
 // ── DATA ─────────────────────────────────────────────────────────────────────
 
-// Generic SharePoint GET helper (reuses existing MSAL token)
 async function spFetch(listName, select, top = 5000) {
   const token = await getToken();
   const url   = `${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(listName)}')/items?$top=${top}&$select=${select}`;
@@ -450,7 +449,7 @@ async function loadData() {
     const cacheUrl = `${SITE_URL}/_api/web/lists/getbytitle('${LIST_NAME}')/items?$filter=Title eq '${ITEM_TITLE}'&$select=ChartData&$top=1`;
     const [cacheResp, capRows, ltRows] = await Promise.all([
       fetch(cacheUrl, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json;odata=nometadata' } }),
-      spFetch('DM - Capacity',            'Title,field_2,field_3,field_4'),
+      spFetch('DM - Capacity',             'Title,field_2,field_3,field_4'),
       spFetch('DM - Lead Time By Category','Title,field_1,field_2,field_3,field_4,field_6')
     ]);
 
@@ -460,7 +459,7 @@ async function loadData() {
     const raw = cacheJson.value[0].ChartData;
     if (!raw) throw new Error('ChartData empty — run Generate Demand first.');
 
-    // Build overlay lookup keyed by category name
+    // Build overlay lookups keyed by category name
     const capLookup = {};
     for (const c of capRows) {
       capLookup[c.Title] = {
