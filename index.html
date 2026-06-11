@@ -639,8 +639,8 @@ textarea.form-control { height: 72px; resize: vertical; }
           <span id="demandNotify" style="font-size:12px;color:var(--green);font-family:var(--font-mono);"></span>
           <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
             <input class="filter-input" type="text" id="resultsSearch" placeholder="Filter results..." style="width:180px;height:30px;" oninput="renderResults()" />
-            <button class="btn btn-ghost btn-sm" onclick="exportCSV('raw')"   title="Every row: Developer, Product, Family, Year, Quarter, Amount">⬇ Raw CSV</button>
-            <button class="btn btn-ghost btn-sm" onclick="exportCSV('pivot')" title="Aggregated by Year — one column per Developer x Family">⬇ Pivot CSV</button>
+            <button class="btn btn-ghost btn-sm" onclick="exportCSV('raw')"   title="Every row: Developer, Family, Category, Year, Quarter, Amount">⬇ Raw CSV</button>
+            <button class="btn btn-ghost btn-sm" onclick="exportCSV('pivot')" title="Aggregated by Year — one column per Developer x Family x Category">⬇ Pivot CSV</button>
           </div>
         </div>
         <div class="results-col-header">
@@ -1404,48 +1404,20 @@ function renderResults() {
 async function viewChart() {
   if (!store.demandResults.length) { toast('Generate demand first', 'error'); return; }
   try {
-    // Slim rows only — overlays loaded by chart.html direct from SharePoint
-    const rows = store.demandResults
-      .filter(r => r.CalYear > 0)
-      .map(r => ({ d: r.Developer, p: r.Product_ID, f: r.Family, y: r.CalYear, a: r.Amount }));
-
-    // Split into ~300KB chunks to stay under the 2MB SP REST body limit
-    const CHUNK = 300_000;
-    const full  = JSON.stringify(rows);
-    const chunks = [];
-    for (let i = 0; i < full.length; i += CHUNK) chunks.push(full.slice(i, i + CHUNK));
-
-    // Read existing cache items
+    // Overlay data (capacity, lead times) is loaded directly by chart.html.
+    // Cache carries slim demand rows only to stay within SP column size limits.
+    const payload = JSON.stringify(
+      store.demandResults
+        .filter(r => r.CalYear > 0)
+        .map(r => ({ d: r.Developer, p: r.Product_ID, f: r.Family, y: r.CalYear, a: r.Amount }))
+    );
     const existing = await spGet(CONFIG.lists.chartCache, 'Id,Title');
-
-    // Write each chunk as cache_0, cache_1, …
-    for (let i = 0; i < chunks.length; i++) {
-      const title   = `cache_${i}`;
-      const current = existing.find(r => r.Title === title);
-      if (current) {
-        await spPatch(CONFIG.lists.chartCache, current.Id, { ChartData: chunks[i] });
-      } else {
-        await spPost(CONFIG.lists.chartCache, { Title: title, ChartData: chunks[i] });
-      }
-    }
-
-    // Delete any leftover chunks from a previous larger run
-    for (const item of existing) {
-      const m = item.Title.match(/^cache_(\d+)$/);
-      if (m && parseInt(m[1]) >= chunks.length) {
-        await spDelete(CONFIG.lists.chartCache, item.Id);
-      }
-    }
-
-    // Also write a manifest so chart.html knows how many chunks to expect
-    const manifest = JSON.stringify({ chunks: chunks.length });
-    const mRow = existing.find(r => r.Title === 'cache_meta');
-    if (mRow) {
-      await spPatch(CONFIG.lists.chartCache, mRow.Id, { ChartData: manifest });
+    const cacheRow = existing.find(r => r.Title === 'cache');
+    if (cacheRow) {
+      await spPatch(CONFIG.lists.chartCache, cacheRow.Id, { ChartData: payload });
     } else {
-      await spPost(CONFIG.lists.chartCache, { Title: 'cache_meta', ChartData: manifest });
+      await spPost(CONFIG.lists.chartCache, { Title: 'cache', ChartData: payload });
     }
-
     window.open('https://renrenrenx10.github.io/nuccol-tools/chart.html', '_blank');
   } catch(e) {
     toast('Chart export failed: ' + e.message, 'error');
@@ -1473,16 +1445,17 @@ function exportCSV(mode) {
   var CRLF = '\r\n';
   var csv, filename;
   if (mode === 'raw') {
-    var headers = ['Developer','Product','Family','Year','Quarter','Amount','From Baseline'];
+    var headers = ['Developer','Family','Category','Year','Quarter','Amount','From Baseline'];
     var lines = rows.map(function(r) {
-      return [csvVal(r.Developer), csvVal(r.Product_ID), csvVal(r.Family||''), r.CalYear, csvVal(r.Quarter), r.Amount, r.FromBaseline ? 'Yes' : 'No'].join(',');
+      return [csvVal(r.Developer), csvVal(r.Family||''), csvVal(r.Product_ID), r.CalYear, csvVal(r.Quarter), r.Amount, r.FromBaseline ? 'Yes' : 'No'].join(',');
     });
     csv = [headers.join(',')].concat(lines).join(CRLF);
     filename = 'DangerMouse_Raw_' + datestamp() + '.csv';
   } else {
+    // Pivot: rows = Year, columns = Developer — Family — Category, values = summed amount
     var agg = {};
     rows.forEach(function(r) {
-      var col = r.Developer + ' — ' + (r.Family || 'Unknown');
+      var col = r.Developer + ' — ' + (r.Family || 'Unknown') + ' — ' + r.Product_ID;
       var key = r.CalYear + '|' + col;
       agg[key] = (agg[key] || 0) + (r.Amount || 0);
     });
@@ -1491,7 +1464,7 @@ function exportCSV(mode) {
     years.sort(function(a,b){ return a-b; });
     var cols = [];
     rows.forEach(function(r){
-      var c = r.Developer + ' — ' + (r.Family || 'Unknown');
+      var c = r.Developer + ' — ' + (r.Family || 'Unknown') + ' — ' + r.Product_ID;
       if (cols.indexOf(c) === -1) cols.push(c);
     });
     cols.sort();
