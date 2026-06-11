@@ -915,10 +915,12 @@ const CONFIG = {
   siteUrl:    'https://nuccol.sharepoint.com/sites/DangerMouse',
   scopes:     ['https://nuccol.sharepoint.com/.default'],
   lists: {
-    products:   'DM - Products',
-    developers: 'DM - Developers',
-    schedules:  'DM - Dev Schedules',
-    chartCache: 'ChartCache'
+    products:      'DM - Products',
+    developers:    'DM - Developers',
+    schedules:     'DM - Dev Schedules',
+    capacity:      'DM - Capacity',
+    leadTimeByCat: 'DM - Lead Time By Category',
+    chartCache:    'ChartCache'
   }
 };
 
@@ -1064,10 +1066,12 @@ async function spDelete(listName, id) {
 // DATA STORE
 // ══════════════════════════════════════════════════════
 let store = {
-  products:   [],
-  developers: [],
-  schedules:  [],
-  buildPlan:  [],
+  products:      [],
+  developers:    [],
+  schedules:     [],
+  capacity:      [],
+  leadTimes:     [],
+  buildPlan:     [],
   demandResults: [],
   editingProduct: null,
   editingDev: null,
@@ -1076,23 +1080,57 @@ let store = {
 
 async function loadAllData() {
   try {
-    const [prods, devs, scheds] = await Promise.all([
-      spGet(CONFIG.lists.products,   'Id,Title,MaterialType,ResourceType,Weight,Unit,LeadTime,LeadTimeUnit,ProductionRate', '', 'Title asc'),
-      spGet(CONFIG.lists.developers, 'Id,Title,field_1,field_2,field_3,field_4,field_5,field_6', '', 'Title asc'),
-      spGet(CONFIG.lists.schedules,  'Id,Developer_ID,Product_ID,ScheduleYear,Quarter,Amount_Absolute', '', 'Developer_ID asc')
+    const [prods, devs, scheds, caps, lts] = await Promise.all([
+      spGet(CONFIG.lists.products,      'Id,Title,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8', '', 'field_1 asc,Title asc'),
+      spGet(CONFIG.lists.developers,    'Id,Title,field_1,field_2,field_3,field_4,field_5,field_6', '', 'Title asc'),
+      spGet(CONFIG.lists.schedules,     'Id,Title,field_1,field_2,field_3,field_4', '', 'Title asc'),
+      spGet(CONFIG.lists.capacity,      'Title,field_1,field_2,field_3,field_4', '', 'Title asc'),
+      spGet(CONFIG.lists.leadTimeByCat, 'Title,field_1,field_2,field_3,field_4,field_5,field_6', '', 'Title asc')
     ]);
-    store.products   = prods;
-    store.developers = devs.map(d => ({
-      Id:             d.Id,
-      Title:          d.Title,
-      Type_of_Plant:  d.field_1 || d.Type_of_Plant || '',
-      Name_of_Plant:  d.field_2 || d.Name_of_Plant || '',
-      Technology:     d.field_3 || d.Technology    || '',
-      Country:        d.field_4 || d.Country       || '',
-      Status:         d.field_5 || d.Status        || '',
-      Baseline_Plant: d.field_6 || d.Baseline_Plant|| '',
+    store.products   = prods.map(p => ({
+      Id:                     p.Id,
+      Title:                  p.Title,
+      Unified_Family:         p.field_1,
+      Nuclear_Classification: p.field_2,
+      GW_Total:               p.field_3,
+      SMR_Total:              p.field_4,
+      Primary_Unit:           p.field_5,
+      Source_Rows:            p.field_6,
+      Tier1_Rows:             p.field_7,
+      Plant_Type:             p.field_8,
     }));
-    store.schedules  = scheds;
+    store.capacity = caps.map(c => ({
+      Category: c.Title,
+      Cap:      c.field_2 != null ? parseFloat(c.field_2) : null,
+      CapUnit:  c.field_3 || null,
+      CapConf:  c.field_4 || null,
+    }));
+    store.leadTimes = lts.map(l => ({
+      Category:   l.Title,
+      LtEarliest: l.field_1 != null ? parseFloat(l.field_1) : null,
+      LtLatest:   l.field_2 != null ? parseFloat(l.field_2) : null,
+      Lt:         l.field_3 != null ? parseFloat(l.field_3) : null,
+      SrcCount:   l.field_4 != null ? parseInt(l.field_4)   : null,
+      SrcComps:   l.field_6 || null,
+    }));
+    store.developers = devs.map(d => ({
+      Id:            d.Id,
+      Title:         d.Title,
+      Type_of_Plant: d.field_1,
+      Name_of_Plant: d.field_2,
+      Technology:    d.field_3,
+      Country:       d.field_4,
+      Status:        d.field_5,
+      Baseline_Plant:d.field_6 || '',
+    }));
+    store.schedules  = scheds.map(s => ({
+      Id:              s.Id,
+      Developer_ID:    s.Title,
+      Product_ID:      s.field_1,
+      ScheduleYear:    s.field_2,
+      Quarter:         s.field_3,
+      Amount_Absolute: s.field_4,
+    }));
     populateDeveloperDropdown();
     populateSchedFilters();
     renderProducts();
@@ -1189,7 +1227,7 @@ async function generateDemand() {
           store.demandResults.push({
             Developer:    planRow.Developer,
             Product_ID:   sched.Product_ID,
-            MaterialType: prod ? (prod.MaterialType || '') : '',
+            Family:       prod ? (prod.Unified_Family || '') : '',
             CalYear:      calYear,
             Quarter:      sched.Quarter || '',
             Amount:       amount * planRow.Concurrent,
@@ -1236,7 +1274,7 @@ function renderResults() {
     <div class="results-row">
       <span class="c-dev" style="font-size:12px;font-weight:600;">${esc(r.Developer)}</span>
       <span class="c-prod mono-sm">${esc(r.Product_ID)}</span>
-      <span class="c-mt">${r.MaterialType ? `<span class="badge badge-cyan">${esc(r.MaterialType)}</span>` : '<span style="color:#ccc">—</span>'}</span>
+      <span class="c-mt">${r.Family ? `<span class="badge badge-cyan">${esc(r.Family)}</span>` : '<span style="color:#ccc">—</span>'}</span>
       <span class="c-year mono" style="color:var(--navy);text-align:center;">${r.CalYear}</span>
       <span class="c-qtr mono" style="color:var(--cyan);font-weight:700;text-align:center;">${esc(r.Quarter)}</span>
       <span class="c-amt mono" style="text-align:right;">${r.Amount.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
