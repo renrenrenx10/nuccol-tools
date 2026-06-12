@@ -799,6 +799,14 @@ async function loadAll() {
     renderSearch();
     renderInteractionsList();
     renderHomeRecent();
+
+    // Deep-link: ?companyId=X opens that company directly
+    const params  = new URLSearchParams(window.location.search);
+    const deepCid = params.get('companyId');
+    if (deepCid) {
+      const match = DB.companies.find(c => String(c.CompanyID) === String(deepCid));
+      if (match) { openFirm(match.ID); return; }
+    }
   } catch(e) {
     $('sp-status').innerHTML = `<span style="color:var(--red)">⚠️ ${esc(e.message)}</span>`;
     showToast("⚠️ SharePoint: " + e.message, 'error');

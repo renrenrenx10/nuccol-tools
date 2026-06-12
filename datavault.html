@@ -189,15 +189,6 @@ select { cursor: pointer; appearance: none;
 }
 textarea { resize: vertical; min-height: 60px; }
 
-/* ─── CH_DATA READ-ONLY BADGE ───────────────────────────────────────────── */
-.ch-readonly {
-  font-family: inherit; font-size: 12px; border: 1px solid var(--border);
-  padding: 7px 10px; background: #f8f9fc; color: #555; width: 100%;
-  min-height: 32px; line-height: 1.5;
-}
-.ch-readonly.empty { color: var(--muted); font-style: italic; }
-.ch-source-note { font-size: 10px; color: var(--muted); letter-spacing: 1px; margin-top: 2px; }
-
 /* ─── TOGGLE ────────────────────────────────────────────────────────────── */
 .toggle-wrap { display: flex; align-items: center; gap: 10px; }
 .toggle-wrap span { font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
@@ -216,7 +207,7 @@ textarea { resize: vertical; min-height: 60px; }
 .toggle input:checked + .toggle-slider { background: var(--blue); }
 .toggle input:checked + .toggle-slider::before { transform: translateX(28px); }
 .toggle-label-off { position: absolute; right: 5px; color: #999; font-size: 9px; font-weight: 700; letter-spacing: 0.5px; top: 50%; transform: translateY(-50%); pointer-events: none; }
-.toggle-label-on  { position: absolute; left: 5px;  color: #fff; font-size: 9px; font-weight: 700; letter-spacing: 0.5px; top: 50%; transform: translateY(-50%); display: none; }
+.toggle-label-on  { position: absolute; left: 5px;  color: #fff; font-size: 9px; font-weight: 700; letter-spacing: 0.5px; top: 50%; transform: translateY(-50%); pointer-events: none; display: none; }
 .toggle input:checked ~ .toggle-label-off { display: none; }
 .toggle input:checked ~ .toggle-label-on  { display: block; }
 
@@ -475,11 +466,11 @@ textarea { resize: vertical; min-height: 60px; }
         <button class="btn btn-secondary" onclick="saveCompany()">Save</button>
         <button class="btn btn-primary" id="btn-analyse" onclick="startScrape()" style="display:none">Analyse Firm</button>
         <button class="btn btn-outline" id="btn-view-scrape" onclick="viewLastScrape()" style="display:none">View Last Scrape</button>
+        <button class="btn btn-outline" id="btn-open-rolodex" onclick="openInRolodex()" style="display:none">📇 RoloDex</button>
         <button class="btn btn-outline" onclick="navigateBack()">← Back</button>
       </div>
       <div class="tab-bar" id="company-tabs">
         <button class="tab-btn active" data-tab="c1" onclick="switchTab('company','c1',this)">Core Data</button>
-        <button class="tab-btn" data-tab="c8" onclick="switchTab('company','c8',this)">CH Data</button>
         <button class="tab-btn" data-tab="c2" onclick="switchTab('company','c2',this)">Classification</button>
         <button class="tab-btn" data-tab="c3" onclick="switchTab('company','c3',this)">Status</button>
         <button class="tab-btn" data-tab="c4" onclick="switchTab('company','c4',this)">Capabilities</button>
@@ -516,19 +507,12 @@ textarea { resize: vertical; min-height: 60px; }
             <input type="text" id="c-postcode">
           </div>
           <div class="field-group">
+            <label class="field-label">CH Number</label>
+            <input type="text" id="c-regno">
+          </div>
+          <div class="field-group">
             <label class="field-label">Regional SCC</label>
             <input type="text" id="c-regional">
-          </div>
-          <div class="field-group">
-            <!-- spacer -->
-          </div>
-          <div class="field-group">
-            <label class="field-label">Latitude</label>
-            <input type="text" id="c-lat" placeholder="e.g. 53.3811">
-          </div>
-          <div class="field-group">
-            <label class="field-label">Longitude</label>
-            <input type="text" id="c-lng" placeholder="e.g. -1.4701">
           </div>
           <div class="field-group span-2">
             <label class="field-label">Other Addresses</label>
@@ -537,44 +521,6 @@ textarea { resize: vertical; min-height: 60px; }
           <div class="field-group span-2">
             <label class="field-label">Quick Description</label>
             <textarea id="c-quickdesc" style="min-height:60px"></textarea>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB: CH Data -->
-      <div class="edit-panel tab-content" id="tab-c8">
-        <p class="text-muted" style="margin-bottom:16px;font-size:11px;letter-spacing:1px">
-          Companies House data — populated automatically by the enrichment pipeline. CH Number is editable; all other fields are read-only reference data.
-        </p>
-        <div class="form-grid">
-          <div class="field-group">
-            <label class="field-label">CH Number</label>
-            <input type="text" id="c-regno" placeholder="e.g. 01234567">
-          </div>
-          <div class="field-group">
-            <label class="field-label">CH Name</label>
-            <div id="c-ch-name-display" class="ch-readonly empty">—</div>
-            <span class="ch-source-note">Companies House registered name</span>
-          </div>
-          <div class="field-group">
-            <label class="field-label">CH Status</label>
-            <div id="c-ch-status-display" class="ch-readonly empty">—</div>
-          </div>
-          <div class="field-group">
-            <label class="field-label">CH Last Updated</label>
-            <div id="c-ch-lastupdate-display" class="ch-readonly empty">—</div>
-          </div>
-          <div class="field-group span-2">
-            <label class="field-label">CH Registered Address</label>
-            <div id="c-ch-regaddress-display" class="ch-readonly empty" style="min-height:48px;white-space:pre-wrap">—</div>
-          </div>
-          <div class="field-group span-2">
-            <label class="field-label">Previous Names</label>
-            <div id="c-ch-prevnames-display" class="ch-readonly empty" style="min-height:48px;white-space:pre-wrap">—</div>
-          </div>
-          <div class="field-group span-2">
-            <label class="field-label">Previous Addresses</label>
-            <div id="c-ch-prevaddresses-display" class="ch-readonly empty" style="min-height:48px;white-space:pre-wrap">—</div>
           </div>
         </div>
       </div>
@@ -1158,10 +1104,11 @@ const msalClient = new msal.PublicClientApplication(msalConfig);
 let currentUser = null;
 let msalReady = false;
 
+// Initialise MSAL once and then attempt auto-login (main window only — not inside the popup)
 (async () => {
   await msalClient.initialize();
   msalReady = true;
-  if (window.opener) return;
+  if (window.opener) return; // we're the MSAL popup — do nothing
   await msalClient.handleRedirectPromise();
   const accounts = msalClient.getAllAccounts();
   if (accounts.length) { currentUser = accounts[0]; onSignedIn(); }
@@ -1207,7 +1154,25 @@ async function onSignedIn() {
     document.getElementById('user-name').textContent = currentUser.name || currentUser.username;
   }
   await loadLookupData();
+
+  // Deep-link: ?companyId=123 jumps straight to that company
+  const params   = new URLSearchParams(window.location.search);
+  const deepId   = params.get('companyId');
+  if (deepId) {
+    // state.companies uses SharePoint ID (c.ID), field_1 is the NuCCoL CompanyID
+    const match = state.companies.find(c => String(c.field_1) === String(deepId) || String(c.ID) === String(deepId));
+    if (match) {
+      await openCompany(match.ID);
+      return;
+    }
+  }
   navigate('dashboard');
+}
+
+function openInRolodex() {
+  if (!state.selectedCompany?.field_1) return;
+  // Pass NuCCoL CompanyID (field_1) so Rolodex can filter by it
+  window.open(`rolodex.html?companyId=${state.selectedCompany.field_1}`, '_blank');
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -1278,6 +1243,7 @@ async function spDelete(listName, id) {
 const state = {
   screen: 'dashboard',
   navHistory: [],
+  // data caches
   companies: [],
   capabilities: [],
   commodities: [],
@@ -1285,15 +1251,18 @@ const state = {
   markets: [],
   counties: [],
   scrls: [],
+  // current records
   selectedCompany: null,
   selectedSCRL: null,
   selectedComponent: null,
   selectedSCRLCompanyRow: null,
   selectedSCRLCompanyComponent: null,
+  // scrape
   varScrapeRow: null,
   scrapeAccept: {},
   scrapeInterval: null,
   scrapePollCount: 0,
+  // filtered results cache
   companyCapabilities: [],
   companyCommodities: [],
   companyAccreditations: [],
@@ -1339,27 +1308,17 @@ function setChk(id, v) { const el = document.getElementById(id); if (el) el.chec
 function getVal(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
 function getChk(id) { const el = document.getElementById(id); return el ? el.checked : false; }
 
-// Set read-only display div (CH data fields)
-function setDisplay(id, v) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  if (v) {
-    el.textContent = v;
-    el.classList.remove('empty');
-  } else {
-    el.textContent = '—';
-    el.classList.add('empty');
-  }
-}
-
 function switchTab(prefix, tabId, btn) {
+  // deactivate all in same group
   const parent = btn.closest('.tab-bar');
   parent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  // hide all tab-content siblings
   const screen = btn.closest('.screen');
   screen.querySelectorAll('.tab-content').forEach(tc => {
     tc.classList.toggle('active', tc.id === 'tab-' + tabId);
   });
+  // special actions per tab
   if (tabId === 'c4') loadCompanyCapsComs();
   if (tabId === 'c5') loadCompanyAccredsMkts();
   if (tabId === 'c6') loadCompanySCRLs();
@@ -1374,7 +1333,7 @@ function switchTab(prefix, tabId, btn) {
 function navigate(screen, params = {}, pushHistory = true) {
   if (pushHistory && state.screen && state.screen !== screen) {
     state.navHistory.push({ screen: state.screen, params: state.navParams || {} });
-    if (state.navHistory.length > 20) state.navHistory.shift();
+    if (state.navHistory.length > 20) state.navHistory.shift(); // cap stack
   }
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const el = document.getElementById('screen-' + screen);
@@ -1403,6 +1362,8 @@ function navigateBack() {
 
 /* ──────────────────────────────────────────────────────────────────────────
    FIELD NAME NORMALISERS
+   SharePoint lists using auto-generated field_N names are mapped back to
+   their display names here so the rest of the code can use readable names.
    ────────────────────────────────────────────────────────────────────────── */
 function normaliseCompany(c) {
   return {
@@ -1440,15 +1401,6 @@ function normaliseCompany(c) {
     NuclearRefDate:     c.field_32 ?? c.NuclearRefDate,
     NuclearRefURL:      c.field_33 ?? c.NuclearRefURL,
     MarketNotes:        c.field_40 ?? c.MarketNotes,
-    // new fields — use their actual static names (not field_N)
-    Lat:                c.lat      ?? c.Lat,
-    Lng:                c.lng      ?? c.Lng,
-    CH_Name:            c.CH_Name,
-    CH_Status:          c.CH_Status,
-    CH_RegAddress:      c.CH_RegAddress,
-    CH_PrevNames:       c.CH_PrevNames,
-    CH_PrevAddresses:   c.CH_PrevAddresses,
-    CH_LastUpdate:      c.CH_LastUpdate,
   };
 }
 
@@ -1520,6 +1472,10 @@ async function loadLookupData() {
 function populateSearchFilters() {
   const opts = (arr) => arr.map(i=>`<option value="${i.Title}">${i.Title}</option>`).join('');
   const regionOpts = state.counties.map(c=>`<option value="${c}">${c}</option>`).join('');
+  ['s-capability','c-add-cap-sel'].forEach(id=>{
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = `<option value="">—</option>` + opts(state.capabilities);
+  });
   const sc = document.getElementById('s-capability');
   if (sc) sc.innerHTML = `<option value="">All</option>` + opts(state.capabilities);
   const sco = document.getElementById('s-commodity');
@@ -1575,6 +1531,7 @@ let _searchJunctionCaps = [], _searchJunctionComs = [],
 
 async function renderSearch() {
   applySearchFilters();
+  // load junction tables for filtering if not loaded
   if (!_searchJunctionCaps.length) {
     showLoading(true);
     try {
@@ -1634,10 +1591,7 @@ function clearSearchFilters() {
 async function openCompany(id) {
   showLoading(true);
   try {
-    // Fetch full record including CH fields and lat/lng
-    const raw = await spFetch(
-      `web/lists/getbytitle('Companies')/items(${id})?$select=*,lat,lng,CH_Name,CH_Status,CH_RegAddress,CH_PrevNames,CH_PrevAddresses,CH_LastUpdate`
-    );
+    const raw = await spFetch(`web/lists/getbytitle('Companies')/items(${id})`);
     const data = normaliseCompany(raw);
     state.selectedCompany = data;
     navigate('company', { company: data });
@@ -1650,36 +1604,24 @@ async function openCompany(id) {
    ────────────────────────────────────────────────────────────────────────── */
 function renderCompany(company) {
   state.selectedCompany = company;
+  // Switch to first tab
   switchToFirstTab('company-tabs', 'c1');
   const isNew = !company || !company.ID;
   document.getElementById('btn-analyse').style.display = isNew ? 'none' : 'inline-block';
   document.getElementById('btn-view-scrape').style.display = isNew ? 'none' : 'inline-block';
+  document.getElementById('btn-open-rolodex').style.display = isNew ? 'none' : 'inline-block';
 
   const c = company || {};
-
-  // ── Core Data ──
   setVal('c-name',        c.Title);
   setVal('c-city',        c.City);
   setVal('c-website',     c.Website);
   setVal('c-county',      c.County);
   setVal('c-email',       c.Email);
   setVal('c-postcode',    c.Postcode);
+  setVal('c-regno',       c.RegisteredNumber);
   setVal('c-regional',    c.RegionalIA);
   setVal('c-other-addr',  c.OtherAddresses);
   setVal('c-quickdesc',   c.QuickDescription);
-  setVal('c-lat',         c.Lat);
-  setVal('c-lng',         c.Lng);
-
-  // ── CH Data (editable: CH Number; read-only: rest) ──
-  setVal('c-regno',       c.RegisteredNumber);
-  setDisplay('c-ch-name-display',        c.CH_Name);
-  setDisplay('c-ch-status-display',      c.CH_Status);
-  setDisplay('c-ch-regaddress-display',  c.CH_RegAddress);
-  setDisplay('c-ch-prevnames-display',   c.CH_PrevNames);
-  setDisplay('c-ch-prevaddresses-display', c.CH_PrevAddresses);
-  setDisplay('c-ch-lastupdate-display',  c.CH_LastUpdate ? fmtDate(c.CH_LastUpdate) : null);
-
-  // ── Classification ──
   setVal('c-maincommodity',c.MainCommodityGroup);
   setVal('c-size',        c.Size);
   setVal('c-turnover',    c.Turnover);
@@ -1688,8 +1630,6 @@ function renderCompany(company) {
   setVal('c-updatedby',   c.UpdatedBy);
   setChk('c-f4n',         c.F4NCandidate === 'Y');
   setChk('c-f4h2',        c.F4H2Candidate === 'Y');
-
-  // ── Status ──
   setVal('c-rag',         c.RAGStatus);
   setVal('c-flag',        c.Flag);
   setVal('c-flagcomment', c.FlagComment);
@@ -1710,7 +1650,7 @@ function switchToFirstTab(tabBarRef, firstTabId) {
   });
   const screen = bar.closest('.screen');
   screen.querySelectorAll('.tab-content').forEach(tc => {
-    tc.classList.toggle('active', tc.id === 'tab-c1');
+    tc.classList.toggle('active', tc.id === 'tab-' + firstTabId);
   });
 }
 
@@ -1720,14 +1660,14 @@ async function saveCompany() {
   showLoading(true);
   const body = {
     Title: name,
-    field_2:  getVal('c-city'),
-    field_3:  getVal('c-county'),
-    field_4:  getVal('c-postcode'),
-    field_5:  getVal('c-other-addr'),
-    field_6:  getVal('c-website'),
-    field_7:  getVal('c-email'),
-    field_8:  getVal('c-regno'),        // CH Number — still editable
-    field_9:  getVal('c-regional'),
+    field_2: getVal('c-city'),
+    field_3: getVal('c-county'),
+    field_4: getVal('c-postcode'),
+    field_5: getVal('c-other-addr'),
+    field_6: getVal('c-website'),
+    field_7: getVal('c-email'),
+    field_8: getVal('c-regno'),
+    field_9: getVal('c-regional'),
     field_10: getVal('c-quickdesc'),
     field_11: getVal('c-maincommodity'),
     field_12: getVal('c-dataconf'),
@@ -1737,17 +1677,13 @@ async function saveCompany() {
     field_16: getVal('c-size'),
     field_17: getVal('c-flag'),
     field_18: getVal('c-flagcomment'),
-    field_19: getChk('c-f4n')  ? 'Y' : 'N',
+    field_19: getChk('c-f4n') ? 'Y' : 'N',
     field_20: getChk('c-f4h2') ? 'Y' : 'N',
     field_24: getVal('c-updatedby'),
     field_30: getVal('c-notes'),
     field_31: getChk('c-nuclear') ? 'Y' : 'N',
     field_33: getVal('c-nucurl'),
     field_40: getVal('c-marketnotes'),
-    // lat/lng use their actual static field names
-    lat: getVal('c-lat') || null,
-    lng: getVal('c-lng') || null,
-    // CH fields are read-only — not written back by the UI
   };
   const nucDate = getVal('c-nucdate');
   if (nucDate) body.NuclearRefDate = nucDate;
@@ -1763,6 +1699,7 @@ async function saveCompany() {
       toast('Company created', 'success');
     }
     state.selectedCompany = saved;
+    // refresh local cache
     const idx = state.companies.findIndex(c => c.ID === saved.ID);
     if (idx >= 0) state.companies[idx] = { ...state.companies[idx], ...body };
     else state.companies.push(saved);
@@ -1934,28 +1871,19 @@ async function goToSCRL(scrlId) {
 
 /* ── LOCATION TAB ────────────────────────────────────────────────────────── */
 function renderLocationTab() {
-  const lat  = getVal('c-lat')      || state.selectedCompany?.Lat || '';
-  const lng  = getVal('c-lng')      || state.selectedCompany?.Lng || '';
-  const post = getVal('c-postcode') || state.selectedCompany?.Postcode || '';
-  const name = getVal('c-name')     || state.selectedCompany?.Title || '';
-  document.getElementById('c-location-label').textContent = name + (post ? ' — ' + post : '');
-  // Prefer lat/lng for map if available, fall back to postcode
-  if (lat && lng) {
-    document.getElementById('c-map-img').src =
-      `https://staticmap.openstreetmap.de/staticmap.php?center=${lat},${lng}&zoom=15&size=600x400&markers=${lat},${lng}`;
-  } else if (post) {
-    const encoded = encodeURIComponent(post);
+  const postcode = getVal('c-postcode') || state.selectedCompany?.Postcode || '';
+  const name     = getVal('c-name')    || state.selectedCompany?.Title || '';
+  document.getElementById('c-location-label').textContent = name + (postcode ? ' — ' + postcode : '');
+  if (postcode) {
+    const encoded = encodeURIComponent(postcode);
     document.getElementById('c-map-img').src =
       `https://staticmap.openstreetmap.de/staticmap.php?center=${encoded}&zoom=15&size=600x400&markers=${encoded}`;
   }
 }
 
 function openGoogleMaps() {
-  const lat  = getVal('c-lat')      || state.selectedCompany?.Lat || '';
-  const lng  = getVal('c-lng')      || state.selectedCompany?.Lng || '';
-  const post = getVal('c-postcode') || state.selectedCompany?.Postcode || '';
-  const query = (lat && lng) ? `${lat},${lng}` : post;
-  if (query) window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`, '_blank', 'noopener,noreferrer');
+  const postcode = getVal('c-postcode') || state.selectedCompany?.Postcode || '';
+  if (postcode) window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(postcode)}`, '_blank', 'noopener,noreferrer');
 }
 
 /* ── SCRAPE ──────────────────────────────────────────────────────────────── */
@@ -1965,14 +1893,17 @@ async function startScrape() {
   overlay.classList.add('active');
   state.scrapePollCount = 0;
   try {
+    // Delete existing scrape rows for this company
     const existing = await spGetAll('Scrape_Results', 'ID', `Title eq '${state.selectedCompany.ID}'`);
     for (const row of existing) await spDelete('Scrape_Results', row.ID);
+    // Create new pending row
     await spPost('Scrape_Results', {
       Title: String(state.selectedCompany.ID),
       CompanyName: state.selectedCompany.Title,
       Website: state.selectedCompany.Website || '',
       Status: 'Pending',
     });
+    // Poll every 10s
     state.scrapeInterval = setInterval(pollScrape, 10000);
   } catch (e) {
     overlay.classList.remove('active');
@@ -2044,6 +1975,7 @@ async function renderScrlList() {
   const gallery = document.getElementById('sl-gallery');
   if (!results.length) { gallery.innerHTML = '<div class="empty-state">No SCRLs found</div>'; return; }
 
+  // For component / firm counts, use cached data if available
   gallery.innerHTML = results.map(s => `
     <div class="gallery-row" onclick="openSCRL(${s.ID})">
       <span class="col name" style="flex:2.5">${esc(s.Title)}</span>
@@ -2139,6 +2071,7 @@ async function saveSCRL() {
     const idx = state.scrls.findIndex(s => s.ID === saved.ID);
     if (idx >= 0) state.scrls[idx] = { ...state.scrls[idx], ...body };
     else state.scrls.push(saved);
+    // re-populate dropdowns
     populateSCRLDropdowns();
   } catch (e) { toast('Save failed: ' + e.message, 'error'); }
   showLoading(false);
@@ -2154,6 +2087,7 @@ async function loadSCRLComponents() {
       `SCRL_ID_Ref eq ${state.selectedSCRL.ID}`);
     state.scrlComponents = comps.sort((a,b)=>(a.ItemNumber||0)-(b.ItemNumber||0));
     renderComponentsGallery();
+    // Populate filter dd in Firms tab too
     const sel = document.getElementById('sd-filter-comp');
     if (sel) {
       sel.innerHTML = `<option value="">All components</option>` +
@@ -2288,6 +2222,7 @@ async function loadSCRLFirms() {
     state.scrlCompanies         = firms.map(normaliseSCRLCompany);
     state.scrlCompanyComponents = compComps;
     renderSCRLFirms();
+    // Populate company search
     const sel = document.getElementById('sd-add-firm-sel');
     if (sel) sel.innerHTML = `<option value="">— search firms —</option>` +
       state.companies.map(c=>`<option value="${c.ID}">${esc(c.Title)}</option>`).join('');
@@ -2494,6 +2429,7 @@ const REVIEW_FIELDS = [
 ];
 
 function renderScrapeReview() {
+  // Reset accept flags
   state.scrapeAccept = {};
   REVIEW_FIELDS.forEach(f => state.scrapeAccept[f.accept] = false);
 
