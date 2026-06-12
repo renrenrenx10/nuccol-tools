@@ -563,16 +563,17 @@
 ═══════════════════════════════════════════════════════ -->
 <script>
 const CONFIG = {
-  clientId:   "ec0a6806-59e8-4ea9-8ff5-6bdb1ba87baf",
-  tenantId:   "d44192f5-1023-458c-9cb3-9ff7e9c6d4ad",
-  spSiteUrl:  "https://nuccol.sharepoint.com/sites/NuCCoLOperations",
-  // Companies points at the shared DataVault list — same source of truth
+  clientId:  "ec0a6806-59e8-4ea9-8ff5-6bdb1ba87baf",
+  tenantId:  "d44192f5-1023-458c-9cb3-9ff7e9c6d4ad",
+  // Rolodex-owned lists (contacts + interactions)
+  spSiteUrl: "https://nuccol.sharepoint.com/sites/Rolodex",
+  // Companies lives in the SCRLDatabase site — shared with DataVault
+  spCompaniesSiteUrl: "https://nuccol.sharepoint.com/sites/SCRLDatabase",
   lists: {
-    companies:    "Companies",
-    contacts:     "tblContacts",
-    interactions: "tblInteractions"
+    companies:    "core",          // SCRLDatabase site
+    contacts:     "Contacts",      // Rolodex site  (URL: /Lists/Contacts)
+    interactions: "Interactions"   // Rolodex site  (URL: /Lists/Interactions)
   },
-  // Path to DataVault in the same repo
   dataVaultPath: "datavault.html"
 };
 
@@ -590,7 +591,8 @@ const msalConfig = {
 
 let msalInstance   = null;
 let currentAccount = null;
-const spScopes     = [`${new URL(CONFIG.spSiteUrl).origin}/.default`];
+// Both sites are on the same tenant/origin so one scope covers both
+const spScopes = ["https://nuccol.sharepoint.com/.default"];
 const $            = id => document.getElementById(id);
 
 // ═══════════════════════════════════════════════════════
@@ -662,13 +664,18 @@ async function getToken() {
 // ═══════════════════════════════════════════════════════
 function encSP(s) { return String(s).replace(/'/g, "''"); }
 
+function spSiteFor(listName) {
+  return listName === CONFIG.lists.companies ? CONFIG.spCompaniesSiteUrl : CONFIG.spSiteUrl;
+}
+
 async function spGet(listName, select = "*", filter = "", orderBy = "") {
-  const token = await getToken();
+  const token   = await getToken();
+  const siteUrl = spSiteFor(listName);
   const q = new URLSearchParams({ '$select': select, '$top': '5000' });
   if (filter)  q.set('$filter', filter);
   if (orderBy) q.set('$orderby', orderBy);
   const items = [];
-  let url = `${CONFIG.spSiteUrl}/_api/web/lists/getbytitle('${encSP(listName)}')/items?${q}`;
+  let url = `${siteUrl}/_api/web/lists/getbytitle('${encSP(listName)}')/items?${q}`;
   while (url) {
     const res = await fetch(url, {
       headers: { "Authorization": "Bearer " + token, "Accept": "application/json;odata=nometadata" }
@@ -682,8 +689,9 @@ async function spGet(listName, select = "*", filter = "", orderBy = "") {
 }
 
 async function spPost(listName, fields) {
-  const token = await getToken();
-  const res = await fetch(`${CONFIG.spSiteUrl}/_api/web/lists/getbytitle('${encSP(listName)}')/items`, {
+  const token   = await getToken();
+  const siteUrl = spSiteFor(listName);
+  const res = await fetch(`${siteUrl}/_api/web/lists/getbytitle('${encSP(listName)}')/items`, {
     method: "POST",
     headers: {
       "Authorization": "Bearer " + token,
@@ -700,8 +708,9 @@ async function spPost(listName, fields) {
 }
 
 async function spPatch(listName, itemId, fields) {
-  const token = await getToken();
-  const res = await fetch(`${CONFIG.spSiteUrl}/_api/web/lists/getbytitle('${encSP(listName)}')/items(${itemId})`, {
+  const token   = await getToken();
+  const siteUrl = spSiteFor(listName);
+  const res = await fetch(`${siteUrl}/_api/web/lists/getbytitle('${encSP(listName)}')/items(${itemId})`, {
     method: "POST",
     headers: {
       "Authorization": "Bearer " + token,
@@ -716,8 +725,9 @@ async function spPatch(listName, itemId, fields) {
 }
 
 async function spDelete(listName, itemId) {
-  const token = await getToken();
-  const res = await fetch(`${CONFIG.spSiteUrl}/_api/web/lists/getbytitle('${encSP(listName)}')/items(${itemId})`, {
+  const token   = await getToken();
+  const siteUrl = spSiteFor(listName);
+  const res = await fetch(`${siteUrl}/_api/web/lists/getbytitle('${encSP(listName)}')/items(${itemId})`, {
     method: "POST",
     headers: {
       "Authorization": "Bearer " + token,
