@@ -1170,9 +1170,12 @@ async function onSignedIn() {
 }
 
 function openInRolodex() {
-  if (!state.selectedCompany?.field_1) return;
-  // Pass NuCCoL CompanyID (field_1) so Rolodex can filter by it
-  window.open(`rolodex.html?companyId=${state.selectedCompany.field_1}`, '_blank');
+  const c = state.selectedCompany;
+  if (!c) return;
+  // field_1 = NuCCoL CompanyID (survives normaliseCompany as raw field)
+  // Fall back to SP ID if field_1 absent
+  const companyId = c.field_1 || c.ID;
+  window.open(`rolodex.html?companyId=${companyId}`, '_blank');
 }
 
 /* ──────────────────────────────────────────────────────────────────────────

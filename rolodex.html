@@ -804,7 +804,9 @@ async function loadAll() {
     const params  = new URLSearchParams(window.location.search);
     const deepCid = params.get('companyId');
     if (deepCid) {
-      const match = DB.companies.find(c => String(c.CompanyID) === String(deepCid));
+      const match = DB.companies.find(c =>
+        String(c.CompanyID) === String(deepCid) || String(c.ID) === String(deepCid)
+      );
       if (match) { openFirm(match.ID); return; }
     }
   } catch(e) {
