@@ -8,186 +8,264 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.38.3/lib/msal-browser.min.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Open+Sans:wght@400;600;700&display=swap');
-    body { font-family: 'Open Sans', system-ui, sans-serif; }
+    @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+    body { font-family: 'Inter', system-ui, sans-serif; }
     .title-font { font-family: 'Courier Prime', monospace; }
-    .terminal-input { font-family: 'Courier Prime', monospace; background-color: #0f172a; color: #e0f2fe; border: 1px solid #334155; }
-    .modal { display: none; }
+
+    /* ── Palette ── */
+    :root {
+      --navy:    #0f2d5e;
+      --blue:    #1d4ed8;
+      --blue-lt: #3b82f6;
+      --blue-bg: #eff6ff;
+      --blue-bd: #bfdbfe;
+      --surface: #ffffff;
+      --page:    #f1f5f9;
+      --border:  #e2e8f0;
+      --border2: #cbd5e1;
+      --text:    #0f172a;
+      --muted:   #64748b;
+      --muted2:  #94a3b8;
+      --hover:   #f8fafc;
+      --sel:     #eff6ff;
+      --green:   #16a34a;
+      --amber:   #d97706;
+      --red:     #dc2626;
+    }
+
+    /* ── Layout ── */
     #login-screen { display: flex; }
-    .spinner { border: 3px solid #334155; border-top: 3px solid #3b82f6; border-radius: 50%; width: 20px; height: 20px; animation: spin 0.8s linear infinite; display: inline-block; vertical-align: middle; }
+    .modal { display: none; }
+    .screen-fade { animation: fadeIn 0.12s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+
+    /* ── Sidebar nav ── */
+    .nav-item { border-left: 3px solid transparent; transition: background 0.12s; }
+    .nav-item.active { background: var(--blue-bg); border-left-color: var(--blue); }
+    .nav-item.active .nav-icon { color: var(--blue); }
+    .nav-item:hover:not(.active) { background: var(--page); }
+
+    /* ── Table rows ── */
+    .row-hover:hover { background: var(--hover); cursor: pointer; }
+    .row-selected { background: var(--sel) !important; border-left: 3px solid var(--blue); }
+
+    /* ── Tabs ── */
+    .tab-active   { color: var(--blue); border-bottom: 2px solid var(--blue); font-weight: 600; }
+    .tab-inactive { color: var(--muted); border-bottom: 2px solid transparent; }
+    .tab-inactive:hover { color: var(--text); }
+
+    /* ── Form inputs ── */
+    input[type=text], input[type=email], input[type=tel],
+    input[type=url], input[type=date], select, textarea {
+      background: var(--surface); border: 1px solid var(--border2);
+      color: var(--text); border-radius: 8px; padding: 7px 11px;
+      font-size: 13px; width: 100%; font-family: 'Inter', sans-serif; outline: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--blue-lt); box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+    }
+    select option { background: white; }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+    /* ── Badge ── */
+    .badge { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 999px;
+             font-size: 11px; font-weight: 600; }
+
+    /* ── Spinner ── */
+    .spinner { border: 2px solid var(--border); border-top: 2px solid var(--blue);
+               border-radius: 50%; width: 16px; height: 16px;
+               animation: spin 0.7s linear infinite; display: inline-block; vertical-align: middle; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .row-hover:hover { background: #1e293b; cursor: pointer; }
-    .row-selected { background: #1e3a5f !important; border-left: 3px solid #3b82f6; }
-    .tab-active { background: #1e3a5f; color: #fff; border-bottom: 3px solid #3b82f6; }
-    .tab-inactive { color: #94a3b8; border-bottom: 3px solid transparent; }
-    .tab-inactive:hover { color: #e2e8f0; }
-    .screen-fade { animation: fadeIn 0.15s ease; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-    .nav-item { border-left: 3px solid transparent; }
-    .nav-item.active { background: #1e2937; border-left: 3px solid #3b82f6; }
-    #toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
-    .toast { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 12px 18px; font-size: 13px; max-width: 360px; pointer-events: auto; animation: slideIn 0.2s ease; }
-    @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-    input[type=text], input[type=email], input[type=tel], input[type=url], input[type=date], select, textarea {
-      background: #0f172a; border: 1px solid #334155; color: #e2e8f0; border-radius: 10px; padding: 8px 12px;
-      font-size: 13px; width: 100%; font-family: 'Courier Prime', monospace; outline: none;
-    }
-    input[type=text]:focus, input[type=email]:focus, input[type=tel]:focus, input[type=url]:focus,
-    input[type=date]:focus, select:focus, textarea:focus {
-      border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
-    }
-    select option { background: #0f172a; }
-    ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
-    .badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; font-family: 'Courier Prime', monospace; }
+
+    /* ── Toast ── */
+    #toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+                       display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+    .toast { background: var(--surface); border: 1px solid var(--border2); border-radius: 10px;
+             padding: 10px 16px; font-size: 13px; max-width: 340px; pointer-events: auto;
+             box-shadow: 0 4px 16px rgba(0,0,0,0.10); animation: slideIn 0.18s ease; }
+    @keyframes slideIn { from { opacity:0; transform:translateX(16px); } to { opacity:1; transform:translateX(0); } }
+
+    /* ── Column headers ── */
+    .col-header { background: var(--navy); color: #fff; padding: 6px 20px;
+                  font-size: 11px; font-family: 'Courier Prime', monospace;
+                  font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+    .col-header-light { background: var(--blue-bg); border-bottom: 1px solid var(--blue-bd);
+                        padding: 6px 20px; font-size: 11px; font-family: 'Courier Prime', monospace;
+                        font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--navy); }
+
+    /* ── Stat cards ── */
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+                 padding: 24px; text-align: center; }
+    .stat-num  { font-size: 2.5rem; font-weight: 700; font-family: 'Courier Prime', monospace; color: var(--navy); line-height: 1; }
+    .stat-lbl  { font-size: 12px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* ── Action cards ── */
+    .action-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+                   padding: 28px 20px; text-align: center; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; }
+    .action-card:hover { border-color: var(--blue); box-shadow: 0 4px 20px rgba(29,78,216,0.10); }
+    .action-icon { width: 52px; height: 52px; background: var(--blue-bg); border-radius: 14px;
+                   display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
   </style>
 </head>
-<body class="h-full bg-zinc-950 text-zinc-100">
+<body class="h-full" style="background:var(--page);color:var(--text)">
 
-<!-- ── LOGIN ─────────────────────────────────────────────── -->
-<div id="login-screen" class="fixed inset-0 bg-zinc-950 flex items-center justify-center z-50">
-  <div class="text-center max-w-md w-full px-8">
-    <div class="flex items-center justify-center gap-4 mb-6">
-      <div class="w-14 h-14 bg-blue-700 rounded-xl flex items-center justify-center text-white font-bold text-3xl title-font">R</div>
+<!-- ── LOGIN ──────────────────────────────────────────────── -->
+<div id="login-screen" class="fixed inset-0 flex items-center justify-center z-50" style="background:var(--navy)">
+  <div class="text-center max-w-sm w-full px-8">
+    <div class="flex items-center justify-center gap-4 mb-8">
+      <div class="w-14 h-14 rounded-xl flex items-center justify-center font-bold text-2xl title-font text-white"
+           style="background:var(--blue)">R</div>
       <div class="text-left">
-        <div class="text-4xl font-bold title-font tracking-tighter">RoloDex</div>
-        <div class="text-blue-400 text-sm -mt-1">NuCCoL — Company & Contact Management</div>
+        <div class="text-4xl font-bold title-font text-white tracking-tight">RoloDex</div>
+        <div class="text-sm mt-0.5" style="color:rgba(255,255,255,0.55)">NuCCoL — CRM</div>
       </div>
     </div>
-    <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-10 mt-8">
-      <p class="text-zinc-400 text-sm mb-8">Sign in with your NuCCoL Microsoft 365 account to continue.</p>
+    <div class="rounded-2xl p-8" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12)">
+      <p class="text-sm mb-6" style="color:rgba(255,255,255,0.5)">
+        Sign in with your NuCCoL Microsoft 365 account to continue.
+      </p>
       <button id="btn-login"
-        class="w-full flex items-center justify-center gap-3 px-6 py-4 bg-white hover:bg-zinc-100 text-zinc-900 font-semibold rounded-2xl transition-all text-base">
-        <svg width="20" height="20" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
-          <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
-          <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
-          <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
-          <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+        class="w-full flex items-center justify-center gap-3 px-6 py-3.5 font-semibold rounded-xl transition-all text-sm"
+        style="background:white;color:#0f172a">
+        <svg width="18" height="18" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
+          <rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+          <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
         </svg>
         Sign in with Microsoft
       </button>
-      <div id="login-status" class="mt-6 text-sm text-zinc-500 min-h-[1.5rem]"></div>
+      <div id="login-status" class="mt-5 text-xs min-h-[1.2rem]" style="color:rgba(255,255,255,0.4)"></div>
     </div>
-    <div class="mt-6 text-xs text-zinc-600">
-      Access restricted to authorised NuCCoL staff.<br>
-      Data stored in SharePoint. Hosted on GitHub Pages.
+    <div class="mt-5 text-xs" style="color:rgba(255,255,255,0.25)">
+      Access restricted to authorised NuCCoL staff.<br>Data stored in SharePoint · Hosted on GitHub Pages.
     </div>
   </div>
 </div>
 
-<!-- ── MAIN APP ───────────────────────────────────────────── -->
+<!-- ── MAIN APP ────────────────────────────────────────────── -->
 <div id="app" class="flex h-screen overflow-hidden" style="display:none!important">
 
   <!-- Sidebar -->
-  <div class="w-64 bg-zinc-900 border-r border-zinc-800 flex flex-col flex-shrink-0">
-    <div class="p-5 border-b border-zinc-800">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 bg-blue-700 rounded-lg flex items-center justify-center font-bold title-font text-lg">R</div>
+  <div class="flex flex-col flex-shrink-0" style="width:220px;background:var(--surface);border-right:1px solid var(--border)">
+    <!-- Brand -->
+    <div class="p-4" style="border-bottom:1px solid var(--border)">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold title-font text-base text-white flex-shrink-0"
+             style="background:var(--navy)">R</div>
         <div>
-          <div class="font-bold title-font text-lg leading-tight">RoloDex</div>
-          <div class="text-zinc-500 text-xs">CRM</div>
+          <div class="font-bold title-font text-base leading-tight" style="color:var(--navy)">RoloDex</div>
+          <div class="text-xs" style="color:var(--muted2)">NuCCoL CRM</div>
         </div>
       </div>
     </div>
 
     <!-- Nav -->
-    <nav class="flex-1 p-3 space-y-1">
+    <nav class="flex-1 p-2 space-y-0.5">
       <button onclick="showScreen('home')" id="nav-home"
-        class="nav-item active w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-left hover:bg-zinc-800 transition-colors">
-        <i class="fa-solid fa-house w-4 text-blue-400"></i> Home
+        class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-left active">
+        <i class="fa-solid fa-house nav-icon w-4 text-sm" style="color:var(--muted)"></i>
+        <span>Home</span>
       </button>
       <button onclick="showScreen('search')" id="nav-search"
-        class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-left hover:bg-zinc-800 transition-colors">
-        <i class="fa-solid fa-magnifying-glass w-4 text-blue-400"></i> Search Firms
+        class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-left">
+        <i class="fa-solid fa-magnifying-glass nav-icon w-4 text-sm" style="color:var(--muted)"></i>
+        <span>Search Firms</span>
       </button>
       <button onclick="openAddFirm(null)" id="nav-addfirm"
-        class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-left hover:bg-zinc-800 transition-colors">
-        <i class="fa-solid fa-building-circle-arrow-right w-4 text-blue-400"></i> Add New Firm
+        class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-left">
+        <i class="fa-solid fa-building-circle-arrow-right nav-icon w-4 text-sm" style="color:var(--muted)"></i>
+        <span>Add New Firm</span>
       </button>
       <button onclick="showScreen('interactions')" id="nav-interactions"
-        class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-left hover:bg-zinc-800 transition-colors">
-        <i class="fa-solid fa-calendar-check w-4 text-blue-400"></i> All Interactions
+        class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-left">
+        <i class="fa-solid fa-calendar-check nav-icon w-4 text-sm" style="color:var(--muted)"></i>
+        <span>Interactions</span>
       </button>
+      <div class="pt-2 mt-2" style="border-top:1px solid var(--border)">
+        <a href="datavault.html"
+          class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-left"
+          style="color:var(--muted);text-decoration:none">
+          <i class="fa-solid fa-database nav-icon w-4 text-sm" style="color:var(--muted)"></i>
+          <span>DataVault</span>
+          <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-auto" style="color:var(--muted2)"></i>
+        </a>
+      </div>
     </nav>
 
     <!-- User -->
-    <div class="p-4 border-t border-zinc-800">
-      <div class="flex items-center gap-3">
-        <div id="user-avatar" class="w-9 h-9 bg-blue-700 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">?</div>
-        <div class="min-w-0">
-          <div id="user-name" class="text-sm font-medium truncate">—</div>
-          <div id="user-email" class="text-xs text-zinc-500 truncate">—</div>
+    <div class="p-3" style="border-top:1px solid var(--border)">
+      <div class="flex items-center gap-2.5">
+        <div id="user-avatar" class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs text-white flex-shrink-0"
+             style="background:var(--blue)">?</div>
+        <div class="min-w-0 flex-1">
+          <div id="user-name" class="text-xs font-semibold truncate" style="color:var(--text)">—</div>
+          <div id="user-email" class="text-xs truncate" style="color:var(--muted2)">—</div>
         </div>
-        <button onclick="signOut()" title="Sign out" class="ml-auto text-zinc-500 hover:text-zinc-300 flex-shrink-0">
-          <i class="fa-solid fa-right-from-bracket text-xs"></i>
+        <button onclick="signOut()" title="Sign out" class="flex-shrink-0 text-xs p-1 rounded hover:bg-slate-100" style="color:var(--muted)">
+          <i class="fa-solid fa-right-from-bracket"></i>
         </button>
       </div>
-      <div id="sp-status" class="mt-2 text-xs text-zinc-500"></div>
+      <div id="sp-status" class="mt-1.5 text-xs" style="color:var(--muted2)"></div>
     </div>
   </div>
 
   <!-- Main content -->
   <div class="flex-1 overflow-hidden flex flex-col">
 
-    <!-- ══ HOME SCREEN ═════════════════════════════════════ -->
+    <!-- ══ HOME SCREEN ══════════════════════════════════════ -->
     <div id="screen-home" class="flex-1 overflow-auto p-8 screen-fade">
-      <div class="mb-8">
-        <h1 class="text-3xl font-bold title-font">RoloDex</h1>
-        <p class="text-zinc-400 mt-1">Company & Contact Management</p>
+      <div class="mb-7">
+        <h1 class="text-2xl font-bold title-font" style="color:var(--navy)">RoloDex</h1>
+        <p class="text-sm mt-1" style="color:var(--muted)">Company &amp; Contact Management</p>
       </div>
 
-      <!-- Stats bar -->
+      <!-- Stats -->
+      <div class="grid grid-cols-3 gap-4 mb-7">
+        <div class="stat-card">
+          <div id="stat-companies" class="stat-num">—</div>
+          <div class="stat-lbl">Companies</div>
+        </div>
+        <div class="stat-card">
+          <div id="stat-contacts" class="stat-num">—</div>
+          <div class="stat-lbl">Contacts</div>
+        </div>
+        <div class="stat-card">
+          <div id="stat-interactions" class="stat-num">—</div>
+          <div class="stat-lbl">Interactions</div>
+        </div>
+      </div>
+
+      <!-- Quick actions -->
       <div class="grid grid-cols-3 gap-4 mb-8">
-        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 text-center">
-          <div id="stat-companies" class="text-4xl font-bold title-font text-blue-400">—</div>
-          <div class="text-zinc-400 text-sm mt-1">Companies</div>
-        </div>
-        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 text-center">
-          <div id="stat-contacts" class="text-4xl font-bold title-font text-blue-400">—</div>
-          <div class="text-zinc-400 text-sm mt-1">Contacts</div>
-        </div>
-        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 text-center">
-          <div id="stat-interactions" class="text-4xl font-bold title-font text-blue-400">—</div>
-          <div class="text-zinc-400 text-sm mt-1">Interactions</div>
-        </div>
-      </div>
-
-      <!-- Quick action cards -->
-      <div class="grid grid-cols-3 gap-5">
-        <button onclick="showScreen('search')"
-          class="bg-zinc-900 border border-zinc-800 hover:border-blue-600 rounded-2xl p-8 text-center transition-all group">
-          <div class="w-16 h-16 bg-blue-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-800/40 transition-colors">
-            <i class="fa-solid fa-magnifying-glass text-2xl text-blue-400"></i>
-          </div>
-          <div class="font-bold text-base mb-1">Search Firms</div>
-          <div class="text-zinc-500 text-sm">Find and manage existing companies and their contacts</div>
+        <button onclick="showScreen('search')" class="action-card">
+          <div class="action-icon"><i class="fa-solid fa-magnifying-glass text-xl" style="color:var(--blue)"></i></div>
+          <div class="font-semibold text-sm mb-1" style="color:var(--text)">Search Firms</div>
+          <div class="text-xs" style="color:var(--muted)">Find and manage companies and contacts</div>
         </button>
-        <button onclick="openAddFirm(null)"
-          class="bg-zinc-900 border border-zinc-800 hover:border-blue-600 rounded-2xl p-8 text-center transition-all group">
-          <div class="w-16 h-16 bg-blue-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-800/40 transition-colors">
-            <i class="fa-solid fa-building-circle-arrow-right text-2xl text-blue-400"></i>
-          </div>
-          <div class="font-bold text-base mb-1">Add New Firm</div>
-          <div class="text-zinc-500 text-sm">Register a new company on the CRM</div>
+        <button onclick="openAddFirm(null)" class="action-card">
+          <div class="action-icon"><i class="fa-solid fa-building-circle-arrow-right text-xl" style="color:var(--blue)"></i></div>
+          <div class="font-semibold text-sm mb-1" style="color:var(--text)">Add New Firm</div>
+          <div class="text-xs" style="color:var(--muted)">Register a new company</div>
         </button>
-        <button onclick="showScreen('search')"
-          class="bg-zinc-900 border border-zinc-800 hover:border-blue-600 rounded-2xl p-8 text-center transition-all group">
-          <div class="w-16 h-16 bg-blue-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-800/40 transition-colors">
-            <i class="fa-solid fa-comments text-2xl text-blue-400"></i>
-          </div>
-          <div class="font-bold text-base mb-1">Log Interaction</div>
-          <div class="text-zinc-500 text-sm">Record a new interaction — search for the company first</div>
+        <button onclick="showScreen('search')" class="action-card">
+          <div class="action-icon"><i class="fa-solid fa-comments text-xl" style="color:var(--blue)"></i></div>
+          <div class="font-semibold text-sm mb-1" style="color:var(--text)">Log Interaction</div>
+          <div class="text-xs" style="color:var(--muted)">Search for a company first, then log</div>
         </button>
       </div>
 
       <!-- Recent interactions -->
-      <div class="mt-8">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="font-semibold text-zinc-200">Recent Interactions</h2>
-          <button onclick="showScreen('interactions')" class="text-blue-400 text-sm hover:underline">View all →</button>
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="font-semibold text-sm" style="color:var(--text)">Recent Interactions</h2>
+          <button onclick="showScreen('interactions')" class="text-xs font-medium hover:underline" style="color:var(--blue)">View all →</button>
         </div>
-        <div id="home-recent-interactions" class="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
-          <div class="text-zinc-500 text-sm text-center py-8">Loading...</div>
+        <div id="home-recent-interactions" class="rounded-xl overflow-hidden"
+             style="background:var(--surface);border:1px solid var(--border)">
+          <div class="text-sm text-center py-8" style="color:var(--muted)">Loading...</div>
         </div>
       </div>
     </div>
@@ -195,289 +273,284 @@
     <!-- ══ SEARCH SCREEN ════════════════════════════════════ -->
     <div id="screen-search" class="hidden flex-1 overflow-hidden flex flex-col screen-fade">
       <!-- Toolbar -->
-      <div class="bg-zinc-900 border-b border-zinc-800 px-6 py-4 flex items-center gap-4 flex-shrink-0">
-        <div class="relative flex-1 max-w-sm">
-          <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm"></i>
-          <input id="search-company" type="text" placeholder="Search by company name..."
-            class="pl-9 pr-4 py-2 bg-zinc-800 border-zinc-700 rounded-xl text-sm" oninput="renderSearch()">
+      <div class="px-5 py-3 flex items-center gap-3 flex-shrink-0"
+           style="background:var(--surface);border-bottom:1px solid var(--border)">
+        <div class="relative flex-1 max-w-xs">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs" style="color:var(--muted)"></i>
+          <input id="search-company" type="text" placeholder="Company name..."
+            style="padding-left:2rem" oninput="renderSearch()">
         </div>
-        <div class="relative flex-1 max-w-sm">
-          <i class="fa-solid fa-user absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm"></i>
-          <input id="search-contact" type="text" placeholder="Search by contact name..."
-            class="pl-9 pr-4 py-2 bg-zinc-800 border-zinc-700 rounded-xl text-sm" oninput="renderSearch()">
+        <div class="relative flex-1 max-w-xs">
+          <i class="fa-solid fa-user absolute left-3 top-1/2 -translate-y-1/2 text-xs" style="color:var(--muted)"></i>
+          <input id="search-contact" type="text" placeholder="Contact name..."
+            style="padding-left:2rem" oninput="renderSearch()">
         </div>
-        <div class="ml-auto flex gap-3">
+        <div class="ml-auto flex gap-2">
           <button onclick="openAddFirm(null)"
-            class="px-5 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-semibold transition-colors">
+            class="px-4 py-2 text-xs font-semibold rounded-lg text-white transition-colors"
+            style="background:var(--navy)">
             + Add Firm
           </button>
           <button onclick="openAddContact(null)"
-            class="px-5 py-2 bg-zinc-700 hover:bg-zinc-600 rounded-xl text-sm font-semibold transition-colors">
+            class="px-4 py-2 text-xs font-semibold rounded-lg transition-colors"
+            style="background:var(--page);border:1px solid var(--border2);color:var(--text)">
             + Add Contact
           </button>
         </div>
       </div>
       <!-- Column headers -->
-      <div class="bg-blue-950 border-b border-zinc-800 px-6 py-2 grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 flex-shrink-0">
-        <div class="text-xs font-bold text-white title-font uppercase">Firm</div>
-        <div class="text-xs font-bold text-white title-font uppercase">City</div>
-        <div class="text-xs font-bold text-white title-font uppercase">County</div>
-        <div class="text-xs font-bold text-white title-font uppercase">Website</div>
-        <div class="text-xs font-bold text-white title-font uppercase">Regional SCC</div>
+      <div class="col-header grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 flex-shrink-0">
+        <div>Firm</div><div>City</div><div>County</div><div>Website</div><div>Regional SCC</div>
       </div>
-      <!-- Results list -->
-      <div id="search-results" class="flex-1 overflow-auto"></div>
+      <!-- Results -->
+      <div id="search-results" class="flex-1 overflow-auto" style="background:var(--surface)"></div>
     </div>
 
-    <!-- ══ FIRM DETAIL SCREEN ═══════════════════════════════ -->
+    <!-- ══ FIRM DETAIL SCREEN ════════════════════════════════ -->
     <div id="screen-firm" class="hidden flex-1 overflow-hidden flex flex-col screen-fade">
-      <!-- Firm header + form -->
-      <div class="bg-zinc-900 border-b border-zinc-800 flex-shrink-0">
+      <!-- Header -->
+      <div class="flex-shrink-0" style="background:var(--surface);border-bottom:1px solid var(--border)">
         <!-- Top bar -->
-        <div class="px-6 py-4 flex items-center gap-4 border-b border-zinc-800">
+        <div class="px-5 py-3 flex items-center gap-4" style="border-bottom:1px solid var(--border)">
           <div>
-            <div id="firm-screen-title" class="text-xl font-bold title-font">Add Firm</div>
-            <div id="firm-screen-subtitle" class="text-blue-400 text-sm">Register a new company</div>
+            <div id="firm-screen-title" class="text-lg font-bold title-font" style="color:var(--navy)">Add Firm</div>
+            <div id="firm-screen-subtitle" class="text-xs mt-0.5" style="color:var(--muted)">Register a new company</div>
           </div>
-          <div class="ml-auto flex items-center gap-3">
-            <button onclick="saveFirm(false)" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-semibold transition-colors">
-              💾 Save
+          <div class="ml-auto flex items-center gap-2">
+            <button id="btn-datavault-link" onclick="openInDataVault()" class="hidden px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors"
+              style="background:var(--blue-bg);border:1px solid var(--blue-bd);color:var(--blue)">
+              <i class="fa-solid fa-database mr-1"></i> View in DataVault
             </button>
-            <button onclick="saveFirm(true)" class="px-5 py-2 bg-zinc-700 hover:bg-zinc-600 rounded-xl text-sm font-semibold transition-colors">
-              Save & New
-            </button>
-            <button onclick="deleteFirm()" id="btn-delete-firm" class="px-5 py-2 bg-red-800 hover:bg-red-700 rounded-xl text-sm font-semibold transition-colors hidden">
-              🗑 Delete
-            </button>
-            <button onclick="showScreen('search')" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-sm transition-colors">
-              ✕ Close
-            </button>
+            <button onclick="saveFirm(false)" class="px-4 py-1.5 text-xs font-semibold rounded-lg text-white transition-colors"
+              style="background:var(--blue)">💾 Save</button>
+            <button onclick="saveFirm(true)" class="px-4 py-1.5 text-xs font-semibold rounded-lg transition-colors"
+              style="background:var(--page);border:1px solid var(--border2);color:var(--text)">Save & New</button>
+            <button onclick="deleteFirm()" id="btn-delete-firm"
+              class="hidden px-4 py-1.5 text-xs font-semibold rounded-lg text-white"
+              style="background:var(--red)">🗑 Delete</button>
+            <button onclick="showScreen('search')" class="px-3 py-1.5 text-xs rounded-lg transition-colors"
+              style="background:var(--page);border:1px solid var(--border2);color:var(--muted)">✕ Close</button>
           </div>
         </div>
         <!-- Firm fields -->
-        <div class="px-6 py-4 grid grid-cols-3 gap-x-6 gap-y-3">
+        <div class="px-5 py-4 grid grid-cols-3 gap-x-5 gap-y-3">
           <div>
-            <label class="block text-xs text-zinc-400 mb-1 title-font uppercase">Firm</label>
+            <label class="block text-xs font-semibold mb-1 title-font uppercase" style="color:var(--muted)">Firm Name</label>
             <input id="firm-name" type="text" placeholder="Company name" />
           </div>
           <div>
-            <label class="block text-xs text-zinc-400 mb-1 title-font uppercase">Phone</label>
+            <label class="block text-xs font-semibold mb-1 title-font uppercase" style="color:var(--muted)">Phone</label>
             <input id="firm-phone" type="tel" placeholder="+44..." />
           </div>
           <div>
-            <label class="block text-xs text-zinc-400 mb-1 title-font uppercase">Notes</label>
+            <label class="block text-xs font-semibold mb-1 title-font uppercase" style="color:var(--muted)">Notes</label>
             <input id="firm-notes" type="text" placeholder="Notes..." />
           </div>
           <div>
-            <label class="block text-xs text-zinc-400 mb-1 title-font uppercase">Website</label>
+            <label class="block text-xs font-semibold mb-1 title-font uppercase" style="color:var(--muted)">Website</label>
             <input id="firm-website" type="url" placeholder="https://..." />
           </div>
           <div>
-            <label class="block text-xs text-zinc-400 mb-1 title-font uppercase">Email</label>
+            <label class="block text-xs font-semibold mb-1 title-font uppercase" style="color:var(--muted)">Email</label>
             <input id="firm-email" type="email" placeholder="info@..." />
           </div>
           <div>
-            <label class="block text-xs text-zinc-400 mb-1 title-font uppercase">Regional IA</label>
+            <label class="block text-xs font-semibold mb-1 title-font uppercase" style="color:var(--muted)">Regional IA</label>
             <input id="firm-regional" type="text" placeholder="e.g. NW" />
           </div>
           <div>
-            <label class="block text-xs text-zinc-400 mb-1 title-font uppercase">City</label>
+            <label class="block text-xs font-semibold mb-1 title-font uppercase" style="color:var(--muted)">City</label>
             <input id="firm-city" type="text" />
           </div>
           <div>
-            <label class="block text-xs text-zinc-400 mb-1 title-font uppercase">County</label>
+            <label class="block text-xs font-semibold mb-1 title-font uppercase" style="color:var(--muted)">County</label>
             <input id="firm-county" type="text" />
           </div>
           <div>
-            <label class="block text-xs text-zinc-400 mb-1 title-font uppercase">Postcode</label>
+            <label class="block text-xs font-semibold mb-1 title-font uppercase" style="color:var(--muted)">Postcode</label>
             <input id="firm-postcode" type="text" />
           </div>
         </div>
         <!-- Sub-tabs -->
-        <div class="flex gap-0 px-6 border-t border-zinc-800">
+        <div class="flex items-center px-5" style="border-top:1px solid var(--border)">
           <button onclick="firmTab('contacts')" id="ftab-contacts"
-            class="tab-active px-6 py-3 text-sm font-medium transition-colors">
-            👥 Contacts <span id="ftab-contacts-count" class="text-xs text-zinc-400 ml-1"></span>
+            class="tab-active px-4 py-2.5 text-sm transition-colors mr-1">
+            👥 Contacts <span id="ftab-contacts-count" class="text-xs ml-1" style="color:var(--muted)"></span>
           </button>
           <button onclick="firmTab('interactions')" id="ftab-interactions"
-            class="tab-inactive px-6 py-3 text-sm font-medium transition-colors">
-            💬 Interactions <span id="ftab-interactions-count" class="text-xs text-zinc-400 ml-1"></span>
+            class="tab-inactive px-4 py-2.5 text-sm transition-colors">
+            💬 Interactions <span id="ftab-interactions-count" class="text-xs ml-1" style="color:var(--muted)"></span>
           </button>
-          <div class="ml-auto flex items-center gap-3 py-2">
+          <div class="ml-auto flex items-center gap-2 py-2">
             <button id="btn-add-contact-firm" onclick="openAddContact(null)"
-              class="px-4 py-1.5 bg-zinc-700 hover:bg-zinc-600 rounded-lg text-xs font-semibold transition-colors">
-              + Add Contact
+              class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors"
+              style="background:var(--page);border:1px solid var(--border2);color:var(--text)">
+              + Contact
             </button>
-            <button id="btn-log-interaction-firm" onclick="openAddInteraction(null)" class="hidden px-4 py-1.5 bg-zinc-700 hover:bg-zinc-600 rounded-lg text-xs font-semibold transition-colors">
+            <button id="btn-log-interaction-firm" onclick="openAddInteraction(null)"
+              class="hidden px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors"
+              style="background:var(--page);border:1px solid var(--border2);color:var(--text)">
               + Log Interaction
             </button>
           </div>
         </div>
       </div>
       <!-- Sub-tab content -->
-      <div class="flex-1 overflow-auto">
-        <!-- Contacts sub-tab -->
+      <div class="flex-1 overflow-auto" style="background:var(--surface)">
         <div id="firm-contacts-panel">
-          <div class="bg-blue-950/60 border-b border-zinc-800 px-6 py-2 grid grid-cols-[2fr_2fr_2fr_1fr] gap-4">
-            <div class="text-xs font-bold text-white title-font uppercase">Name</div>
-            <div class="text-xs font-bold text-white title-font uppercase">Job Title</div>
-            <div class="text-xs font-bold text-white title-font uppercase">Email</div>
-            <div class="text-xs font-bold text-white title-font uppercase">Phone</div>
+          <div class="col-header-light grid grid-cols-[2fr_2fr_2fr_1fr] gap-4">
+            <div>Name</div><div>Job Title</div><div>Email</div><div>Phone</div>
           </div>
           <div id="firm-contacts-list"></div>
         </div>
-        <!-- Interactions sub-tab -->
         <div id="firm-interactions-panel" class="hidden">
-          <div class="bg-blue-950/60 border-b border-zinc-800 px-6 py-2 grid grid-cols-[1fr_1fr_2fr_2fr] gap-4">
-            <div class="text-xs font-bold text-white title-font uppercase">Date</div>
-            <div class="text-xs font-bold text-white title-font uppercase">Method</div>
-            <div class="text-xs font-bold text-white title-font uppercase">Contact</div>
-            <div class="text-xs font-bold text-white title-font uppercase">Summary</div>
+          <div class="col-header-light grid grid-cols-[1fr_1fr_2fr_2fr] gap-4">
+            <div>Date</div><div>Method</div><div>Contact</div><div>Summary</div>
           </div>
           <div id="firm-interactions-list"></div>
         </div>
       </div>
     </div>
 
-    <!-- ══ ALL INTERACTIONS SCREEN ══════════════════════════ -->
+    <!-- ══ ALL INTERACTIONS SCREEN ════════════════════════ -->
     <div id="screen-interactions" class="hidden flex-1 overflow-hidden flex flex-col screen-fade">
-      <div class="bg-zinc-900 border-b border-zinc-800 px-6 py-4 flex items-center gap-4 flex-shrink-0">
-        <h2 class="font-bold text-lg title-font">All Interactions</h2>
-        <div class="relative ml-4 flex-1 max-w-xs">
-          <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm"></i>
+      <div class="px-5 py-3 flex items-center gap-4 flex-shrink-0"
+           style="background:var(--surface);border-bottom:1px solid var(--border)">
+        <h2 class="font-bold text-base title-font" style="color:var(--navy)">All Interactions</h2>
+        <div class="relative ml-2 flex-1 max-w-xs">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs" style="color:var(--muted)"></i>
           <input id="search-interactions" type="text" placeholder="Filter by company or summary..."
-            class="pl-9 pr-4 py-2 bg-zinc-800 border-zinc-700 rounded-xl text-sm" oninput="renderInteractionsList()">
+            style="padding-left:2rem" oninput="renderInteractionsList()">
         </div>
-        <div class="ml-auto flex gap-3">
-          <select id="filter-followup" onchange="renderInteractionsList()" class="bg-zinc-800 border-zinc-700 rounded-xl text-sm px-3 py-2 w-auto">
+        <div class="ml-auto">
+          <select id="filter-followup" onchange="renderInteractionsList()"
+            style="width:auto;padding:7px 28px 7px 11px">
             <option value="">All follow-ups</option>
             <option value="yes">Follow-up required</option>
             <option value="no">No follow-up</option>
           </select>
         </div>
       </div>
-      <div class="bg-blue-950 border-b border-zinc-800 px-6 py-2 grid grid-cols-[1fr_1fr_1.5fr_2fr_1fr_1fr] gap-4 flex-shrink-0">
-        <div class="text-xs font-bold text-white title-font uppercase">Date</div>
-        <div class="text-xs font-bold text-white title-font uppercase">Company</div>
-        <div class="text-xs font-bold text-white title-font uppercase">Contact</div>
-        <div class="text-xs font-bold text-white title-font uppercase">Summary</div>
-        <div class="text-xs font-bold text-white title-font uppercase">Method</div>
-        <div class="text-xs font-bold text-white title-font uppercase">Follow Up</div>
+      <div class="col-header grid grid-cols-[1fr_1fr_1.5fr_2fr_1fr_1fr] gap-4 flex-shrink-0">
+        <div>Date</div><div>Company</div><div>Contact</div><div>Summary</div><div>Method</div><div>Follow Up</div>
       </div>
-      <div id="interactions-list" class="flex-1 overflow-auto"></div>
+      <div id="interactions-list" class="flex-1 overflow-auto" style="background:var(--surface)"></div>
     </div>
 
   </div><!-- /main content -->
 </div><!-- /app -->
 
-<!-- ═══ CONTACT MODAL ═══════════════════════════════════════ -->
-<div id="contact-modal" class="modal fixed inset-0 bg-black/80 items-center justify-center z-50">
-  <div class="bg-zinc-900 w-full max-w-2xl mx-4 rounded-3xl overflow-hidden">
-    <div class="bg-zinc-800 px-6 py-5 flex justify-between items-center">
-      <div id="contact-modal-title" class="font-bold text-xl title-font">Add Contact</div>
-      <button onclick="closeContactModal()" class="text-3xl text-zinc-400 hover:text-white leading-none">×</button>
+<!-- ═══ CONTACT MODAL ══════════════════════════════════════ -->
+<div id="contact-modal" class="modal fixed inset-0 items-center justify-center z-50" style="background:rgba(15,45,94,0.5)">
+  <div class="w-full max-w-2xl mx-4 rounded-2xl overflow-hidden shadow-2xl" style="background:var(--surface)">
+    <div class="px-6 py-4 flex justify-between items-center" style="background:var(--navy)">
+      <div id="contact-modal-title" class="font-bold text-lg title-font text-white">Add Contact</div>
+      <button onclick="closeContactModal()" class="text-2xl text-white/60 hover:text-white leading-none">×</button>
     </div>
     <div class="p-6 space-y-4">
       <input type="hidden" id="cm-id" />
-      <div class="text-sm text-zinc-400 title-font" id="cm-company-label"></div>
+      <div class="text-xs font-semibold title-font px-3 py-2 rounded-lg" id="cm-company-label"
+           style="background:var(--blue-bg);color:var(--blue);display:none"></div>
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-xs text-zinc-400 mb-1 title-font uppercase">First Name</label>
+          <label class="block text-xs font-semibold mb-1 title-font uppercase" style="color:var(--muted)">First Name</label>
           <input id="cm-first" type="text" placeholder="First name" />
         </div>
         <div>
-          <label class="block text-xs text-zinc-400 mb-1 title-font uppercase">Last Name</label>
+          <label class="block text-xs font-semibold mb-1 title-font uppercase" style="color:var(--muted)">Last Name</label>
           <input id="cm-last" type="text" placeholder="Last name" />
         </div>
         <div>
-          <label class="block text-xs text-zinc-400 mb-1 title-font uppercase">Job Title</label>
+          <label class="block text-xs font-semibold mb-1 title-font uppercase" style="color:var(--muted)">Job Title</label>
           <input id="cm-title" type="text" placeholder="Job title" />
         </div>
         <div>
-          <label class="block text-xs text-zinc-400 mb-1 title-font uppercase">Phone</label>
+          <label class="block text-xs font-semibold mb-1 title-font uppercase" style="color:var(--muted)">Phone</label>
           <input id="cm-phone" type="tel" placeholder="+44..." />
         </div>
         <div>
-          <label class="block text-xs text-zinc-400 mb-1 title-font uppercase">Email</label>
+          <label class="block text-xs font-semibold mb-1 title-font uppercase" style="color:var(--muted)">Email</label>
           <input id="cm-email" type="email" placeholder="name@..." />
         </div>
         <div>
-          <label class="block text-xs text-zinc-400 mb-1 title-font uppercase">LinkedIn</label>
+          <label class="block text-xs font-semibold mb-1 title-font uppercase" style="color:var(--muted)">LinkedIn</label>
           <input id="cm-linkedin" type="url" placeholder="https://linkedin.com/in/..." />
         </div>
       </div>
       <div>
-        <label class="block text-xs text-zinc-400 mb-1 title-font uppercase">Notes</label>
-        <textarea id="cm-notes" rows="3" class="terminal-input rounded-xl p-3 text-sm w-full" placeholder="Notes..."></textarea>
+        <label class="block text-xs font-semibold mb-1 title-font uppercase" style="color:var(--muted)">Notes</label>
+        <textarea id="cm-notes" rows="3" placeholder="Notes..."></textarea>
       </div>
     </div>
-    <div class="px-6 py-4 border-t border-zinc-800 flex gap-3 justify-end">
-      <button onclick="deleteContact()" id="cm-delete-btn" class="px-5 py-2 bg-red-800 hover:bg-red-700 rounded-xl text-sm font-semibold hidden">🗑 Delete</button>
-      <button onclick="saveContact(false)" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-semibold">💾 Save</button>
-      <button onclick="saveContact(true)" class="px-5 py-2 bg-zinc-700 hover:bg-zinc-600 rounded-xl text-sm font-semibold">Save & New</button>
-      <button onclick="closeContactModal()" class="px-5 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-sm">Cancel</button>
+    <div class="px-6 py-4 flex gap-2 justify-end" style="border-top:1px solid var(--border)">
+      <button onclick="deleteContact()" id="cm-delete-btn"
+        class="hidden px-4 py-2 text-xs font-semibold rounded-lg text-white" style="background:var(--red)">🗑 Delete</button>
+      <button onclick="saveContact(false)"
+        class="px-5 py-2 text-xs font-semibold rounded-lg text-white" style="background:var(--blue)">💾 Save</button>
+      <button onclick="saveContact(true)"
+        class="px-4 py-2 text-xs font-semibold rounded-lg" style="background:var(--page);border:1px solid var(--border2);color:var(--text)">Save & New</button>
+      <button onclick="closeContactModal()"
+        class="px-4 py-2 text-xs rounded-lg" style="background:var(--page);border:1px solid var(--border2);color:var(--muted)">Cancel</button>
     </div>
   </div>
 </div>
 
-<!-- ═══ INTERACTION MODAL ════════════════════════════════════ -->
-<div id="interaction-modal" class="modal fixed inset-0 bg-black/80 items-center justify-center z-50">
-  <div class="bg-zinc-900 w-full max-w-2xl mx-4 rounded-3xl overflow-hidden">
-    <div class="bg-zinc-800 px-6 py-5 flex justify-between items-center">
-      <div id="interaction-modal-title" class="font-bold text-xl title-font">Log Interaction</div>
-      <button onclick="closeInteractionModal()" class="text-3xl text-zinc-400 hover:text-white leading-none">×</button>
+<!-- ═══ INTERACTION MODAL ══════════════════════════════════ -->
+<div id="interaction-modal" class="modal fixed inset-0 items-center justify-center z-50" style="background:rgba(15,45,94,0.5)">
+  <div class="w-full max-w-2xl mx-4 rounded-2xl overflow-hidden shadow-2xl" style="background:var(--surface)">
+    <div class="px-6 py-4 flex justify-between items-center" style="background:var(--navy)">
+      <div id="interaction-modal-title" class="font-bold text-lg title-font text-white">Log Interaction</div>
+      <button onclick="closeInteractionModal()" class="text-2xl text-white/60 hover:text-white leading-none">×</button>
     </div>
     <div class="p-6 space-y-4">
       <input type="hidden" id="im-id" />
-      <div class="text-sm text-blue-400 title-font font-semibold" id="im-company-label"></div>
+      <div class="text-xs font-semibold title-font px-3 py-2 rounded-lg" id="im-company-label"
+           style="background:var(--blue-bg);color:var(--blue);display:none"></div>
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-xs text-zinc-400 mb-1 title-font uppercase">Contact</label>
-          <select id="im-contact">
-            <option value="">— select contact —</option>
-          </select>
+          <label class="block text-xs font-semibold mb-1 title-font uppercase" style="color:var(--muted)">Contact</label>
+          <select id="im-contact"><option value="">— select contact —</option></select>
         </div>
         <div>
-          <label class="block text-xs text-zinc-400 mb-1 title-font uppercase">Date of Interaction</label>
+          <label class="block text-xs font-semibold mb-1 title-font uppercase" style="color:var(--muted)">Date</label>
           <input id="im-date" type="date" />
         </div>
         <div>
-          <label class="block text-xs text-zinc-400 mb-1 title-font uppercase">Method</label>
+          <label class="block text-xs font-semibold mb-1 title-font uppercase" style="color:var(--muted)">Method</label>
           <select id="im-method">
-            <option>Email</option>
-            <option>Phone Call</option>
-            <option>Meeting</option>
-            <option>Site Visit</option>
-            <option>Event</option>
-            <option>Other</option>
+            <option>Email</option><option>Phone Call</option><option>Meeting</option>
+            <option>Site Visit</option><option>Event</option><option>Other</option>
           </select>
         </div>
         <div>
-          <label class="block text-xs text-zinc-400 mb-1 title-font uppercase">Follow Up Required?</label>
+          <label class="block text-xs font-semibold mb-1 title-font uppercase" style="color:var(--muted)">Follow Up Required?</label>
           <select id="im-followup" onchange="toggleFollowUpFields()">
-            <option value="No">No</option>
-            <option value="Yes">Yes</option>
+            <option value="No">No</option><option value="Yes">Yes</option>
           </select>
         </div>
         <div id="im-followup-date-wrap" class="hidden">
-          <label class="block text-xs text-zinc-400 mb-1 title-font uppercase">Follow Up Date</label>
+          <label class="block text-xs font-semibold mb-1 title-font uppercase" style="color:var(--muted)">Follow Up Date</label>
           <input id="im-followup-date" type="date" />
         </div>
         <div id="im-nextaction-wrap" class="hidden">
-          <label class="block text-xs text-zinc-400 mb-1 title-font uppercase">Next Action Date</label>
+          <label class="block text-xs font-semibold mb-1 title-font uppercase" style="color:var(--muted)">Next Action Date</label>
           <input id="im-nextaction" type="date" />
         </div>
       </div>
       <div>
-        <label class="block text-xs text-zinc-400 mb-1 title-font uppercase">Summary</label>
-        <textarea id="im-summary" rows="4" class="terminal-input rounded-xl p-3 text-sm w-full" placeholder="Describe the interaction..."></textarea>
+        <label class="block text-xs font-semibold mb-1 title-font uppercase" style="color:var(--muted)">Summary</label>
+        <textarea id="im-summary" rows="4" placeholder="Describe the interaction..."></textarea>
       </div>
     </div>
-    <div class="px-6 py-4 border-t border-zinc-800 flex gap-3 justify-end">
-      <button onclick="deleteInteraction()" id="im-delete-btn" class="px-5 py-2 bg-red-800 hover:bg-red-700 rounded-xl text-sm font-semibold hidden">🗑 Delete</button>
-      <button onclick="saveInteraction(false)" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-semibold">💾 Save</button>
-      <button onclick="saveInteraction(true)" class="px-5 py-2 bg-zinc-700 hover:bg-zinc-600 rounded-xl text-sm font-semibold">Save & New</button>
-      <button onclick="closeInteractionModal()" class="px-5 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-sm">Cancel</button>
+    <div class="px-6 py-4 flex gap-2 justify-end" style="border-top:1px solid var(--border)">
+      <button onclick="deleteInteraction()" id="im-delete-btn"
+        class="hidden px-4 py-2 text-xs font-semibold rounded-lg text-white" style="background:var(--red)">🗑 Delete</button>
+      <button onclick="saveInteraction(false)"
+        class="px-5 py-2 text-xs font-semibold rounded-lg text-white" style="background:var(--blue)">💾 Save</button>
+      <button onclick="saveInteraction(true)"
+        class="px-4 py-2 text-xs font-semibold rounded-lg" style="background:var(--page);border:1px solid var(--border2);color:var(--text)">Save & New</button>
+      <button onclick="closeInteractionModal()"
+        class="px-4 py-2 text-xs rounded-lg" style="background:var(--page);border:1px solid var(--border2);color:var(--muted)">Cancel</button>
     </div>
   </div>
 </div>
@@ -485,24 +558,27 @@
 <!-- Toast container -->
 <div id="toast-container"></div>
 
-<!-- ═══════════════════════════════════════════════════════════
-     CONFIG
-═══════════════════════════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════════════════════
+     CONFIG — update list names to match your SharePoint
+═══════════════════════════════════════════════════════ -->
 <script>
 const CONFIG = {
   clientId:   "ec0a6806-59e8-4ea9-8ff5-6bdb1ba87baf",
   tenantId:   "d44192f5-1023-458c-9cb3-9ff7e9c6d4ad",
   spSiteUrl:  "https://nuccol.sharepoint.com/sites/NuCCoLOperations",
+  // Companies points at the shared DataVault list — same source of truth
   lists: {
     companies:    "Companies",
-    contacts:     "Contacts",
-    interactions: "Interactions"
-  }
+    contacts:     "tblContacts",
+    interactions: "tblInteractions"
+  },
+  // Path to DataVault in the same repo
+  dataVaultPath: "datavault.html"
 };
 
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 // MSAL
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 const msalConfig = {
   auth: {
     clientId:    CONFIG.clientId,
@@ -512,29 +588,24 @@ const msalConfig = {
   cache: { cacheLocation: "sessionStorage" }
 };
 
-let msalInstance  = null;
+let msalInstance   = null;
 let currentAccount = null;
-const spScopes = [`${new URL(CONFIG.spSiteUrl).origin}/.default`];
+const spScopes     = [`${new URL(CONFIG.spSiteUrl).origin}/.default`];
+const $            = id => document.getElementById(id);
 
-const $ = id => document.getElementById(id);
-
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 // AUTH
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 async function initAuth() {
   try {
     msalInstance = new msal.PublicClientApplication(msalConfig);
     await msalInstance.initialize();
-  } catch(e) {
-    setLoginStatus("⚠️ MSAL failed: " + e.message, true); return;
-  }
+  } catch(e) { setLoginStatus("⚠️ MSAL failed: " + e.message, true); return; }
   $('btn-login').addEventListener('click', signIn);
   try {
     const response = await msalInstance.handleRedirectPromise();
     if (response) { currentAccount = response.account; onSignedIn(); return; }
-  } catch(e) {
-    setLoginStatus("⚠️ Auth error: " + e.message, true); return;
-  }
+  } catch(e) { setLoginStatus("⚠️ Auth error: " + e.message, true); return; }
   const accounts = msalInstance.getAllAccounts();
   if (accounts.length > 0) { currentAccount = accounts[0]; onSignedIn(); }
 }
@@ -563,17 +634,17 @@ function signOut() {
 function onSignedIn() {
   $('login-screen').style.display = 'none';
   $('app').style.removeProperty('display');
-  const name  = currentAccount.name || currentAccount.username;
-  $('user-name').textContent   = name;
-  $('user-email').textContent  = currentAccount.username;
+  const name = currentAccount.name || currentAccount.username;
+  $('user-name').textContent  = name;
+  $('user-email').textContent = currentAccount.username;
   $('user-avatar').textContent = name.charAt(0).toUpperCase();
   loadAll();
 }
 
 function setLoginStatus(html, isError = false) {
   const el = $('login-status');
-  el.innerHTML = html;
-  el.className = 'mt-6 text-sm min-h-[1.5rem] ' + (isError ? 'text-red-400' : 'text-zinc-500');
+  el.innerHTML  = html;
+  el.style.color = isError ? '#f87171' : 'rgba(255,255,255,0.4)';
 }
 
 async function getToken() {
@@ -586,14 +657,14 @@ async function getToken() {
   }
 }
 
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 // SHAREPOINT REST
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 function encSP(s) { return String(s).replace(/'/g, "''"); }
 
 async function spGet(listName, select = "*", filter = "", orderBy = "") {
   const token = await getToken();
-  const q = new URLSearchParams({ '$select': select, '$top': '2000' });
+  const q = new URLSearchParams({ '$select': select, '$top': '5000' });
   if (filter)  q.set('$filter', filter);
   if (orderBy) q.set('$orderby', orderBy);
   const items = [];
@@ -658,40 +729,83 @@ async function spDelete(listName, itemId) {
   if (!res.ok) throw new Error(`DELETE ${listName} #${itemId}: ${res.status}`);
 }
 
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 // DATA STORE
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 let DB = { companies: [], contacts: [], interactions: [] };
-let selectedCompany = null; // currently open firm
+let selectedCompany = null;
 
 async function loadAll() {
-  $('sp-status').innerHTML = '<span class="spinner"></span> Loading...';
+  $('sp-status').innerHTML = '<span class="spinner"></span>';
   try {
+    // Companies: read from shared DataVault list — field_1 = CompanyID
     const [companies, contacts, interactions] = await Promise.all([
-      spGet(CONFIG.lists.companies,    "ID,Title,CompanyName,CompanyID,Website,City,County,Postcode,Phone,Email,Notes,RegionalIA",
-            "", "CompanyName asc"),
-      spGet(CONFIG.lists.contacts,     "ID,Title,ContactID,CompanyID,FirstName,LastName,JobTitle,Email,Phone,LinkedIn,Notes",
-            "", "LastName asc"),
-      spGet(CONFIG.lists.interactions, "ID,Title,InteractionID,CompanyID,ContactID,DateOfInteraction,InteractionMethod,Summary,FollowUpRequired,FollowUpDate,NextActionDate",
-            "", "DateOfInteraction desc")
+      spGet(CONFIG.lists.companies,
+        "ID,Title,field_1,field_2,field_3,field_4,field_6,field_7,field_9",
+        "", "Title asc"),
+      spGet(CONFIG.lists.contacts,
+        "ID,Title,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8,field_9",
+        "", "field_4 asc"),
+      spGet(CONFIG.lists.interactions,
+        "ID,Title,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8,field_9",
+        "", "field_4 desc")
     ]);
-    DB.companies    = companies;
-    DB.contacts     = contacts;
-    DB.interactions = interactions;
-    $('sp-status').innerHTML = '<span class="text-emerald-400">✓ Connected</span>';
+
+    // Normalise Companies (DataVault field names → friendly names)
+    DB.companies = companies.map(c => ({
+      ...c,
+      CompanyID:  c.field_1,
+      City:       c.field_2,
+      County:     c.field_3,
+      Postcode:   c.field_4,
+      Website:    c.field_6,
+      Email:      c.field_7,
+      RegionalIA: c.field_9,
+      CompanyName: c.Title,
+    }));
+
+    // Normalise Contacts (tblContacts field names)
+    DB.contacts = contacts.map(c => ({
+      ...c,
+      ContactID: c.field_1,
+      CompanyID: c.field_2,
+      FirstName: c.field_3,
+      LastName:  c.field_4,
+      JobTitle:  c.field_5,
+      Email:     c.field_6,
+      Phone:     c.field_7,
+      LinkedIn:  c.field_8,
+      Notes:     c.field_9,
+    }));
+
+    // Normalise Interactions (tblInteractions field names)
+    DB.interactions = interactions.map(i => ({
+      ...i,
+      InteractionID:     i.field_1,
+      CompanyID:         i.field_2,
+      ContactID:         i.field_3,
+      DateOfInteraction: i.field_4,
+      InteractionMethod: i.field_5,
+      Summary:           i.field_6,
+      FollowUpRequired:  i.field_7,
+      FollowUpDate:      i.field_8,
+      NextActionDate:    i.field_9,
+    }));
+
+    $('sp-status').innerHTML = '<span style="color:var(--green)">✓ Connected</span>';
     updateHomeStats();
     renderSearch();
     renderInteractionsList();
     renderHomeRecent();
   } catch(e) {
-    $('sp-status').innerHTML = `<span class="text-red-400">⚠️ ${esc(e.message)}</span>`;
-    showToast("⚠️ SharePoint error: " + e.message, 'error');
+    $('sp-status').innerHTML = `<span style="color:var(--red)">⚠️ ${esc(e.message)}</span>`;
+    showToast("⚠️ SharePoint: " + e.message, 'error');
   }
 }
 
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 // HELPERS
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 function esc(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
@@ -699,121 +813,140 @@ function fmtDate(d) {
   if (!d) return '—';
   try { return new Date(d).toLocaleDateString('en-GB'); } catch { return d; }
 }
-function nextCompanyID() { return (Math.max(0, ...DB.companies.map(c => parseInt(c.CompanyID)||0)) + 1); }
-function nextContactID()  { return (Math.max(0, ...DB.contacts.map(c => parseInt(c.ContactID)||0)) + 1); }
-function nextInteractionID() { return (Math.max(0, ...DB.interactions.map(i => parseInt(i.InteractionID)||0)) + 1); }
-function getCompanyName(companyID) {
-  const c = DB.companies.find(c => c.CompanyID == companyID);
+function nextCompanyID()     { return (Math.max(0, ...DB.companies.map(c=>parseInt(c.CompanyID)||0)) + 1); }
+function nextContactID()     { return (Math.max(0, ...DB.contacts.map(c=>parseInt(c.ContactID)||0)) + 1); }
+function nextInteractionID() { return (Math.max(0, ...DB.interactions.map(i=>parseInt(i.InteractionID)||0)) + 1); }
+function getCompanyName(cid) {
+  const c = DB.companies.find(c => c.CompanyID == cid);
   return c ? (c.CompanyName || c.Title || '') : '—';
 }
-function getContactName(contactID) {
-  const c = DB.contacts.find(c => c.ContactID == contactID);
-  return c ? `${c.FirstName || ''} ${c.LastName || ''}`.trim() : '—';
+function getContactName(cid) {
+  const c = DB.contacts.find(c => c.ContactID == cid);
+  return c ? `${c.FirstName||''} ${c.LastName||''}`.trim() : '—';
 }
-function companyContacts(companyID) { return DB.contacts.filter(c => c.CompanyID == companyID); }
-function companyInteractions(companyID) { return DB.interactions.filter(i => i.CompanyID == companyID); }
+function companyContacts(cid)     { return DB.contacts.filter(c => c.CompanyID == cid); }
+function companyInteractions(cid) { return DB.interactions.filter(i => i.CompanyID == cid); }
 
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+// DATAVAULT LINK
+// ═══════════════════════════════════════════════════════
+function openInDataVault() {
+  if (!selectedCompany?.CompanyID) return;
+  window.open(`${CONFIG.dataVaultPath}?companyId=${selectedCompany.CompanyID}`, '_blank');
+}
+
+// ═══════════════════════════════════════════════════════
 // TOAST
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 function showToast(msg, type = 'ok') {
   const tc = $('toast-container');
   const t  = document.createElement('div');
-  t.className = 'toast ' + (type === 'error' ? 'border-red-700 text-red-300' : type === 'warn' ? 'border-yellow-700 text-yellow-200' : 'border-emerald-700 text-emerald-200');
+  const colours = {
+    ok:    'border-green-300 text-green-800',
+    error: 'border-red-300 text-red-800',
+    warn:  'border-amber-300 text-amber-800'
+  };
+  t.className  = 'toast ' + (colours[type] || colours.ok);
   t.textContent = msg;
   tc.appendChild(t);
   setTimeout(() => t.remove(), 4000);
 }
 
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 // NAVIGATION
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 const SCREENS = ['home','search','firm','interactions'];
-const NAV_MAP = { home: 'nav-home', search: 'nav-search', interactions: 'nav-interactions' };
+const NAV_MAP = { home:'nav-home', search:'nav-search', interactions:'nav-interactions' };
 
 function showScreen(name) {
   SCREENS.forEach(s => {
     const el = $(`screen-${s}`);
     el.classList.toggle('hidden', s !== name);
-    el.classList.toggle('flex', s === name && (s === 'search' || s === 'firm' || s === 'interactions'));
+    el.classList.toggle('flex', s === name && ['search','firm','interactions'].includes(s));
   });
-  // Nav highlight
   Object.entries(NAV_MAP).forEach(([s, id]) => {
     const btn = $(id);
     btn.classList.toggle('active', s === name);
   });
-  if (name === 'search') renderSearch();
+  if (name === 'search')       renderSearch();
   if (name === 'interactions') renderInteractionsList();
 }
 
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 // HOME
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 function updateHomeStats() {
-  $('stat-companies').textContent    = DB.companies.length;
-  $('stat-contacts').textContent     = DB.contacts.length;
-  $('stat-interactions').textContent = DB.interactions.length;
+  $('stat-companies').textContent    = DB.companies.length.toLocaleString();
+  $('stat-contacts').textContent     = DB.contacts.length.toLocaleString();
+  $('stat-interactions').textContent = DB.interactions.length.toLocaleString();
 }
 
 function renderHomeRecent() {
-  const el = $('home-recent-interactions');
+  const el     = $('home-recent-interactions');
   const recent = DB.interactions.slice(0, 8);
-  if (!recent.length) { el.innerHTML = '<div class="text-zinc-500 text-sm text-center py-8">No interactions yet.</div>'; return; }
-  el.innerHTML = recent.map(i => `
-    <div class="row-hover border-b border-zinc-800 px-5 py-3 grid grid-cols-[1fr_1.5fr_1.5fr_2fr_1fr] gap-4 text-sm cursor-pointer"
-      onclick="openInteractionFromList(${i.ID})">
-      <div class="text-zinc-400 title-font">${fmtDate(i.DateOfInteraction)}</div>
-      <div class="font-medium text-zinc-200 truncate">${esc(getCompanyName(i.CompanyID))}</div>
-      <div class="text-zinc-400 truncate">${esc(getContactName(i.ContactID))}</div>
-      <div class="text-zinc-300 truncate">${esc(i.Summary || '')}</div>
-      <div class="text-zinc-500">${esc(i.InteractionMethod || '')}</div>
+  if (!recent.length) {
+    el.innerHTML = `<div class="text-sm text-center py-8" style="color:var(--muted)">No interactions yet — find a company and log the first one.</div>`;
+    return;
+  }
+  el.innerHTML = `
+    <div class="col-header-light grid grid-cols-[1fr_1.5fr_1.5fr_2fr_1fr] gap-4">
+      <div>Date</div><div>Company</div><div>Contact</div><div>Summary</div><div>Method</div>
+    </div>` +
+    recent.map(i => `
+    <div class="row-hover border-b px-5 py-3 grid grid-cols-[1fr_1.5fr_1.5fr_2fr_1fr] gap-4 text-sm cursor-pointer"
+         style="border-color:var(--border)" onclick="openInteractionFromList(${i.ID})">
+      <div class="title-font text-xs" style="color:var(--muted)">${fmtDate(i.DateOfInteraction)}</div>
+      <div class="font-medium truncate" style="color:var(--text)">${esc(getCompanyName(i.CompanyID))}</div>
+      <div class="truncate" style="color:var(--muted)">${esc(getContactName(i.ContactID))}</div>
+      <div class="truncate" style="color:var(--text)">${esc(i.Summary || '')}</div>
+      <div class="text-xs" style="color:var(--muted)">${esc(i.InteractionMethod || '')}</div>
     </div>`).join('');
 }
 
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 // SEARCH SCREEN
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 function renderSearch() {
-  const q    = ($('search-company') || {}).value?.toLowerCase().trim() || '';
-  const qc   = ($('search-contact') || {}).value?.toLowerCase().trim() || '';
-  const el   = $('search-results');
+  const q   = ($('search-company')||{}).value?.toLowerCase().trim() || '';
+  const qc  = ($('search-contact')||{}).value?.toLowerCase().trim() || '';
+  const el  = $('search-results');
   if (!el) return;
 
   let results = DB.companies;
-
-  if (q) results = results.filter(c => (c.CompanyName||c.Title||'').toLowerCase().startsWith(q));
-
+  if (q)  results = results.filter(c => (c.CompanyName||c.Title||'').toLowerCase().startsWith(q));
   if (qc) {
-    const matchedCompanyIDs = new Set(
+    const ids = new Set(
       DB.contacts
-        .filter(ct => (`${ct.FirstName||''} ${ct.LastName||''}`).toLowerCase().includes(qc) || (ct.LastName||'').toLowerCase().startsWith(qc))
+        .filter(ct => (`${ct.FirstName||''} ${ct.LastName||''}`).toLowerCase().includes(qc))
         .map(ct => ct.CompanyID)
     );
-    results = results.filter(c => matchedCompanyIDs.has(c.CompanyID));
+    results = results.filter(c => ids.has(c.CompanyID));
   }
 
   if (!results.length) {
-    el.innerHTML = '<div class="text-zinc-500 text-sm text-center py-12">No companies found.</div>';
+    el.innerHTML = `<div class="text-sm text-center py-12" style="color:var(--muted)">No companies found.</div>`;
     return;
   }
 
   el.innerHTML = results.map(c => `
-    <div class="row-hover border-b border-zinc-800 px-6 py-3 grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 text-sm"
-      onclick="openFirm(${c.ID})">
-      <div class="font-medium text-zinc-100 flex items-center gap-2">
-        <div class="w-1.5 h-6 bg-blue-600 rounded-full flex-shrink-0"></div>
+    <div class="row-hover border-b px-5 py-2.5 grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 text-sm"
+         style="border-color:var(--border)" onclick="openFirm(${c.ID})">
+      <div class="font-semibold flex items-center gap-2" style="color:var(--navy)">
+        <div class="w-1 h-5 rounded-full flex-shrink-0" style="background:var(--blue)"></div>
         ${esc(c.CompanyName || c.Title || '—')}
       </div>
-      <div class="text-zinc-400 title-font">${esc(c.City || '')}</div>
-      <div class="text-zinc-400 title-font">${esc(c.County || '')}</div>
-      <div class="text-blue-400 truncate text-xs">${c.Website ? `<a href="${esc(c.Website)}" target="_blank" onclick="event.stopPropagation()" class="hover:underline">${esc(c.Website.replace(/^https?:\/\//,''))}</a>` : '—'}</div>
-      <div class="text-zinc-500 title-font text-xs">${esc(c.RegionalIA || '')}</div>
+      <div class="title-font text-xs" style="color:var(--muted)">${esc(c.City||'')}</div>
+      <div class="title-font text-xs" style="color:var(--muted)">${esc(c.County||'')}</div>
+      <div class="text-xs truncate" style="color:var(--blue)">
+        ${c.Website ? `<a href="${esc(c.Website)}" target="_blank" onclick="event.stopPropagation()" class="hover:underline">${esc(c.Website.replace(/^https?:\/\//,''))}</a>` : '—'}
+      </div>
+      <div class="title-font text-xs" style="color:var(--muted)">${esc(c.RegionalIA||'')}</div>
     </div>`).join('');
 }
 
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 // FIRM SCREEN
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 function openFirm(companyDbId) {
   selectedCompany = DB.companies.find(c => c.ID === companyDbId) || null;
   populateFirmForm(selectedCompany);
@@ -821,7 +954,7 @@ function openFirm(companyDbId) {
   firmTab('contacts');
 }
 
-function openAddFirm(data) {
+function openAddFirm() {
   selectedCompany = null;
   populateFirmForm(null);
   showScreen('firm');
@@ -829,8 +962,8 @@ function openAddFirm(data) {
 }
 
 function populateFirmForm(c) {
-  $('firm-screen-title').textContent    = c ? 'Edit Firm' : 'Add Firm';
-  $('firm-screen-subtitle').textContent = c ? (c.CompanyName || c.Title || '') : 'Register a new company';
+  $('firm-screen-title').textContent    = c ? (c.CompanyName || c.Title || 'Edit Firm') : 'Add Firm';
+  $('firm-screen-subtitle').textContent = c ? `CompanyID: ${c.CompanyID}` : 'Register a new company';
   $('firm-name').value     = c?.CompanyName || c?.Title || '';
   $('firm-phone').value    = c?.Phone       || '';
   $('firm-notes').value    = c?.Notes       || '';
@@ -841,34 +974,43 @@ function populateFirmForm(c) {
   $('firm-county').value   = c?.County      || '';
   $('firm-postcode').value = c?.Postcode    || '';
   $('btn-delete-firm').classList.toggle('hidden', !c);
-
+  $('btn-datavault-link').classList.toggle('hidden', !c);
   renderFirmContacts();
   renderFirmInteractions();
 }
 
 function firmTab(tab) {
-  const isContacts = tab === 'contacts';
-  $('firm-contacts-panel').classList.toggle('hidden', !isContacts);
-  $('firm-interactions-panel').classList.toggle('hidden', isContacts);
-  $('ftab-contacts').className    = (isContacts ? 'tab-active' : 'tab-inactive') + ' px-6 py-3 text-sm font-medium transition-colors';
-  $('ftab-interactions').className = (!isContacts ? 'tab-active' : 'tab-inactive') + ' px-6 py-3 text-sm font-medium transition-colors';
-  $('btn-add-contact-firm').classList.toggle('hidden', !isContacts);
-  $('btn-log-interaction-firm').classList.toggle('hidden', isContacts);
+  const isC = tab === 'contacts';
+  $('firm-contacts-panel').classList.toggle('hidden', !isC);
+  $('firm-interactions-panel').classList.toggle('hidden', isC);
+  $('ftab-contacts').className    = (isC  ? 'tab-active' : 'tab-inactive') + ' px-4 py-2.5 text-sm transition-colors mr-1';
+  $('ftab-interactions').className= (!isC ? 'tab-active' : 'tab-inactive') + ' px-4 py-2.5 text-sm transition-colors';
+  $('btn-add-contact-firm').classList.toggle('hidden', !isC);
+  $('btn-log-interaction-firm').classList.toggle('hidden', isC);
 }
 
 function renderFirmContacts() {
   const el = $('firm-contacts-list');
-  if (!selectedCompany) { el.innerHTML = '<div class="text-zinc-500 text-sm px-6 py-4">Save the firm first before adding contacts.</div>'; $('ftab-contacts-count').textContent = ''; return; }
+  if (!selectedCompany) {
+    el.innerHTML = `<div class="text-sm px-6 py-4" style="color:var(--muted)">Save the firm first before adding contacts.</div>`;
+    $('ftab-contacts-count').textContent = '';
+    return;
+  }
   const contacts = companyContacts(selectedCompany.CompanyID);
   $('ftab-contacts-count').textContent = contacts.length ? `(${contacts.length})` : '';
-  if (!contacts.length) { el.innerHTML = '<div class="text-zinc-500 text-sm px-6 py-4">No contacts yet. Click "+ Add Contact" above.</div>'; return; }
+  if (!contacts.length) {
+    el.innerHTML = `<div class="text-sm px-6 py-4" style="color:var(--muted)">No contacts yet — click "+ Contact" above.</div>`;
+    return;
+  }
   el.innerHTML = contacts.map(c => `
-    <div class="row-hover border-b border-zinc-800 px-6 py-3 grid grid-cols-[2fr_2fr_2fr_1fr] gap-4 text-sm"
-      onclick="openEditContact(${c.ID})">
-      <div class="font-medium text-zinc-100">${esc(`${c.FirstName||''} ${c.LastName||''}`.trim() || '—')}</div>
-      <div class="text-zinc-400">${esc(c.JobTitle || '—')}</div>
-      <div class="text-blue-400 truncate">${c.Email ? `<a href="mailto:${esc(c.Email)}" onclick="event.stopPropagation()">${esc(c.Email)}</a>` : '—'}</div>
-      <div class="text-zinc-400 title-font">${esc(c.Phone || '—')}</div>
+    <div class="row-hover border-b px-5 py-2.5 grid grid-cols-[2fr_2fr_2fr_1fr] gap-4 text-sm"
+         style="border-color:var(--border)" onclick="openEditContact(${c.ID})">
+      <div class="font-semibold" style="color:var(--text)">${esc(`${c.FirstName||''} ${c.LastName||''}`.trim()||'—')}</div>
+      <div style="color:var(--muted)">${esc(c.JobTitle||'—')}</div>
+      <div class="truncate text-xs" style="color:var(--blue)">
+        ${c.Email ? `<a href="mailto:${esc(c.Email)}" onclick="event.stopPropagation()" class="hover:underline">${esc(c.Email)}</a>` : '—'}
+      </div>
+      <div class="text-xs" style="color:var(--muted)">${esc(c.Phone||'—')}</div>
     </div>`).join('');
 }
 
@@ -877,52 +1019,56 @@ function renderFirmInteractions() {
   if (!selectedCompany) { el.innerHTML = ''; $('ftab-interactions-count').textContent = ''; return; }
   const ints = companyInteractions(selectedCompany.CompanyID);
   $('ftab-interactions-count').textContent = ints.length ? `(${ints.length})` : '';
-  if (!ints.length) { el.innerHTML = '<div class="text-zinc-500 text-sm px-6 py-4">No interactions yet. Click "+ Log Interaction" above.</div>'; return; }
+  if (!ints.length) {
+    el.innerHTML = `<div class="text-sm px-6 py-4" style="color:var(--muted)">No interactions yet — click "+ Log Interaction" above.</div>`;
+    return;
+  }
   el.innerHTML = ints.map(i => `
-    <div class="row-hover border-b border-zinc-800 px-6 py-3 grid grid-cols-[1fr_1fr_2fr_2fr] gap-4 text-sm"
-      onclick="openEditInteraction(${i.ID})">
-      <div class="text-zinc-400 title-font">${fmtDate(i.DateOfInteraction)}</div>
-      <div class="text-zinc-300">${esc(i.InteractionMethod || '—')}</div>
-      <div class="text-zinc-400">${esc(getContactName(i.ContactID))}</div>
-      <div class="text-zinc-300 truncate">${esc(i.Summary || '')}</div>
+    <div class="row-hover border-b px-5 py-2.5 grid grid-cols-[1fr_1fr_2fr_2fr] gap-4 text-sm"
+         style="border-color:var(--border)" onclick="openEditInteraction(${i.ID})">
+      <div class="title-font text-xs" style="color:var(--muted)">${fmtDate(i.DateOfInteraction)}</div>
+      <div style="color:var(--text)">${esc(i.InteractionMethod||'—')}</div>
+      <div style="color:var(--muted)">${esc(getContactName(i.ContactID))}</div>
+      <div class="truncate" style="color:var(--text)">${esc(i.Summary||'')}</div>
     </div>`).join('');
 }
 
 async function saveFirm(andNew) {
   const name = $('firm-name').value.trim();
   if (!name) { showToast('⚠️ Company name is required.', 'warn'); return; }
+  // Companies list uses DataVault field names
   const fields = {
-    Title:       name,
-    CompanyName: name,
-    CompanyID:   selectedCompany?.CompanyID || nextCompanyID(),
-    Website:     $('firm-website').value.trim(),
-    City:        $('firm-city').value.trim(),
-    County:      $('firm-county').value.trim(),
-    Postcode:    $('firm-postcode').value.trim(),
-    Phone:       $('firm-phone').value.trim(),
-    Email:       $('firm-email').value.trim(),
-    Notes:       $('firm-notes').value.trim(),
-    RegionalIA:  $('firm-regional').value.trim(),
+    Title:    name,
+    field_2:  $('firm-city').value.trim(),
+    field_3:  $('firm-county').value.trim(),
+    field_4:  $('firm-postcode').value.trim(),
+    field_6:  $('firm-website').value.trim(),
+    field_7:  $('firm-email').value.trim(),
+    field_9:  $('firm-regional').value.trim(),
+    // Phone and Notes are not in DataVault Companies — store in notes field if needed
+    // field_30 = Notes in DataVault schema
+    field_30: $('firm-notes').value.trim(),
   };
   try {
     if (selectedCompany) {
       await spPatch(CONFIG.lists.companies, selectedCompany.ID, fields);
-      Object.assign(selectedCompany, fields);
+      Object.assign(selectedCompany, fields, { CompanyName: name, City: fields.field_2, County: fields.field_3 });
       const idx = DB.companies.findIndex(c => c.ID === selectedCompany.ID);
-      if (idx !== -1) DB.companies[idx] = { ...DB.companies[idx], ...fields };
+      if (idx !== -1) DB.companies[idx] = { ...DB.companies[idx], ...selectedCompany };
       showToast('✅ Firm updated');
     } else {
+      fields.field_1 = nextCompanyID();
       const newC = await spPost(CONFIG.lists.companies, fields);
+      newC.CompanyID  = newC.field_1;
+      newC.CompanyName = newC.Title;
+      newC.City       = newC.field_2;
+      newC.County     = newC.field_3;
       DB.companies.push(newC);
       selectedCompany = newC;
       showToast('✅ Firm created');
     }
     updateHomeStats();
-    if (andNew) {
-      openAddFirm(null);
-    } else {
-      populateFirmForm(selectedCompany);
-    }
+    if (andNew) { openAddFirm(); } else { populateFirmForm(selectedCompany); }
   } catch(e) {
     showToast('⚠️ Save failed: ' + e.message, 'error');
   }
@@ -930,7 +1076,7 @@ async function saveFirm(andNew) {
 
 async function deleteFirm() {
   if (!selectedCompany) return;
-  if (!confirm(`Delete "${selectedCompany.CompanyName}"?\n\nThis will NOT delete their contacts or interactions — just the company record.`)) return;
+  if (!confirm(`Delete "${selectedCompany.CompanyName}"?\n\nThis will NOT delete contacts or interactions.`)) return;
   try {
     await spDelete(CONFIG.lists.companies, selectedCompany.ID);
     DB.companies = DB.companies.filter(c => c.ID !== selectedCompany.ID);
@@ -943,23 +1089,19 @@ async function deleteFirm() {
   }
 }
 
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 // CONTACTS MODAL
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 let editingContact = null;
 
-function openAddContact(data) {
+function openAddContact() {
   editingContact = null;
   $('contact-modal-title').textContent = 'Add Contact';
-  $('cm-id').value       = '';
-  $('cm-first').value    = '';
-  $('cm-last').value     = '';
-  $('cm-title').value    = '';
-  $('cm-phone').value    = '';
-  $('cm-email').value    = '';
-  $('cm-linkedin').value = '';
-  $('cm-notes').value    = '';
-  $('cm-company-label').textContent = selectedCompany ? `📋 ${selectedCompany.CompanyName || selectedCompany.Title}` : '';
+  ['cm-id','cm-first','cm-last','cm-title','cm-phone','cm-email','cm-linkedin','cm-notes']
+    .forEach(id => $(id).value = '');
+  const lbl = $('cm-company-label');
+  if (selectedCompany) { lbl.textContent = `📋 ${selectedCompany.CompanyName||selectedCompany.Title}`; lbl.style.display='block'; }
+  else lbl.style.display = 'none';
   $('cm-delete-btn').classList.add('hidden');
   $('contact-modal').style.display = 'flex';
 }
@@ -977,7 +1119,9 @@ function openEditContact(contactDbId) {
   $('cm-email').value    = c.Email      || '';
   $('cm-linkedin').value = c.LinkedIn   || '';
   $('cm-notes').value    = c.Notes      || '';
-  $('cm-company-label').textContent = selectedCompany ? `📋 ${selectedCompany.CompanyName || selectedCompany.Title}` : '';
+  const lbl = $('cm-company-label');
+  if (selectedCompany) { lbl.textContent = `📋 ${selectedCompany.CompanyName||selectedCompany.Title}`; lbl.style.display='block'; }
+  else lbl.style.display = 'none';
   $('cm-delete-btn').classList.remove('hidden');
   $('contact-modal').style.display = 'flex';
 }
@@ -989,31 +1133,39 @@ async function saveContact(andNew) {
   const last  = $('cm-last').value.trim();
   if (!first && !last) { showToast('⚠️ Name is required.', 'warn'); return; }
   const fields = {
-    Title:     `${first} ${last}`.trim(),
-    ContactID: editingContact?.ContactID || nextContactID(),
-    CompanyID: selectedCompany?.CompanyID || null,
-    FirstName: first,
-    LastName:  last,
-    JobTitle:  $('cm-title').value.trim(),
-    Phone:     $('cm-phone').value.trim(),
-    Email:     $('cm-email').value.trim(),
-    LinkedIn:  $('cm-linkedin').value.trim(),
-    Notes:     $('cm-notes').value.trim(),
+    Title:    `${first} ${last}`.trim(),
+    field_1:  editingContact?.ContactID || nextContactID(),
+    field_2:  selectedCompany?.CompanyID || null,
+    field_3:  first,
+    field_4:  last,
+    field_5:  $('cm-title').value.trim(),
+    field_6:  $('cm-email').value.trim(),
+    field_7:  $('cm-phone').value.trim(),
+    field_8:  $('cm-linkedin').value.trim(),
+    field_9:  $('cm-notes').value.trim(),
   };
   try {
     if (editingContact) {
       await spPatch(CONFIG.lists.contacts, editingContact.ID, fields);
       const idx = DB.contacts.findIndex(c => c.ID === editingContact.ID);
-      if (idx !== -1) DB.contacts[idx] = { ...DB.contacts[idx], ...fields };
+      if (idx !== -1) DB.contacts[idx] = { ...DB.contacts[idx], ...fields,
+        ContactID: fields.field_1, CompanyID: fields.field_2, FirstName: fields.field_3,
+        LastName: fields.field_4, JobTitle: fields.field_5, Email: fields.field_6,
+        Phone: fields.field_7, LinkedIn: fields.field_8, Notes: fields.field_9 };
       showToast('✅ Contact updated');
     } else {
       const newC = await spPost(CONFIG.lists.contacts, fields);
+      newC.ContactID = newC.field_1; newC.CompanyID = newC.field_2;
+      newC.FirstName = newC.field_3; newC.LastName  = newC.field_4;
+      newC.JobTitle  = newC.field_5; newC.Email     = newC.field_6;
+      newC.Phone     = newC.field_7; newC.LinkedIn  = newC.field_8;
+      newC.Notes     = newC.field_9;
       DB.contacts.push(newC);
       showToast('✅ Contact added');
     }
     updateHomeStats();
     renderFirmContacts();
-    if (andNew) { openAddContact(null); } else { closeContactModal(); }
+    if (andNew) { openAddContact(); } else { closeContactModal(); }
   } catch(e) {
     showToast('⚠️ Save failed: ' + e.message, 'error');
   }
@@ -1035,9 +1187,9 @@ async function deleteContact() {
   }
 }
 
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 // INTERACTIONS MODAL
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 let editingInteraction = null;
 
 function populateContactDropdown() {
@@ -1052,7 +1204,7 @@ function populateContactDropdown() {
   });
 }
 
-function openAddInteraction(data) {
+function openAddInteraction() {
   editingInteraction = null;
   $('interaction-modal-title').textContent = 'Log Interaction';
   $('im-id').value       = '';
@@ -1060,7 +1212,9 @@ function openAddInteraction(data) {
   $('im-method').value   = 'Email';
   $('im-followup').value = 'No';
   $('im-summary').value  = '';
-  $('im-company-label').textContent = selectedCompany ? `📋 ${selectedCompany.CompanyName || selectedCompany.Title}` : '';
+  const lbl = $('im-company-label');
+  if (selectedCompany) { lbl.textContent = `📋 ${selectedCompany.CompanyName||selectedCompany.Title}`; lbl.style.display='block'; }
+  else lbl.style.display='none';
   $('im-delete-btn').classList.add('hidden');
   toggleFollowUpFields();
   populateContactDropdown();
@@ -1079,7 +1233,8 @@ function openEditInteraction(interactionDbId) {
   $('im-summary').value  = i.Summary || '';
   $('im-followup-date').value = i.FollowUpDate   ? i.FollowUpDate.split('T')[0]   : '';
   $('im-nextaction').value    = i.NextActionDate  ? i.NextActionDate.split('T')[0]  : '';
-  $('im-company-label').textContent = `📋 ${getCompanyName(i.CompanyID)}`;
+  const lbl = $('im-company-label');
+  lbl.textContent = `📋 ${getCompanyName(i.CompanyID)}`; lbl.style.display='block';
   $('im-delete-btn').classList.remove('hidden');
   toggleFollowUpFields();
   populateContactDropdown();
@@ -1090,7 +1245,6 @@ function openEditInteraction(interactionDbId) {
 function openInteractionFromList(interactionDbId) {
   const i = DB.interactions.find(x => x.ID === interactionDbId);
   if (!i) return;
-  // Set context company so dropdown works
   const company = DB.companies.find(c => c.CompanyID == i.CompanyID);
   if (company) selectedCompany = company;
   openEditInteraction(interactionDbId);
@@ -1107,28 +1261,37 @@ function toggleFollowUpFields() {
 async function saveInteraction(andNew) {
   const summary = $('im-summary').value.trim();
   if (!summary) { showToast('⚠️ Summary is required.', 'warn'); return; }
-  const followUp = $('im-followup').value;
+  const followUp  = $('im-followup').value;
   const contactID = parseInt($('im-contact').value) || null;
   const fields = {
-    Title:               summary.substring(0, 50),
-    InteractionID:       editingInteraction?.InteractionID || nextInteractionID(),
-    CompanyID:           selectedCompany?.CompanyID || null,
-    ContactID:           contactID,
-    DateOfInteraction:   $('im-date').value || null,
-    InteractionMethod:   $('im-method').value,
-    Summary:             summary,
-    FollowUpRequired:    { Value: followUp },
-    FollowUpDate:        followUp === 'Yes' ? ($('im-followup-date').value || null) : null,
-    NextActionDate:      followUp === 'Yes' ? ($('im-nextaction').value || null) : null,
+    Title:    summary.substring(0, 50),
+    field_1:  editingInteraction?.InteractionID || nextInteractionID(),
+    field_2:  selectedCompany?.CompanyID || null,
+    field_3:  contactID,
+    field_4:  $('im-date').value || null,
+    field_5:  $('im-method').value,
+    field_6:  summary,
+    field_7:  followUp,
+    field_8:  followUp === 'Yes' ? ($('im-followup-date').value || null) : null,
+    field_9:  followUp === 'Yes' ? ($('im-nextaction').value || null) : null,
   };
   try {
     if (editingInteraction) {
       await spPatch(CONFIG.lists.interactions, editingInteraction.ID, fields);
       const idx = DB.interactions.findIndex(i => i.ID === editingInteraction.ID);
-      if (idx !== -1) DB.interactions[idx] = { ...DB.interactions[idx], ...fields };
+      if (idx !== -1) DB.interactions[idx] = { ...DB.interactions[idx], ...fields,
+        InteractionID: fields.field_1, CompanyID: fields.field_2, ContactID: fields.field_3,
+        DateOfInteraction: fields.field_4, InteractionMethod: fields.field_5,
+        Summary: fields.field_6, FollowUpRequired: fields.field_7,
+        FollowUpDate: fields.field_8, NextActionDate: fields.field_9 };
       showToast('✅ Interaction updated');
     } else {
       const newI = await spPost(CONFIG.lists.interactions, fields);
+      newI.InteractionID = newI.field_1; newI.CompanyID = newI.field_2;
+      newI.ContactID = newI.field_3; newI.DateOfInteraction = newI.field_4;
+      newI.InteractionMethod = newI.field_5; newI.Summary = newI.field_6;
+      newI.FollowUpRequired = newI.field_7; newI.FollowUpDate = newI.field_8;
+      newI.NextActionDate = newI.field_9;
       DB.interactions.unshift(newI);
       showToast('✅ Interaction logged');
     }
@@ -1136,7 +1299,7 @@ async function saveInteraction(andNew) {
     renderFirmInteractions();
     renderInteractionsList();
     renderHomeRecent();
-    if (andNew) { openAddInteraction(null); } else { closeInteractionModal(); }
+    if (andNew) { openAddInteraction(); } else { closeInteractionModal(); }
   } catch(e) {
     showToast('⚠️ Save failed: ' + e.message, 'error');
   }
@@ -1144,7 +1307,7 @@ async function saveInteraction(andNew) {
 
 async function deleteInteraction() {
   if (!editingInteraction) return;
-  if (!confirm('Delete this interaction record?')) return;
+  if (!confirm('Delete this interaction?')) return;
   try {
     await spDelete(CONFIG.lists.interactions, editingInteraction.ID);
     DB.interactions = DB.interactions.filter(i => i.ID !== editingInteraction.ID);
@@ -1159,46 +1322,46 @@ async function deleteInteraction() {
   }
 }
 
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 // ALL INTERACTIONS SCREEN
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 function renderInteractionsList() {
-  const el  = $('interactions-list');
+  const el = $('interactions-list');
   if (!el) return;
-  const q   = ($('search-interactions')||{}).value?.toLowerCase().trim() || '';
-  const fu  = ($('filter-followup')||{}).value || '';
+  const q  = ($('search-interactions')||{}).value?.toLowerCase().trim() || '';
+  const fu = ($('filter-followup')||{}).value || '';
 
   let rows = DB.interactions;
-  if (q) rows = rows.filter(i =>
-    getCompanyName(i.CompanyID).toLowerCase().includes(q) ||
-    (i.Summary||'').toLowerCase().includes(q)
-  );
-  if (fu === 'yes') rows = rows.filter(i => (i.FollowUpRequired?.Value || i.FollowUpRequired) === 'Yes');
-  if (fu === 'no')  rows = rows.filter(i => (i.FollowUpRequired?.Value || i.FollowUpRequired) !== 'Yes');
+  if (q)        rows = rows.filter(i => getCompanyName(i.CompanyID).toLowerCase().includes(q) || (i.Summary||'').toLowerCase().includes(q));
+  if (fu==='yes') rows = rows.filter(i => (i.FollowUpRequired?.Value||i.FollowUpRequired) === 'Yes');
+  if (fu==='no')  rows = rows.filter(i => (i.FollowUpRequired?.Value||i.FollowUpRequired) !== 'Yes');
 
-  if (!rows.length) { el.innerHTML = '<div class="text-zinc-500 text-sm text-center py-12">No interactions found.</div>'; return; }
+  if (!rows.length) {
+    el.innerHTML = `<div class="text-sm text-center py-12" style="color:var(--muted)">No interactions found.</div>`;
+    return;
+  }
 
   el.innerHTML = rows.map(i => {
-    const fuVal = i.FollowUpRequired?.Value || i.FollowUpRequired || 'No';
+    const fuVal   = i.FollowUpRequired?.Value || i.FollowUpRequired || 'No';
     const fuBadge = fuVal === 'Yes'
-      ? '<span class="badge bg-amber-900/40 text-amber-300 border border-amber-700">Follow up</span>'
-      : '<span class="badge bg-zinc-800 text-zinc-500">—</span>';
+      ? `<span class="badge" style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d">Follow up</span>`
+      : `<span class="badge" style="background:var(--page);color:var(--muted2);border:1px solid var(--border)">—</span>`;
     return `
-      <div class="row-hover border-b border-zinc-800 px-6 py-3 grid grid-cols-[1fr_1fr_1.5fr_2fr_1fr_1fr] gap-4 text-sm"
-        onclick="openInteractionFromList(${i.ID})">
-        <div class="text-zinc-400 title-font">${fmtDate(i.DateOfInteraction)}</div>
-        <div class="font-medium text-zinc-200 truncate">${esc(getCompanyName(i.CompanyID))}</div>
-        <div class="text-zinc-400 truncate">${esc(getContactName(i.ContactID))}</div>
-        <div class="text-zinc-300 truncate">${esc(i.Summary || '')}</div>
-        <div class="text-zinc-500">${esc(i.InteractionMethod || '')}</div>
+      <div class="row-hover border-b px-5 py-2.5 grid grid-cols-[1fr_1fr_1.5fr_2fr_1fr_1fr] gap-4 text-sm"
+           style="border-color:var(--border)" onclick="openInteractionFromList(${i.ID})">
+        <div class="title-font text-xs" style="color:var(--muted)">${fmtDate(i.DateOfInteraction)}</div>
+        <div class="font-medium truncate" style="color:var(--text)">${esc(getCompanyName(i.CompanyID))}</div>
+        <div class="truncate" style="color:var(--muted)">${esc(getContactName(i.ContactID))}</div>
+        <div class="truncate" style="color:var(--text)">${esc(i.Summary||'')}</div>
+        <div class="text-xs" style="color:var(--muted)">${esc(i.InteractionMethod||'')}</div>
         <div>${fuBadge}</div>
       </div>`;
   }).join('');
 }
 
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 // BOOT
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', initAuth);
 </script>
 </body>
