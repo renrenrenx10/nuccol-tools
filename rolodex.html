@@ -754,10 +754,10 @@ async function loadAll() {
         "ID,Title,field_1,field_2,field_3,field_4,field_6,field_7,field_9",
         "", "Title asc"),
       spGet(CONFIG.lists.contacts,
-        "ID,Title,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8,field_9",
-        "", "field_4 asc"),
+        "ID,Title,ContactID,CompanyID,FirstName,LastName,JobTitle,Email,Phone,LinkedIn,Notes",
+        "", "LastName asc"),
       spGet(CONFIG.lists.interactions,
-        "ID,Title,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8,field_9",
+        "ID,Title,field_1,field_2,field_3,field_4,field_5,field_6,field_8,field_9,field_11",
         "", "field_4 desc")
     ]);
 
@@ -774,21 +774,13 @@ async function loadAll() {
       CompanyName: c.Title,
     }));
 
-    // Normalise Contacts (tblContacts field names)
+    // Contacts: columns were named directly (no field_N pattern)
     DB.contacts = contacts.map(c => ({
       ...c,
-      ContactID: c.field_1,
-      CompanyID: c.field_2,
-      FirstName: c.field_3,
-      LastName:  c.field_4,
-      JobTitle:  c.field_5,
-      Email:     c.field_6,
-      Phone:     c.field_7,
-      LinkedIn:  c.field_8,
-      Notes:     c.field_9,
+      // InternalNames match friendly names directly
     }));
 
-    // Normalise Interactions (tblInteractions field names)
+    // Interactions: uses field_N pattern (field_7 skipped in SP)
     DB.interactions = interactions.map(i => ({
       ...i,
       InteractionID:     i.field_1,
@@ -797,9 +789,9 @@ async function loadAll() {
       DateOfInteraction: i.field_4,
       InteractionMethod: i.field_5,
       Summary:           i.field_6,
-      FollowUpRequired:  i.field_7,
-      FollowUpDate:      i.field_8,
-      NextActionDate:    i.field_9,
+      FollowUpRequired:  i.field_8,   // field_7 absent in SP list
+      FollowUpDate:      i.field_9,
+      NextActionDate:    i.field_11,  // field_10 = CreatedAt, field_11 = NextActionDate
     }));
 
     $('sp-status').innerHTML = '<span style="color:var(--green)">✓ Connected</span>';
@@ -1143,34 +1135,26 @@ async function saveContact(andNew) {
   const last  = $('cm-last').value.trim();
   if (!first && !last) { showToast('⚠️ Name is required.', 'warn'); return; }
   const fields = {
-    Title:    `${first} ${last}`.trim(),
-    field_1:  editingContact?.ContactID || nextContactID(),
-    field_2:  selectedCompany?.CompanyID || null,
-    field_3:  first,
-    field_4:  last,
-    field_5:  $('cm-title').value.trim(),
-    field_6:  $('cm-email').value.trim(),
-    field_7:  $('cm-phone').value.trim(),
-    field_8:  $('cm-linkedin').value.trim(),
-    field_9:  $('cm-notes').value.trim(),
+    Title:     `${first} ${last}`.trim(),
+    ContactID: editingContact?.ContactID || nextContactID(),
+    CompanyID: selectedCompany?.CompanyID || null,
+    FirstName: first,
+    LastName:  last,
+    JobTitle:  $('cm-title').value.trim(),
+    Email:     $('cm-email').value.trim(),
+    Phone:     $('cm-phone').value.trim(),
+    LinkedIn:  $('cm-linkedin').value.trim(),
+    Notes:     $('cm-notes').value.trim(),
   };
   try {
     if (editingContact) {
       await spPatch(CONFIG.lists.contacts, editingContact.ID, fields);
       const idx = DB.contacts.findIndex(c => c.ID === editingContact.ID);
-      if (idx !== -1) DB.contacts[idx] = { ...DB.contacts[idx], ...fields,
-        ContactID: fields.field_1, CompanyID: fields.field_2, FirstName: fields.field_3,
-        LastName: fields.field_4, JobTitle: fields.field_5, Email: fields.field_6,
-        Phone: fields.field_7, LinkedIn: fields.field_8, Notes: fields.field_9 };
+      if (idx !== -1) DB.contacts[idx] = { ...DB.contacts[idx], ...fields };
       showToast('✅ Contact updated');
     } else {
       const newC = await spPost(CONFIG.lists.contacts, fields);
-      newC.ContactID = newC.field_1; newC.CompanyID = newC.field_2;
-      newC.FirstName = newC.field_3; newC.LastName  = newC.field_4;
-      newC.JobTitle  = newC.field_5; newC.Email     = newC.field_6;
-      newC.Phone     = newC.field_7; newC.LinkedIn  = newC.field_8;
-      newC.Notes     = newC.field_9;
-      DB.contacts.push(newC);
+      DB.contacts.push({ ...newC, ...fields });
       showToast('✅ Contact added');
     }
     updateHomeStats();
@@ -1281,9 +1265,9 @@ async function saveInteraction(andNew) {
     field_4:  $('im-date').value || null,
     field_5:  $('im-method').value,
     field_6:  summary,
-    field_7:  followUp,
-    field_8:  followUp === 'Yes' ? ($('im-followup-date').value || null) : null,
-    field_9:  followUp === 'Yes' ? ($('im-nextaction').value || null) : null,
+    field_8:  followUp,                                                          // FollowUpRequired
+    field_9:  followUp === 'Yes' ? ($('im-followup-date').value || null) : null, // FollowUpDate
+    field_11: followUp === 'Yes' ? ($('im-nextaction').value    || null) : null, // NextActionDate
   };
   try {
     if (editingInteraction) {
@@ -1292,17 +1276,16 @@ async function saveInteraction(andNew) {
       if (idx !== -1) DB.interactions[idx] = { ...DB.interactions[idx], ...fields,
         InteractionID: fields.field_1, CompanyID: fields.field_2, ContactID: fields.field_3,
         DateOfInteraction: fields.field_4, InteractionMethod: fields.field_5,
-        Summary: fields.field_6, FollowUpRequired: fields.field_7,
-        FollowUpDate: fields.field_8, NextActionDate: fields.field_9 };
+        Summary: fields.field_6, FollowUpRequired: fields.field_8,
+        FollowUpDate: fields.field_9, NextActionDate: fields.field_11 };
       showToast('✅ Interaction updated');
     } else {
       const newI = await spPost(CONFIG.lists.interactions, fields);
-      newI.InteractionID = newI.field_1; newI.CompanyID = newI.field_2;
-      newI.ContactID = newI.field_3; newI.DateOfInteraction = newI.field_4;
-      newI.InteractionMethod = newI.field_5; newI.Summary = newI.field_6;
-      newI.FollowUpRequired = newI.field_7; newI.FollowUpDate = newI.field_8;
-      newI.NextActionDate = newI.field_9;
-      DB.interactions.unshift(newI);
+      DB.interactions.unshift({ ...newI,
+        InteractionID: fields.field_1, CompanyID: fields.field_2, ContactID: fields.field_3,
+        DateOfInteraction: fields.field_4, InteractionMethod: fields.field_5,
+        Summary: fields.field_6, FollowUpRequired: fields.field_8,
+        FollowUpDate: fields.field_9, NextActionDate: fields.field_11 });
       showToast('✅ Interaction logged');
     }
     updateHomeStats();
