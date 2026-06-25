@@ -596,7 +596,7 @@ function renderChart(data) {
         label:`UK Capacity (${Number(capRow.cap).toLocaleString()} ${capRow.capUnit||''}/yr)`,
         data: years.map(()=>capRow.cap),
         borderColor:'#27ae60', backgroundColor:'transparent',
-        borderWidth:2.5, borderDash:[8,4], pointRadius:0, fill:false, tension:0, yAxisID:'yCap'
+        borderWidth:2.5, borderDash:[8,4], pointRadius:0, fill:false, tension:0, yAxisID:'y'
       });
     }
     if (overlayState.lt) {
@@ -624,13 +624,6 @@ function renderChart(data) {
   }
 
   const extraScales = {};
-  if (overlayDS.find(d=>d._overlay==='cap')) {
-    extraScales.yCap = {
-      type:'linear', position:'right',
-      title:{ display:true, text:'UK Capacity / yr', font:{family:'Share Tech Mono',size:11}, color:'#27ae60' },
-      ticks:{ color:'#27ae60', font:{size:11} }, grid:{ drawOnChartArea:false }, beginAtZero:true
-    };
-  }
 
   if (chartInstance) chartInstance.destroy();
 
