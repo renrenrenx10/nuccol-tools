@@ -1405,19 +1405,39 @@ async function viewChart() {
   if (!store.demandResults.length) { toast('Generate demand first', 'error'); return; }
   try {
     // Overlay data (capacity, lead times) is loaded directly by chart.html.
-    // Cache carries slim demand rows only to stay within SP column size limits.
+    // Split payload into ~1.5 MB chunks to stay under SP's 2 MB request limit.
+    const CHUNK_SIZE = 1_500_000; // characters (~1.5 MB)
     const payload = JSON.stringify(
       store.demandResults
         .filter(r => r.CalYear > 0)
         .map(r => ({ d: r.Developer, p: r.Product_ID, f: r.Family, y: r.CalYear, a: r.Amount }))
     );
-    const existing = await spGet(CONFIG.lists.chartCache, 'Id,Title');
-    const cacheRow = existing.find(r => r.Title === 'cache');
-    if (cacheRow) {
-      await spPatch(CONFIG.lists.chartCache, cacheRow.Id, { ChartData: payload });
-    } else {
-      await spPost(CONFIG.lists.chartCache, { Title: 'cache', ChartData: payload });
+    const chunks = [];
+    for (let i = 0; i < payload.length; i += CHUNK_SIZE) {
+      chunks.push(payload.slice(i, i + CHUNK_SIZE));
     }
+
+    const existing = await spGet(CONFIG.lists.chartCache, 'Id,Title');
+    const byTitle  = Object.fromEntries(existing.map(r => [r.Title, r.Id]));
+
+    // Write each chunk as cache_0, cache_1, …
+    for (let i = 0; i < chunks.length; i++) {
+      const title = `cache_${i}`;
+      if (byTitle[title]) {
+        await spPatch(CONFIG.lists.chartCache, byTitle[title], { ChartData: chunks[i] });
+      } else {
+        await spPost(CONFIG.lists.chartCache, { Title: title, ChartData: chunks[i] });
+      }
+    }
+
+    // Write manifest so chart.html knows how many chunks to fetch
+    const metaPayload = JSON.stringify({ chunks: chunks.length });
+    if (byTitle['cache_meta']) {
+      await spPatch(CONFIG.lists.chartCache, byTitle['cache_meta'], { ChartData: metaPayload });
+    } else {
+      await spPost(CONFIG.lists.chartCache, { Title: 'cache_meta', ChartData: metaPayload });
+    }
+
     window.open('https://renrenrenx10.github.io/nuccol-tools/chart.html', '_blank');
   } catch(e) {
     toast('Chart export failed: ' + e.message, 'error');
