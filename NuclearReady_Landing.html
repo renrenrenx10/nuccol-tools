@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NuclearReady — UK Nuclear Supply Chain</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:      #0A1628;
+  --navy-mid:  #152338;
+  --cyan:      #29B6E8;
+  --cyan-dark: #1898c4;
+  --cyan-dim:  rgba(41,182,232,0.15);
+  --white:     #ffffff;
+  --off-white: #f4f8fc;
+  --muted:     #6b8099;
+  --border:    #d8e4ee;
+  --granted:   #1a7a4a;
+  --granted-bg:#e6f4ec;
+  --journey:   #b45309;
+  --journey-bg:#fef3e0;
+  --text:      #17243a;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Barlow',sans-serif;background:var(--white);color:var(--text);line-height:1.6;}
+
+/* NAV */
+nav {
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:rgba(10,22,40,0.96);backdrop-filter:blur(12px);
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  height:58px;display:flex;align-items:center;padding:0 40px;gap:20px;
+}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.nav-logo-icon{width:32px;height:32px;border-radius:8px;background:var(--cyan);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.nav-logo-icon svg{width:17px;height:17px;fill:#fff;}
+.nav-logo-name{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:#fff;letter-spacing:0.06em;text-transform:uppercase;}
+.nav-spacer{flex:1;}
+.nav-links{display:flex;align-items:center;gap:28px;}
+.nav-link{font-size:13px;font-weight:500;color:rgba(255,255,255,0.6);text-decoration:none;transition:color .15s;}
+.nav-link:hover{color:#fff;}
+.nav-cta{
+  padding:8px 20px;border-radius:6px;background:var(--cyan);color:var(--navy);
+  font-size:13px;font-weight:700;text-decoration:none;transition:background .15s;
+  font-family:'Barlow Condensed',sans-serif;letter-spacing:0.04em;text-transform:uppercase;
+}
+.nav-cta:hover{background:var(--cyan-dark);color:#fff;}
+
+/* HERO */
+#hero {
+  min-height:100vh;background:var(--navy);
+  display:flex;flex-direction:column;justify-content:center;
+  position:relative;overflow:hidden;padding:120px 40px 80px;
+}
+.hero-grid {
+  position:absolute;inset:0;pointer-events:none;
+  background-image:radial-gradient(circle, rgba(41,182,232,0.08) 1px, transparent 1px);
+  background-size:44px 44px;
+}
+.hero-glow {
+  position:absolute;right:15%;top:20%;pointer-events:none;
+  width:500px;height:500px;border-radius:50%;
+  background:radial-gradient(circle, rgba(41,182,232,0.12) 0%, transparent 70%);
+}
+.hero-orbital {
+  position:absolute;right:-120px;top:50%;transform:translateY(-50%);
+  width:700px;height:700px;opacity:0.07;pointer-events:none;
+}
+.hero-inner{max-width:800px;position:relative;z-index:2;}
+.hero-eyebrow {
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(41,182,232,0.12);border:1px solid rgba(41,182,232,0.25);
+  border-radius:20px;padding:5px 14px;margin-bottom:28px;
+}
+.hero-eyebrow-dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:pulse 2s ease infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.5;transform:scale(1.3);}}
+.hero-eyebrow-text{font-size:11px;font-weight:600;color:var(--cyan);letter-spacing:0.12em;text-transform:uppercase;}
+.hero-h1 {
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:clamp(48px,6vw,80px);font-weight:800;
+  color:#fff;line-height:1.0;letter-spacing:-0.01em;
+  margin-bottom:20px;text-transform:uppercase;
+}
+.hero-h1 em{color:var(--cyan);font-style:normal;}
+.hero-sub {
+  font-size:17px;font-weight:400;color:rgba(255,255,255,0.65);
+  max-width:540px;line-height:1.7;margin-bottom:36px;
+}
+.hero-actions{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:56px;}
+.btn-primary{
+  padding:14px 32px;border-radius:7px;background:var(--cyan);
+  color:var(--navy);font-family:'Barlow Condensed',sans-serif;
+  font-size:16px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;
+  text-decoration:none;transition:all .18s;display:inline-flex;align-items:center;gap:8px;
+}
+.btn-primary:hover{background:var(--cyan-dark);color:#fff;transform:translateY(-1px);box-shadow:0 8px 24px rgba(41,182,232,0.3);}
+.btn-primary svg{width:16px;height:16px;}
+.btn-ghost{
+  padding:13px 28px;border-radius:7px;border:1.5px solid rgba(255,255,255,0.2);
+  color:rgba(255,255,255,0.8);font-size:15px;font-weight:500;
+  text-decoration:none;transition:all .18s;
+}
+.btn-ghost:hover{border-color:rgba(255,255,255,0.5);color:#fff;}
+
+.hero-stats{display:flex;gap:0;border:1px solid rgba(255,255,255,0.1);border-radius:10px;overflow:hidden;background:rgba(255,255,255,0.04);max-width:520px;}
+.hstat{flex:1;padding:18px 22px;border-right:1px solid rgba(255,255,255,0.08);}
+.hstat:last-child{border-right:none;}
+.hstat-num{font-family:'Barlow Condensed',sans-serif;font-size:34px;font-weight:800;color:var(--cyan);line-height:1;}
+.hstat-label{font-size:10px;font-weight:600;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.1em;margin-top:2px;}
+
+/* ABOUT */
+#about{padding:80px 40px;background:var(--off-white);}
+.section-inner{max-width:1060px;margin:0 auto;}
+.section-label{font-size:11px;font-weight:700;color:var(--cyan-dark);letter-spacing:0.14em;text-transform:uppercase;margin-bottom:10px;}
+.section-h2{font-family:'Barlow Condensed',sans-serif;font-size:clamp(30px,4vw,44px);font-weight:800;color:var(--navy);line-height:1.1;text-transform:uppercase;margin-bottom:16px;}
+
+.about-layout{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;}
+.about-text p{font-size:15px;color:var(--muted);line-height:1.75;margin-bottom:16px;}
+.about-text p:last-child{margin-bottom:0;}
+.about-text a{color:var(--cyan-dark);font-weight:600;text-decoration:none;}
+.about-text a:hover{text-decoration:underline;}
+.about-steps{display:flex;flex-direction:column;gap:14px;}
+.step{display:flex;gap:14px;align-items:flex-start;background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px 18px;}
+.step-num{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--cyan);min-width:28px;line-height:1;}
+.step-body{}
+.step-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:2px;}
+.step-desc{font-size:12px;color:var(--muted);line-height:1.5;}
+
+/* PROGRAMME STATUS */
+#programme{padding:0 40px 80px;background:var(--off-white);}
+.status-cards{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:640px;}
+.status-card{border-radius:10px;padding:28px;border:1.5px solid;}
+.status-card.granted{background:var(--granted-bg);border-color:#a8d5bb;}
+.status-card.journey{background:var(--journey-bg);border-color:#f0c070;}
+.sc-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;}
+.sc-badge.granted{color:var(--granted);}
+.sc-badge.journey{color:var(--journey);}
+.sc-num{font-family:'Barlow Condensed',sans-serif;font-size:44px;font-weight:800;line-height:1;margin-bottom:4px;}
+.sc-num.granted{color:var(--granted);}
+.sc-num.journey{color:var(--journey);}
+.sc-desc{font-size:13px;color:var(--muted);line-height:1.6;}
+
+/* NEWS */
+#news{padding:80px 40px;background:var(--navy);}
+#news .section-label{color:var(--cyan);}
+#news .section-h2{color:#fff;margin-bottom:36px;}
+.news-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;}
+.news-card{
+  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);
+  border-radius:10px;padding:24px;transition:border-color .18s;
+}
+.news-card:hover{border-color:rgba(41,182,232,0.4);}
+.news-tag{display:inline-block;padding:3px 10px;border-radius:10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;}
+.news-tag.new-member{background:rgba(41,182,232,0.15);color:var(--cyan);}
+.news-tag.achievement{background:rgba(26,122,74,0.2);color:#4ec98a;}
+.news-tag.contract{background:rgba(180,83,9,0.2);color:#f0a050;}
+.news-tag.industry{background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);}
+.news-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:#fff;line-height:1.3;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.02em;}
+.news-excerpt{font-size:13px;color:rgba(255,255,255,0.5);line-height:1.6;margin-bottom:14px;}
+.news-meta{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:rgba(255,255,255,0.3);}
+.news-company{font-weight:600;color:rgba(255,255,255,0.5);}
+.news-note{
+  margin-top:24px;padding:14px 18px;border-radius:8px;
+  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
+  font-size:12px;color:rgba(255,255,255,0.35);line-height:1.6;
+}
+.news-note strong{color:rgba(255,255,255,0.5);}
+
+/* CTA */
+#cta{padding:80px 40px;background:var(--cyan);text-align:center;}
+.cta-h2{font-family:'Barlow Condensed',sans-serif;font-size:clamp(32px,4vw,52px);font-weight:800;color:var(--navy);text-transform:uppercase;margin-bottom:14px;}
+.cta-sub{font-size:16px;color:rgba(10,22,40,0.7);margin-bottom:32px;max-width:480px;margin-left:auto;margin-right:auto;}
+.btn-navy{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:14px 36px;border-radius:7px;background:var(--navy);
+  color:#fff;font-family:'Barlow Condensed',sans-serif;
+  font-size:17px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;
+  text-decoration:none;transition:all .18s;
+}
+.btn-navy:hover{background:var(--navy-mid);transform:translateY(-1px);box-shadow:0 8px 28px rgba(10,22,40,0.3);}
+.btn-navy svg{width:18px;height:18px;}
+
+/* FOOTER */
+footer{background:var(--navy);padding:48px 40px 28px;border-top:1px solid rgba(255,255,255,0.06);}
+.footer-inner{max-width:1060px;margin:0 auto;}
+.footer-top{display:flex;gap:60px;flex-wrap:wrap;margin-bottom:36px;}
+.footer-brand{flex:1;min-width:220px;}
+.footer-logo{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.footer-logo-icon{width:30px;height:30px;border-radius:7px;background:var(--cyan);display:flex;align-items:center;justify-content:center;}
+.footer-logo-icon svg{width:15px;height:15px;fill:#fff;}
+.footer-logo-name{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:#fff;letter-spacing:0.06em;text-transform:uppercase;}
+.footer-tagline{font-size:12px;color:rgba(255,255,255,0.35);line-height:1.6;max-width:260px;}
+.footer-col h4{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:14px;}
+.footer-col ul{list-style:none;}
+.footer-col ul li{margin-bottom:8px;}
+.footer-col ul li a{font-size:13px;color:rgba(255,255,255,0.35);text-decoration:none;transition:color .15s;}
+.footer-col ul li a:hover{color:var(--cyan);}
+.footer-bottom{border-top:1px solid rgba(255,255,255,0.06);padding-top:22px;display:flex;gap:16px;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;}
+.footer-disclaimer{font-size:11px;color:rgba(255,255,255,0.22);line-height:1.6;max-width:660px;}
+.footer-disclaimer strong{color:rgba(255,255,255,0.35);}
+.footer-powered{font-size:11px;color:rgba(255,255,255,0.2);white-space:nowrap;}
+.footer-powered strong{color:rgba(255,255,255,0.35);}
+
+@media(max-width:700px){
+  nav{padding:0 20px;}
+  #hero,#about,#programme,#news,#cta,footer{padding-left:20px;padding-right:20px;}
+  .hero-stats{flex-direction:column;}
+  .hstat{border-right:none;border-bottom:1px solid rgba(255,255,255,0.08);}
+  .about-layout{grid-template-columns:1fr;}
+  .status-cards{grid-template-columns:1fr;}
+  .footer-top{flex-direction:column;gap:28px;}
+  .footer-bottom{flex-direction:column;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="NuclearReady_Landing.html">
+    <div class="nav-logo-icon">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.5"/><ellipse cx="12" cy="12" rx="10" ry="4.5" stroke="#fff" stroke-width="1.5" fill="none"/><ellipse cx="12" cy="12" rx="10" ry="4.5" stroke="#fff" stroke-width="1.5" fill="none" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4.5" stroke="#fff" stroke-width="1.5" fill="none" transform="rotate(120 12 12)"/></svg>
+    </div>
+    <span class="nav-logo-name">NuclearReady</span>
+  </a>
+  <div class="nav-spacer"></div>
+  <div class="nav-links">
+    <a class="nav-link" href="#about">About F4N</a>
+    <a class="nav-link" href="#news">News</a>
+    <a class="nav-cta" href="NuclearReady_Explorer_v3.html">Open Explorer →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <svg class="hero-orbital" viewBox="0 0 760 760" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="380" cy="380" r="60" fill="white"/>
+    <ellipse cx="380" cy="380" rx="340" ry="130" stroke="white" stroke-width="2"/>
+    <ellipse cx="380" cy="380" rx="340" ry="130" stroke="white" stroke-width="2" transform="rotate(60 380 380)"/>
+    <ellipse cx="380" cy="380" rx="340" ry="130" stroke="white" stroke-width="2" transform="rotate(120 380 380)"/>
+    <circle cx="720" cy="380" r="14" fill="white"/>
+    <circle cx="210" cy="154" r="14" fill="white"/>
+    <circle cx="210" cy="606" r="10" fill="white"/>
+  </svg>
+
+  <div class="hero-inner">
+    <div class="hero-eyebrow">
+      <span class="hero-eyebrow-dot"></span>
+      <span class="hero-eyebrow-text">Delivered by NucCol</span>
+    </div>
+    <h1 class="hero-h1">
+      The UK Nuclear<br>Supply Chain,<br><em>Ready for Business</em>
+    </h1>
+    <p class="hero-sub">
+      NuclearReady is the directory of UK manufacturers that have been assessed through NucCol's F4N programme — independently verified and ready to compete for nuclear contracts.
+    </p>
+    <div class="hero-actions">
+      <a class="btn-primary" href="NuclearReady_Explorer_v3.html">
+        Explore the Directory
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a class="btn-ghost" href="#about">About F4N</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hstat"><div class="hstat-num" id="hs-granted">–</div><div class="hstat-label">F4N Granted</div></div>
+      <div class="hstat"><div class="hstat-num" id="hs-journey">–</div><div class="hstat-label">On Journey</div></div>
+      <div class="hstat"><div class="hstat-num">12</div><div class="hstat-label">UK Regions</div></div>
+      <div class="hstat"><div class="hstat-num">17</div><div class="hstat-label">Sectors Served</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="section-inner">
+    <div class="section-label">The Programme</div>
+    <h2 class="section-h2">What is F4N?</h2>
+
+    <div class="about-layout">
+      <div class="about-text">
+        <p>
+          NuclearReady is the directory of UK manufacturers currently undertaking or granted F4N (Fit For Nuclear) status under NucCol.
+        </p>
+        <p>
+          F4N is a structured programme that prepares UK manufacturers to compete in the nuclear sector — helping companies understand what nuclear buyers expect, identify gaps, and meet the requirements to win work.
+        </p>
+        <p>
+          Assessment is carried out by NucCol's supply chain consultants, who visit each company in person, verify a self-assessment across six categories of business excellence, and work with them to build an action plan against nuclear industry standards.
+        </p>
+        <p>
+          Companies working through this process are listed as <strong>On the Journey</strong>. Those approved by the F4N granting panel earn <strong>F4N Granted</strong> status — the recognised mark that a business is ready to compete for nuclear contracts.
+        </p>
+        <p>
+          <a href="https://www.nuccol.co.uk/f4n" target="_blank" rel="noopener">Find out more about F4N →</a>
+        </p>
+      </div>
+
+      <div class="about-steps">
+        <div class="step">
+          <div class="step-num">01</div>
+          <div class="step-body">
+            <div class="step-title">Capability Questionnaire &amp; Self-Assessment</div>
+            <div class="step-desc">An initial questionnaire and online self-assessment covering six categories of business operation establish a clear baseline before consultant involvement.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">02</div>
+          <div class="step-body">
+            <div class="step-title">Site Verification &amp; Action Plan</div>
+            <div class="step-desc">NucCol's supply chain consultants visit your premises, verify the self-assessment, and co-create a structured action plan to close gaps against nuclear buyer expectations.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">03</div>
+          <div class="step-body">
+            <div class="step-title">Sector Knowledge &amp; Development</div>
+            <div class="step-desc">Nuclear-specific knowledge assessments and online knowledge transfer modules build your team's understanding of procurement standards and technical requirements.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">04</div>
+          <div class="step-body">
+            <div class="step-title">Pre-Grant Visit &amp; F4N Granted</div>
+            <div class="step-desc">After completing your action plans, a final pre-grant visit leads to assessment by the granting panel. Granted companies are listed in this directory and gain full NucCol membership benefits.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROGRAMME STATUS -->
+<section id="programme">
+  <div class="section-inner">
+    <div class="status-cards">
+      <div class="status-card granted">
+        <div class="sc-badge granted">✓ F4N Granted</div>
+        <div class="sc-num granted" id="sc-granted">–</div>
+        <div class="sc-desc">Companies that have successfully completed the F4N assessment and met all nuclear supply chain criteria. Fully endorsed and listed.</div>
+      </div>
+      <div class="status-card journey">
+        <div class="sc-badge journey">◎ On the Journey</div>
+        <div class="sc-num journey" id="sc-journey">–</div>
+        <div class="sc-desc">Companies actively working towards Granted status. Visible in the directory so buyers can see who is raising their game for nuclear work.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NEWS -->
+<section id="news">
+  <div class="section-inner">
+    <div class="section-label">Latest from Members</div>
+    <h2 class="section-h2">Member News &amp; Updates</h2>
+    <div class="news-grid">
+      <div class="news-card">
+        <span class="news-tag new-member">New Member</span>
+        <div class="news-title">Belfast Precision Components joins F4N Journey</div>
+        <div class="news-excerpt">The Northern Ireland precision machining specialist has begun its F4N assessment journey, bringing high-tolerance Inconel and titanium capability into the directory for the first time.</div>
+        <div class="news-meta">
+          <span class="news-company">Belfast Precision Components</span>
+          <span>June 2025</span>
+        </div>
+      </div>
+      <div class="news-card">
+        <span class="news-tag achievement">Achievement</span>
+        <div class="news-title">Strachan &amp; Henshaw Nuclear achieves F4N Granted status</div>
+        <div class="news-excerpt">Bristol-based fuel handling specialists have successfully completed the full F4N assessment, earning Granted status for their remote handling systems and polar crane capability.</div>
+        <div class="news-meta">
+          <span class="news-company">Strachan &amp; Henshaw Nuclear</span>
+          <span>May 2025</span>
+        </div>
+      </div>
+      <div class="news-card">
+        <span class="news-tag contract">Contract Win</span>
+        <div class="news-title">F4N members secure Hinkley Point C contracts</div>
+        <div class="news-excerpt">Several F4N Granted members have secured supply chain positions on the Hinkley Point C new-build programme, demonstrating the commercial value of the assessment pathway.</div>
+        <div class="news-meta">
+          <span class="news-company">NucCol</span>
+          <span>April 2025</span>
+        </div>
+      </div>
+    </div>
+    <div class="news-note">
+      <strong>Coming soon:</strong> F4N members will be able to post their own news, case studies and contract wins directly from the NuclearReady members area — appearing here after moderation review.
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta">
+  <h2 class="cta-h2">Find Your Next Nuclear Supplier</h2>
+  <p class="cta-sub">Search and filter the full directory of F4N-assessed UK companies — free, public, no login required.</p>
+  <a class="btn-navy" href="NuclearReady_Explorer_v3.html">
+    Open the Explorer
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+  </a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <div class="footer-logo-icon">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.5"/><ellipse cx="12" cy="12" rx="10" ry="4.5" stroke="#fff" stroke-width="1.5" fill="none"/><ellipse cx="12" cy="12" rx="10" ry="4.5" stroke="#fff" stroke-width="1.5" fill="none" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4.5" stroke="#fff" stroke-width="1.5" fill="none" transform="rotate(120 12 12)"/></svg>
+          </div>
+          <span class="footer-logo-name">NuclearReady</span>
+        </div>
+        <div class="footer-tagline">The directory of UK companies assessed through NucCol's F4N programme, ready to compete for nuclear contracts.</div>
+      </div>
+      <div class="footer-col">
+        <h4>Directory</h4>
+        <ul>
+          <li><a href="NuclearReady_Explorer_v3.html">Company Explorer</a></li>
+          <li><a href="NuclearReady_Explorer_v3.html">Search by Capability</a></li>
+          <li><a href="NuclearReady_Explorer_v3.html">Search by Region</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Programme</h4>
+        <ul>
+          <li><a href="https://www.nuccol.co.uk/f4n" target="_blank" rel="noopener">About F4N</a></li>
+          <li><a href="https://www.nuccol.co.uk" target="_blank" rel="noopener">NucCol Website</a></li>
+          <li><a href="https://www.nuccol.co.uk/members" target="_blank" rel="noopener">Members Area</a></li>
+          <li><a href="mailto:fit4@nuccol.co.uk">fit4@nuccol.co.uk</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-disclaimer">
+        <strong>Content Disclaimer:</strong> The information in this directory is provided by member companies and NucCol in good faith. NucCol does not warrant the accuracy, completeness or fitness for purpose of any company information listed. Inclusion in this directory does not constitute a recommendation or endorsement by NucCol for any specific contract or procurement decision. Buyers should carry out their own due diligence before engaging any supplier. F4N Granted status relates only to the F4N assessment criteria and does not imply compliance with any statutory, regulatory or contract-specific requirements.
+      </div>
+      <div class="footer-powered">Powered by <strong>NucCol</strong> · © 2026</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+const GRANTED = 44;
+const JOURNEY = 33;
+document.getElementById('hs-granted').textContent = GRANTED;
+document.getElementById('hs-journey').textContent  = JOURNEY;
+document.getElementById('sc-granted').textContent  = GRANTED;
+document.getElementById('sc-journey').textContent  = JOURNEY;
+</script>
+</body>
+</html>
