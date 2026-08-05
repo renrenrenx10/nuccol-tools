@@ -561,7 +561,7 @@ textarea.form-control { height: 72px; resize: vertical; }
     <div class="nav-links">
       <button class="nav-btn active" onclick="navigate('demand')">Search</button>
       <button class="nav-btn" onclick="navigate('products')">Products</button>
-      <button class="nav-btn" onclick="navigate('developers')">Developers</button>
+      <button class="nav-btn" onclick="navigate('developers')">Plants</button>
       <button class="nav-btn" onclick="navigate('schedules')">Schedules</button>
       <button class="nav-btn" onclick="navigate('about')">About</button>
     </div>
@@ -592,7 +592,7 @@ textarea.form-control { height: 72px; resize: vertical; }
         <div class="panel-section-title">Build Plan</div>
 
         <div class="form-group">
-          <label class="form-label" for="ddDev">Developer</label>
+          <label class="form-label" for="ddDev">Plant</label>
           <select class="form-control" id="ddDev" style="height:36px;"></select>
         </div>
         <div class="form-group">
@@ -639,12 +639,12 @@ textarea.form-control { height: 72px; resize: vertical; }
           <span id="demandNotify" style="font-size:12px;color:var(--green);font-family:var(--font-mono);"></span>
           <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
             <input class="filter-input" type="text" id="resultsSearch" placeholder="Filter results..." style="width:180px;height:30px;" oninput="renderResults()" />
-            <button class="btn btn-ghost btn-sm" onclick="exportCSV('raw')"   title="Every row: Developer, Family, Category, Year, Quarter, Amount">⬇ Raw CSV</button>
-            <button class="btn btn-ghost btn-sm" onclick="exportCSV('pivot')" title="Aggregated by Year — one column per Developer x Family x Category">⬇ Pivot CSV</button>
+            <button class="btn btn-ghost btn-sm" onclick="exportCSV('raw')"   title="Every row: Plant, Family, Category, Year, Quarter, Amount">⬇ Raw CSV</button>
+            <button class="btn btn-ghost btn-sm" onclick="exportCSV('pivot')" title="Aggregated by Year — one column per Plant x Family x Category">⬇ Pivot CSV</button>
           </div>
         </div>
         <div class="results-col-header">
-          <span class="th c-dev">Developer</span>
+          <span class="th c-dev">Plant</span>
           <span class="th c-prod">Category</span>
           <span class="th c-mt">Family</span>
           <span class="th c-year">Year</span>
@@ -675,24 +675,22 @@ textarea.form-control { height: 72px; resize: vertical; }
       <input class="filter-input" type="text" id="prodSearch" placeholder="Search products…" style="width:240px;" oninput="renderProducts()" />
       <select class="filter-select" id="prodFamilyFilter" onchange="renderProducts()">
         <option value="">All Families</option>
-        <option>Electrical</option><option>HVAC</option><option>HX</option>
-        <option>IC</option><option>Other</option><option>Piping</option>
-        <option>Pump</option><option>Steel_Civil</option><option>Tanks_Vessels</option><option>Valve</option>
+        <option>Bearings & Seals</option><option>Construction & Site Services</option><option>Electrical</option><option>Fasteners & Fixings</option><option>Fire Protection</option><option>HVAC</option><option>Heat Exchangers</option><option>I&C</option><option>Materials</option><option>Piping</option><option>Process Systems</option><option>Pumps</option><option>Reactor Internals</option><option>Safety & Emergency Systems</option><option>Shielding</option><option>Site & Handling Equipment</option><option>Steel & Civil</option><option>Tanks & Vessels</option><option>Turbine & Power Generation</option><option>Valves</option><option>Waste Management</option>
       </select>
-      <select class="filter-select" id="prodNuclearFilter" onchange="renderProducts()">
-        <option value="">All Classifications</option>
-        <option>🔴 Nuclear-only</option><option>🟡 Nuclear-grade</option><option>🟢 General industrial</option>
+      <select class="filter-select" id="prodConfFilter" onchange="renderProducts()">
+        <option value="">All Confidence Levels</option>
+        <option>MOSTLY_NATIVE</option><option>PARTIALLY_NATIVE</option><option>MOSTLY_ANALOGUE_OR_GENERIC</option>
       </select>
       <div class="filter-spacer"></div>
       <span class="count-badge" id="prodCount">— products</span>
     </div>
     <div class="table-header">
-      <span class="th p-name">Product Name</span>
-      <span class="th p-mat">Material Type</span>
-      <span class="th p-res">Resource Type</span>
-      <span class="th p-wt">Weight</span>
-      <span class="th p-lt">Lead Time</span>
-      <span class="th p-rate">Prod. Rate</span>
+      <span class="th p-name">Category (Plant Capability)</span>
+      <span class="th p-mat">Commodity Group</span>
+      <span class="th p-res">Unit</span>
+      <span class="th p-wt">Coverage</span>
+      <span class="th p-lt">Confidence</span>
+      <span class="th p-rate">Plants</span>
     </div>
     <div class="table-wrap" id="productsBody">
       <div class="loading-row"><div class="spinner"></div> Loading products…</div>
@@ -703,26 +701,26 @@ textarea.form-control { height: 72px; resize: vertical; }
   <div class="screen" id="screenDevelopers">
     <div class="page-header">
       <div class="page-header-text">
-        <div class="page-title">Developers</div>
-        <div class="page-subtitle">SMR developers in the demand model</div>
+        <div class="page-title">Plants</div>
+        <div class="page-subtitle">18 named reactor designs + 2 generic composites (GW/SMR class averages)</div>
       </div>
-      <button class="btn btn-primary" onclick="openDevForm()">+ Add Developer</button>
+      <button class="btn btn-primary" onclick="openDevForm()">+ Add Plant</button>
     </div>
     <div class="filter-bar">
-      <input class="filter-input" type="text" id="devSearch" placeholder="Search developers…" style="width:240px;" oninput="renderDevelopers()" />
+      <input class="filter-input" type="text" id="devSearch" placeholder="Search plants…" style="width:240px;" oninput="renderDevelopers()" />
       <div class="filter-spacer"></div>
-      <span class="count-badge" id="devCount">— developers</span>
+      <span class="count-badge" id="devCount">— plants</span>
     </div>
     <div class="table-header">
-      <span class="th d-name">Developer Name</span>
-      <span class="th" style="width:120px;flex-shrink:0;">Type</span>
-      <span class="th" style="width:180px;flex-shrink:0;">Plant Name</span>
-      <span class="th" style="width:100px;flex-shrink:0;">Country</span>
-      <span class="th" style="width:140px;flex-shrink:0;">Status</span>
+      <span class="th d-name">Plant</span>
+      <span class="th" style="width:120px;flex-shrink:0;">Shape</span>
+      <span class="th" style="width:180px;flex-shrink:0;">Reactor Class</span>
+      <span class="th" style="width:100px;flex-shrink:0;">MWe (approx.)</span>
+      <span class="th" style="width:140px;flex-shrink:0;">Composite?</span>
       <span class="th d-count">Schedules</span>
     </div>
     <div class="table-wrap" id="developersBody">
-      <div class="loading-row"><div class="spinner"></div> Loading developers…</div>
+      <div class="loading-row"><div class="spinner"></div> Loading plants…</div>
     </div>
   </div>
 
@@ -739,7 +737,7 @@ textarea.form-control { height: 72px; resize: vertical; }
     </div>
     <div class="filter-bar">
       <select class="filter-select" id="schedDevFilter" onchange="renderSchedules()" style="width:220px;">
-        <option value="">— Select Developer —</option>
+        <option value="">— Select Plant —</option>
       </select>
       <div class="filter-spacer"></div>
       <span class="count-badge" id="schedCount"></span>
@@ -783,20 +781,20 @@ textarea.form-control { height: 72px; resize: vertical; }
             <span style="font-size:20px;">📂</span> Where does the data come from?
           </div>
           <p style="font-size:14px;line-height:1.7;color:var(--slate);margin-bottom:16px;">
-            The commodity demand data was compiled by NuCCoL from a wide range of nuclear construction programmes and reactor vendor documentation. Two reference plant datasets underpin the model:
+            DangerMouse v3 is built from <strong>Reactor_BOM_DSE_Mapping_v3.xlsx</strong> — 18 named reactor designs, each mapped component-by-component to its official design-basis document (DCD/FSAR/PCSR), with page-level citations. On top of the 18 named designs sit two generic composites — <strong>Generic_GW_v2</strong> and <strong>Generic_SMR_v2</strong> — each the average of its class, used when you want a representative plant rather than a specific vendor design.
           </p>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
             <div style="background:var(--bg);border-radius:8px;padding:16px 18px;border-left:4px solid var(--navy);">
-              <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--navy);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">GW Plant Baseline</div>
-              <p style="font-size:13px;line-height:1.6;color:var(--slate);">Represents a large-scale gigawatt-class pressurised water reactor. Demand figures are drawn from GW-scale construction programme data, reconciled and validated across multiple sources. Build duration: <strong>10 years / 40 quarters</strong>.</p>
+              <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--navy);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">GW-shaped plants (9 designs)</div>
+              <p style="font-size:13px;line-height:1.6;color:var(--slate);">ABWR, AP1000, APR1400, ESBWR, HPR1000, UK_EPR, US_APWR, US_EPR + Generic_GW_v2. Build duration: <strong>10 years / 40 quarters</strong>.</p>
             </div>
             <div style="background:var(--bg);border-radius:8px;padding:16px 18px;border-left:4px solid var(--cyan);">
-              <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--cyan);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">SMR Plant Baseline</div>
-              <p style="font-size:13px;line-height:1.6;color:var(--slate);">Represents a small modular reactor of approximately 300–470 MWe. Where real SMR-specific data existed it was used directly. Where gaps remained, GW figures were scaled down using a validated scaling methodology. Build duration: <strong>7 years / 28 quarters</strong>.</p>
+              <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--cyan);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">SMR-shaped plants (11 designs)</div>
+              <p style="font-size:13px;line-height:1.6;color:var(--slate);">AP300, AP600, BWRX300, Candu, Holtec SMR-300, NuScale US460 & VOYGR, RR_SMR, Terrapower Natrium, X Energy + Generic_SMR_v2. Build duration: <strong>7 years / 28 quarters</strong>.</p>
             </div>
           </div>
           <p style="font-size:13px;line-height:1.6;color:var(--muted);">
-            Both datasets were compiled entirely by NuCCoL. All sources have been reviewed, normalised, and quality-checked. Data is stored in SharePoint and loaded into DangerMouse at runtime.
+            Every plant runs on real component-level quantities where they exist. Where a category had no trustworthy quantity anywhere in that reactor's own data, it was filled from the closest analogue reactor (same class first, scaled by MWe for bulk-unit categories) — see the <strong>Confidence</strong> column on the Products screen for which is which, per category.
           </p>
         </div>
 
@@ -806,22 +804,40 @@ textarea.form-control { height: 72px; resize: vertical; }
             <span style="font-size:20px;">🗂</span> How is the data organised?
           </div>
           <p style="font-size:14px;line-height:1.7;color:var(--slate);margin-bottom:14px;">
-            NuCCoL developed a bespoke taxonomy to normalise thousands of individual commodity lines from different sources into a consistent, searchable structure. Everything in the model sits within this hierarchy:
+            The source data's own taxonomy (Commodity Group → Plant Capability → Component) was rolled up onto a Family → Category scheme, stopping one level above individual named components — "Valves → Check Valves", not "Valves → Check Valves → Reactor Fuel Check Valve 01" — because that's the grain demand modelling actually needs.
           </p>
           <div style="display:flex;align-items:center;gap:0;margin-bottom:16px;flex-wrap:wrap;">
-            <div style="background:var(--navy);color:white;border-radius:8px;padding:10px 18px;font-family:var(--font-mono);font-size:12px;font-weight:700;">10 Families</div>
+            <div style="background:var(--navy);color:white;border-radius:8px;padding:10px 18px;font-family:var(--font-mono);font-size:12px;font-weight:700;">21 Families</div>
             <div style="font-size:20px;color:var(--muted);padding:0 8px;">→</div>
-            <div style="background:var(--navy-mid);color:white;border-radius:8px;padding:10px 18px;font-family:var(--font-mono);font-size:12px;font-weight:700;">105 Categories</div>
+            <div style="background:var(--navy-mid);color:white;border-radius:8px;padding:10px 18px;font-family:var(--font-mono);font-size:12px;font-weight:700;">250 Categories</div>
             <div style="font-size:20px;color:var(--muted);padding:0 8px;">→</div>
-            <div style="background:var(--bg);color:var(--slate);border-radius:8px;padding:10px 18px;font-family:var(--font-mono);font-size:12px;font-weight:700;border:1px solid var(--border);">3,691 Commodity Lines</div>
+            <div style="background:var(--bg);color:var(--slate);border-radius:8px;padding:10px 18px;font-family:var(--font-mono);font-size:12px;font-weight:700;border:1px solid var(--border);">across 20 plants</div>
           </div>
           <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px;">
-            ${['Bearings & Seals','Construction & Site Services','Design Basis (not a commodity)','Electrical','Fasteners & Fixings','Fire Protection','HVAC','Heat Exchangers','I&C','Materials','Piping','Process Systems','Pumps','Reactor Internals','Shielding','Site & Handling Equipment','Steel & Civil','Tanks & Vessels','Turbine & Power Generation','Valves','Waste Management'].map(f =>
+            ${['Bearings & Seals','Construction & Site Services','Electrical','Fasteners & Fixings','Fire Protection','HVAC','Heat Exchangers','I&C','Materials','Piping','Process Systems','Pumps','Reactor Internals','Safety & Emergency Systems','Shielding','Site & Handling Equipment','Steel & Civil','Tanks & Vessels','Turbine & Power Generation','Valves','Waste Management'].map(f =>
               `<div style="background:var(--cyan-dim);color:var(--navy);border-radius:6px;padding:6px 10px;font-size:12px;font-weight:600;text-align:center;">${f}</div>`
             ).join('')}
           </div>
           <p style="font-size:13px;line-height:1.6;color:var(--muted);">
-            Each category also carries a <strong>nuclear classification</strong>: 🔴 Nuclear-only (safety-critical, highest specification), 🟡 Nuclear-grade (elevated specification), or 🟢 General industrial (standard commercial supply chain). This classification helps identify where supply chain risk is concentrated.
+            <strong>Safety & Emergency Systems</strong> is new in v3 — it didn't fit the old 19-family scheme and had to be added to cover emergency planning, radiation monitoring, security, and emergency shutdown systems cleanly.
+          </p>
+        </div>
+
+        <!-- Data provenance & transparency -->
+        <div style="background:white;border-radius:10px;border:1px solid var(--border);padding:24px 28px;">
+          <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:10px;">
+            <span style="font-size:20px;">🔍</span> How trustworthy is each number?
+          </div>
+          <p style="font-size:14px;line-height:1.7;color:var(--slate);margin-bottom:14px;">
+            Every category on the Products screen carries a confidence badge, computed from an audit across all 20 plants:
+          </p>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;gap:12px;align-items:baseline;"><span class="badge badge-green">● Mostly native</span><span style="font-size:13px;color:var(--slate);">— summed from that reactor's own trustworthy rows: official-document extraction, or old-model data with a recovered HIGH/MEDIUM confidence tier.</span></div>
+            <div style="display:flex;gap:12px;align-items:baseline;"><span class="badge badge-amber">◐ Partially native</span><span style="font-size:13px;color:var(--slate);">— some plants have native data for this category, others needed a cross-reactor analogue.</span></div>
+            <div style="display:flex;gap:12px;align-items:baseline;"><span class="badge badge-red">○ Mostly analogue/generic</span><span style="font-size:13px;color:var(--slate);">— borrowed from the nearest matching reactor (or averaged for the generic composites), scaled by MWe where the unit is bulk (m³, t, m). Treat as directional, not precise.</span></div>
+          </div>
+          <p style="font-size:13px;line-height:1.6;color:var(--muted);margin-top:14px;">
+            The full row-level audit — every quantity's source, the fuzzy-match confidence tier recovered from the old NuCCoL model, and every cross-reactor donor/scale-factor decision — is documented alongside this build in <em>DangerMouse_Rebuild_Review</em>.
           </p>
         </div>
 
@@ -835,11 +851,11 @@ textarea.form-control { height: 72px; resize: vertical; }
           </p>
           <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
             ${[
-              ['1', 'Select baseline', 'Each developer in your build plan is matched to either the GW or SMR baseline dataset depending on their plant type. This determines which demand numbers and which construction timeline are used.'],
-              ['2', 'Apply construction schedule', 'Baseline demand for each commodity category is spread across the build timeline using a quarterly construction schedule. Categories are active during the periods when they are typically procured and installed — concrete is front-loaded, electrical and I&C are mid-to-late programme, fuel and casks are at the end.'],
-              ['3', 'Scale by concurrent builds', 'If a developer is building multiple reactors simultaneously (concurrent), all demand figures are multiplied accordingly. Two concurrent SMR builds means twice the quarterly demand for every category.'],
-              ['4', 'Offset consecutive builds', 'If a developer plans consecutive builds (one after another), each subsequent build starts after the previous one completes — offset by 6 years for SMR or 10 years for GW. Demand from all builds is then summed into a single timeline.'],
-              ['5', 'Aggregate across developers', 'If multiple developers are in your plan, their demand profiles are combined. You can view total demand or filter by individual developer to see their contribution.'],
+              ['1', 'Select plant', 'Each entry in your build plan is one of the 20 plants — a named reactor design or a generic GW/SMR composite. Its own quantities and quarter-phased schedule are used directly; there is no baseline fallback any more, every plant has real data.'],
+              ['2', 'Apply construction schedule', 'Each category is spread across the build timeline using a quarterly curve. GW-shaped plants use windows derived from real manufacturing lead-time data where available (civil front-loaded, electrical/I&C mid-programme); SMR-shaped plants reuse the real extracted SMR procurement curve. Every plant of the same shape shares this curve — there is no way to know in advance how an individual developer will actually phase their build, so a validated shared shape is used rather than guessing per-developer.'],
+              ['3', 'Scale by concurrent builds', 'If a plan entry is building multiple reactors simultaneously (concurrent), all demand figures are multiplied accordingly.'],
+              ['4', 'Offset consecutive builds', 'If a plan entry has consecutive builds (one after another), each subsequent build starts after the previous one completes — offset by 6 years for SMR-shaped or 10 years for GW-shaped plants. Demand from all builds is then summed into a single timeline.'],
+              ['5', 'Aggregate across plants', 'If multiple plants are in your plan, their demand profiles are combined. You can view total demand or filter by individual plant to see its contribution.'],
             ].map(([n, title, desc]) => `
               <div style="display:flex;gap:14px;align-items:flex-start;">
                 <div style="background:var(--navy);color:white;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px;">${n}</div>
@@ -854,23 +870,23 @@ textarea.form-control { height: 72px; resize: vertical; }
             <span style="font-size:20px;">📊</span> How do I read the results?
           </div>
           <p style="font-size:14px;line-height:1.7;color:var(--slate);margin-bottom:12px;">
-            Demand results show the amount of each commodity category required per quarter per calendar year. The chart view (accessed via View Chart) shows this as a stacked bar chart grouped by commodity family — 10 bars at the top level. Clicking a family bar drills into its constituent categories.
+            Demand results show the amount of each category required per quarter per calendar year. The chart view (accessed via View Chart) shows this as a stacked bar chart grouped by family — 21 bars at the top level. Clicking a family bar drills into its constituent categories, and each category's info panel now also shows its data-provenance confidence, not just capacity and lead time.
           </p>
           <p style="font-size:14px;line-height:1.7;color:var(--slate);margin-bottom:12px;">
-            <strong>Units vary by category</strong> — pumps are counted in units (No.), concrete in cubic metres (m³), steel in tonnes (t), cable in metres (m). The unit for each category is shown in the Products screen. Do not add totals across categories with different units — the KPI total shown is a raw sum for indicative scale only.
+            <strong>Units vary by category</strong> — pumps are counted in units (No.), concrete in cubic metres (m³), steel in tonnes (t), cable in metres (m). Do not add totals across categories with different units — the KPI total shown is a raw sum for indicative scale only.
           </p>
           <div style="background:rgba(230,126,34,0.08);border-left:4px solid var(--amber);border-radius:0 6px 6px 0;padding:12px 16px;">
             <div style="font-size:12px;font-weight:700;color:var(--amber);margin-bottom:4px;font-family:var(--font-mono);">⚠ IMPORTANT — Model limitations</div>
-            <p style="font-size:13px;line-height:1.6;color:var(--slate);">DangerMouse is a planning and horizon-scanning tool, not a procurement specification. Demand figures represent NuCCoL's best estimate based on available data and are subject to change as programme information matures. Figures should be treated as indicative order-of-magnitude estimates only. Always validate against the latest developer programme data before using for commercial decisions.</p>
+            <p style="font-size:13px;line-height:1.6;color:var(--slate);">DangerMouse is a planning and horizon-scanning tool, not a procurement specification. Demand figures represent NuCCoL's best estimate based on available data and are subject to change as programme information matures. Quarter-phasing is a shared shape per plant class (GW/SMR), not a real developer-specific build programme — there's no way to know how any individual developer will actually phase their build. Categories flagged "Mostly analogue/generic" are directional, not precise. Always validate against the latest programme data before using for commercial decisions.</p>
           </div>
         </div>
 
         <!-- Version -->
         <div style="background:var(--bg);border-radius:8px;padding:14px 18px;font-family:var(--font-mono);font-size:11px;color:var(--muted);display:flex;gap:24px;flex-wrap:wrap;">
-          <span>DangerMouse v2.0</span>
-          <span>Data updated: June 2026</span>
-          <span>GW baseline: 3,691 commodity lines</span>
-          <span>SMR baseline: 3,691 commodity lines</span>
+          <span>DangerMouse v3.0</span>
+          <span>Data source: Reactor_BOM_DSE_Mapping_v3.xlsx</span>
+          <span>20 plants (18 named + 2 generic composites)</span>
+          <span>21 families / 250 categories</span>
           <span>Built by NuCCoL</span>
         </div>
 
@@ -898,40 +914,21 @@ textarea.form-control { height: 72px; resize: vertical; }
         <label class="form-label" for="fProdFamily">Commodity Family</label>
         <select class="form-control" id="fProdFamily" style="height:36px;">
           <option value="">— select —</option>
-          <option>Electrical</option><option>HVAC</option><option>HX</option>
-          <option>IC</option><option>Other</option><option>Piping</option>
-          <option>Pump</option><option>Steel_Civil</option><option>Tanks_Vessels</option><option>Valve</option>
+          <option>Bearings & Seals</option><option>Construction & Site Services</option><option>Electrical</option><option>Fasteners & Fixings</option><option>Fire Protection</option><option>HVAC</option><option>Heat Exchangers</option><option>I&C</option><option>Materials</option><option>Piping</option><option>Process Systems</option><option>Pumps</option><option>Reactor Internals</option><option>Safety & Emergency Systems</option><option>Shielding</option><option>Site & Handling Equipment</option><option>Steel & Civil</option><option>Tanks & Vessels</option><option>Turbine & Power Generation</option><option>Valves</option><option>Waste Management</option>
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label" for="fProdNuclear">Nuclear Classification</label>
-        <select class="form-control" id="fProdNuclear" style="height:36px;">
-          <option value="">— select —</option>
-          <option>🔴 Nuclear-only</option>
-          <option>🟡 Nuclear-grade</option>
-          <option>🟢 General industrial</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="fProdPlantType">Plant Type</label>
-        <select class="form-control" id="fProdPlantType" style="height:36px;">
-          <option value="">— select —</option>
-          <option>GW</option><option>SMR</option><option>Both</option>
-        </select>
-      </div>
-      <div class="form-row">
-        <div class="form-col form-group">
-          <label class="form-label" for="fProdGWTotal">GW Total</label>
-          <input class="form-control" id="fProdGWTotal" type="number" step="0.0001" placeholder="0" />
-        </div>
-        <div class="form-col form-group">
-          <label class="form-label" for="fProdSMRTotal">SMR Total</label>
-          <input class="form-control" id="fProdSMRTotal" type="number" step="0.0001" placeholder="0" />
-        </div>
+        <label class="form-label" for="fProdCommGroup">Commodity Group</label>
+        <input class="form-control" id="fProdCommGroup" placeholder="e.g. Valves" />
       </div>
       <div class="form-group">
         <label class="form-label" for="fProdUnit">Primary Unit</label>
         <input class="form-control" id="fProdUnit" placeholder="e.g. No., t, m³" />
+      </div>
+      <div class="modal-full" style="background:var(--bg);border-radius:8px;padding:12px 16px;font-size:12px;color:var(--muted);line-height:1.6;">
+        Coverage and confidence (Native / Cross-Reactor Analogue / Generic Composite) are computed
+        across all 20 plants during the rollup, not editable per-category here — see the
+        DangerMouse_Rebuild_Review audit files for the full per-plant breakdown behind this category.
       </div>
     </div>
     <div class="modal-footer">
@@ -948,63 +945,41 @@ textarea.form-control { height: 72px; resize: vertical; }
 <div class="modal-backdrop" id="devModal">
   <div class="modal" style="max-width:520px;">
     <button class="modal-close" onclick="closeModal('devModal')">✕</button>
-    <div class="modal-title" id="devModalTitle">Add Developer</div>
+    <div class="modal-title" id="devModalTitle">Add Plant</div>
     <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:20px;">
       <div class="form-group">
-        <label class="form-label" for="fDevName">Developer Name *</label>
-        <input class="form-control" id="fDevName" placeholder="e.g. Rolls-Royce SMR" />
+        <label class="form-label" for="fDevName">Plant Name *</label>
+        <input class="form-control" id="fDevName" placeholder="e.g. RR_SMR" />
       </div>
       <div class="form-row">
         <div class="form-col form-group">
           <label class="form-label" for="fDevType">Type of Plant</label>
           <select class="form-control" id="fDevType" style="height:36px;">
             <option value="">— select —</option>
-            <option>SMR</option><option>AMR</option><option>Large Reactor</option><option>Other</option>
+            <option>SMR</option><option>Large Reactor</option>
           </select>
         </div>
         <div class="form-col form-group">
-          <label class="form-label" for="fDevPlantName">Name of Plant</label>
-          <input class="form-control" id="fDevPlantName" placeholder="e.g. VOYGR" />
+          <label class="form-label" for="fDevShape">Shape (curve used)</label>
+          <select class="form-control" id="fDevShape" style="height:36px;">
+            <option value="">— select —</option>
+            <option>GW</option><option>SMR</option>
+          </select>
         </div>
       </div>
       <div class="form-row">
         <div class="form-col form-group">
-          <label class="form-label" for="fDevCountry">Country</label>
-          <input class="form-control" id="fDevCountry" placeholder="e.g. United Kingdom" />
+          <label class="form-label" for="fDevClass">Reactor Class</label>
+          <input class="form-control" id="fDevClass" placeholder="e.g. GW_PWR, SMR_PWR, OTHER_ADV" />
         </div>
         <div class="form-col form-group">
-          <label class="form-label" for="fDevStatus">Status</label>
-          <select class="form-control" id="fDevStatus" style="height:36px;">
-            <option value="">— select —</option>
-            <option>Conceptual Design</option><option>Design Development</option>
-            <option>Vendor Review</option><option>Pre-licensing</option>
-            <option>Licensed</option><option>Under Construction</option>
-            <option>Prototype Development</option><option>Operational</option><option>Cancelled</option>
-          </select>
+          <label class="form-label" for="fDevMWe">MWe (approx.)</label>
+          <input class="form-control" id="fDevMWe" type="number" placeholder="e.g. 470" />
         </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="fDevTech">Technology</label>
-        <select class="form-control" id="fDevTech" style="height:36px;">
-          <option value="">— select —</option>
-          <option>Pressurized Water Reactor</option><option>Boiling Water Reactor</option>
-          <option>Molten Salt Reactor</option><option>Sodium-cooled Fast Reactor</option>
-          <option>Lead-cooled Fast Reactor</option><option>Gas-cooled Reactor</option>
-          <option>High Temperature Gas Reactor</option><option>Other</option>
-        </select>
-      </div>
-    </div>
-      <div class="form-group">
-        <label class="form-label" for="fDevBaseline">Baseline Plant (schedule fallback)</label>
-        <select class="form-control" id="fDevBaseline" style="height:36px;">
-          <option value="">— none —</option>
-          <option>GW Plant Baseline</option>
-          <option>SMR Plant Baseline</option>
-        </select>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-primary btn-xl" onclick="saveDeveloper()">Save Developer</button>
+      <button class="btn btn-primary btn-xl" onclick="saveDeveloper()">Save Plant</button>
       <button class="btn btn-ghost btn-xl" onclick="closeModal('devModal')">Cancel</button>
     </div>
   </div>
@@ -1035,9 +1010,9 @@ const CONFIG = {
   siteUrl:    'https://nuccol.sharepoint.com/sites/DangerMouse',
   scopes:     ['https://nuccol.sharepoint.com/.default'],
   lists: {
-    products:      'DM - Products',
-    developers:    'DM - Developers',
-    schedules:     'DM - Dev Schedules',
+    products:      'DM - Products v2',
+    developers:    'DM - Developers v2',
+    schedules:     'DM - Dev Schedules v2',
     chartCache:    'ChartCache',
     capacity:      'DM - Capacity',
     leadTimeByCat: 'DM - Lead Time By Category'
@@ -1201,23 +1176,34 @@ let store = {
 async function loadAllData() {
   try {
     const [prods, devs, scheds, caps, lts] = await Promise.all([
-      spGet(CONFIG.lists.products,      'Id,Title,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8', '', 'field_1 asc,Title asc'),
-      spGet(CONFIG.lists.developers,    'Id,Title,field_1,field_2,field_3,field_4,field_5,Baseline_Plant', '', 'Title asc'),
-      spGet(CONFIG.lists.schedules,     'Id,Title,field_1,field_2,field_3,field_4', '', 'Title asc'),
+      // NOTE: DM - Products v2 / Developers v2 / Dev Schedules v2 were all created via
+      // SharePoint's CSV-import wizard, which assigns generic internal names (field_1..field_9)
+      // to every custom column and keeps our intended header text only as DisplayName. Confirmed
+      // directly from each list's CSV export ListSchema on 2026-08-05 — see mapping in comments below.
+      spGet(CONFIG.lists.products,      'Id,Title,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8,field_9', '', 'field_1 asc,Title asc'),
+      spGet(CONFIG.lists.developers,    'Id,Title,field_1,field_2,field_3,field_4,field_5,field_6', '', 'Title asc'),
+      spGet(CONFIG.lists.schedules,     'Id,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8,field_9', '', 'field_1 asc'),
       spGet(CONFIG.lists.capacity,      'Title,field_1,field_2,field_3,field_4', '', 'Title asc'),
       spGet(CONFIG.lists.leadTimeByCat, 'Title,field_1,field_2,field_3,field_4,field_5,field_6', '', 'Title asc')
     ]);
+    // Products v2: one row per category (Family x Commodity Group x Capability), with rolled-up
+    // provenance across the 20 plants instead of two GW/SMR totals — see DangerMouse_Rebuild_Review
+    // for how Plants_With_Native / Overall_Confidence were derived.
+    // Products v2 field map: field_1=Unified_Family field_2=Commodity_Group field_3=Plant_Capability
+    // field_4=Primary_Unit field_5=Plants_With_Native field_6=Plants_With_Analogue
+    // field_7=Plants_With_Generic field_8=N_Plants_Covered field_9=Overall_Confidence
     store.products   = prods.map(p => ({
-      Id:                     p.Id,
-      Title:                  p.Title,
-      Unified_Family:         p.field_1,
-      Nuclear_Classification: p.field_2,
-      GW_Total:               p.field_3,
-      SMR_Total:              p.field_4,
-      Primary_Unit:           p.field_5,
-      Source_Rows:            p.field_6,
-      Tier1_Rows:             p.field_7,
-      Plant_Type:             p.field_8,
+      Id:                    p.Id,
+      Title:                 p.Title,
+      Unified_Family:        p.field_1,
+      Commodity_Group:       p.field_2,
+      Plant_Capability:      p.field_3,
+      Primary_Unit:          p.field_4,
+      Plants_With_Native:    p.field_5 != null ? parseInt(p.field_5) : 0,
+      Plants_With_Analogue:  p.field_6 != null ? parseInt(p.field_6) : 0,
+      Plants_With_Generic:   p.field_7 != null ? parseInt(p.field_7) : 0,
+      N_Plants_Covered:      p.field_8 != null ? parseInt(p.field_8) : 0,
+      Overall_Confidence:    p.field_9,
     }));
     // capacity: Title=Category, field_2=UK_Capacity_Per_Year, field_3=Unit, field_4=Confidence
     store.capacity = caps.map(c => ({
@@ -1236,23 +1222,31 @@ async function loadAllData() {
       SrcCount:   l.field_4 != null ? parseInt(l.field_4)   : null,
       SrcComps:   l.field_6 || null,
     }));
+    // Developers v2 = the 20 plants (18 named reactor designs + Generic_GW_v2/Generic_SMR_v2).
+    // Every plant now carries its own real schedule, so Baseline_Plant is self-referential —
+    // kept only as a defensive fallback key, not because plants borrow each other's schedules.
+    // Developers v2 field map: field_1=Type_of_Plant field_2=Plant_Shape field_3=Reactor_Class
+    // field_4=MWe_Approx field_5=Baseline_Plant field_6=Is_Generic_Composite
     store.developers = devs.map(d => ({
-      Id:             d.Id,
-      Title:          d.Title,
-      Type_of_Plant:  d.field_1,
-      Name_of_Plant:  d.field_2,
-      Technology:     d.field_3,
-      Country:        d.field_4,
-      Status:         d.field_5,
-      Baseline_Plant: d.Baseline_Plant || '',
+      Id:                   d.Id,
+      Title:                d.Title,
+      Type_of_Plant:        d.field_1,
+      Plant_Shape:          d.field_2,
+      Reactor_Class:        d.field_3,
+      MWe_Approx:           d.field_4 != null ? parseFloat(d.field_4) : null,
+      Baseline_Plant:       d.field_5 || d.Title,
+      Is_Generic_Composite: String(d.field_6).toLowerCase() === 'true',
     }));
+    // Dev Schedules v2 field map: field_1=Developer_ID field_2=Product_ID field_3=Unified_Family
+    // field_4=Commodity_Group field_5=ScheduleYear field_6=Quarter field_7=Amount_Absolute
+    // field_8=Unit field_9=Plant_Shape
     store.schedules  = scheds.map(s => ({
       Id:              s.Id,
-      Developer_ID:    s.Title,
-      Product_ID:      s.field_1,
-      ScheduleYear:    s.field_2,
-      Quarter:         s.field_3,
-      Amount_Absolute: s.field_4,
+      Developer_ID:    s.field_1,
+      Product_ID:      s.field_2,
+      ScheduleYear:    s.field_5,
+      Quarter:         s.field_6,
+      Amount_Absolute: s.field_7,
     }));
     populateDeveloperDropdown();
     populateSchedFilters();
@@ -1518,16 +1512,16 @@ function datestamp() {
 function renderProducts() {
   const q      = (document.getElementById('prodSearch').value || '').toLowerCase();
   const family = document.getElementById('prodFamilyFilter').value;
-  const nucl   = document.getElementById('prodNuclearFilter').value;
+  const conf   = document.getElementById('prodConfFilter').value;
   let rows = store.products.filter(p =>
-    (!q      || p.Title.toLowerCase().includes(q) || (p.Commodity_Category||'').toLowerCase().includes(q)) &&
+    (!q      || p.Title.toLowerCase().includes(q) || (p.Commodity_Group||'').toLowerCase().includes(q)) &&
     (!family || (p.Unified_Family||'') === family) &&
-    (!nucl   || (p.Nuclear_Classification||'').startsWith(nucl.charAt(0)))
+    (!conf   || (p.Overall_Confidence||'') === conf)
   );
-  document.getElementById('prodCount').textContent = rows.length + ' products';
+  document.getElementById('prodCount').textContent = rows.length + ' categories';
   const el = document.getElementById('productsBody');
   if (!rows.length) {
-    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📦</div><div class="empty-title">No products found</div></div>`;
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📦</div><div class="empty-title">No categories found</div></div>`;
     return;
   }
   // Group by family for display
@@ -1543,11 +1537,11 @@ function renderProducts() {
     html += items.map(p => `
     <div class="table-row">
       <span class="p-name" style="font-weight:600;font-size:13px;">${esc(p.Title)}</span>
-      <span class="p-mat">${nuclearBadge(p.Nuclear_Classification)}</span>
-      <span class="p-res" style="width:100px;">${p.Plant_Type ? `<span class="badge badge-grey">${esc(p.Plant_Type)}</span>` : ''}</span>
-      <span class="p-wt mono-sm" style="text-align:right;">${p.GW_Total != null ? Number(p.GW_Total).toLocaleString('en-GB',{maximumFractionDigits:0}) : '—'}</span>
-      <span class="p-lt mono-sm" style="width:130px;">${p.SMR_Total != null ? Number(p.SMR_Total).toLocaleString('en-GB',{maximumFractionDigits:0}) : '—'}</span>
-      <span class="p-rate mono-sm" style="text-align:right;width:60px;">${esc(p.Primary_Unit||'—')}</span>
+      <span class="p-mat mono-sm">${esc(p.Commodity_Group||'—')}</span>
+      <span class="p-res mono-sm" style="width:100px;">${esc(p.Primary_Unit||'—')}</span>
+      <span class="p-wt mono-sm" style="text-align:right;">${p.Plants_With_Native}/${p.N_Plants_Covered} native</span>
+      <span class="p-lt" style="width:200px;">${confidenceBadge(p.Overall_Confidence)}</span>
+      <span class="p-rate mono-sm" style="text-align:right;width:60px;">${p.N_Plants_Covered}</span>
       <div class="p-act">
         <button class="btn btn-ghost btn-sm" onclick="openProductForm(${p.Id})">Edit</button>
         <button class="btn btn-danger btn-sm btn-icon" onclick="deleteProduct(${p.Id},'${esc(p.Title)}')">🗑</button>
@@ -1557,53 +1551,50 @@ function renderProducts() {
   el.innerHTML = html;
 }
 
-function nuclearBadge(v) {
-  if (!v) return '<span class="badge badge-grey">—</span>';
-  const first = v.charAt(0);
-  const cls = first === '🔴' ? 'badge-red' : first === '🟡' ? 'badge-amber' : 'badge-green';
-  return `<span class="badge ${cls}">${esc(v)}</span>`;
-}
-
-function plantTypeBadge(v) {
-  const map = { GW:'badge-purple', SMR:'badge-cyan', Both:'badge-green' };
-  return v ? `<span class="badge ${map[v]||'badge-grey'}">${esc(v)}</span>` : '<span class="badge badge-grey">—</span>';
+// Provenance badge — shows at a glance whether a category's quantities across the 20 plants are
+// mostly native (official-doc/high-confidence old-model data), partially native, or mostly
+// cross-reactor analogue / generic composite. See DangerMouse_Rebuild_Review for the full audit.
+function confidenceBadge(v) {
+  const map = {
+    MOSTLY_NATIVE:               { cls: 'badge-green', label: '● Mostly native' },
+    PARTIALLY_NATIVE:            { cls: 'badge-amber',  label: '◐ Partially native' },
+    MOSTLY_ANALOGUE_OR_GENERIC:  { cls: 'badge-red',    label: '○ Mostly analogue/generic' },
+  };
+  const m = map[v];
+  return m ? `<span class="badge ${m.cls}">${m.label}</span>` : '<span class="badge badge-grey">—</span>';
 }
 
 function openProductForm(id = null) {
   store.editingProduct = id ? store.products.find(p => p.Id === id) : null;
   const p = store.editingProduct;
-  document.getElementById('productModalTitle').textContent = p ? `Edit: ${p.Title}` : 'Add New Product';
-  document.getElementById('fProdName').value        = p ? p.Title                        : '';
-  document.getElementById('fProdFamily').value      = p ? (p.Unified_Family||'')       : '';
-  document.getElementById('fProdNuclear').value     = p ? (p.Nuclear_Classification||'') : '';
-  document.getElementById('fProdPlantType').value   = p ? (p.Plant_Type||'')             : '';
-  document.getElementById('fProdGWTotal').value     = p ? (p.GW_Total ?? '')             : '';
-  document.getElementById('fProdSMRTotal').value    = p ? (p.SMR_Total ?? '')            : '';
-  document.getElementById('fProdUnit').value        = p ? (p.Primary_Unit||'')           : '';
+  document.getElementById('productModalTitle').textContent = p ? `Edit: ${p.Title}` : 'Add New Category';
+  document.getElementById('fProdName').value        = p ? p.Title                   : '';
+  document.getElementById('fProdFamily').value      = p ? (p.Unified_Family||'')    : '';
+  document.getElementById('fProdCommGroup').value   = p ? (p.Commodity_Group||'')   : '';
+  document.getElementById('fProdUnit').value        = p ? (p.Primary_Unit||'')      : '';
   openModal('productModal');
 }
 
 async function saveProduct() {
   const name = document.getElementById('fProdName').value.trim();
   if (!name) { toast('Category name is required', 'error'); return; }
+  const fFamily = document.getElementById('fProdFamily').value    || null;
+  const fComm   = document.getElementById('fProdCommGroup').value || null;
+  const fUnit   = document.getElementById('fProdUnit').value      || null;
+
+  // Products v2 internal names: field_1=Unified_Family field_2=Commodity_Group field_4=Primary_Unit
   const body = {
-    Title:   name,
-    field_1: document.getElementById('fProdFamily').value    || null,
-    field_2: document.getElementById('fProdNuclear').value   || null,
-    field_3: parseFloatOrNull(document.getElementById('fProdGWTotal').value),
-    field_4: parseFloatOrNull(document.getElementById('fProdSMRTotal').value),
-    field_5: document.getElementById('fProdUnit').value      || null,
-    field_8: document.getElementById('fProdPlantType').value || null,
+    Title:    name,
+    field_1:  fFamily,
+    field_2:  fComm,
+    field_4:  fUnit,
   };
 
   const friendlyProd = {
-    Title:                  name,
-    Unified_Family:       body.field_1,
-    Nuclear_Classification: body.field_2,
-    GW_Total:               body.field_3,
-    SMR_Total:              body.field_4,
-    Primary_Unit:           body.field_5,
-    Plant_Type:             body.field_8,
+    Title:            name,
+    Unified_Family:   fFamily,
+    Commodity_Group:  fComm,
+    Primary_Unit:     fUnit,
   };
 
   const saving = document.getElementById('productSaving');
@@ -1647,23 +1638,23 @@ async function deleteProduct(id, name) {
 function renderDevelopers() {
   const q    = (document.getElementById('devSearch').value || '').toLowerCase();
   const rows = store.developers.filter(d => !q || d.Title.toLowerCase().includes(q));
-  document.getElementById('devCount').textContent = rows.length + ' developers';
+  document.getElementById('devCount').textContent = rows.length + ' plants';
   const el = document.getElementById('developersBody');
   if (!rows.length) {
-    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🏭</div><div class="empty-title">No developers found</div></div>`;
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🏭</div><div class="empty-title">No plants found</div></div>`;
     return;
   }
   el.innerHTML = rows.map(d => {
     const schedCount = store.schedules.filter(s => s.Developer_ID === d.Title).length;
-    const statusColour = { Licensed:'badge-green', 'Under Construction':'badge-amber', Operational:'badge-cyan', Cancelled:'badge-red' };
+    const shapeColour = { GW:'badge-purple', SMR:'badge-cyan' };
     return `
     <div class="table-row">
       <span class="d-name" style="font-weight:600;font-size:13px;">${esc(d.Title)}</span>
-      <span style="width:120px;flex-shrink:0;">${d.Type_of_Plant ? `<span class="badge badge-grey">${esc(d.Type_of_Plant)}</span>` : '—'}</span>
-      <span style="width:180px;flex-shrink:0;font-size:12px;color:var(--muted);">${esc(d.Name_of_Plant||'—')}</span>
-      <span style="width:100px;flex-shrink:0;font-size:12px;">${esc(d.Country||'—')}</span>
-      <span style="width:140px;flex-shrink:0;">${d.Status ? `<span class="badge ${statusColour[d.Status]||'badge-grey'}">${esc(d.Status)}</span>` : '—'}</span>
-      <span class="d-count" style="text-align:center;"><span class="badge badge-cyan">${schedCount}</span>${schedCount === 0 && d.Baseline_Plant ? ` <span class="badge badge-grey" title="Uses ${esc(d.Baseline_Plant)}">↗ baseline</span>` : ''}</span>
+      <span style="width:120px;flex-shrink:0;">${d.Plant_Shape ? `<span class="badge ${shapeColour[d.Plant_Shape]||'badge-grey'}">${esc(d.Plant_Shape)}</span>` : '—'}</span>
+      <span style="width:180px;flex-shrink:0;font-size:12px;color:var(--muted);">${esc(d.Reactor_Class||'—')}</span>
+      <span style="width:100px;flex-shrink:0;font-size:12px;">${d.MWe_Approx != null ? Number(d.MWe_Approx).toLocaleString('en-GB') : '—'}</span>
+      <span style="width:140px;flex-shrink:0;">${d.Is_Generic_Composite ? '<span class="badge badge-amber">Generic composite</span>' : '<span class="badge badge-grey">Named design</span>'}</span>
+      <span class="d-count" style="text-align:center;"><span class="badge badge-cyan">${schedCount}</span></span>
       <div class="d-act">
         <button class="btn btn-ghost btn-sm" onclick="openDevForm(${d.Id})">Edit</button>
         <button class="btn btn-danger btn-sm btn-icon" onclick="deleteDeveloper(${d.Id},'${esc(d.Title)}')">🗑</button>
@@ -1675,50 +1666,51 @@ function renderDevelopers() {
 function openDevForm(id = null) {
   store.editingDev = id ? store.developers.find(d => d.Id === id) : null;
   const d = store.editingDev;
-  document.getElementById('devModalTitle').textContent = d ? `Edit: ${d.Title}` : 'Add Developer';
-  document.getElementById('fDevName').value      = d ? d.Title              : '';
-  document.getElementById('fDevType').value      = d ? (d.Type_of_Plant||'') : '';
-  document.getElementById('fDevPlantName').value = d ? (d.Name_of_Plant||'') : '';
-  document.getElementById('fDevCountry').value   = d ? (d.Country||'')      : '';
-  document.getElementById('fDevStatus').value    = d ? (d.Status||'')       : '';
-  document.getElementById('fDevTech').value      = d ? (d.Technology||'')   : '';
+  document.getElementById('devModalTitle').textContent = d ? `Edit: ${d.Title}` : 'Add Plant';
+  document.getElementById('fDevName').value  = d ? d.Title                 : '';
+  document.getElementById('fDevType').value  = d ? (d.Type_of_Plant||'')   : '';
+  document.getElementById('fDevShape').value = d ? (d.Plant_Shape||'')     : '';
+  document.getElementById('fDevClass').value = d ? (d.Reactor_Class||'')   : '';
+  document.getElementById('fDevMWe').value   = d ? (d.MWe_Approx ?? '')    : '';
   openModal('devModal');
 }
 
 async function saveDeveloper() {
   const name = document.getElementById('fDevName').value.trim();
-  if (!name) { toast('Developer name is required', 'error'); return; }
-  const body = {
-    Title:   name,
-    field_1: document.getElementById('fDevType').value      || null,
-    field_2: document.getElementById('fDevPlantName').value || null,
-    field_3: document.getElementById('fDevTech').value      || null,
-    field_4: document.getElementById('fDevCountry').value   || null,
-    field_5: document.getElementById('fDevStatus').value    || null,
-    Baseline_Plant: document.getElementById('fDevBaseline').value || null,
+  if (!name) { toast('Plant name is required', 'error'); return; }
+  const friendlyDev = {
+    Title:                name,
+    Type_of_Plant:        document.getElementById('fDevType').value  || null,
+    Plant_Shape:          document.getElementById('fDevShape').value || null,
+    Reactor_Class:        document.getElementById('fDevClass').value || null,
+    MWe_Approx:           parseFloatOrNull(document.getElementById('fDevMWe').value),
+    Baseline_Plant:       name,
+    Is_Generic_Composite: false,
   };
-  // Also update friendly names in local store after save
-  const friendlyBody = {
-    Title:         name,
-    Type_of_Plant: body.field_1,
-    Name_of_Plant: body.field_2,
-    Technology:    body.field_3,
-    Country:       body.field_4,
-    Status:        body.field_5,
+  // Developers v2 internal names: field_1=Type_of_Plant field_2=Plant_Shape field_3=Reactor_Class
+  // field_4=MWe_Approx field_5=Baseline_Plant field_6=Is_Generic_Composite
+  const body = {
+    Title:    friendlyDev.Title,
+    field_1:  friendlyDev.Type_of_Plant,
+    field_2:  friendlyDev.Plant_Shape,
+    field_3:  friendlyDev.Reactor_Class,
+    field_4:  friendlyDev.MWe_Approx,
+    field_5:  friendlyDev.Baseline_Plant,
+    field_6:  friendlyDev.Is_Generic_Composite,
   };
   try {
     if (store.editingDev) {
       await spPatch(CONFIG.lists.developers, store.editingDev.Id, body);
-      Object.assign(store.editingDev, friendlyBody);
+      Object.assign(store.editingDev, friendlyDev);
     } else {
       const created = await spPost(CONFIG.lists.developers, body);
-      store.developers.push({ ...friendlyBody, Id: created.Id });
+      store.developers.push({ ...friendlyDev, Id: created.Id });
       store.developers.sort((a,b) => a.Title.localeCompare(b.Title));
     }
     populateDeveloperDropdown();
     renderDevelopers();
     closeModal('devModal');
-    toast('Developer saved', 'success');
+    toast('Plant saved', 'success');
   } catch(e) {
     toast('Save failed: ' + e.message, 'error');
   }
@@ -1732,7 +1724,7 @@ async function deleteDeveloper(id, name) {
     store.developers = store.developers.filter(d => d.Id !== id);
     populateDeveloperDropdown();
     renderDevelopers();
-    toast('Developer deleted', 'success');
+    toast('Plant deleted', 'success');
   } catch(e) {
     toast('Delete failed: ' + e.message, 'error');
   }
@@ -1748,13 +1740,13 @@ const QUARTERS  = ['Q1','Q2','Q3','Q4'];
 function yearsForDev(devTitle) {
   const dev = store.developers.find(d => d.Title === devTitle);
   if (!dev) return SMR_YEARS;
-  return dev.Type_of_Plant === 'Large Reactor' ? GW_YEARS : SMR_YEARS;
+  return dev.Plant_Shape === 'GW' ? GW_YEARS : SMR_YEARS;
 }
 
 function consecutiveOffsetForDev(devTitle) {
   const dev = store.developers.find(d => d.Title === devTitle);
   if (!dev) return 6;
-  return dev.Type_of_Plant === 'Large Reactor' ? 10 : 6;
+  return dev.Plant_Shape === 'GW' ? 10 : 6;
 }
 
 function populateSchedFilters() {
@@ -1870,24 +1862,30 @@ async function schedCellChanged(input) {
   clearTimeout(_schedSaveTimer);
 
   try {
+    const amt = isNaN(val) ? null : val;
+    // Dev Schedules v2 internal names: field_1=Developer_ID field_2=Product_ID field_5=ScheduleYear
+    // field_6=Quarter field_7=Amount_Absolute
     const body = {
-      Developer_ID:    dev,
-      Product_ID:      prod,
-      ScheduleYear:    yr,
-      Quarter:         qtr,
-      Amount_Absolute: isNaN(val) ? null : val
+      field_1: dev,
+      field_2: prod,
+      field_5: yr,
+      field_6: qtr,
+      field_7: amt,
     };
 
     if (id) {
       await spPatch(CONFIG.lists.schedules, id, body);
       // Update store
       const existing = store.schedules.find(s => s.Id === id);
-      if (existing) existing.Amount_Absolute = isNaN(val) ? null : val;
+      if (existing) existing.Amount_Absolute = amt;
     } else {
       // New entry — create it
       body.Title = `${dev.substring(0,3)}_${prod.substring(0,8)}_Y${yr}_${qtr}`.replace(/\s/g,'');
       const created = await spPost(CONFIG.lists.schedules, body);
-      store.schedules.push({ ...body, Id: created.Id });
+      store.schedules.push({
+        Id: created.Id, Developer_ID: dev, Product_ID: prod,
+        ScheduleYear: yr, Quarter: qtr, Amount_Absolute: amt
+      });
       input.dataset.id = created.Id;
     }
 

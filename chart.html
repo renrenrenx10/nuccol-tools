@@ -278,14 +278,14 @@
     <div class="kpi"><div class="kpi-label">Total Demand</div><div class="kpi-value" id="kpiTotal">—</div></div>
     <div class="kpi"><div class="kpi-label">Categories</div><div class="kpi-value" id="kpiProducts">—</div></div>
     <div class="kpi"><div class="kpi-label">Year Span</div><div class="kpi-value" id="kpiYears">—</div></div>
-    <div class="kpi"><div class="kpi-label">Developers</div><div class="kpi-value" id="kpiDevs">—</div></div>
+    <div class="kpi"><div class="kpi-label">Plants</div><div class="kpi-value" id="kpiDevs">—</div></div>
   </div>
 </div>
 
 <main>
   <!-- FILTER BAR -->
   <div class="filter-bar" id="filterBar" style="display:none">
-    <span class="filter-label">Developer</span>
+    <span class="filter-label">Plant</span>
     <div class="dev-toggles" id="devToggles">
       <button class="pill all active" onclick="toggleDev('__all__',this)">All</button>
     </div>
@@ -359,6 +359,10 @@
             <div class="info-row"><span class="info-key">Total</span><span class="info-val" id="iTotal"></span></div>
             <div class="info-row"><span class="info-key">Peak / yr</span><span class="info-val" id="iPeak"></span></div>
             <div class="info-row"><span class="info-key">Unit</span><span class="info-val" id="iUnit"></span></div>
+          </div>
+          <div class="info-group" id="iProvGroup">
+            <div class="info-group-title">Data Provenance</div>
+            <div id="iProvBody"></div>
           </div>
           <div class="info-group" id="iCapGroup">
             <div class="info-group-title">UK Supply Capacity</div>
@@ -459,9 +463,11 @@ async function loadData() {
       const url = `${SITE_URL}/_api/web/lists/getbytitle('${LIST_NAME}')/items?$filter=Title eq 'cache_${i}'&$select=ChartData&$top=1`;
       chunkFetches.push(fetch(url, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json;odata=nometadata' } }));
     }
-    const [capRows, ltRows, ...chunkResps] = await Promise.all([
+    const [capRows, ltRows, prodRows, ...chunkResps] = await Promise.all([
       spFetch('DM - Capacity',             'Title,field_2,field_3,field_4'),
       spFetch('DM - Lead Time By Category','Title,field_1,field_2,field_3,field_4,field_6'),
+      // DM - Products v2 internal names: field_5=Plants_With_Native field_8=N_Plants_Covered field_9=Overall_Confidence
+      spFetch('DM - Products v2',          'Title,field_5,field_8,field_9'),
       ...chunkFetches
     ]);
 
@@ -489,10 +495,19 @@ async function loadData() {
         srcComponents:l.field_6 || null
       };
     }
+    // Data-provenance lookup — same join key (category name) as capacity/lead time above.
+    const provLookup = {};
+    for (const p of prodRows) {
+      provLookup[p.Title] = {
+        provConfidence: p.field_9 || null,
+        provNative:     p.field_5 != null ? parseInt(p.field_5) : null,
+        provCovered:    p.field_8 != null ? parseInt(p.field_8) : null,
+      };
+    }
 
     // Merge overlay data onto each demand row by category (r.p)
     const slim = JSON.parse(raw);
-    allData = slim.map(r => ({ ...r, ...(capLookup[r.p] || {}), ...(ltLookup[r.p] || {}) }));
+    allData = slim.map(r => ({ ...r, ...(capLookup[r.p] || {}), ...(ltLookup[r.p] || {}), ...(provLookup[r.p] || {}) }));
 
     hideSbStatus();
     populateFilters();
@@ -819,6 +834,24 @@ function openInfoPanel(categoryLabel) {
   document.getElementById('iTotal').textContent = total.toLocaleString('en-GB',{maximumFractionDigits:0});
   document.getElementById('iPeak').textContent  = peak.toLocaleString('en-GB',{maximumFractionDigits:0}) + ' / yr';
   document.getElementById('iUnit').textContent  = unit;
+
+  // Data provenance — how trustworthy this category's quantities are, per the DangerMouse
+  // Rebuild Review audit (native vs cross-reactor analogue vs generic composite).
+  const provRow  = rows.find(r => r.provConfidence != null);
+  const provBody = document.getElementById('iProvBody');
+  if (provRow) {
+    const confMap = {
+      MOSTLY_NATIVE:              { cls:'good', label:'● Mostly native' },
+      PARTIALLY_NATIVE:           { cls:'warn', label:'◐ Partially native' },
+      MOSTLY_ANALOGUE_OR_GENERIC: { cls:'bad',  label:'○ Mostly analogue/generic' },
+    };
+    const c = confMap[provRow.provConfidence] || { cls:'', label: provRow.provConfidence };
+    provBody.innerHTML = `
+      <div class="info-row"><span class="info-key">Confidence</span><span class="info-val ${c.cls}">${c.label}</span></div>
+      <div class="info-row"><span class="info-key">Plants with native data</span><span class="info-val">${provRow.provNative} / ${provRow.provCovered}</span></div>`;
+  } else {
+    provBody.innerHTML = '<div class="no-data">No provenance data available</div>';
+  }
 
   // Capacity
   const capRow = rows.find(r => r.cap != null);
