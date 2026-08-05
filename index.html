@@ -565,6 +565,10 @@ textarea.form-control { height: 72px; resize: vertical; }
       <button class="nav-btn" onclick="navigate('schedules')">Schedules</button>
       <button class="nav-btn" onclick="navigate('about')">About</button>
     </div>
+    <div id="globalLoadStatus" style="display:none;align-items:center;gap:8px;font-size:12px;font-family:var(--font-mono);color:var(--muted);background:rgba(13,59,110,0.06);border:1px solid var(--border);border-radius:20px;padding:5px 12px 5px 8px;margin-right:12px;">
+      <div class="spinner" style="width:13px;height:13px;border-width:2px;"></div>
+      <span id="globalLoadText">Loading…</span>
+    </div>
     <div class="nav-user">
       <div class="nav-avatar" id="navAvatar">?</div>
       <span class="nav-username" id="navUsername">—</span>
@@ -593,7 +597,7 @@ textarea.form-control { height: 72px; resize: vertical; }
 
         <div class="form-group">
           <label class="form-label" for="ddDev">Plant</label>
-          <select class="form-control" id="ddDev" style="height:36px;"></select>
+          <select class="form-control" id="ddDev" style="height:36px;"><option value="">Loading plants…</option></select>
         </div>
         <div class="form-group">
           <label class="form-label" for="datStart">Start Date</label>
@@ -1185,29 +1189,48 @@ let store = {
   editingSched: null
 };
 
+// NOTE: DM - Products v2 / Developers v2 / Dev Schedules v2 were all created via
+// SharePoint's CSV-import wizard, which assigns generic internal names (field_1..field_9)
+// to every custom column and keeps our intended header text only as DisplayName. Confirmed
+// directly from each list's CSV export ListSchema on 2026-08-05 — see mapping in comments below.
 async function loadAllData() {
+  // Developers v2 loads first and on its own — it's only 20 rows, so it comes back almost
+  // instantly and we populate the Plant dropdown + Plants screen right away. Previously this
+  // was bundled into one big Promise.all with Dev Schedules v2 (~49,782 rows), so the dropdown
+  // sat empty for however long the schedules fetch took. Developers v2 field map:
+  // field_1=Type_of_Plant field_2=Plant_Shape field_3=Reactor_Class field_4=MWe_Approx
+  // field_5=Baseline_Plant field_6=Is_Generic_Composite
   try {
-    const [prods, devs, scheds, caps, lts] = await Promise.all([
-      // NOTE: DM - Products v2 / Developers v2 / Dev Schedules v2 were all created via
-      // SharePoint's CSV-import wizard, which assigns generic internal names (field_1..field_9)
-      // to every custom column and keeps our intended header text only as DisplayName. Confirmed
-      // directly from each list's CSV export ListSchema on 2026-08-05 — see mapping in comments below.
-      spGet(CONFIG.lists.products,      'Id,Title,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8,field_9', '', 'field_1 asc,Title asc'),
-      spGet(CONFIG.lists.developers,    'Id,Title,field_1,field_2,field_3,field_4,field_5,field_6', '', 'Title asc'),
-      // No $orderby here — Dev Schedules v2 has ~49,782 rows and field_1 isn't an indexed
-      // column, so sorting it would force a full-list scan and trip SharePoint's list view
-      // threshold. Sorted client-side below instead, after all pages are fetched.
-      spGet(CONFIG.lists.schedules,     'Id,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8,field_9', '', ''),
-      spGet(CONFIG.lists.capacity,      'Title,field_1,field_2,field_3,field_4', '', 'Title asc'),
-      spGet(CONFIG.lists.leadTimeByCat, 'Title,field_1,field_2,field_3,field_4,field_5,field_6', '', 'Title asc')
-    ]);
-    // Products v2: one row per category (Family x Commodity Group x Capability), with rolled-up
-    // provenance across the 20 plants instead of two GW/SMR totals — see DangerMouse_Rebuild_Review
-    // for how Plants_With_Native / Overall_Confidence were derived.
-    // Products v2 field map: field_1=Unified_Family field_2=Commodity_Group field_3=Plant_Capability
-    // field_4=Primary_Unit field_5=Plants_With_Native field_6=Plants_With_Analogue
-    // field_7=Plants_With_Generic field_8=N_Plants_Covered field_9=Overall_Confidence
-    store.products   = prods.map(p => ({
+    const devs = await spGet(CONFIG.lists.developers, 'Id,Title,field_1,field_2,field_3,field_4,field_5,field_6', '', 'Title asc');
+    // Developers v2 = the 20 plants (18 named reactor designs + Generic_GW_v2/Generic_SMR_v2).
+    // Every plant now carries its own real schedule, so Baseline_Plant is self-referential —
+    // kept only as a defensive fallback key, not because plants borrow each other's schedules.
+    store.developers = devs.map(d => ({
+      Id:                   d.Id,
+      Title:                d.Title,
+      Type_of_Plant:        d.field_1,
+      Plant_Shape:          d.field_2,
+      Reactor_Class:        d.field_3,
+      MWe_Approx:           d.field_4 != null ? parseFloat(d.field_4) : null,
+      Baseline_Plant:       d.field_5 || d.Title,
+      Is_Generic_Composite: String(d.field_6).toLowerCase() === 'true',
+    }));
+    populateDeveloperDropdown();
+    renderDevelopers();
+  } catch(e) {
+    console.error('Failed to load DM - Developers v2:', e);
+    toast('Failed to load Plants: ' + e.message, 'error');
+  }
+
+  // Products v2 next — also small (250 rows). One row per category (Family x Commodity Group x
+  // Capability), with rolled-up provenance across the 20 plants — see DangerMouse_Rebuild_Review
+  // for how Plants_With_Native / Overall_Confidence were derived. Field map: field_1=Unified_Family
+  // field_2=Commodity_Group field_3=Plant_Capability field_4=Primary_Unit field_5=Plants_With_Native
+  // field_6=Plants_With_Analogue field_7=Plants_With_Generic field_8=N_Plants_Covered
+  // field_9=Overall_Confidence
+  try {
+    const prods = await spGet(CONFIG.lists.products, 'Id,Title,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8,field_9', '', 'field_1 asc,Title asc');
+    store.products = prods.map(p => ({
       Id:                    p.Id,
       Title:                 p.Title,
       Unified_Family:        p.field_1,
@@ -1220,6 +1243,25 @@ async function loadAllData() {
       N_Plants_Covered:      p.field_8 != null ? parseInt(p.field_8) : 0,
       Overall_Confidence:    p.field_9,
     }));
+    renderProducts();
+  } catch(e) {
+    console.error('Failed to load DM - Products v2:', e);
+    toast('Failed to load Products: ' + e.message, 'error');
+  }
+
+  // Capacity + Lead Time overlays (small) and Dev Schedules v2 (large — ~49,782 rows, pages
+  // through @odata.nextLink in spGet and can take a while) load together, in the background,
+  // separately from the two fast fetches above.
+  showGlobalLoading('Loading schedules (~49,782 rows)');
+  try {
+    const [scheds, caps, lts] = await Promise.all([
+      // No $orderby here — Dev Schedules v2 has ~49,782 rows and field_1 isn't an indexed
+      // column, so sorting it would force a full-list scan and trip SharePoint's list view
+      // threshold. Sorted client-side below instead, after all pages are fetched.
+      spGet(CONFIG.lists.schedules,     'Id,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8,field_9', '', ''),
+      spGet(CONFIG.lists.capacity,      'Title,field_1,field_2,field_3,field_4', '', 'Title asc'),
+      spGet(CONFIG.lists.leadTimeByCat, 'Title,field_1,field_2,field_3,field_4,field_5,field_6', '', 'Title asc')
+    ]);
     // capacity: Title=Category, field_2=UK_Capacity_Per_Year, field_3=Unit, field_4=Confidence
     store.capacity = caps.map(c => ({
       Category: c.Title,
@@ -1236,21 +1278,6 @@ async function loadAllData() {
       Lt:         l.field_3 != null ? parseFloat(l.field_3) : null,
       SrcCount:   l.field_4 != null ? parseInt(l.field_4)   : null,
       SrcComps:   l.field_6 || null,
-    }));
-    // Developers v2 = the 20 plants (18 named reactor designs + Generic_GW_v2/Generic_SMR_v2).
-    // Every plant now carries its own real schedule, so Baseline_Plant is self-referential —
-    // kept only as a defensive fallback key, not because plants borrow each other's schedules.
-    // Developers v2 field map: field_1=Type_of_Plant field_2=Plant_Shape field_3=Reactor_Class
-    // field_4=MWe_Approx field_5=Baseline_Plant field_6=Is_Generic_Composite
-    store.developers = devs.map(d => ({
-      Id:                   d.Id,
-      Title:                d.Title,
-      Type_of_Plant:        d.field_1,
-      Plant_Shape:          d.field_2,
-      Reactor_Class:        d.field_3,
-      MWe_Approx:           d.field_4 != null ? parseFloat(d.field_4) : null,
-      Baseline_Plant:       d.field_5 || d.Title,
-      Is_Generic_Composite: String(d.field_6).toLowerCase() === 'true',
     }));
     // Dev Schedules v2 field map: field_1=Developer_ID field_2=Product_ID field_3=Unified_Family
     // field_4=Commodity_Group field_5=ScheduleYear field_6=Quarter field_7=Amount_Absolute
@@ -1270,14 +1297,37 @@ async function loadAllData() {
       (a.ScheduleYear - b.ScheduleYear) ||
       (a.Quarter || '').localeCompare(b.Quarter || '')
     );
-    populateDeveloperDropdown();
     populateSchedFilters();
-    renderProducts();
-    renderDevelopers();
     renderSchedules();
+    hideGlobalLoading();
+    toast('✓ All data loaded', 'success');
   } catch(e) {
-    toast('Failed to load data: ' + e.message, 'error');
+    hideGlobalLoading();
+    console.error('Failed to load DM - Dev Schedules v2 / Capacity / Lead Time:', e);
+    toast('Failed to load Schedules: ' + e.message, 'error');
   }
+}
+
+let _loadTimerInterval = null;
+let _loadStartTime = null;
+
+function showGlobalLoading(label) {
+  _loadStartTime = Date.now();
+  const el  = document.getElementById('globalLoadStatus');
+  const txt = document.getElementById('globalLoadText');
+  el.style.display = 'flex';
+  txt.textContent = label;
+  clearInterval(_loadTimerInterval);
+  _loadTimerInterval = setInterval(() => {
+    const secs = Math.floor((Date.now() - _loadStartTime) / 1000);
+    txt.textContent = `${label}… ${secs}s`;
+  }, 1000);
+}
+
+function hideGlobalLoading() {
+  clearInterval(_loadTimerInterval);
+  const el = document.getElementById('globalLoadStatus');
+  if (el) el.style.display = 'none';
 }
 
 // ══════════════════════════════════════════════════════
