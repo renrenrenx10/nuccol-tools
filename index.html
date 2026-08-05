@@ -1096,17 +1096,29 @@ function showApp() {
 // SHAREPOINT REST API
 // ══════════════════════════════════════════════════════
 async function spGet(listName, select = '', filter = '', orderby = '') {
+  // Pages through @odata.nextLink so lists over 5,000 items (e.g. Dev Schedules v2,
+  // ~49,782 rows) return in full. IMPORTANT: don't pass an $orderby on a non-indexed
+  // column for large lists — sorting forces SharePoint to scan the whole list in one
+  // go regardless of paging, which trips SPQueryThrottledException ("exceeds the list
+  // view threshold") past 5,000 rows. Id is indexed by default and safe to sort by;
+  // anything else, sort client-side after fetching instead.
   const token = await getToken();
   let url = `${CONFIG.siteUrl}/_api/web/lists/getbytitle('${encodeURIComponent(listName)}')/items?$top=5000`;
   if (select)  url += `&$select=${select}`;
   if (filter)  url += `&$filter=${filter}`;
   if (orderby) url += `&$orderby=${orderby}`;
-  const resp = await fetch(url, {
-    headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json;odata=nometadata' }
-  });
-  if (!resp.ok) throw new Error(`SP GET failed: ${resp.status} ${await resp.text()}`);
-  const data = await resp.json();
-  return data.value;
+
+  let all = [];
+  while (url) {
+    const resp = await fetch(url, {
+      headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json;odata=nometadata' }
+    });
+    if (!resp.ok) throw new Error(`SP GET failed: ${resp.status} ${await resp.text()}`);
+    const data = await resp.json();
+    all = all.concat(data.value);
+    url = data['odata.nextLink'] || data['@odata.nextLink'] || null;
+  }
+  return all;
 }
 
 async function spPost(listName, body) {
@@ -1182,7 +1194,10 @@ async function loadAllData() {
       // directly from each list's CSV export ListSchema on 2026-08-05 — see mapping in comments below.
       spGet(CONFIG.lists.products,      'Id,Title,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8,field_9', '', 'field_1 asc,Title asc'),
       spGet(CONFIG.lists.developers,    'Id,Title,field_1,field_2,field_3,field_4,field_5,field_6', '', 'Title asc'),
-      spGet(CONFIG.lists.schedules,     'Id,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8,field_9', '', 'field_1 asc'),
+      // No $orderby here — Dev Schedules v2 has ~49,782 rows and field_1 isn't an indexed
+      // column, so sorting it would force a full-list scan and trip SharePoint's list view
+      // threshold. Sorted client-side below instead, after all pages are fetched.
+      spGet(CONFIG.lists.schedules,     'Id,field_1,field_2,field_3,field_4,field_5,field_6,field_7,field_8,field_9', '', ''),
       spGet(CONFIG.lists.capacity,      'Title,field_1,field_2,field_3,field_4', '', 'Title asc'),
       spGet(CONFIG.lists.leadTimeByCat, 'Title,field_1,field_2,field_3,field_4,field_5,field_6', '', 'Title asc')
     ]);
@@ -1248,6 +1263,13 @@ async function loadAllData() {
       Quarter:         s.field_6,
       Amount_Absolute: s.field_7,
     }));
+    // Sorted client-side (see note above on why we can't $orderby field_1 server-side).
+    store.schedules.sort((a, b) =>
+      (a.Developer_ID || '').localeCompare(b.Developer_ID || '') ||
+      (a.Product_ID   || '').localeCompare(b.Product_ID   || '') ||
+      (a.ScheduleYear - b.ScheduleYear) ||
+      (a.Quarter || '').localeCompare(b.Quarter || '')
+    );
     populateDeveloperDropdown();
     populateSchedFilters();
     renderProducts();
