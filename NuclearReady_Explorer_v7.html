@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NuclearReady — Supply Chain Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:         #0A1628;
+  --navy-mid:     #152338;
+  --navy-light:   #1e3050;
+  --bg:           #f0f4f8;
+  --surface:      #ffffff;
+  --surface2:     #f7f9fc;
+  --surface3:     #eef2f7;
+  --border:       #d4dde8;
+  --border2:      #b8c8d8;
+  --accent:       #29B6E8;
+  --accent-hover: #1898c4;
+  --accent-light: #e4f6fd;
+  --accent-dark:  #1580a8;
+  --granted:      #1a7a4a;
+  --granted-bg:   #e6f4ec;
+  --granted-border:#a8d5bb;
+  --journey:      #b45309;
+  --journey-bg:   #fef3e0;
+  --journey-border:#f0c070;
+  --text:         #17243a;
+  --text-muted:   #4e6070;
+  --text-dim:     #92a8bc;
+  --card-bottom:      #331b52;
+  --card-bottom-text: #f6f2fb;
+  --card-bottom-muted:#c8b4e6;
+  --card-bottom-border:#4d2f77;
+  --card-bottom-chip: #47296f;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);}
+#app{display:flex;flex-direction:column;height:100vh;width:100vw;}
+
+/* ── TOPBAR ── */
+#topbar{
+  height:54px;min-height:54px;background:var(--navy);
+  border-bottom:none;display:flex;align-items:center;
+  padding:0 18px;gap:14px;z-index:200;flex-shrink:0;
+  box-shadow:0 2px 14px rgba(0,0,0,0.3);
+}
+.logo-wrap{display:flex;align-items:center;gap:9px;}
+.logo-icon{width:34px;height:34px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.logo-icon svg{width:18px;height:18px;fill:#fff;}
+.logo-text-block{display:flex;flex-direction:column;line-height:1.1;}
+.logo-name{font-family:'Barlow Condensed',sans-serif;font-size:21px;font-weight:800;letter-spacing:0.05em;color:#fff;text-transform:uppercase;}
+.logo-sub{font-size:9.5px;color:rgba(255,255,255,0.55);letter-spacing:0.08em;text-transform:uppercase;font-weight:500;}
+.logo-pipe{width:1px;height:24px;background:rgba(255,255,255,0.18);}
+.powered-tag{font-size:10px;color:rgba(255,255,255,0.45);letter-spacing:0.04em;display:flex;align-items:center;gap:7px;}
+.powered-tag strong{color:var(--accent);font-weight:600;}
+.powered-tag img{height:22px;width:auto;flex-shrink:0;}
+.topbar-spacer{flex:1;}
+.topbar-stats{display:flex;gap:20px;align-items:center;}
+.ts-item{text-align:center;}
+.ts-num{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;line-height:1;color:var(--accent);}
+.ts-label{font-size:9px;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:0.07em;font-weight:500;}
+.topbar-pipe{width:1px;height:28px;background:rgba(255,255,255,0.15);}
+#search-wrap{position:relative;display:flex;align-items:center;}
+#global-search{
+  width:240px;padding:7px 12px 7px 32px;
+  background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.2);border-radius:7px;
+  font-family:'Barlow',sans-serif;font-size:12px;color:#fff;outline:none;
+  transition:border-color .18s,width .2s;
+}
+#global-search::placeholder{color:rgba(255,255,255,0.4);}
+#global-search:focus{border-color:var(--accent);width:290px;background:rgba(255,255,255,0.15);}
+.search-icon{position:absolute;left:10px;color:rgba(255,255,255,0.4);pointer-events:none;}
+.search-icon svg{width:13px;height:13px;}
+
+/* ── MAIN ── */
+#main{display:flex;flex:1;overflow:hidden;}
+
+/* ── LEFT FILTER PANEL ── */
+#filter-panel{
+  width:252px;min-width:252px;background:var(--surface);
+  border-right:1px solid var(--border);display:flex;flex-direction:column;
+  overflow:hidden;flex-shrink:0;
+}
+#filter-scroll{flex:1;overflow-y:auto;padding-bottom:6px;}
+#filter-scroll::-webkit-scrollbar{width:3px;}
+#filter-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+.fp-group{border-bottom:1px solid var(--border);}
+.fp-group-header{
+  padding:8px 12px 6px;background:var(--surface2);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  cursor:pointer;user-select:none;
+}
+.fp-group-title{
+  font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;
+  text-transform:uppercase;letter-spacing:0.1em;color:var(--navy);
+  display:flex;align-items:center;gap:5px;
+}
+.fp-chevron{font-size:9px;color:var(--text-dim);transition:transform .18s;}
+.fp-chevron.open{transform:rotate(180deg);}
+.fp-clear-btn{font-size:9px;font-weight:600;color:var(--accent);cursor:pointer;opacity:0;transition:opacity .15s;pointer-events:none;padding:2px 6px;border-radius:4px;}
+.fp-clear-btn:hover{background:var(--accent-light);}
+.fp-clear-btn.visible{opacity:1;pointer-events:auto;}
+.fp-group-body{padding:8px 10px 8px;display:none;}
+.fp-group-body.open{display:block;}
+.fp-hint{font-size:10px;color:var(--text-dim);margin-bottom:6px;font-style:italic;}
+
+/* Filter inner search (for commodity) */
+.fp-inner-search{
+  width:100%;padding:5px 8px;margin-bottom:6px;
+  border:1.5px solid var(--border);border-radius:5px;
+  font-family:'Barlow',sans-serif;font-size:11px;color:var(--text);outline:none;
+  background:var(--surface2);
+}
+.fp-inner-search:focus{border-color:var(--accent);}
+.fp-inner-search::placeholder{color:var(--text-dim);}
+
+/* Checkbox style filters */
+.check-grid{display:flex;flex-direction:column;gap:2px;}
+.check-item{display:flex;align-items:center;gap:6px;cursor:pointer;padding:3px 4px;border-radius:4px;transition:background .1s;}
+.check-item:hover{background:var(--accent-light);}
+.check-item input[type=checkbox]{
+  width:12px;height:12px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;
+}
+.check-label{font-size:11px;color:var(--text-muted);line-height:1.2;flex:1;}
+.check-item.checked .check-label{color:var(--accent-dark);font-weight:600;}
+
+/* Region list */
+.region-rows{display:flex;flex-direction:column;gap:1px;}
+.region-row{display:flex;align-items:center;justify-content:space-between;padding:4px 4px;border-radius:4px;cursor:pointer;transition:background .1s;}
+.region-row:hover{background:var(--accent-light);}
+.region-row.active{background:var(--accent-light);}
+.region-row .check-label{color:var(--text-muted);}
+.region-row.active .check-label{color:var(--accent-dark);font-weight:600;}
+.region-ct{font-size:9px;font-weight:700;color:var(--text-dim);font-family:'Barlow Condensed',sans-serif;}
+
+/* Size filter */
+.size-grid{display:flex;flex-wrap:wrap;gap:4px;}
+.size-btn{
+  padding:4px 9px;border-radius:5px;border:1.5px solid var(--border);
+  font-size:10px;font-weight:600;cursor:pointer;font-family:'Barlow',sans-serif;
+  color:var(--text-muted);background:var(--surface2);transition:all .15s;
+}
+.size-btn:hover{border-color:var(--accent);color:var(--accent);}
+.size-btn.active{background:var(--accent-light);border-color:var(--accent);color:var(--accent-dark);}
+
+/* Status toggle */
+#status-section{padding:8px 10px;border-bottom:1px solid var(--border);background:var(--surface2);flex-shrink:0;}
+.status-row{display:flex;gap:5px;}
+.status-btn{
+  flex:1;padding:5px 0;border-radius:5px;border:1.5px solid var(--border);
+  font-size:10px;font-weight:600;text-align:center;cursor:pointer;
+  transition:all .16s;font-family:'Barlow',sans-serif;color:var(--text-muted);
+  background:transparent;
+}
+.status-btn:hover{border-color:var(--border2);color:var(--text);}
+.status-btn.active-all{background:var(--accent-light);border-color:var(--accent);color:var(--accent-dark);}
+.status-btn.active-granted{background:var(--granted-bg);border-color:var(--granted-border);color:var(--granted);}
+.status-btn.active-journey{background:var(--journey-bg);border-color:var(--journey-border);color:var(--journey);}
+
+.fp-reset-wrap{padding:8px 10px;flex-shrink:0;border-top:1px solid var(--border);}
+.fp-reset-btn{
+  width:100%;padding:7px;border-radius:6px;
+  background:transparent;border:1.5px solid var(--border);
+  color:var(--text-muted);font-size:11px;font-weight:600;cursor:pointer;
+  font-family:'Barlow',sans-serif;transition:all .15s;
+}
+.fp-reset-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light);}
+
+/* ── GRID AREA ── */
+#grid-area{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;}
+#results-bar{
+  padding:8px 16px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;background:var(--surface);flex-shrink:0;
+}
+#result-count{font-size:12px;color:var(--text-muted);}
+#result-count strong{color:var(--text);font-weight:700;}
+.rb-spacer{flex:1;}
+.sort-label{font-size:11px;color:var(--text-dim);}
+#sort-select{
+  background:var(--surface2);border:1.5px solid var(--border);border-radius:5px;
+  color:var(--text-muted);font-size:11px;padding:4px 8px;
+  font-family:'Barlow',sans-serif;outline:none;cursor:pointer;
+}
+#sort-select:focus{border-color:var(--accent);}
+.view-toggle{display:flex;gap:2px;background:var(--surface2);border:1.5px solid var(--border);border-radius:6px;padding:2px;}
+.vt-btn{width:26px;height:24px;border:none;border-radius:4px;cursor:pointer;background:transparent;color:var(--text-dim);display:flex;align-items:center;justify-content:center;transition:all .14s;}
+.vt-btn:hover{color:var(--text);}
+.vt-btn.active{background:var(--accent);color:#fff;}
+
+#company-grid{
+  flex:1;overflow-y:auto;padding:14px;
+  display:grid;grid-template-columns:repeat(3,1fr);gap:16px;
+  align-content:start;
+}
+#company-grid::-webkit-scrollbar{width:4px;}
+#company-grid::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+#company-grid.list-view{grid-template-columns:1fr;gap:7px;}
+
+/* ── COMPANY CARD (logo-first banner) ── */
+.company-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  overflow:hidden;cursor:pointer;transition:all .16s;display:flex;flex-direction:column;
+  min-height:210px;
+}
+.company-card:hover{border-color:var(--accent);box-shadow:0 6px 22px rgba(41,182,232,0.16);transform:translateY(-2px);}
+.company-card.selected{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-light);}
+.card-logoband{
+  background:#ffffff;border-bottom:1px solid var(--border);
+  height:88px;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:14px 18px;position:relative;
+}
+.card-logoband svg{width:100%;height:auto;max-height:100%;}
+.card-logoband img{max-width:100%;max-height:100%;object-fit:contain;}
+.card-avatar{
+  width:100%;height:100%;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;
+  background:var(--navy);color:#fff;text-transform:uppercase;
+}
+.journey-card .card-avatar{background:var(--journey);}
+.card-avatar-logo{background:transparent;}
+.card-badge-corner{position:absolute;top:8px;right:8px;}
+.card-body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:8px;flex:1;min-height:100px;background:var(--card-bottom);}
+.card-name{font-size:13.5px;font-weight:700;color:var(--card-bottom-text);text-align:center;line-height:1.25;}
+.card-location{font-size:10.5px;color:var(--card-bottom-muted);display:flex;align-items:center;justify-content:center;gap:3px;}
+.card-location svg{width:9px;height:9px;flex-shrink:0;}
+.card-status-badge{
+  padding:3px 8px;border-radius:10px;font-size:9px;font-weight:700;
+  text-transform:uppercase;letter-spacing:0.06em;flex-shrink:0;
+  white-space:nowrap;
+}
+.badge-granted{background:var(--granted-bg);color:var(--granted);border:1px solid var(--granted-border);}
+.badge-journey{background:var(--journey-bg);color:var(--journey);border:1px solid var(--journey-border);}
+.card-desc{font-size:11px;color:var(--card-bottom-muted);line-height:1.5;}
+.card-caps-row{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;}
+.cap-chip{
+  padding:2px 7px;border-radius:7px;font-size:9px;font-weight:600;
+  background:var(--card-bottom-chip);border:1px solid var(--card-bottom-border);color:var(--card-bottom-text);
+  white-space:nowrap;max-width:180px;overflow:hidden;text-overflow:ellipsis;
+}
+.cap-chip-more{
+  padding:2px 7px;border-radius:7px;font-size:9px;font-weight:700;
+  background:var(--accent);border:1px solid var(--accent-hover);color:#fff;
+}
+.card-accreds-row{display:none;}
+.accred-chip{
+  padding:2px 7px;border-radius:7px;font-size:9px;font-weight:600;
+  background:#f0f0fc;border:1px solid #c8c8ef;color:#4444aa;white-space:nowrap;
+}
+.card-footer{display:none;}
+.mkt-chip{
+  padding:2px 6px;border-radius:5px;font-size:9px;font-weight:600;
+  background:var(--card-bottom-chip);border:1px solid var(--card-bottom-border);color:var(--card-bottom-muted);white-space:nowrap;
+}
+.mkt-chip.nuclear{background:var(--accent);color:#fff;border-color:var(--accent-hover);}
+.card-year{font-size:9px;color:var(--card-bottom-muted);margin-left:auto;}
+
+/* List view — compact row with small square logo; keep the original light
+   row styling here, since the white-top/purple-bottom split is a grid-card
+   treatment and doesn't apply to a single-row layout. */
+.list-view .company-card{flex-direction:row;align-items:center;gap:12px;padding:9px 13px;border-radius:9px;min-height:0;}
+.list-view .card-logoband{
+  width:46px;height:46px;flex-shrink:0;border-radius:8px;border-bottom:none;
+  padding:5px;height:46px;
+}
+.list-view .card-badge-corner{display:none;}
+.list-view .card-body{
+  flex-direction:row;align-items:center;padding:0;gap:12px;flex:1;min-width:0;min-height:0;
+  background:transparent;
+}
+.list-view .card-name{color:var(--text);text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:200px;flex-shrink:0;}
+.list-view .card-location{color:var(--text-muted);justify-content:flex-start;width:150px;flex-shrink:0;}
+.list-view .card-desc{color:var(--text-muted);}
+.list-view .cap-chip{background:var(--surface2);border-color:var(--border);color:var(--text-muted);}
+.list-view .cap-chip-more{background:var(--accent-light);border-color:var(--border2);color:var(--accent-dark);}
+.list-view .mkt-chip{background:var(--surface2);border-color:var(--border);color:var(--text-dim);}
+.list-view .mkt-chip.nuclear{background:var(--accent-light);color:var(--accent-dark);border-color:var(--border2);}
+.list-view .card-year{color:var(--text-dim);}
+.list-view .card-caps-row{flex:1;flex-wrap:nowrap;overflow:hidden;justify-content:flex-start;}
+.list-view .card-status-badge{flex-shrink:0;margin-left:auto;}
+.card-badge-inline{display:none;}
+.list-view .card-badge-inline{display:inline-flex;}
+
+/* Empty */
+#empty-state{display:none;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:10px;color:var(--text-dim);}
+#empty-state.visible{display:flex;}
+.empty-icon{width:44px;height:44px;border-radius:10px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;}
+.empty-title{font-size:14px;font-weight:600;color:var(--text-muted);}
+.empty-sub{font-size:12px;}
+
+/* ── DETAIL DRAWER (overlay, not push) ── */
+#backdrop{position:absolute;inset:0;background:rgba(10,22,40,0.28);opacity:0;pointer-events:none;transition:opacity .22s;z-index:50;}
+#backdrop.open{opacity:1;pointer-events:auto;}
+#detail-panel{
+  position:absolute;top:0;right:0;height:100%;width:520px;
+  background:var(--surface);border-left:2px solid var(--border);
+  display:flex;flex-direction:column;z-index:60;
+  box-shadow:-8px 0 28px rgba(0,0,0,0.18);
+  transform:translateX(100%);transition:transform .26s cubic-bezier(.4,0,.2,1);
+}
+#detail-panel.open{transform:translateX(0);}
+#detail-inner{width:100%;display:flex;flex-direction:column;height:100%;overflow:hidden;}
+#detail-header{
+  padding:22px 24px 0;flex-shrink:0;
+  background:linear-gradient(135deg,var(--navy) 0%,var(--navy-mid) 100%);
+}
+.dh-row1{display:flex;align-items:flex-start;gap:14px;margin-bottom:14px;}
+.dh-avatar{
+  width:74px;height:74px;border-radius:13px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;
+  background:#fff;color:var(--navy);padding:7px;overflow:hidden;
+}
+.dh-avatar.journey{color:var(--journey);}
+.dh-avatar.dh-avatar-logo{background:#fff;padding:7px;}
+.dh-avatar.dh-avatar-logo img{max-width:100%;max-height:100%;object-fit:contain;display:block;}
+.dh-title{flex:1;min-width:0;padding-top:2px;}
+#dh-name{font-size:19px;font-weight:700;color:#fff;line-height:1.3;margin-bottom:6px;}
+.dh-close{
+  width:30px;height:30px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);
+  cursor:pointer;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);font-size:13px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .14s;
+}
+.dh-close:hover{background:rgba(255,255,255,0.18);color:#fff;}
+.dh-row2{display:flex;flex-wrap:wrap;gap:12px;margin:14px 0 16px;}
+.dh-info-chip{display:flex;align-items:center;gap:5px;font-size:11.5px;color:rgba(255,255,255,0.65);}
+.dh-info-chip svg{width:11px;height:11px;flex-shrink:0;color:rgba(255,255,255,0.4);}
+.dh-actions{display:flex;gap:9px;margin-bottom:14px;}
+.dh-btn{
+  flex:1;padding:9px 12px;border-radius:7px;font-size:12px;font-weight:600;
+  cursor:pointer;font-family:'Barlow',sans-serif;transition:all .14s;
+  display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;
+}
+.dh-btn-primary{background:var(--accent);border:1.5px solid var(--accent);color:#fff;}
+.dh-btn-primary:hover{background:var(--accent-hover);border-color:var(--accent-hover);}
+.dh-btn-secondary{background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.7);}
+.dh-btn-secondary:hover{background:rgba(255,255,255,0.15);border-color:rgba(255,255,255,0.4);color:#fff;}
+.dh-share-btn{
+  width:34px;flex:none;padding:9px;border-radius:7px;font-size:11px;
+  background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.7);
+  cursor:pointer;font-family:'Barlow',sans-serif;transition:all .14s;
+  display:flex;align-items:center;justify-content:center;
+}
+.dh-share-btn:hover{background:rgba(255,255,255,0.15);color:#fff;}
+.dh-tabrow{display:flex;gap:2px;}
+.dh-tabbtn{
+  padding:9px 4px 10px;flex:1;text-align:center;background:none;border:none;cursor:pointer;
+  font-family:'Barlow',sans-serif;font-size:11.5px;font-weight:600;color:rgba(255,255,255,0.5);
+  border-bottom:2.5px solid transparent;
+}
+.dh-tabbtn.active{color:#fff;border-bottom-color:var(--accent);}
+
+/* Detail content (tabbed) */
+#detail-content{flex:1;overflow-y:auto;}
+#detail-content::-webkit-scrollbar{width:3px;}
+#detail-content::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+.dh-pane{display:none;flex-direction:column;}
+.dh-pane.active{display:flex;}
+.dc-section{padding:18px 24px;border-bottom:1px solid var(--border);}
+.dc-section:last-child{border-bottom:none;}
+.dc-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-dim);margin-bottom:7px;}
+.dc-tags{display:flex;flex-wrap:wrap;gap:4px;}
+.dc-tag{padding:3px 9px;border-radius:7px;font-size:10px;font-weight:500;background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);}
+.dc-tag.t-nuclear{background:var(--accent-light);border-color:var(--border2);color:var(--accent-dark);}
+.dc-tag.t-accred{background:#f0f0fc;border-color:#c8c8ef;color:#4444aa;}
+.dc-tag.t-service{background:var(--journey-bg);border-color:var(--journey-border);color:var(--journey);}
+.dc-desc-text{font-size:11px;color:var(--text-muted);line-height:1.6;}
+.dc-field-row{display:flex;gap:8px;margin-bottom:5px;font-size:11px;}
+.dc-field-label{color:var(--text-dim);font-weight:600;min-width:80px;flex-shrink:0;}
+.dc-field-value{color:var(--text-muted);}
+.dc-field-value.empty{color:var(--text-dim);font-style:italic;}
+.dc-recent-work{display:flex;flex-direction:column;gap:8px;}
+.dc-work-item{padding:8px 10px;border-radius:7px;background:var(--surface2);border:1px solid var(--border);}
+.dc-work-title{font-size:11px;font-weight:600;color:var(--text);margin-bottom:3px;}
+.dc-work-desc{font-size:10px;color:var(--text-muted);line-height:1.5;}
+.dc-work-year{font-size:9px;color:var(--text-dim);margin-top:3px;}
+.journey-notice{
+  margin:18px 24px 0;padding:9px 11px;border-radius:7px;
+  background:var(--journey-bg);border:1px solid var(--journey-border);
+  font-size:11px;color:var(--journey);line-height:1.4;
+}
+.journey-notice strong{font-weight:700;}
+.dc-social-row{display:flex;gap:6px;margin-top:5px;}
+.dc-social-btn{
+  padding:5px 10px;border-radius:5px;font-size:10px;font-weight:600;
+  border:1.5px solid var(--border);background:var(--surface2);color:var(--text-muted);
+  text-decoration:none;display:flex;align-items:center;gap:4px;transition:all .14s;
+}
+.dc-social-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light);}
+.dc-permalink{font-size:9px;color:var(--text-dim);margin-top:6px;word-break:break-all;}
+.dc-permalink a{color:var(--accent-dark);text-decoration:none;}
+.dc-permalink a:hover{text-decoration:underline;}
+
+/* ── LOADING ── */
+#loading{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:14px;}
+.loading-ring{width:44px;height:44px;border-radius:50%;border:3px solid rgba(255,255,255,0.15);border-top-color:var(--accent);animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-text{font-size:12px;color:rgba(255,255,255,0.5);font-weight:500;}
+.loading-brand{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;color:#fff;letter-spacing:0.08em;}
+.loading-brand span{color:var(--accent);}
+
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+.company-card{animation:cardIn .22s ease both;}
+@keyframes cardIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+/* Active filter count badge */
+.fp-group-title .filter-count{
+  display:inline-flex;align-items:center;justify-content:center;
+  background:var(--accent);color:#fff;border-radius:8px;
+  font-size:9px;font-weight:700;min-width:16px;height:16px;padding:0 4px;
+  font-family:'Barlow',sans-serif;
+}
+</style>
+</head>
+<body>
+<div id="loading">
+  <div class="loading-brand">Nuclear<span>Ready</span></div>
+  <div class="loading-ring"></div>
+  <div class="loading-text">Loading supplier directory…</div>
+</div>
+
+<div id="app" style="display:none;">
+  <!-- TOPBAR -->
+  <div id="topbar">
+    <div class="logo-wrap">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.5"/><ellipse cx="12" cy="12" rx="10" ry="4.5" stroke="#fff" stroke-width="1.5" fill="none"/><ellipse cx="12" cy="12" rx="10" ry="4.5" stroke="#fff" stroke-width="1.5" fill="none" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4.5" stroke="#fff" stroke-width="1.5" fill="none" transform="rotate(120 12 12)"/></svg>
+      </div>
+      <div class="logo-text-block">
+        <div class="logo-name">NuclearReady</div>
+        <div class="logo-sub">Supply Chain Explorer</div>
+      </div>
+    </div>
+    <div class="logo-pipe"></div>
+    <div class="powered-tag"><img src="data:image/png;base64,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" alt="NucCol logo"> Made by <strong>NucCol</strong></div>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-stats">
+      <div class="ts-item"><div class="ts-num" id="stat-granted">–</div><div class="ts-label">Granted</div></div>
+      <div class="ts-item"><div class="ts-num" id="stat-journey">–</div><div class="ts-label">On Journey</div></div>
+      <div class="ts-item"><div class="ts-num" id="stat-total">–</div><div class="ts-label">Members</div></div>
+    </div>
+    <div class="topbar-pipe"></div>
+    <div id="search-wrap">
+      <div class="search-icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.44 1.386a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/></svg></div>
+      <input id="global-search" type="text" placeholder="Search name, capability, location…">
+    </div>
+  </div>
+
+  <div id="main">
+    <!-- LEFT FILTER PANEL -->
+    <div id="filter-panel">
+      <!-- Status -->
+      <div id="status-section">
+        <div class="fp-hint" style="margin-bottom:5px;">Filter by programme status:</div>
+        <div class="status-row">
+          <button class="status-btn active-all" data-s="all" onclick="setStatus('all')">All</button>
+          <button class="status-btn" data-s="Granted" onclick="setStatus('Granted')">✓ Granted</button>
+          <button class="status-btn" data-s="On Journey" onclick="setStatus('On Journey')">◎ On Journey</button>
+        </div>
+      </div>
+
+      <div id="filter-scroll">
+        <!-- 1. Product Category -->
+        <div class="fp-group" id="grp-category">
+          <div class="fp-group-header" onclick="toggleGroup('category')">
+            <div class="fp-group-title"><span>1.</span> Product Category <span class="filter-count" id="fc-category" style="display:none"></span></div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="fp-clear-btn" id="clear-category" onclick="event.stopPropagation();clearGroup('category')">Clear</span>
+              <span class="fp-chevron open" id="chev-category">▼</span>
+            </div>
+          </div>
+          <div class="fp-group-body open" id="body-category">
+            <div class="fp-hint">Show companies making products in one of these categories:</div>
+            <div class="check-grid" id="checks-category"></div>
+          </div>
+        </div>
+
+        <!-- 2. Commodity -->
+        <div class="fp-group" id="grp-commodity">
+          <div class="fp-group-header" onclick="toggleGroup('commodity')">
+            <div class="fp-group-title"><span>2.</span> Commodity <span class="filter-count" id="fc-commodity" style="display:none"></span></div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="fp-clear-btn" id="clear-commodity" onclick="event.stopPropagation();clearGroup('commodity')">Clear</span>
+              <span class="fp-chevron" id="chev-commodity">▼</span>
+            </div>
+          </div>
+          <div class="fp-group-body" id="body-commodity">
+            <div class="fp-hint">Narrow by specific product or commodity (261 items):</div>
+            <input class="fp-inner-search" type="text" placeholder="Type to search commodities…" oninput="filterCommodityList(this.value)" id="commodity-search">
+            <div class="check-grid" id="checks-commodity"></div>
+          </div>
+        </div>
+
+        <!-- 3. Machining Capability -->
+        <div class="fp-group" id="grp-machining">
+          <div class="fp-group-header" onclick="toggleGroup('machining')">
+            <div class="fp-group-title"><span>3.</span> Machining Capability <span class="filter-count" id="fc-machining" style="display:none"></span></div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="fp-clear-btn" id="clear-machining" onclick="event.stopPropagation();clearGroup('machining')">Clear</span>
+              <span class="fp-chevron" id="chev-machining">▼</span>
+            </div>
+          </div>
+          <div class="fp-group-body" id="body-machining">
+            <div class="fp-hint">Companies with one of the following machining capabilities:</div>
+            <div class="check-grid" id="checks-machining"></div>
+          </div>
+        </div>
+
+        <!-- 4. Welding & Fabrication -->
+        <div class="fp-group" id="grp-welding">
+          <div class="fp-group-header" onclick="toggleGroup('welding')">
+            <div class="fp-group-title"><span>4.</span> Welding & Fabrication <span class="filter-count" id="fc-welding" style="display:none"></span></div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="fp-clear-btn" id="clear-welding" onclick="event.stopPropagation();clearGroup('welding')">Clear</span>
+              <span class="fp-chevron" id="chev-welding">▼</span>
+            </div>
+          </div>
+          <div class="fp-group-body" id="body-welding">
+            <div class="fp-hint">Companies with one of the following welding capabilities:</div>
+            <div class="check-grid" id="checks-welding"></div>
+          </div>
+        </div>
+
+        <!-- 5. Testing & Inspection -->
+        <div class="fp-group" id="grp-testing">
+          <div class="fp-group-header" onclick="toggleGroup('testing')">
+            <div class="fp-group-title"><span>5.</span> Testing & Inspection <span class="filter-count" id="fc-testing" style="display:none"></span></div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="fp-clear-btn" id="clear-testing" onclick="event.stopPropagation();clearGroup('testing')">Clear</span>
+              <span class="fp-chevron" id="chev-testing">▼</span>
+            </div>
+          </div>
+          <div class="fp-group-body" id="body-testing">
+            <div class="fp-hint">Companies with one of the following inspection capabilities:</div>
+            <div class="check-grid" id="checks-testing"></div>
+          </div>
+        </div>
+
+        <!-- 6. Design Capability -->
+        <div class="fp-group" id="grp-design">
+          <div class="fp-group-header" onclick="toggleGroup('design')">
+            <div class="fp-group-title"><span>6.</span> Design Capability <span class="filter-count" id="fc-design" style="display:none"></span></div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="fp-clear-btn" id="clear-design" onclick="event.stopPropagation();clearGroup('design')">Clear</span>
+              <span class="fp-chevron" id="chev-design">▼</span>
+            </div>
+          </div>
+          <div class="fp-group-body" id="body-design">
+            <div class="fp-hint">Companies with one of the following design capabilities:</div>
+            <div class="check-grid" id="checks-design"></div>
+          </div>
+        </div>
+
+        <!-- 7. Services -->
+        <div class="fp-group" id="grp-services">
+          <div class="fp-group-header" onclick="toggleGroup('services')">
+            <div class="fp-group-title"><span>7.</span> Services <span class="filter-count" id="fc-services" style="display:none"></span></div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="fp-clear-btn" id="clear-services" onclick="event.stopPropagation();clearGroup('services')">Clear</span>
+              <span class="fp-chevron" id="chev-services">▼</span>
+            </div>
+          </div>
+          <div class="fp-group-body" id="body-services">
+            <div class="fp-hint">Companies offering one of the following services:</div>
+            <div class="check-grid" id="checks-services"></div>
+          </div>
+        </div>
+
+        <!-- 8. Company Size -->
+        <div class="fp-group" id="grp-size">
+          <div class="fp-group-header" onclick="toggleGroup('size')">
+            <div class="fp-group-title"><span>8.</span> Company Size <span class="filter-count" id="fc-size" style="display:none"></span></div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="fp-clear-btn" id="clear-size" onclick="event.stopPropagation();clearGroup('size')">Clear</span>
+              <span class="fp-chevron" id="chev-size">▼</span>
+            </div>
+          </div>
+          <div class="fp-group-body" id="body-size">
+            <div class="fp-hint">Filter by number of employees:</div>
+            <div class="size-grid" id="size-btns"></div>
+          </div>
+        </div>
+
+        <!-- 9. Region -->
+        <div class="fp-group" id="grp-region">
+          <div class="fp-group-header" onclick="toggleGroup('region')">
+            <div class="fp-group-title"><span>9.</span> Region <span class="filter-count" id="fc-region" style="display:none"></span></div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="fp-clear-btn" id="clear-region" onclick="event.stopPropagation();clearGroup('region')">Clear</span>
+              <span class="fp-chevron" id="chev-region">▼</span>
+            </div>
+          </div>
+          <div class="fp-group-body" id="body-region">
+            <div class="fp-hint">Show companies whose assessed site is in:</div>
+            <div class="region-rows" id="region-rows"></div>
+          </div>
+        </div>
+
+        <!-- 10. Industry Sector -->
+        <div class="fp-group" id="grp-markets">
+          <div class="fp-group-header" onclick="toggleGroup('markets')">
+            <div class="fp-group-title"><span>10.</span> Industry Sector <span class="filter-count" id="fc-markets" style="display:none"></span></div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="fp-clear-btn" id="clear-markets" onclick="event.stopPropagation();clearGroup('markets')">Clear</span>
+              <span class="fp-chevron" id="chev-markets">▼</span>
+            </div>
+          </div>
+          <div class="fp-group-body" id="body-markets">
+            <div class="fp-hint">Companies also serving one of these sectors:</div>
+            <div class="check-grid" id="checks-markets"></div>
+          </div>
+        </div>
+      </div><!-- /filter-scroll -->
+
+      <div class="fp-reset-wrap">
+        <button class="fp-reset-btn" onclick="resetAll()">↺ Reset all filters</button>
+      </div>
+    </div><!-- /filter-panel -->
+
+    <!-- GRID -->
+    <div id="grid-area">
+      <div id="results-bar">
+        <span id="result-count">Showing <strong id="rc-num">0</strong> companies</span>
+        <div class="rb-spacer"></div>
+        <span class="sort-label">Sort:</span>
+        <select id="sort-select" onchange="applyFilters()">
+          <option value="name">A–Z Name</option>
+          <option value="status">Status first</option>
+          <option value="year">Year joined</option>
+        </select>
+        <div class="view-toggle">
+          <button class="vt-btn active" id="btn-grid" onclick="setView('grid')" title="Grid">
+            <svg viewBox="0 0 12 12" fill="currentColor" width="11" height="11"><rect x="0" y="0" width="5" height="5" rx="1"/><rect x="7" y="0" width="5" height="5" rx="1"/><rect x="0" y="7" width="5" height="5" rx="1"/><rect x="7" y="7" width="5" height="5" rx="1"/></svg>
+          </button>
+          <button class="vt-btn" id="btn-list" onclick="setView('list')" title="List">
+            <svg viewBox="0 0 12 12" fill="currentColor" width="11" height="11"><rect x="0" y="0" width="12" height="2.5" rx="1"/><rect x="0" y="4.75" width="12" height="2.5" rx="1"/><rect x="0" y="9.5" width="12" height="2.5" rx="1"/></svg>
+          </button>
+        </div>
+      </div>
+      <div id="company-grid"></div>
+      <div id="empty-state">
+        <div class="empty-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><circle cx="9" cy="9" r="7"/><path d="m16 16-3-3"/></svg></div>
+        <div class="empty-title">No companies match</div>
+        <div class="empty-sub">Try removing some filters</div>
+      </div>
+
+      <!-- OVERLAY BACKDROP + DETAIL DRAWER (scoped to grid area) -->
+      <div id="backdrop" onclick="closeDetail()"></div>
+      <div id="detail-panel">
+        <div id="detail-inner">
+          <div id="detail-header">
+            <div class="dh-row1">
+              <div class="dh-avatar" id="dh-avatar">–</div>
+              <div class="dh-title">
+                <div id="dh-name">–</div>
+                <div id="dh-status-row"></div>
+              </div>
+              <div class="dh-close" onclick="closeDetail()">✕</div>
+            </div>
+            <div class="dh-row2" id="dh-info"></div>
+            <div class="dh-actions">
+              <a class="dh-btn dh-btn-primary" id="dh-website" href="#" target="_blank" rel="noopener">
+                <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" width="10" height="10"><circle cx="6" cy="6" r="5"/><path d="M6 1c-1.5 1.5-1.5 9.5 0 10M6 1c1.5 1.5 1.5 9.5 0 10M1 6h10"/></svg>
+                Visit Website
+              </a>
+              <a class="dh-btn dh-btn-secondary" id="dh-map-btn" href="#" target="_blank" rel="noopener">
+                <svg viewBox="0 0 12 12" fill="currentColor" width="10" height="10"><path d="M6 0C3.79 0 2 1.79 2 4c0 3 4 8 4 8s4-5 4-8c0-2.21-1.79-4-4-4zm0 5.5A1.5 1.5 0 1 1 6 2.5a1.5 1.5 0 0 1 0 3z"/></svg>
+                Map
+              </a>
+              <button class="dh-share-btn" onclick="shareCompany()" title="Copy link">
+                <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" width="12" height="12"><circle cx="9" cy="2" r="1.5"/><circle cx="9" cy="10" r="1.5"/><circle cx="3" cy="6" r="1.5"/><path d="M7.5 2.85L4.5 5.15M7.5 9.15L4.5 6.85"/></svg>
+              </button>
+            </div>
+            <div class="dh-tabrow">
+              <button class="dh-tabbtn active" onclick="setDetailTab('overview')">Overview</button>
+              <button class="dh-tabbtn" onclick="setDetailTab('capabilities')">Capabilities</button>
+              <button class="dh-tabbtn" onclick="setDetailTab('markets')">Markets &amp; Accreditations</button>
+            </div>
+          </div>
+          <div id="detail-content">
+            <div class="dh-pane active" id="dh-pane-overview"></div>
+            <div class="dh-pane" id="dh-pane-capabilities"></div>
+            <div class="dh-pane" id="dh-pane-markets"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ─────────────────────────────────────────────
+// TAXONOMY — sourced from NuclearReady_Selections.xlsx
+// ─────────────────────────────────────────────
+const TAXONOMY = {
+  categories: ["Bearings, Seals and Drives","Castings","Coatings & Treatments (Inc Heat Treatment)","Enclosures","Fasteners","Forgings","Heating & Ventilation","Heavy Fabrications","Instrumentation & Control Equipment","Light and Medium Fabrications","Material Supplier","Mechanical Handling & Cranes","Other","Pipework Systems & Seals","Power & Data Supply","Precision Machining","Pressure Vessels Heat exchangers & Tanks","Pumps & Valves","Steel Fabrications","Testing & Inspection","Workshop Equipment"],
+  commodities: ["Access Ladders Stairs & Platforms","Acoustic Systems","Additive - metal","Additive - polymer","Adhesives","Air Ejectors Dryers & Receivers","Alarms & Monitoring including Condition Monitoring","Analysers","Analysis","Antivibration","Apparatus","Arrestors Exciters & Inverters","Automation","Backfill & Shoring","Batteries and Battery Chargers","Bearings & Seals","Blowers","Bus Bars","Cable Supports Conduit Fixings Trays Trunking Ducting & Splicers","Cables","Chains & Hoists including Heavy Lift","Chemical Liquid & Resin Products","Circuit Breakers","Civil Works & Civil Engineering excluding Earthworks","Cladding","Class 1E & Non Class 1E Electrical Related Systems","Coatings Paints Protection Processes & Systems","Columns","Communications Systems","Composites","Compressors","Computer monitors & panels","Concrete & Cement","Concrete Panels Pre-cast","Condensers","Condition monitoring equipment","Connectors & Contactors","Construction Building","Consumables","Containers Transportation & Storage","Containment Structure","Control Rod Drive Mechanism","Control Rods","Control Systems","Cooling & Coolers","Core Components & Assemblies","Cranes & Lifting","Cranes Polar & Fuel Handling","Cyber Security","Decontamination","Deminalisation Systems & Equipment","Desalination Equipment","Detectors Sensors Transmitters & Detection Systems","Diesel Generators & Back-up Diesel or Gas Generators","Displacement Sensors","Doors Airlocks Gates Hatches including Barriers Blast & Security","Ducting","Earthworks","Effluent Management Systems","Electrical & Electronic Components, Connectors and PCB's","Electrical Feedthroughs","Electrical Generators","Electrical Protection","Electrical Supplies","Electrical Systems","Electricity","Elevators","Emergency Planning Systems","Equipment Engineered","Equipment Qualification Analysis / Simulation","Equipment Qualification Manufacturing Facility - In-house Physical Testing","Equipment Qualification Unclassified","Equipment Qualification Test Facility - Physical Testing","Exhaust Boot","Expansion Joints","Fabrication Hi-integrity & Complex Structures including Heavy","Fabrication Med-integrity Structures","Facilities","Fan Systems & Fans","Fasteners & Fixings","Fencing","Filtration Systems","Fire Alarms","Fire Protection","Fire Rated Structures","Fire Suppression","Fire Water System","Flasks, Casks & Containers","Flow Sensors","Food Services","Form Work","Freeze Protection","Fuel Components Nuclear","Fuel Handling","Fuel Other & Fuel Systems","Fuel Pool Gates","Fuel Transfer Equipment","Fuses & Switches","Geiger-Muller Tubes","Geotechnical Quality Assurance","Glands","Gloveboxes","Gratings Sumps Covers Plates & Drains","Grounding Devices","Grout & Equipment","Heaters Pressuriser","Heaters Systems","Heat Exchangers including Main Steam Generators","Heat Recovery","Hoses Pneumatic and Hydraulics","HVAC Blowers","HVAC Chillers & Compressors","HVAC Controllers","HVAC Cooling & Coolers","HVAC Dampers & Louvers","HVAC Ducting","HVAC Fan Systems & Fans","HVAC Filtration & Filters","HVAC Heaters & Heating Units","HVAC Humidifiers & Dehumidifiers","HVAC Plenums","HVAC Systems","Hydraulics","In-core monitoring and instrumentation","Inspection & Surveillance Services","Inspection Equipments & Services including NDE & Surveillance","Instrumentation control computers detectors transmitters monitors & panels","Insulation General & Specialist Thermal","Insulators","Integrated Head Assembly","Interior Walls Buildings","Interlock Controls","Ion Exchange Systems","IT Infrastructure including IT and Cyber Security","Laboratory Equipment","Laboratory Systems Titration","Level Control","Level Sensors","Lighting","Load Sensors","Lubrication Systems Generators & Others","Lubrication Systems Main Steam Turbine","Manipulators","Marine Barges","Marine Works","Material Plate & Bar","Materials Castings","Materials Distribution","Materials Embedments & Rebar","Materials Forgings & Steels","Materials Main Stack Discharge","Materials Structural Steels Flanged Beams & Sections","Materials Supplier - all forms","Materials Testing","Materials Tubing & Pipework","Materials Wire & Wire Rope","Mechanical & Electrical Engineering & Services (M&E)","Mechanical handling equipment","Meters & Gauges","Modularised & Skid Mounted Process Systems","Neutron Absorbers & Detectors","Off-site Facility Emergency","Operational Tools","Other Supplies & Support Services including Analysis & Health","Penetrations Electrical & Mechanical Systems","Penetrations, electrical","Penetrations, mechanical","Pest & Rodent Control","Piles and Caissons","Pipework","Pipework Fittings & Spools","Pipework GRP","Pipework Snubbers","Pipework Supports","Pipework Systems including Seals","Planning Structures","Plant and Machinery","Pool Liners","Portable Equipment","Power Distribution","Power Output","Power Supply","Precision & General Machining","Pressure Sensors","Pressure Vessels Heat Exchangers & Tanks including Internals","Protective Clothing","Protective Functions Alarms","Pumps","Pumps & Valves","Pumps including Main Reactor Circulation Pumps & Motors","Racking Devices","Radiation Protection Monitoring & Radiological Controls","Radwaste Processing","Railway","Reactor Cavity Interior","Reactor Control Detectors","Reactor Pressure Vessel","Reactor Pressure Vessel Internals","Receptacles","Recombiners","Regulators","Resin Beds","Resources Labour","Road and Road Materials","Robotics, robots and robotic equipment","Robotic Manipulators Crawlers & Automated Remote Operating Tools","Rotors & Shafts","Sampling","Seals & Metal O-rings","Seals Gaskets O-Rings & Metal O-Rings","Security Facilities & Physical","Separator Reheaters","Services Agents","Services Transport","Shafts Main Turbine Bearings & Seals","Shielding","Shutdown Systems Emergency","Siding","Simulators & Training Systems","Site Gas Supplies & Systems","Site Services","Smoke Detectors","Specialist Services & Processes including Engineering Manufacturing Design & Testing","Spray Nozzles","Spray Pond","Starters","Stators & Stator Cooling","Steelwork including Mezzanine & Gantry Systems","Storage Racks & Furniture including Pond","Structural Components Building","Structural Fabrications","Structures","Stud Tensioning","Surface coatings","Switchgear","Tanks","Temperature Sensors","Terminal Blocks & Boards","Thermal Insulation","Tooling Equipment","Trace Heating","Transfer Devices","Transformers","Tunnel Boring Machinery","Turbine Generators","Turbine Generators Bypass","Turbine Gland Systems","Ultimate Heat Sink","Valves","Valves including Main Isolation SQUIB & Actuators","Vehicles & Plant","Vessels including Main Reactor Pressure Vessel & Internals","Washing & Decontamination","Waste Management","Water Supply","Water Treatment Systems","Water Wells","Welding & Welding Systems","Workshop Equipment"],
+  machining: ["3 Axis Milling","4 Axis Milling","5 Axis Milling","6 Axis Milling","Deep hole Drilling","Horizontal Milling (CNC)","Horizontal Milling (Conventional)","Horizontal Mill / Turn","Horizontal Turning (CNC)","Horizontal Turning (Conventional)","Multi-spindle drilling","Robotic machining","Vertical Milling (CNC)","Vertical Milling (Conventional)","Vertical Mill / Turn","Vertical Turning (Conventional)"],
+  welding: ["Bulk Additive Manufacturing","Diode Laser Cladding","Electron Beam Welding","Electroslag Strip Cladding (ESSC)","Friction Stir Welding","Gas Tungsten Arc Welding (GTAW)","K-TIG (key hole GTAW)","Laser Welding","Manual Metal Arc Welding (MMA)","Metal Active Gas Welding (MAG)","Metal Inert Gas Welding (MIG)","Narrow Gap Welding (GTAW or SAW)","Orbital & Planetary (GTAW & SAW)","Plasma Arc Welding (PAW)","Robotics","Submerged Arc Strip Cladding (SASC)","Submerged Arc Welding (SAW)","Tube Sheet Welding (Using a laser or GTAW process)"],
+  testing: ["Advanced testing facilities","Chemical","Clean room facilities","CMM machines","Drop Testing","Electrical","Electro-Magnetic Compatibility & Interference","Equipment Qualification","Fire Resistant","Non destructive testing - Magnetic Particle","Non destructive testing - Radiography","Non destructive testing - Ultrasonic","Pressure / Hydro Testing","Proof Load Testing","Radiation","Temperature controlled facility for inspection"],
+  design: ["CAD Design - 2D","CAD Design - 3D","CAM Design - 2D","CAM Design - 3D"],
+  regions: ["East Midlands","East of England","London","North East","Northern Ireland","North West","Scotland","South East","South West","Wales","West Midlands","Yorkshire and the Humber"],
+  markets: ["Aerospace - Civil and Defence","Automotive","Construction - Civils","Construction - Strategic Platforms & Vessels","Electrical components & equipment","Marine Commercial & Naval","Material Supply","Nuclear Civil","Nuclear Defence - Naval Marine","Oil & Gas including LNG","Petrochemical & Refining","Pharmaceutical & Medical","Power Generation, Distribution & Transmission","Rail & Transport","Renewables - (Wind, Tidal, Solar, Biomass etc.)","Subsea and Offshore","Utilities"],
+  services: ["3D laser scanning","Bending","Civil Construction including modular construction","Design services","Exotic materials","Geotechnical Quality Assurance","Heat treatment","Installation","Law","Logistics","Material handling","Modular construction","On Site services","Pipe inspection","Port services","Project management","Radiation monitor calibration","Safety, security and risk management","Stock holders","System integration"],
+  companySizes: ["1–10","11–50","51–200","201–500","500+"]
+};
+
+// ─────────────────────────────────────────────
+// COMPANY DATA — v3 schema
+// Populated from nr_companies, synced from the Supplier Database via scc.html.
+// Fields: id, slug, name, status, region, city, county, postcode, address,
+//   website, year_joined, markets[], accreditations[], capabilities[],
+//   services[], employees, turnover, main_commodity_group, description,
+//   contact_name, contact_phone, contact_email, recent_work[],
+//   linkedin, twitter
+// ─────────────────────────────────────────────
+function slugify(name) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+}
+
+// Region normalisation: align sample data to taxonomy labels
+const REGION_MAP = {
+  'Yorkshire': 'Yorkshire and the Humber',
+  'Midlands': 'West Midlands',
+  'East Anglia': 'East of England'
+};
+function normaliseRegion(r) { return REGION_MAP[r] || r; }
+
+// Market normalisation: align sample data labels to taxonomy
+const MARKET_MAP = {
+  'Aerospace': 'Aerospace - Civil and Defence',
+  'Chemical': 'Petrochemical & Refining',
+  'Defence': 'Nuclear Defence - Naval Marine',
+  'Medical & Pharmaceuticals': 'Pharmaceutical & Medical',
+  'Oil and Gas': 'Oil & Gas including LNG',
+  'Rail': 'Rail & Transport',
+  'Renewables': 'Renewables - (Wind, Tidal, Solar, Biomass etc.)',
+  'Hydrogen': 'Renewables - (Wind, Tidal, Solar, Biomass etc.)',
+};
+function normaliseMarket(m) { return MARKET_MAP[m] || m; }
+
+// ─────────────────────────────────────────────
+// SUPABASE + COMPANY DATA
+// ─────────────────────────────────────────────
+const SUPA_URL  = 'https://qkyvmtouwrzrcyagkheo.supabase.co';
+const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFreXZtdG91d3J6cmN5YWdraGVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzODQzNjMsImV4cCI6MjA5MDk2MDM2M30.gKEgkVA-VjOnS_084W79kpzOdZhFQkhFp63MAe_FTd4';
+const db = supabase.createClient(SUPA_URL, SUPA_ANON);
+
+let COMPANIES = [];
+const COMPANY_BY_SLUG = {};
+
+function mapCompany(row) {
+  let caps = row.capabilities;
+  if (typeof caps === 'string') { try { caps = JSON.parse(caps); } catch(e) { caps = caps ? [caps] : []; } }
+  // Two shapes supported:
+  //  (a) grouped object written by members.html: {categories:[],machining:[],...,services:[],markets:[]}
+  //  (b) flat array written by SCC from the DataVault supplier DB: ["CNC Milling", ...]
+  const capIsArray = Array.isArray(caps);
+  caps = caps || {};
+  const capFlat = capIsArray ? caps.filter(Boolean) : [
+    ...(caps.categories  || []),
+    ...(caps.commodities || []),
+    ...(caps.machining   || []),
+    ...(caps.welding     || []),
+    ...(caps.testing     || []),
+    ...(caps.design      || []),
+  ];
+  // markets / accreditations: prefer the flat DataVault columns when present,
+  // otherwise fall back to the grouped-object keys.
+  const marketsFlat = Array.isArray(row.markets) ? row.markets
+    : (capIsArray ? [] : (caps.markets || []));
+  const accredsFlat = Array.isArray(row.accreditations) ? row.accreditations : [];
+  return {
+    id:             row.id,
+    name:           row.name,
+    status:         row.status === 'granted' ? 'Granted' : 'On Journey',
+    description:    row.description  || '',
+    website:        row.website      || '',
+    logo_url:       row.logo_url     || null,
+    region:         normaliseRegion(row.region || ''),
+    employees:      row.employees    || '',
+    capabilities:   capFlat,
+    services:       (capIsArray ? [] : (caps.services || [])),
+    markets:        marketsFlat,
+    accreditations: accredsFlat,
+    year_joined:    row.created_at ? new Date(row.created_at).getFullYear() : null,
+    city:           row.city || '',
+    county:         row.county || '',
+    postcode:       row.postcode || '',
+    address:        row.address || '',
+    turnover:       row.turnover || '',
+    main_commodity_group: row.main_commodity_group || '',
+    contact_name:   row.contact_name  || null,
+    contact_email:  row.contact_email || null,
+    linkedin:       row.linkedin      || null,
+    slug:           slugify(row.name),
+  };
+}
+
+async function loadCompanies() {
+  const { data, error } = await db
+    .from('nr_companies')
+    .select('*')
+    .eq('hidden', false)
+    .order('name');
+  if (error) { console.error('Failed to load companies:', error.message); return; }
+  COMPANIES = (data || []).map(mapCompany);
+  COMPANIES.forEach(c => { COMPANY_BY_SLUG[c.slug] = c; });
+}
+
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+let state = {
+  status: 'all',
+  category: new Set(),
+  commodity: new Set(),
+  machining: new Set(),
+  welding: new Set(),
+  testing: new Set(),
+  design: new Set(),
+  services: new Set(),
+  size: new Set(),
+  region: new Set(),
+  markets: new Set(),
+  search: '',
+  view: 'grid',
+  selected: null
+};
+
+// Map filter group names to TAXONOMY keys and company fields
+const GROUP_CONFIG = {
+  category:  { taxKey: 'categories',  field: 'capabilities', fuzzy: true  },
+  commodity: { taxKey: 'commodities', field: 'capabilities', fuzzy: false },
+  machining: { taxKey: 'machining',   field: 'capabilities', fuzzy: false },
+  welding:   { taxKey: 'welding',     field: 'capabilities', fuzzy: false },
+  testing:   { taxKey: 'testing',     field: 'capabilities', fuzzy: false },
+  design:    { taxKey: 'design',      field: 'capabilities', fuzzy: false },
+  services:  { taxKey: 'services',    field: 'services',     fuzzy: false },
+  markets:   { taxKey: 'markets',     field: 'markets',      fuzzy: false },
+};
+
+// ─────────────────────────────────────────────
+// BUILD FILTERS
+// ─────────────────────────────────────────────
+function buildFilters() {
+  // Checkbox groups
+  Object.entries(GROUP_CONFIG).forEach(([grp, cfg]) => {
+    const items = TAXONOMY[cfg.taxKey];
+    const el = document.getElementById(`checks-${grp}`);
+    if (!el) return;
+    el.innerHTML = items.map(item => `
+      <label class="check-item" id="ci-${grp}-${CSS.escape(item)}">
+        <input type="checkbox" onchange="toggleFilter('${grp}','${item.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">
+        <span class="check-label">${item}</span>
+      </label>`).join('');
+  });
+
+  // Size buttons
+  const sb = document.getElementById('size-btns');
+  sb.innerHTML = TAXONOMY.companySizes.map(s =>
+    `<button class="size-btn" data-size="${s}" onclick="toggleSize('${s}')">${s}</button>`
+  ).join('');
+
+  // Region rows with counts
+  const rr = document.getElementById('region-rows');
+  rr.innerHTML = TAXONOMY.regions.map(r => {
+    const ct = COMPANIES.filter(c => c.region === r).length;
+    return `<div class="region-row" data-region="${r}" onclick="toggleRegion('${r}')">
+      <span class="check-label">${r}</span>
+      <span class="region-ct">${ct}</span>
+    </div>`;
+  }).join('');
+}
+
+function updateStats() {
+  document.getElementById('stat-granted').textContent = COMPANIES.filter(c => c.status === 'Granted').length;
+  document.getElementById('stat-journey').textContent = COMPANIES.filter(c => c.status === 'On Journey').length;
+  document.getElementById('stat-total').textContent = COMPANIES.length;
+}
+
+// ─────────────────────────────────────────────
+// FILTER ACTIONS
+// ─────────────────────────────────────────────
+function setStatus(s) {
+  state.status = s;
+  document.querySelectorAll('.status-btn').forEach(b => {
+    b.className = 'status-btn';
+    if (b.dataset.s === s) b.classList.add(s === 'all' ? 'active-all' : s === 'Granted' ? 'active-granted' : 'active-journey');
+  });
+  applyFilters();
+}
+
+function toggleFilter(grp, val) {
+  const set = state[grp];
+  if (set.has(val)) set.delete(val); else set.add(val);
+  const el = document.getElementById(`ci-${grp}-${CSS.escape(val)}`);
+  if (el) el.classList.toggle('checked', set.has(val));
+  const cb = el ? el.querySelector('input') : null;
+  if (cb) cb.checked = set.has(val);
+  updateClearBtn(grp);
+  applyFilters();
+}
+
+function toggleRegion(r) {
+  if (state.region.has(r)) state.region.delete(r); else state.region.add(r);
+  document.querySelectorAll('.region-row').forEach(el => {
+    el.classList.toggle('active', state.region.has(el.dataset.region));
+  });
+  updateClearBtn('region');
+  applyFilters();
+}
+
+function toggleSize(s) {
+  if (state.size.has(s)) state.size.delete(s); else state.size.add(s);
+  document.querySelectorAll('.size-btn').forEach(btn => {
+    btn.classList.toggle('active', state.size.has(btn.dataset.size));
+  });
+  updateClearBtn('size');
+  applyFilters();
+}
+
+function updateClearBtn(grp) {
+  const count = grp === 'region' ? state.region.size : grp === 'size' ? state.size.size : state[grp].size;
+  const btn = document.getElementById(`clear-${grp}`);
+  const badge = document.getElementById(`fc-${grp}`);
+  if (btn) btn.classList.toggle('visible', count > 0);
+  if (badge) { badge.textContent = count; badge.style.display = count > 0 ? '' : 'none'; }
+}
+
+function clearGroup(grp) {
+  if (grp === 'region') {
+    state.region.clear();
+    document.querySelectorAll('.region-row').forEach(el => el.classList.remove('active'));
+  } else if (grp === 'size') {
+    state.size.clear();
+    document.querySelectorAll('.size-btn').forEach(el => el.classList.remove('active'));
+  } else if (grp === 'commodity') {
+    state.commodity.clear();
+    document.querySelectorAll('#checks-commodity input').forEach(cb => { cb.checked = false; });
+    document.querySelectorAll('#checks-commodity .check-item').forEach(el => el.classList.remove('checked'));
+    const search = document.getElementById('commodity-search');
+    if (search) { search.value = ''; filterCommodityList(''); }
+  } else {
+    state[grp].clear();
+    const container = document.getElementById(`checks-${grp}`);
+    if (container) {
+      container.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
+      container.querySelectorAll('.check-item').forEach(el => el.classList.remove('checked'));
+    }
+  }
+  updateClearBtn(grp);
+  applyFilters();
+}
+
+function toggleGroup(grp) {
+  const body = document.getElementById(`body-${grp}`);
+  const chev = document.getElementById(`chev-${grp}`);
+  const open = body.classList.toggle('open');
+  chev.classList.toggle('open', open);
+}
+
+function filterCommodityList(query) {
+  const q = query.toLowerCase().trim();
+  document.querySelectorAll('#checks-commodity .check-item').forEach(item => {
+    const label = item.querySelector('.check-label').textContent.toLowerCase();
+    item.style.display = (!q || label.includes(q)) ? '' : 'none';
+  });
+}
+
+function resetAll() {
+  state.status = 'all';
+  ['category','commodity','machining','welding','testing','design','services','markets'].forEach(g => state[g].clear());
+  state.region.clear(); state.size.clear(); state.search = '';
+  document.getElementById('global-search').value = '';
+  document.querySelectorAll('.status-btn').forEach(b => { b.className = 'status-btn'; if (b.dataset.s === 'all') b.classList.add('active-all'); });
+  document.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
+  document.querySelectorAll('.check-item').forEach(el => el.classList.remove('checked'));
+  document.querySelectorAll('.region-row').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.size-btn').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.fp-clear-btn').forEach(el => el.classList.remove('visible'));
+  document.querySelectorAll('.filter-count').forEach(el => { el.textContent = ''; el.style.display = 'none'; });
+  const search = document.getElementById('commodity-search');
+  if (search) { search.value = ''; filterCommodityList(''); }
+  applyFilters();
+}
+
+// ─────────────────────────────────────────────
+// APPLY FILTERS
+// ─────────────────────────────────────────────
+function matchesGroup(c, grp) {
+  const cfg = GROUP_CONFIG[grp];
+  const sel = state[grp];
+  if (sel.size === 0) return true;
+  const field = c[cfg.field] || [];
+  if (cfg.fuzzy) {
+    return [...sel].some(v =>
+      field.some(f => f.toLowerCase().includes(v.toLowerCase()) || v.toLowerCase().includes(f.toLowerCase().slice(0,24)))
+    );
+  }
+  return [...sel].some(v => field.some(f => f.toLowerCase() === v.toLowerCase() || f.toLowerCase().includes(v.toLowerCase())));
+}
+
+function applyFilters() {
+  let results = COMPANIES.filter(c => {
+    if (state.status !== 'all' && c.status !== state.status) return false;
+    if (state.region.size > 0 && !state.region.has(c.region)) return false;
+    if (state.size.size > 0) {
+      const emp = (c.employees || '').replace(/–/g,'–');
+      if (!state.size.has(emp)) return false;
+    }
+    for (const grp of ['category','commodity','machining','welding','testing','design','services','markets']) {
+      if (!matchesGroup(c, grp)) return false;
+    }
+    if (state.search) {
+      const hay = [c.name, c.city, c.region, c.description,
+        ...(c.markets||[]), ...(c.capabilities||[]), ...(c.accreditations||[]), ...(c.services||[])
+      ].join(' ').toLowerCase();
+      if (!hay.includes(state.search)) return false;
+    }
+    return true;
+  });
+
+  const sort = document.getElementById('sort-select').value;
+  if (sort === 'name') results.sort((a,b) => a.name.localeCompare(b.name));
+  else if (sort === 'status') results.sort((a,b) => a.status.localeCompare(b.status) || a.name.localeCompare(b.name));
+  else if (sort === 'year') results.sort((a,b) => b.year_joined - a.year_joined);
+
+  renderGrid(results);
+  document.getElementById('rc-num').textContent = results.length;
+}
+
+// ─────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────
+function renderGrid(companies) {
+  const grid = document.getElementById('company-grid');
+  const empty = document.getElementById('empty-state');
+  if (!companies.length) { grid.innerHTML = ''; empty.classList.add('visible'); return; }
+  empty.classList.remove('visible');
+  grid.innerHTML = companies.map((c,i) => {
+    const initials = c.name.replace(/[^a-zA-Z ]/g,'').split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase() || '?';
+    const isGranted = c.status === 'Granted';
+    const shownCaps = c.capabilities.slice(0,2);
+    const moreCaps = c.capabilities.length - 2;
+    const shownAccreds = c.accreditations.slice(0,2);
+    const moreAccreds = c.accreditations.length - 2;
+    const nuclearMkt = c.markets.includes('Nuclear Civil');
+    const otherMkts = c.markets.filter(m => m !== 'Nuclear Civil').slice(0,2);
+    return `<div class="company-card${isGranted ? '' : ' journey-card'}${state.selected === c.id ? ' selected' : ''}" onclick="openDetail('${c.id}')" style="animation-delay:${Math.min(i,18)*0.025}s">
+      <div class="card-logoband">
+        ${c.logo_url
+          ? `<img src="${c.logo_url}" alt="${c.name} logo" onerror="this.outerHTML='<div class=&quot;card-avatar&quot;>${initials}</div>'">`
+          : `<div class="card-avatar">${initials}</div>`}
+        <span class="card-status-badge card-badge-corner ${isGranted ? 'badge-granted' : 'badge-journey'}">${isGranted ? '✓' : '◎'}</span>
+      </div>
+      <div class="card-body">
+        <div class="card-name" title="${c.name}">${c.name}</div>
+        ${(c.city || c.region) ? `<div class="card-location"><svg viewBox="0 0 12 12" fill="currentColor"><path d="M6 0C3.79 0 2 1.79 2 4c0 3 4 8 4 8s4-5 4-8c0-2.21-1.79-4-4-4zm0 5.5A1.5 1.5 0 1 1 6 2.5a1.5 1.5 0 0 1 0 3z"/></svg>${[c.city, c.region].filter(Boolean).join(', ')}</div>` : ''}
+        <div class="card-caps-row">
+          ${shownCaps.map(cap => `<span class="cap-chip" title="${cap}">${cap}</span>`).join('')}
+          ${moreCaps > 0 ? `<span class="cap-chip-more">+${moreCaps}</span>` : ''}
+        </div>
+        <span class="card-status-badge card-badge-inline ${isGranted ? 'badge-granted' : 'badge-journey'}">${isGranted ? '✓ Granted' : '◎ On Journey'}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────────
+// DETAIL PANEL
+// ─────────────────────────────────────────────
+function openDetail(id) {
+  const c = COMPANIES.find(x => x.id === id);
+  if (!c) return;
+  state.selected = id;
+
+  const initials = c.name.replace(/[^a-zA-Z ]/g,'').split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase() || '?';
+  const isGranted = c.status === 'Granted';
+
+  const dhAvatar = document.getElementById('dh-avatar');
+  if (c.logo_url) {
+    dhAvatar.className = 'dh-avatar dh-avatar-logo';
+    dhAvatar.innerHTML = `<img src="${c.logo_url}" alt="${c.name} logo" onerror="this.parentNode.classList.remove('dh-avatar-logo');this.parentNode.textContent='${initials}'">`;
+  } else {
+    dhAvatar.className = 'dh-avatar' + (isGranted ? '' : ' journey');
+    dhAvatar.textContent = initials;
+  }
+  document.getElementById('dh-name').textContent = c.name;
+  document.getElementById('dh-status-row').innerHTML = `<div class="card-status-badge ${isGranted ? 'badge-granted' : 'badge-journey'}" style="display:inline-flex;margin-top:4px;">${isGranted ? '✓ Granted' : '◎ On Journey'}</div>`;
+
+  const dhChips = [];
+  if (c.city || c.region) dhChips.push(`<div class="dh-info-chip"><svg viewBox="0 0 12 12" fill="currentColor"><path d="M6 0C3.79 0 2 1.79 2 4c0 3 4 8 4 8s4-5 4-8c0-2.21-1.79-4-4-4zm0 5.5A1.5 1.5 0 1 1 6 2.5a1.5 1.5 0 0 1 0 3z"/></svg>${[c.city, c.region].filter(Boolean).join(', ')}</div>`);
+  if (c.year_joined) dhChips.push(`<div class="dh-info-chip"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="2" width="10" height="8" rx="1"/><path d="M1 5h10"/><path d="M4 2V1M8 2V1"/></svg>Member since ${c.year_joined}</div>`);
+  if (c.employees) dhChips.push(`<div class="dh-info-chip"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5" cy="4" r="2"/><path d="M1 10c0-2.2 1.8-4 4-4s4 1.8 4 4"/><circle cx="10" cy="4" r="1.5"/><path d="M10 8.5c1.1 0 2 .9 2 2"/></svg>${c.employees} employees</div>`);
+  document.getElementById('dh-info').innerHTML = dhChips.join('');
+
+  const mapQuery = encodeURIComponent(c.postcode ? [c.name, c.postcode, 'UK'].filter(Boolean).join(' ')
+    : [c.name, c.city, c.region, 'UK'].filter(Boolean).join(' '));
+  document.getElementById('dh-website').href = c.website || '#';
+  document.getElementById('dh-map-btn').href = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
+
+  // ── Overview pane: about, company details, recent work, links ──
+  let overviewHtml = '';
+
+  if (!isGranted) {
+    overviewHtml += `<div class="journey-notice">◎ <strong>On the NuclearReady Journey</strong> — this company is actively working towards full Granted status.</div>`;
+  }
+
+  if (c.description) {
+    overviewHtml += `<div class="dc-section"><div class="dc-label">About</div><div class="dc-desc-text">${c.description}</div></div>`;
+  }
+
+  // Contact & company details (Phase 1 schema)
+  overviewHtml += `<div class="dc-section"><div class="dc-label">Company Details</div>`;
+  const locationText = [c.address, c.city, c.county, c.postcode].filter(Boolean).join(', ')
+    || [c.city, c.region].filter(Boolean).join(', ');
+  if (locationText) overviewHtml += `<div class="dc-field-row"><span class="dc-field-label">Address</span><span class="dc-field-value">${locationText}</span></div>`;
+  if (c.contact_name) overviewHtml += `<div class="dc-field-row"><span class="dc-field-label">Contact</span><span class="dc-field-value">${c.contact_name}</span></div>`;
+  if (c.contact_phone) overviewHtml += `<div class="dc-field-row"><span class="dc-field-label">Phone</span><span class="dc-field-value"><a href="tel:${c.contact_phone}">${c.contact_phone}</a></span></div>`;
+  if (c.contact_email) overviewHtml += `<div class="dc-field-row"><span class="dc-field-label">Email</span><span class="dc-field-value"><a href="mailto:${c.contact_email}">${c.contact_email}</a></span></div>`;
+  if (c.turnover) overviewHtml += `<div class="dc-field-row"><span class="dc-field-label">Turnover</span><span class="dc-field-value">${c.turnover}</span></div>`;
+  if (c.main_commodity_group) overviewHtml += `<div class="dc-field-row"><span class="dc-field-label">Main Commodity Group</span><span class="dc-field-value">${c.main_commodity_group}</span></div>`;
+  if (c.employees) overviewHtml += `<div class="dc-field-row"><span class="dc-field-label">Employees</span><span class="dc-field-value">${c.employees}</span></div>`;
+  overviewHtml += `</div>`;
+
+  // Recent Work / Case Studies
+  if (c.recent_work && c.recent_work.length) {
+    overviewHtml += `<div class="dc-section"><div class="dc-label">Recent Work</div><div class="dc-recent-work">`;
+    c.recent_work.forEach(w => {
+      overviewHtml += `<div class="dc-work-item"><div class="dc-work-title">${w.title}</div><div class="dc-work-desc">${w.description}</div>${w.year ? `<div class="dc-work-year">${w.year}</div>` : ''}</div>`;
+    });
+    overviewHtml += `</div></div>`;
+  }
+
+  // Social links
+  if (c.linkedin || c.twitter || c.website) {
+    overviewHtml += `<div class="dc-section"><div class="dc-label">Links</div><div class="dc-social-row">`;
+    if (c.website) overviewHtml += `<a class="dc-social-btn" href="${c.website}" target="_blank" rel="noopener">🌐 Website</a>`;
+    if (c.linkedin) overviewHtml += `<a class="dc-social-btn" href="${c.linkedin}" target="_blank" rel="noopener">in LinkedIn</a>`;
+    if (c.twitter) overviewHtml += `<a class="dc-social-btn" href="${c.twitter}" target="_blank" rel="noopener">𝕏 X</a>`;
+    overviewHtml += `</div>`;
+    overviewHtml += `<div class="dc-permalink">Profile link: <a href="${window.location.pathname}#company/${c.slug}">#company/${c.slug}</a></div>`;
+    overviewHtml += `</div>`;
+  }
+
+  // ── Capabilities pane: capabilities + services ──
+  let capsHtml = '';
+  if (c.capabilities && c.capabilities.length) {
+    capsHtml += `<div class="dc-section"><div class="dc-label">Capabilities</div><div class="dc-tags">${c.capabilities.map(x => `<span class="dc-tag">${x}</span>`).join('')}</div></div>`;
+  }
+  if (c.services && c.services.length) {
+    capsHtml += `<div class="dc-section"><div class="dc-label">Services</div><div class="dc-tags">${c.services.map(x => `<span class="dc-tag t-service">${x}</span>`).join('')}</div></div>`;
+  }
+  if (!capsHtml) capsHtml = `<div class="dc-section"><div class="dc-desc-text">No capability or service data listed.</div></div>`;
+
+  // ── Markets & Accreditations pane ──
+  let marketsHtml = '';
+  if (c.markets && c.markets.length) {
+    marketsHtml += `<div class="dc-section"><div class="dc-label">Markets Served</div><div class="dc-tags">${c.markets.map(x => `<span class="dc-tag ${x === 'Nuclear Civil' ? 't-nuclear' : ''}">${x}</span>`).join('')}</div></div>`;
+  }
+  if (c.accreditations && c.accreditations.length) {
+    marketsHtml += `<div class="dc-section"><div class="dc-label">Accreditations & Standards</div><div class="dc-tags">${c.accreditations.map(x => `<span class="dc-tag t-accred">${x}</span>`).join('')}</div></div>`;
+  }
+  if (!marketsHtml) marketsHtml = `<div class="dc-section"><div class="dc-desc-text">No market or accreditation data listed.</div></div>`;
+
+  document.getElementById('dh-pane-overview').innerHTML = overviewHtml;
+  document.getElementById('dh-pane-capabilities').innerHTML = capsHtml;
+  document.getElementById('dh-pane-markets').innerHTML = marketsHtml;
+  setDetailTab('overview');
+
+  document.getElementById('backdrop').classList.add('open');
+  document.getElementById('detail-panel').classList.add('open');
+
+  // Update URL hash
+  history.pushState(null, '', `#company/${c.slug}`);
+
+  // Highlight card
+  document.querySelectorAll('.company-card').forEach(el => el.classList.remove('selected'));
+  document.querySelectorAll('.company-card[onclick]').forEach(el => {
+    if (el.getAttribute('onclick') === `openDetail(${id})`) el.classList.add('selected');
+  });
+}
+
+function setDetailTab(name) {
+  document.querySelectorAll('.dh-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.dh-tabbtn').forEach(b => b.classList.remove('active'));
+  document.getElementById('dh-pane-' + name).classList.add('active');
+  if (typeof event !== 'undefined' && event && event.target && event.target.classList.contains('dh-tabbtn')) {
+    event.target.classList.add('active');
+  } else {
+    const idx = { overview: 0, capabilities: 1, markets: 2 }[name];
+    document.querySelectorAll('.dh-tabbtn')[idx].classList.add('active');
+  }
+}
+
+function closeDetail() {
+  document.getElementById('backdrop').classList.remove('open');
+  document.getElementById('detail-panel').classList.remove('open');
+  state.selected = null;
+  document.querySelectorAll('.company-card').forEach(el => el.classList.remove('selected'));
+  history.pushState(null, '', window.location.pathname + window.location.search);
+}
+
+function shareCompany() {
+  const url = window.location.href;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(() => {
+      const btn = document.querySelector('.dh-share-btn');
+      if (btn) { btn.title = 'Copied!'; setTimeout(() => btn.title = 'Copy link', 2000); }
+    });
+  }
+}
+
+function setView(v) {
+  state.view = v;
+  document.getElementById('company-grid').classList.toggle('list-view', v === 'list');
+  document.getElementById('btn-grid').classList.toggle('active', v === 'grid');
+  document.getElementById('btn-list').classList.toggle('active', v === 'list');
+}
+
+// ─────────────────────────────────────────────
+// URL ROUTING
+// ─────────────────────────────────────────────
+function handleRoute() {
+  const hash = window.location.hash;
+  if (hash.startsWith('#company/')) {
+    const slug = hash.slice('#company/'.length);
+    const c = COMPANY_BY_SLUG[slug];
+    if (c) openDetail(c.id);
+  }
+}
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+async function init() {
+  await loadCompanies();
+  updateStats();
+  buildFilters();
+  applyFilters();
+  document.getElementById('global-search').addEventListener('input', e => {
+    state.search = e.target.value.toLowerCase().trim();
+    applyFilters();
+  });
+  window.addEventListener('popstate', handleRoute);
+  setTimeout(() => {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    handleRoute();  // open company from URL on load
+  }, 400);
+}
+window.addEventListener('load', init);
+</script>
+</body>
+</html>
