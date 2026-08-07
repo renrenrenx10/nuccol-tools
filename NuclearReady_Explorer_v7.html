@@ -1019,7 +1019,7 @@ function applyFilters() {
       if (!matchesGroup(c, grp)) return false;
     }
     if (state.search) {
-      const hay = [c.name, c.city, c.region, c.description,
+      const hay = [c.name, c.city, c.county, c.description,
         ...(c.markets||[]), ...(c.capabilities||[]), ...(c.accreditations||[]), ...(c.services||[])
       ].join(' ').toLowerCase();
       if (!hay.includes(state.search)) return false;
@@ -1062,7 +1062,7 @@ function renderGrid(companies) {
       </div>
       <div class="card-body">
         <div class="card-name" title="${c.name}">${c.name}</div>
-        ${(c.city || c.region) ? `<div class="card-location"><svg viewBox="0 0 12 12" fill="currentColor"><path d="M6 0C3.79 0 2 1.79 2 4c0 3 4 8 4 8s4-5 4-8c0-2.21-1.79-4-4-4zm0 5.5A1.5 1.5 0 1 1 6 2.5a1.5 1.5 0 0 1 0 3z"/></svg>${[c.city, c.region].filter(Boolean).join(', ')}</div>` : ''}
+        ${(c.city || c.county) ? `<div class="card-location"><svg viewBox="0 0 12 12" fill="currentColor"><path d="M6 0C3.79 0 2 1.79 2 4c0 3 4 8 4 8s4-5 4-8c0-2.21-1.79-4-4-4zm0 5.5A1.5 1.5 0 1 1 6 2.5a1.5 1.5 0 0 1 0 3z"/></svg>${[c.city, c.county].filter(Boolean).join(', ')}</div>` : ''}
         <div class="card-caps-row">
           ${shownCaps.map(cap => `<span class="cap-chip" title="${cap}">${cap}</span>`).join('')}
           ${moreCaps > 0 ? `<span class="cap-chip-more">+${moreCaps}</span>` : ''}
@@ -1096,13 +1096,13 @@ function openDetail(id) {
   document.getElementById('dh-status-row').innerHTML = `<div class="card-status-badge ${isGranted ? 'badge-granted' : 'badge-journey'}" style="display:inline-flex;margin-top:4px;">${isGranted ? '✓ Granted' : '◎ On Journey'}</div>`;
 
   const dhChips = [];
-  if (c.city || c.region) dhChips.push(`<div class="dh-info-chip"><svg viewBox="0 0 12 12" fill="currentColor"><path d="M6 0C3.79 0 2 1.79 2 4c0 3 4 8 4 8s4-5 4-8c0-2.21-1.79-4-4-4zm0 5.5A1.5 1.5 0 1 1 6 2.5a1.5 1.5 0 0 1 0 3z"/></svg>${[c.city, c.region].filter(Boolean).join(', ')}</div>`);
+  if (c.city || c.county) dhChips.push(`<div class="dh-info-chip"><svg viewBox="0 0 12 12" fill="currentColor"><path d="M6 0C3.79 0 2 1.79 2 4c0 3 4 8 4 8s4-5 4-8c0-2.21-1.79-4-4-4zm0 5.5A1.5 1.5 0 1 1 6 2.5a1.5 1.5 0 0 1 0 3z"/></svg>${[c.city, c.county].filter(Boolean).join(', ')}</div>`);
   if (c.year_joined) dhChips.push(`<div class="dh-info-chip"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="2" width="10" height="8" rx="1"/><path d="M1 5h10"/><path d="M4 2V1M8 2V1"/></svg>Member since ${c.year_joined}</div>`);
   if (c.employees) dhChips.push(`<div class="dh-info-chip"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5" cy="4" r="2"/><path d="M1 10c0-2.2 1.8-4 4-4s4 1.8 4 4"/><circle cx="10" cy="4" r="1.5"/><path d="M10 8.5c1.1 0 2 .9 2 2"/></svg>${c.employees} employees</div>`);
   document.getElementById('dh-info').innerHTML = dhChips.join('');
 
   const mapQuery = encodeURIComponent(c.postcode ? [c.name, c.postcode, 'UK'].filter(Boolean).join(' ')
-    : [c.name, c.city, c.region, 'UK'].filter(Boolean).join(' '));
+    : [c.name, c.city, c.county, 'UK'].filter(Boolean).join(' '));
   document.getElementById('dh-website').href = c.website || '#';
   document.getElementById('dh-map-btn').href = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
 
@@ -1119,8 +1119,7 @@ function openDetail(id) {
 
   // Contact & company details (Phase 1 schema)
   overviewHtml += `<div class="dc-section"><div class="dc-label">Company Details</div>`;
-  const locationText = [c.address, c.city, c.county, c.postcode].filter(Boolean).join(', ')
-    || [c.city, c.region].filter(Boolean).join(', ');
+  const locationText = [c.address, c.city, c.county, c.postcode].filter(Boolean).join(', ');
   if (locationText) overviewHtml += `<div class="dc-field-row"><span class="dc-field-label">Address</span><span class="dc-field-value">${locationText}</span></div>`;
   if (c.contact_name) overviewHtml += `<div class="dc-field-row"><span class="dc-field-label">Contact</span><span class="dc-field-value">${c.contact_name}</span></div>`;
   if (c.contact_phone) overviewHtml += `<div class="dc-field-row"><span class="dc-field-label">Phone</span><span class="dc-field-value"><a href="tel:${c.contact_phone}">${c.contact_phone}</a></span></div>`;
