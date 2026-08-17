@@ -28,24 +28,35 @@
 html{scroll-behavior:smooth;}
 body{font-family:'Barlow',sans-serif;background:var(--white);color:var(--text);line-height:1.6;}
 
-/* NAV */
-nav {
-  position:fixed;top:0;left:0;right:0;z-index:100;
-  background:rgba(10,22,40,0.96);backdrop-filter:blur(12px);
-  border-bottom:1px solid rgba(255,255,255,0.08);
-  height:58px;display:flex;align-items:center;padding:0 40px;gap:20px;
+/* TOPBAR — matches NuclearReady_Explorer_v7 */
+#topbar{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  height:54px;min-height:54px;background:var(--navy);
+  display:flex;align-items:center;padding:0 24px;gap:14px;
+  box-shadow:0 2px 14px rgba(0,0,0,0.3);
 }
-.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
-.nav-logo-icon{width:32px;height:32px;border-radius:8px;background:var(--cyan);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.nav-logo-icon svg{width:17px;height:17px;fill:#fff;}
-.nav-logo-name{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:#fff;letter-spacing:0.06em;text-transform:uppercase;}
-.nav-spacer{flex:1;}
-.nav-links{display:flex;align-items:center;gap:28px;}
+.logo-wrap{display:flex;align-items:center;gap:9px;text-decoration:none;}
+.logo-icon{width:34px;height:34px;border-radius:8px;background:var(--cyan);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.logo-icon svg{width:18px;height:18px;fill:#fff;}
+.logo-text-block{display:flex;flex-direction:column;line-height:1.1;}
+.logo-name{font-family:'Barlow Condensed',sans-serif;font-size:21px;font-weight:800;letter-spacing:0.05em;color:#fff;text-transform:uppercase;}
+.logo-sub{font-size:9.5px;color:rgba(255,255,255,0.55);letter-spacing:0.08em;text-transform:uppercase;font-weight:500;}
+.logo-pipe{width:1px;height:24px;background:rgba(255,255,255,0.18);}
+.powered-tag{font-size:10px;color:rgba(255,255,255,0.45);letter-spacing:0.04em;display:flex;align-items:center;gap:7px;}
+.powered-tag strong{color:var(--cyan);font-weight:600;}
+.powered-tag img{height:22px;width:auto;flex-shrink:0;}
+.topbar-spacer{flex:1;}
+.topbar-stats{display:flex;gap:20px;align-items:center;}
+.ts-item{text-align:center;}
+.ts-num{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;line-height:1;color:var(--cyan);}
+.ts-label{font-size:9px;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:0.07em;font-weight:500;}
+.topbar-pipe{width:1px;height:28px;background:rgba(255,255,255,0.15);}
+.topbar-nav-links{display:flex;align-items:center;gap:24px;}
 .nav-link{font-size:13px;font-weight:500;color:rgba(255,255,255,0.6);text-decoration:none;transition:color .15s;}
 .nav-link:hover{color:#fff;}
 .nav-cta{
-  padding:8px 20px;border-radius:6px;background:var(--cyan);color:var(--navy);
-  font-size:13px;font-weight:700;text-decoration:none;transition:background .15s;
+  padding:7px 18px;border-radius:6px;background:var(--cyan);color:var(--navy);
+  font-size:12px;font-weight:700;text-decoration:none;transition:background .15s;
   font-family:'Barlow Condensed',sans-serif;letter-spacing:0.04em;text-transform:uppercase;
 }
 .nav-cta:hover{background:var(--cyan-dark);color:#fff;}
@@ -70,15 +81,7 @@ nav {
   position:absolute;right:-120px;top:50%;transform:translateY(-50%);
   width:700px;height:700px;opacity:0.07;pointer-events:none;
 }
-.hero-inner{max-width:800px;position:relative;z-index:2;}
-.hero-eyebrow {
-  display:inline-flex;align-items:center;gap:8px;
-  background:rgba(41,182,232,0.12);border:1px solid rgba(41,182,232,0.25);
-  border-radius:20px;padding:5px 14px;margin-bottom:28px;
-}
-.hero-eyebrow-dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:pulse 2s ease infinite;}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.5;transform:scale(1.3);}}
-.hero-eyebrow-text{font-size:11px;font-weight:600;color:var(--cyan);letter-spacing:0.12em;text-transform:uppercase;}
+.hero-inner{max-width:1200px;position:relative;z-index:2;}
 .hero-h1 {
   font-family:'Barlow Condensed',sans-serif;
   font-size:clamp(48px,6vw,80px);font-weight:800;
@@ -88,7 +91,7 @@ nav {
 .hero-h1 em{color:var(--cyan);font-style:normal;}
 .hero-sub {
   font-size:17px;font-weight:400;color:rgba(255,255,255,0.65);
-  max-width:540px;line-height:1.7;margin-bottom:36px;
+  max-width:640px;line-height:1.7;margin-bottom:36px;
 }
 .hero-actions{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:56px;}
 .btn-primary{
@@ -106,7 +109,7 @@ nav {
 }
 .btn-ghost:hover{border-color:rgba(255,255,255,0.5);color:#fff;}
 
-.hero-stats{display:flex;gap:0;border:1px solid rgba(255,255,255,0.1);border-radius:10px;overflow:hidden;background:rgba(255,255,255,0.04);max-width:520px;}
+.hero-stats{display:flex;gap:0;border:1px solid rgba(255,255,255,0.1);border-radius:10px;overflow:hidden;background:rgba(255,255,255,0.04);max-width:400px;}
 .hstat{flex:1;padding:18px 22px;border-right:1px solid rgba(255,255,255,0.08);}
 .hstat:last-child{border-right:none;}
 .hstat-num{font-family:'Barlow Condensed',sans-serif;font-size:34px;font-weight:800;color:var(--cyan);line-height:1;}
@@ -114,35 +117,15 @@ nav {
 
 /* ABOUT */
 #about{padding:80px 40px;background:var(--off-white);}
-.section-inner{max-width:1060px;margin:0 auto;}
+.section-inner{max-width:1400px;margin:0 auto;}
 .section-label{font-size:11px;font-weight:700;color:var(--cyan-dark);letter-spacing:0.14em;text-transform:uppercase;margin-bottom:10px;}
 .section-h2{font-family:'Barlow Condensed',sans-serif;font-size:clamp(30px,4vw,44px);font-weight:800;color:var(--navy);line-height:1.1;text-transform:uppercase;margin-bottom:16px;}
 
-.about-layout{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;}
+.about-layout{max-width:760px;}
 .about-text p{font-size:15px;color:var(--muted);line-height:1.75;margin-bottom:16px;}
 .about-text p:last-child{margin-bottom:0;}
 .about-text a{color:var(--cyan-dark);font-weight:600;text-decoration:none;}
 .about-text a:hover{text-decoration:underline;}
-.about-steps{display:flex;flex-direction:column;gap:14px;}
-.step{display:flex;gap:14px;align-items:flex-start;background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px 18px;}
-.step-num{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--cyan);min-width:28px;line-height:1;}
-.step-body{}
-.step-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:2px;}
-.step-desc{font-size:12px;color:var(--muted);line-height:1.5;}
-
-/* PROGRAMME STATUS */
-#programme{padding:0 40px 80px;background:var(--off-white);}
-.status-cards{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:640px;}
-.status-card{border-radius:10px;padding:28px;border:1.5px solid;}
-.status-card.granted{background:var(--granted-bg);border-color:#a8d5bb;}
-.status-card.journey{background:var(--journey-bg);border-color:#f0c070;}
-.sc-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;}
-.sc-badge.granted{color:var(--granted);}
-.sc-badge.journey{color:var(--journey);}
-.sc-num{font-family:'Barlow Condensed',sans-serif;font-size:44px;font-weight:800;line-height:1;margin-bottom:4px;}
-.sc-num.granted{color:var(--granted);}
-.sc-num.journey{color:var(--journey);}
-.sc-desc{font-size:13px;color:var(--muted);line-height:1.6;}
 
 /* NEWS */
 #news{padding:80px 40px;background:var(--navy);}
@@ -173,7 +156,7 @@ nav {
 /* CTA */
 #cta{padding:80px 40px;background:var(--cyan);text-align:center;}
 .cta-h2{font-family:'Barlow Condensed',sans-serif;font-size:clamp(32px,4vw,52px);font-weight:800;color:var(--navy);text-transform:uppercase;margin-bottom:14px;}
-.cta-sub{font-size:16px;color:rgba(10,22,40,0.7);margin-bottom:32px;max-width:480px;margin-left:auto;margin-right:auto;}
+.cta-sub{font-size:16px;color:rgba(10,22,40,0.7);margin-bottom:32px;max-width:620px;margin-left:auto;margin-right:auto;}
 .btn-navy{
   display:inline-flex;align-items:center;gap:8px;
   padding:14px 36px;border-radius:7px;background:var(--navy);
@@ -186,7 +169,7 @@ nav {
 
 /* FOOTER */
 footer{background:var(--navy);padding:48px 40px 28px;border-top:1px solid rgba(255,255,255,0.06);}
-.footer-inner{max-width:1060px;margin:0 auto;}
+.footer-inner{max-width:1400px;margin:0 auto;}
 .footer-top{display:flex;gap:60px;flex-wrap:wrap;margin-bottom:36px;}
 .footer-brand{flex:1;min-width:220px;}
 .footer-logo{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
@@ -205,13 +188,17 @@ footer{background:var(--navy);padding:48px 40px 28px;border-top:1px solid rgba(2
 .footer-powered{font-size:11px;color:rgba(255,255,255,0.2);white-space:nowrap;}
 .footer-powered strong{color:rgba(255,255,255,0.35);}
 
+@media(max-width:900px){
+  .powered-tag,.logo-sub{display:none;}
+}
 @media(max-width:700px){
-  nav{padding:0 20px;}
-  #hero,#about,#programme,#news,#cta,footer{padding-left:20px;padding-right:20px;}
+  #topbar{padding:0 16px;gap:10px;}
+  .topbar-stats,.topbar-pipe{display:none;}
+  .topbar-nav-links{gap:12px;}
+  .nav-link{display:none;}
+  #hero,#about,#news,#cta,footer{padding-left:20px;padding-right:20px;}
   .hero-stats{flex-direction:column;}
   .hstat{border-right:none;border-bottom:1px solid rgba(255,255,255,0.08);}
-  .about-layout{grid-template-columns:1fr;}
-  .status-cards{grid-template-columns:1fr;}
   .footer-top{flex-direction:column;gap:28px;}
   .footer-bottom{flex-direction:column;}
 }
@@ -219,21 +206,32 @@ footer{background:var(--navy);padding:48px 40px 28px;border-top:1px solid rgba(2
 </head>
 <body>
 
-<!-- NAV -->
-<nav>
-  <a class="nav-logo" href="NuclearReady_Landing.html">
-    <div class="nav-logo-icon">
+<!-- TOPBAR — matches NuclearReady_Explorer_v7 -->
+<div id="topbar">
+  <a class="logo-wrap" href="NuclearReady_Landing.html">
+    <div class="logo-icon">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.5"/><ellipse cx="12" cy="12" rx="10" ry="4.5" stroke="#fff" stroke-width="1.5" fill="none"/><ellipse cx="12" cy="12" rx="10" ry="4.5" stroke="#fff" stroke-width="1.5" fill="none" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4.5" stroke="#fff" stroke-width="1.5" fill="none" transform="rotate(120 12 12)"/></svg>
     </div>
-    <span class="nav-logo-name">NuclearReady</span>
+    <div class="logo-text-block">
+      <div class="logo-name">NuclearReady</div>
+      <div class="logo-sub">UK Nuclear Supply Chain Directory</div>
+    </div>
   </a>
-  <div class="nav-spacer"></div>
-  <div class="nav-links">
+  <div class="logo-pipe"></div>
+  <div class="powered-tag"><img src="data:image/png;base64,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" alt="NucCol logo"> Made by <strong>NucCol</strong></div>
+  <div class="topbar-spacer"></div>
+  <div class="topbar-stats">
+    <div class="ts-item"><div class="ts-num" id="stat-granted">–</div><div class="ts-label">Granted</div></div>
+    <div class="ts-item"><div class="ts-num" id="stat-journey">–</div><div class="ts-label">On Journey</div></div>
+    <div class="ts-item"><div class="ts-num" id="stat-total">–</div><div class="ts-label">Members</div></div>
+  </div>
+  <div class="topbar-pipe"></div>
+  <div class="topbar-nav-links">
     <a class="nav-link" href="#about">About F4N</a>
     <a class="nav-link" href="#news">News</a>
-    <a class="nav-cta" href="NuclearReady_Explorer_v3.html">Open Explorer →</a>
+    <a class="nav-cta" href="NuclearReady_Explorer_v7.html">Open Explorer →</a>
   </div>
-</nav>
+</div>
 
 <!-- HERO -->
 <section id="hero">
@@ -250,10 +248,6 @@ footer{background:var(--navy);padding:48px 40px 28px;border-top:1px solid rgba(2
   </svg>
 
   <div class="hero-inner">
-    <div class="hero-eyebrow">
-      <span class="hero-eyebrow-dot"></span>
-      <span class="hero-eyebrow-text">Delivered by NucCol</span>
-    </div>
     <h1 class="hero-h1">
       The UK Nuclear<br>Supply Chain,<br><em>Ready for Business</em>
     </h1>
@@ -261,7 +255,7 @@ footer{background:var(--navy);padding:48px 40px 28px;border-top:1px solid rgba(2
       NuclearReady is the directory of UK manufacturers that have been assessed through NucCol's F4N programme — independently verified and ready to compete for nuclear contracts.
     </p>
     <div class="hero-actions">
-      <a class="btn-primary" href="NuclearReady_Explorer_v3.html">
+      <a class="btn-primary" href="NuclearReady_Explorer_v7.html">
         Explore the Directory
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
       </a>
@@ -270,8 +264,6 @@ footer{background:var(--navy);padding:48px 40px 28px;border-top:1px solid rgba(2
     <div class="hero-stats">
       <div class="hstat"><div class="hstat-num" id="hs-granted">–</div><div class="hstat-label">F4N Granted</div></div>
       <div class="hstat"><div class="hstat-num" id="hs-journey">–</div><div class="hstat-label">On Journey</div></div>
-      <div class="hstat"><div class="hstat-num">12</div><div class="hstat-label">UK Regions</div></div>
-      <div class="hstat"><div class="hstat-num">17</div><div class="hstat-label">Sectors Served</div></div>
     </div>
   </div>
 </section>
@@ -299,55 +291,6 @@ footer{background:var(--navy);padding:48px 40px 28px;border-top:1px solid rgba(2
         <p>
           <a href="https://www.nuccol.co.uk/f4n" target="_blank" rel="noopener">Find out more about F4N →</a>
         </p>
-      </div>
-
-      <div class="about-steps">
-        <div class="step">
-          <div class="step-num">01</div>
-          <div class="step-body">
-            <div class="step-title">Capability Questionnaire &amp; Self-Assessment</div>
-            <div class="step-desc">An initial questionnaire and online self-assessment covering six categories of business operation establish a clear baseline before consultant involvement.</div>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num">02</div>
-          <div class="step-body">
-            <div class="step-title">Site Verification &amp; Action Plan</div>
-            <div class="step-desc">NucCol's supply chain consultants visit your premises, verify the self-assessment, and co-create a structured action plan to close gaps against nuclear buyer expectations.</div>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num">03</div>
-          <div class="step-body">
-            <div class="step-title">Sector Knowledge &amp; Development</div>
-            <div class="step-desc">Nuclear-specific knowledge assessments and online knowledge transfer modules build your team's understanding of procurement standards and technical requirements.</div>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num">04</div>
-          <div class="step-body">
-            <div class="step-title">Pre-Grant Visit &amp; F4N Granted</div>
-            <div class="step-desc">After completing your action plans, a final pre-grant visit leads to assessment by the granting panel. Granted companies are listed in this directory and gain full NucCol membership benefits.</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- PROGRAMME STATUS -->
-<section id="programme">
-  <div class="section-inner">
-    <div class="status-cards">
-      <div class="status-card granted">
-        <div class="sc-badge granted">✓ F4N Granted</div>
-        <div class="sc-num granted" id="sc-granted">–</div>
-        <div class="sc-desc">Companies that have successfully completed the F4N assessment and met all nuclear supply chain criteria. Fully endorsed and listed.</div>
-      </div>
-      <div class="status-card journey">
-        <div class="sc-badge journey">◎ On the Journey</div>
-        <div class="sc-num journey" id="sc-journey">–</div>
-        <div class="sc-desc">Companies actively working towards Granted status. Visible in the directory so buyers can see who is raising their game for nuclear work.</div>
       </div>
     </div>
   </div>
@@ -397,7 +340,7 @@ footer{background:var(--navy);padding:48px 40px 28px;border-top:1px solid rgba(2
 <section id="cta">
   <h2 class="cta-h2">Find Your Next Nuclear Supplier</h2>
   <p class="cta-sub">Search and filter the full directory of F4N-assessed UK companies — free, public, no login required.</p>
-  <a class="btn-navy" href="NuclearReady_Explorer_v3.html">
+  <a class="btn-navy" href="NuclearReady_Explorer_v7.html">
     Open the Explorer
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
   </a>
@@ -419,9 +362,9 @@ footer{background:var(--navy);padding:48px 40px 28px;border-top:1px solid rgba(2
       <div class="footer-col">
         <h4>Directory</h4>
         <ul>
-          <li><a href="NuclearReady_Explorer_v3.html">Company Explorer</a></li>
-          <li><a href="NuclearReady_Explorer_v3.html">Search by Capability</a></li>
-          <li><a href="NuclearReady_Explorer_v3.html">Search by Region</a></li>
+          <li><a href="NuclearReady_Explorer_v7.html">Company Explorer</a></li>
+          <li><a href="NuclearReady_Explorer_v7.html">Search by Capability</a></li>
+          <li><a href="NuclearReady_Explorer_v7.html">Search by Region</a></li>
         </ul>
       </div>
       <div class="footer-col">
@@ -444,12 +387,42 @@ footer{background:var(--navy);padding:48px 40px 28px;border-top:1px solid rgba(2
 </footer>
 
 <script>
-const GRANTED = 44;
-const JOURNEY = 33;
-document.getElementById('hs-granted').textContent = GRANTED;
-document.getElementById('hs-journey').textContent  = JOURNEY;
-document.getElementById('sc-granted').textContent  = GRANTED;
-document.getElementById('sc-journey').textContent  = JOURNEY;
+// Fallback figures only used if the live feed can't be reached — kept in
+// sync with the static company grid in f4n-companies.html.
+let GRANTED = 27;
+let JOURNEY = 13;
+
+function setText(id, value){
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
+}
+
+function renderStats(){
+  const total = GRANTED + JOURNEY;
+  setText('hs-granted', GRANTED);
+  setText('hs-journey', JOURNEY);
+  setText('stat-granted', GRANTED);
+  setText('stat-journey', JOURNEY);
+  setText('stat-total', total);
+}
+renderStats();
+
+// Pull true, live counts from the same CMS feed f4n-companies.html uses,
+// so both pages always agree.
+(async function(){
+  try {
+    const BASE = 'https://nuccolmedia.blob.core.windows.net/content';
+    const SAS  = 'sv=2026-02-06&ss=b&srt=o&sp=rwdctfx&se=2032-01-01T20:14:16Z&st=2026-06-16T10:59:16Z&spr=https&sig=JVx5ozHDrnCCcLKtK6npIZrswRrTi9njeifMBXgRHg4%3D';
+    const r = await fetch(`${BASE}/site-pages/f4n-companies.json?${SAS}`);
+    if (!r.ok) return;
+    const rows = await r.json();
+    GRANTED = rows.filter(x => x.section === 'Granted').length;
+    JOURNEY = rows.filter(x => x.section === 'Journey').length;
+    renderStats();
+  } catch (e) {
+    // Network/CORS failure — fallback figures above stay on screen.
+  }
+})();
 </script>
 </body>
 </html>
