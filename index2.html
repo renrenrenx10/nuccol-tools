@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NucCol Best Practice Hub</title>
+<meta name="description" content="Free Best Practice resources for UK manufacturers from NucCol, delivering the Fit For Nuclear (F4N) programme.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#12314F; --blue:#1C7FBB; --purple:#7B2D8E;
+  --bg:#F7FAFC; --card:#FFFFFF; --ink:#16232E; --ink-soft:#4A5C6A;
+  --line:#DCE4EA; --light:#EEF4F8; --light2:#F7F2F9;
+  --radius:14px; --maxw:1080px;
+  --font-head:'Fraunces', Georgia, serif;
+  --font-body:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1720; --card:#152230; --ink:#EAF1F6; --ink-soft:#AFC1CE;
+    --line:#28394A; --light:#152B3A; --light2:#2A1F33;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1720; --card:#152230; --ink:#EAF1F6; --ink-soft:#AFC1CE;
+  --line:#28394A; --light:#152B3A; --light2:#2A1F33;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{background:var(--bg); color:var(--ink); font-family:var(--font-body); line-height:1.55; -webkit-font-smoothing:antialiased;}
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 20px 72px;}
+.hero{background:linear-gradient(135deg,var(--navy) 0%,#0B2036 60%,var(--purple) 130%); color:#fff; padding:56px 20px 60px;}
+.hero-inner{max-width:var(--maxw); margin:0 auto;}
+.brand{display:flex; align-items:center; gap:10px; font-size:13px; letter-spacing:.08em; text-transform:uppercase; opacity:.85; font-weight:700;}
+.brand .dot{width:8px;height:8px;border-radius:50%;background:var(--blue);}
+.kicker{margin-top:22px; font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:#8FCBEF; font-weight:700;}
+h1.title{font-family:var(--font-head); font-weight:600; font-size:clamp(30px,5.5vw,46px); margin:8px 0 14px; line-height:1.12; color:#fff; max-width:720px;}
+.subtitle{font-size:16.5px; color:#C9D9E4; max-width:620px; margin:0;}
+.hero-stats{display:flex; gap:28px; flex-wrap:wrap; margin-top:30px;}
+.stat b{display:block; font-family:var(--font-head); font-size:26px; color:#fff;}
+.stat span{font-size:12.5px; color:#9FB6C6; letter-spacing:.03em;}
+.section-title{font-family:var(--font-head); font-size:20px; font-weight:600; color:var(--navy); margin:44px 0 4px;}
+:root[data-theme="dark"] .section-title{color:#8FCBEF;}
+.section-sub{color:var(--ink-soft); font-size:14px; margin:0 0 18px;}
+.grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:16px;}
+.card{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+  padding:20px 20px 18px; display:flex; flex-direction:column; text-decoration:none; color:inherit;
+  transition:transform .15s, box-shadow .15s, border-color .15s;
+}
+.card:hover{transform:translateY(-2px); box-shadow:0 10px 26px rgba(18,49,79,.12); border-color:var(--blue);}
+.tag{display:inline-block; font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; padding:4px 10px; border-radius:999px; margin-bottom:12px; width:fit-content;}
+.tag.quiz{background:linear-gradient(135deg,var(--purple),var(--blue)); color:#fff;}
+.tag.guide{background:var(--light2); color:var(--purple);}
+.tag.checklist{background:var(--light); color:var(--blue);}
+.tag.sample{background:var(--light); color:var(--ink-soft);}
+.card h3{font-family:var(--font-head); font-size:17px; font-weight:600; margin:0 0 8px; color:var(--navy);}
+:root[data-theme="dark"] .card h3{color:#EAF1F6;}
+.card p{font-size:13.5px; color:var(--ink-soft); margin:0; flex:1;}
+.card .go{margin-top:14px; font-size:13px; font-weight:700; color:var(--blue);}
+.footer{text-align:center; color:var(--ink-soft); font-size:12.5px; margin-top:50px; padding-top:20px; border-top:1px solid var(--line);}
+</style>
+</head>
+<body>
+<div class="hero"><div class="hero-inner">
+  <div class="brand"><span class="dot"></span> NucCol &nbsp;|&nbsp; Nuclear Collaboration Ltd</div>
+  <div class="kicker">Best Practice Hub &middot; ManufacturingUK.org</div>
+  <h1 class="title">Practical resources for UK manufacturers entering the nuclear supply chain</h1>
+  <p class="subtitle">Sixteen free guides, checklists and tools from NucCol &mdash; the team behind the Fit For Nuclear (F4N) programme &mdash; covering everything from your first self-assessment to winning your first contract.</p>
+  <div class="hero-stats">
+    <div class="stat"><b>16</b><span>Resources</span></div>
+    <div class="stat"><b>1</b><span>Interactive quiz</span></div>
+    <div class="stat"><b>7</b><span>Topic areas</span></div>
+  </div>
+</div></div>
+
+<div class="wrap">
+
+  <div class="section-title">Getting started</div>
+  <p class="section-sub">New to nuclear? Start here.</p>
+  <div class="grid">
+    <a class="card" href="quiz-is-nuclear-right-for-you.html">
+      <span class="tag quiz">Interactive quiz</span>
+      <h3>Is Your Business Nuclear-Ready?</h3>
+      <p>An 18-point self-assessment across the seven F4N categories, with a live score and readiness band.</p>
+      <span class="go">Take the quiz &rarr;</span>
+    </a>
+    <a class="card" href="Beginners-Guide-Winning-First-Nuclear-Contract.html">
+      <span class="tag guide">Guide</span>
+      <h3>A Beginner's Guide to Winning Your First Nuclear Contract</h3>
+      <p>Five realistic stages, from first considering the sector to staying on buyers' radar long-term.</p>
+      <span class="go">Read the guide &rarr;</span>
+    </a>
+    <a class="card" href="Nuclear-Standards-Quick-Guide.html">
+      <span class="tag guide">Quick guide</span>
+      <h3>Nuclear Supply Chain Quality Standards</h3>
+      <p>What ISO 9001 and ISO 19443 actually require, and which quality grade applies to your work.</p>
+      <span class="go">Read the guide &rarr;</span>
+    </a>
+  </div>
+
+  <div class="section-title">Growth &amp; marketing</div>
+  <p class="section-sub">Getting your business in front of the right buyers.</p>
+  <div class="grid">
+    <a class="card" href="Marketing-for-Manufacturers-Practical-Guide.html">
+      <span class="tag guide">Guide</span>
+      <h3>Marketing for Manufacturers</h3>
+      <p>A practical marketing guide for SMEs without a marketing team &mdash; channels, proof and a quarterly rhythm.</p>
+      <span class="go">Read the guide &rarr;</span>
+    </a>
+    <a class="card" href="Getting-the-Most-from-Meet-the-Buyer-Events.html">
+      <span class="tag guide">Guide</span>
+      <h3>Getting the Most from 'Meet the Buyer' Events</h3>
+      <p>Before, during and after &mdash; how to turn a networking day into a genuine pipeline.</p>
+      <span class="go">Read the guide &rarr;</span>
+    </a>
+  </div>
+
+  <div class="section-title">Supply chain &amp; quality</div>
+  <p class="section-sub">Understanding readiness, standards and where the risks sit.</p>
+  <div class="grid">
+    <a class="card" href="Demystifying-Supply-Chain-Readiness.html">
+      <span class="tag guide">Guide</span>
+      <h3>Demystifying Supply Chain Readiness</h3>
+      <p>What SCRL (Supply Chain Readiness Level) and demand modelling actually mean for you.</p>
+      <span class="go">Read the guide &rarr;</span>
+    </a>
+    <a class="card" href="Spotting-Counterfeit-Parts-CFSI-Awareness-Guide.html">
+      <span class="tag checklist">Awareness guide</span>
+      <h3>Spotting Counterfeit Parts</h3>
+      <p>A CFSI (Counterfeit, Fraudulent, Suspect Items) awareness guide with warning signs and a response plan.</p>
+      <span class="go">Read the guide &rarr;</span>
+    </a>
+    <a class="card" href="Preparing-for-Your-First-Formal-Audit-or-Accreditation.html">
+      <span class="tag guide">Guide</span>
+      <h3>Preparing for Your First Formal Audit or Accreditation</h3>
+      <p>What assessors actually check, and the gaps that catch first-timers out most often.</p>
+      <span class="go">Read the guide &rarr;</span>
+    </a>
+    <a class="card" href="F4N-Sector-Opportunity-Report-Sample-Extract.html">
+      <span class="tag sample">Sample report</span>
+      <h3>F4N Sector Opportunity Report</h3>
+      <p>An illustrative extract showing the market intelligence F4N-certified companies can access.</p>
+      <span class="go">View the sample &rarr;</span>
+    </a>
+  </div>
+
+  <div class="section-title">Safety, security &amp; compliance</div>
+  <p class="section-sub">The essentials nuclear buyers expect you to have covered.</p>
+  <div class="grid">
+    <a class="card" href="Building-a-Nuclear-Safety-Culture.html">
+      <span class="tag guide">Guide</span>
+      <h3>Building a Nuclear Safety Culture</h3>
+      <p>The INPO/WANO Ten Traits framework, explained for an SME context.</p>
+      <span class="go">Read the guide &rarr;</span>
+    </a>
+    <a class="card" href="Cyber-Security-Essentials-Checklist.html">
+      <span class="tag checklist">Checklist</span>
+      <h3>Cyber Security Essentials for Manufacturers</h3>
+      <p>A non-technical checklist across the five Cyber Essentials control themes.</p>
+      <span class="go">View the checklist &rarr;</span>
+    </a>
+    <a class="card" href="Export-Controls-Customs-Nuclear-Exporters.html">
+      <span class="tag guide">Guide</span>
+      <h3>Export Controls &amp; Customs for Nuclear Exporters</h3>
+      <p>Key concepts to know before exporting nuclear-relevant goods or technology.</p>
+      <span class="go">Read the guide &rarr;</span>
+    </a>
+    <a class="card" href="Data-Protection-Basics-GDPR-for-Manufacturers.html">
+      <span class="tag guide">Guide</span>
+      <h3>Data Protection Basics: GDPR for Manufacturers</h3>
+      <p>The practical basics of UK GDPR compliance, without the legal jargon.</p>
+      <span class="go">Read the guide &rarr;</span>
+    </a>
+    <a class="card" href="Modern-Slavery-Act-Compliance-Guide.html">
+      <span class="tag guide">Guide</span>
+      <h3>Modern Slavery Act Compliance Guide</h3>
+      <p>What your nuclear-sector customers expect, even if the Act doesn't technically apply to you yet.</p>
+      <span class="go">Read the guide &rarr;</span>
+    </a>
+  </div>
+
+  <div class="section-title">Operations &amp; skills</div>
+  <p class="section-sub">Practical improvements you can start this week.</p>
+  <div class="grid">
+    <a class="card" href="Lean-Manufacturing-Quick-Wins.html">
+      <span class="tag checklist">Tip sheet</span>
+      <h3>Lean Manufacturing: Quick Wins for Small Teams</h3>
+      <p>Five small, practical changes &mdash; from 5S to a ten-minute daily huddle.</p>
+      <span class="go">View the tips &rarr;</span>
+    </a>
+    <a class="card" href="Skills-Pipeline-Planning-Tip-Sheet.html">
+      <span class="tag checklist">Tip sheet</span>
+      <h3>Skills Pipeline Planning</h3>
+      <p>Five steps to keep your skills pipeline ahead of nuclear-scale growth.</p>
+      <span class="go">View the tips &rarr;</span>
+    </a>
+  </div>
+
+  <div class="footer">NucCol &middot; Nuclear Collaboration Ltd &middot; Best Practice Hub, produced for ManufacturingUK.org</div>
+</div>
+</body>
+</html>

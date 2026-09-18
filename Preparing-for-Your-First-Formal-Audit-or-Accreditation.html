@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preparing for Your First Audit | NucCol Best Practice</title>
+<meta name="description" content="NucCol Best Practice resource for the UK nuclear supply chain.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#12314F; --blue:#1C7FBB; --purple:#7B2D8E;
+  --bg:#F7FAFC; --card:#FFFFFF; --ink:#16232E; --ink-soft:#4A5C6A;
+  --line:#DCE4EA; --light:#EEF4F8; --light2:#F7F2F9;
+  --amber-bg:#FFF6E5; --amber-line:#E9C46A;
+  --good:#1E8A5F; --focus:#1C7FBB;
+  --radius:14px; --maxw:840px;
+  --font-head:'Fraunces', Georgia, serif;
+  --font-body:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1720; --card:#152230; --ink:#EAF1F6; --ink-soft:#AFC1CE;
+    --line:#28394A; --light:#152B3A; --light2:#2A1F33;
+    --amber-bg:#2E2410; --amber-line:#7A5C1E;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1720; --card:#152230; --ink:#EAF1F6; --ink-soft:#AFC1CE;
+  --line:#28394A; --light:#152B3A; --light2:#2A1F33;
+  --amber-bg:#2E2410; --amber-line:#7A5C1E;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--font-body);
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 20px 72px;}
+.topband{
+  background:linear-gradient(135deg,var(--navy) 0%,#0B2036 100%);
+  color:#fff; padding:34px 20px 40px;
+}
+.topband-inner{max-width:var(--maxw); margin:0 auto;}
+.brand{display:flex; align-items:center; gap:10px; font-size:13px; letter-spacing:.08em; text-transform:uppercase; opacity:.85; font-weight:600;}
+.brand .dot{width:8px;height:8px;border-radius:50%;background:var(--blue);}
+.kicker{margin-top:18px; font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:#8FCBEF; font-weight:700;}
+h1.title{
+  font-family:var(--font-head); font-weight:600; font-size:clamp(26px,5vw,38px);
+  margin:8px 0 10px; line-height:1.15; color:#fff;
+}
+.subtitle{font-size:16px; color:#C9D9E4; max-width:640px; margin:0;}
+.meta-row{display:flex; gap:18px; flex-wrap:wrap; margin-top:22px; font-size:13px; color:#9FB6C6;}
+.meta-row span{display:flex; align-items:center; gap:6px;}
+.card{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+  padding:26px 24px; margin-top:22px;
+}
+h2.h2{
+  font-family:var(--font-head); font-size:21px; font-weight:600; color:var(--navy);
+  margin:0 0 12px; padding-bottom:10px; border-bottom:2px solid var(--light);
+}
+:root[data-theme="dark"] h2.h2, @media (prefers-color-scheme: dark){ }
+h2.h2 .num{color:var(--blue); margin-right:8px;}
+p{color:var(--ink-soft); font-size:15.5px;}
+p.lead{color:var(--ink); font-size:16.5px;}
+ul.blist{margin:10px 0; padding-left:0; list-style:none;}
+ul.blist li{position:relative; padding-left:24px; margin-bottom:10px; font-size:15px; color:var(--ink-soft);}
+ul.blist li:before{content:"—"; position:absolute; left:0; color:var(--blue); font-weight:700;}
+table.tbl{width:100%; border-collapse:collapse; margin:14px 0; font-size:14px;}
+table.tbl th{background:var(--navy); color:#fff; text-align:left; padding:10px 12px; font-weight:600; font-size:13px;}
+table.tbl td{padding:10px 12px; border-bottom:1px solid var(--line); color:var(--ink-soft); vertical-align:top;}
+table.tbl tr:last-child td{border-bottom:none;}
+table.tbl tr:nth-child(even) td{background:var(--light);}
+.note{border-radius:10px; padding:16px 18px; margin:16px 0; font-size:14.5px;}
+.note.amber{background:var(--amber-bg); border:1px solid var(--amber-line); color:var(--ink);}
+.note.blue{background:var(--light); border:1px solid var(--line); color:var(--ink);}
+.note b{color:var(--navy);}
+:root[data-theme="dark"] .note b{color:#8FCBEF;}
+.cta{
+  background:linear-gradient(135deg,var(--blue),var(--navy)); color:#fff; border-radius:var(--radius);
+  padding:26px 24px; margin-top:26px; text-align:center;
+}
+.cta h3{font-family:var(--font-head); margin:0 0 8px; font-size:19px;}
+.cta p{color:#D7E7F0; margin:0 0 16px; font-size:14.5px;}
+.cta a.btn{
+  display:inline-block; background:#fff; color:var(--navy); font-weight:700; text-decoration:none;
+  padding:11px 26px; border-radius:999px; font-size:14px;
+}
+.footer{text-align:center; color:var(--ink-soft); font-size:12.5px; margin-top:30px; padding-top:18px; border-top:1px solid var(--line);}
+.pill{display:inline-block; background:var(--light2); color:var(--purple); font-size:11.5px; font-weight:700; padding:4px 10px; border-radius:999px; letter-spacing:.03em; margin-right:6px;}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+@media(max-width:560px){.grid2{grid-template-columns:1fr;}}
+.stepbox{background:var(--light); border-radius:10px; padding:14px 16px; margin-bottom:10px;}
+.stepbox b{color:var(--navy); display:block; margin-bottom:4px; font-size:14.5px;}
+:root[data-theme="dark"] .stepbox b{color:#8FCBEF;}
+
+a.backlink{display:inline-flex;align-items:center;gap:6px;color:#8FCBEF;text-decoration:none;font-size:13px;font-weight:600;margin-bottom:2px;}
+a.backlink:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+<div class="topband"><div class="topband-inner">
+  <a class="backlink" href="index.html">&larr; All Best Practice resources</a>
+  <div class="brand"><span class="dot"></span> NucCol &nbsp;|&nbsp; Nuclear Collaboration Ltd</div>
+  <div class="kicker"></div>
+  <h1 class="title">Preparing for Your First Formal Audit or Accreditation</h1>
+  <p class="subtitle">What assessors are actually looking for, and the gaps that catch first-timers out most often.</p>
+  <div class="meta-row"><span>6 min read</span><span>Standards &amp; Compliance</span></div>
+</div></div>
+<div class="wrap">
+<div class="card"><h2 class="h2"><span class="num">01</span>The four evidence tests</h2><p class="">Whatever you present as evidence, a good assessor will test it against four questions:</p><table class="tbl"><thead><tr><th>Test</th><th>What it asks</th></tr></thead><tbody><tr><td>Relevance</td><td>Does this evidence actually relate to the requirement being assessed?</td></tr><tr><td>Accuracy</td><td>Is it correct, current, and verifiable?</td></tr><tr><td>Clarity</td><td>Could someone unfamiliar with your business understand it?</td></tr><tr><td>Practicality</td><td>Does it show something that actually happens, not just a policy on paper?</td></tr></tbody></table></div><div class="card"><h2 class="h2"><span class="num">02</span>People are evidence too</h2><p class="">Assessors don't just read documents — they talk to people on the shop floor. If your policy says one thing and your team describes something different, that gap is exactly what gets flagged.</p></div><div class="card"><h2 class="h2"><span class="num">03</span>What assessors check on the day</h2><ul class="blist"><li>Whether documented procedures match what actually happens in practice</li><li>Whether records are complete, current, and easy to retrieve</li><li>Whether staff at all levels can explain their role in quality/safety, not just management</li></ul></div><div class="card"><h2 class="h2"><span class="num">04</span>What comes after</h2><p class="">You'll typically receive a score breakdown and a verification report, which feeds into a Continuous Improvement Plan (CSIP) — the gaps identified aren't a failure, they're the roadmap for what to work on next.</p></div><div class="card"><h2 class="h2"><span class="num">05</span>Common first-time gaps</h2><ul class="blist"><li>Records exist but aren't easy to find or retrieve quickly</li><li>Policies are written but not communicated to frontline staff</li><li>Evidence is anecdotal ('we always do that') rather than documented</li></ul></div>
+<div class="cta">
+  <h3>Want a dry run before the real thing?</h3>
+  <p>F4N's assessment process is designed to prepare you for exactly this kind of scrutiny, with support along the way.</p>
+  <a class="btn" href="https://www.nuccol.co.uk" target="_blank" rel="noopener">Learn about F4N assessment &rarr;</a>
+</div>
+<div class="footer">NucCol &middot; Nuclear Collaboration Ltd &middot; Best Practice resource, produced for ManufacturingUK.org</div>
+</div>
+
+</body>
+</html>
