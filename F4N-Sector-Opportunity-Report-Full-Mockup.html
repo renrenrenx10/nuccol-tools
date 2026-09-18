@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sector Opportunity Report Preview | NucCol Best Practice</title>
+<meta name="description" content="NucCol Best Practice resource for the UK nuclear supply chain.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#12314F; --blue:#1C7FBB; --purple:#7B2D8E;
+  --bg:#EEF2F5; --card:#FFFFFF; --ink:#16232E; --ink-soft:#4A5C6A;
+  --line:#DCE4EA; --light:#EEF4F8; --light2:#F7F2F9;
+  --amber-bg:#FFF6E5; --amber-line:#E9C46A;
+  --font-head:'Fraunces', Georgia, serif;
+  --font-body:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0A1016; --card:#152230; --ink:#EAF1F6; --ink-soft:#AFC1CE;
+    --line:#28394A; --light:#152B3A; --light2:#2A1F33; --amber-bg:#2E2410; --amber-line:#7A5C1E;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0A1016; --card:#152230; --ink:#EAF1F6; --ink-soft:#AFC1CE;
+  --line:#28394A; --light:#152B3A; --light2:#2A1F33; --amber-bg:#2E2410; --amber-line:#7A5C1E;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{background:var(--bg); color:var(--ink); font-family:var(--font-body); line-height:1.55; -webkit-font-smoothing:antialiased;}
+.topband{background:linear-gradient(135deg,var(--navy) 0%,#0B2036 100%); color:#fff; padding:30px 20px 34px;}
+.topband-inner{max-width:960px; margin:0 auto;}
+.brand{display:flex; align-items:center; gap:10px; font-size:13px; letter-spacing:.08em; text-transform:uppercase; opacity:.85; font-weight:600;}
+.brand .dot{width:8px;height:8px;border-radius:50%;background:var(--blue);}
+a.backlink{display:inline-flex;align-items:center;gap:6px;color:#8FCBEF;text-decoration:none;font-size:13px;font-weight:600;margin-bottom:10px;}
+a.backlink:hover{text-decoration:underline;}
+.kicker{margin-top:16px; font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:#8FCBEF; font-weight:700;}
+h1.title{font-family:var(--font-head); font-weight:600; font-size:clamp(24px,4.6vw,34px); margin:8px 0 10px; line-height:1.18; color:#fff;}
+.subtitle{font-size:15.5px; color:#C9D9E4; max-width:640px; margin:0;}
+.note{border-radius:10px; padding:14px 18px; margin:18px auto 0; font-size:14px; max-width:960px;}
+.note.amber{background:var(--amber-bg); border:1px solid var(--amber-line); color:var(--ink);}
+.note b{color:var(--navy);}
+:root[data-theme="dark"] .note b{color:#8FCBEF;}
+
+/* --- Fake PDF-viewer chrome --- */
+.viewer{max-width:960px; margin:22px auto 0; padding:0 20px 80px;}
+.toolbar{
+  background:var(--card); border:1px solid var(--line); border-radius:12px 12px 0 0;
+  padding:12px 18px; display:flex; align-items:center; gap:14px; box-shadow:0 2px 8px rgba(0,0,0,.06);
+}
+.toolbar .fname{font-size:13.5px; font-weight:600; color:var(--ink); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.toolbar .fname .ext{color:var(--ink-soft); font-weight:400;}
+.toolbar .pages{font-size:12.5px; color:var(--ink-soft); flex:none;}
+.toolbar .icons{display:flex; gap:10px; flex:none;}
+.toolbar .icons span{width:26px; height:26px; border-radius:6px; background:var(--light); display:flex; align-items:center; justify-content:center; font-size:13px; color:var(--ink-soft);}
+.pagesarea{background:#C7D1D9; border:1px solid var(--line); border-top:none; border-radius:0 0 12px 12px; padding:28px 0; display:flex; flex-direction:column; align-items:center; gap:24px;}
+:root[data-theme="dark"] .pagesarea{background:#060a0e;}
+.page{
+  background:var(--card); width:min(92%, 760px); border-radius:4px; box-shadow:0 10px 30px rgba(0,0,0,.22);
+  padding:44px 48px 40px; position:relative;
+}
+.pagenum{position:absolute; bottom:16px; right:24px; font-size:11px; color:var(--ink-soft);}
+.pagewm{position:absolute; top:14px; right:20px; font-size:9.5px; letter-spacing:.06em; text-transform:uppercase; color:#C1443C; font-weight:700; border:1px solid #C1443C; padding:2px 8px; border-radius:999px; opacity:.75;}
+.rcover{text-align:center; padding-top:70px; padding-bottom:70px;}
+.rcover .kick{font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--blue); font-weight:700; margin-bottom:18px;}
+.rcover h2{font-family:var(--font-head); font-size:30px; color:var(--navy); margin:0 0 14px; line-height:1.2;}
+:root[data-theme="dark"] .rcover h2{color:#EAF1F6;}
+.rcover .for{font-size:16px; color:var(--ink); margin:26px 0 4px; font-weight:700;}
+.rcover .meta{font-size:13px; color:var(--ink-soft); margin:2px 0;}
+.rcover .rule{width:60px; height:3px; background:var(--blue); margin:22px auto;}
+.rconf{margin-top:40px; font-size:11.5px; color:var(--ink-soft); border-top:1px solid var(--line); padding-top:16px; max-width:420px; margin-left:auto; margin-right:auto;}
+.psec{font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--blue); font-weight:700; margin:0 0 4px;}
+.ph{font-family:var(--font-head); font-size:21px; color:var(--navy); margin:0 0 16px; padding-bottom:10px; border-bottom:2px solid var(--light);}
+:root[data-theme="dark"] .ph{color:#8FCBEF;}
+.page p{color:var(--ink-soft); font-size:14.5px; margin:0 0 12px;}
+.page table{width:100%; border-collapse:collapse; margin:10px 0 14px; font-size:13px;}
+.page th{background:var(--navy); color:#fff; text-align:left; padding:8px 10px; font-weight:600; font-size:12px;}
+.page td{padding:8px 10px; border-bottom:1px solid var(--line); color:var(--ink-soft); vertical-align:top;}
+.page tr:nth-child(even) td{background:var(--light);}
+.page ul{margin:8px 0 12px; padding-left:20px;}
+.page ul li{color:var(--ink-soft); font-size:14px; margin-bottom:6px;}
+.tag-hi{color:#1E8A5F; font-weight:700;}
+.tag-med{color:#B8860B; font-weight:700;}
+.tag-lo{color:var(--ink-soft); font-weight:600;}
+.footer{text-align:center; color:var(--ink-soft); font-size:12.5px; margin:30px auto 0; max-width:960px; padding-top:18px; border-top:1px solid var(--line);}
+.cta{max-width:960px; margin:26px auto 0; background:linear-gradient(135deg,var(--blue),var(--navy)); color:#fff; border-radius:14px; padding:26px 24px; text-align:center;}
+.cta h3{font-family:var(--font-head); margin:0 0 8px; font-size:19px;}
+.cta p{color:#D7E7F0; margin:0 0 16px; font-size:14.5px;}
+.cta a.btn{display:inline-block; background:#fff; color:var(--navy); font-weight:700; text-decoration:none; padding:11px 26px; border-radius:999px; font-size:14px;}
+
+a.backlink{display:inline-flex;align-items:center;gap:6px;color:#8FCBEF;text-decoration:none;font-size:13px;font-weight:600;margin-bottom:2px;}
+a.backlink:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+<div class="topband"><div class="topband-inner">
+  <a class="backlink" href="index2.html">&larr; All Best Practice resources</a>
+  <a class="backlink" href="index2.html">&larr; All Best Practice resources</a>
+  <div class="brand"><span class="dot"></span> NucCol &nbsp;|&nbsp; Nuclear Collaboration Ltd</div>
+  <div class="kicker">Sector Opportunity Report &middot; Full Mock-Up</div>
+  <h1 class="title">What a full Sector Opportunity Report looks like</h1>
+  <p class="subtitle">A page-by-page mock-up of the 12-section report format, built around a fictional company, so you can see the full shape of the real thing before requesting your own.</p>
+</div></div>
+<div class="note amber"><b>This is a mock-up, not a real report.</b> "Example Fabrication Ltd" is fictional and every figure, developer name and gap shown here is illustrative. A real Sector Opportunity Report is generated from your own F4N assessment and SCRL data.</div>
+<div class="viewer">
+  <div class="toolbar">
+    <span class="fname">Example-Fabrication-Ltd-Sector-Opportunity-Report<span class="ext">.pdf</span></span>
+    <span class="pages">12 pages</span>
+    <div class="icons"><span>&#8681;</span><span>&#128438;</span></div>
+  </div>
+  <div class="pagesarea">
+    <div class="page"><div class="pagewm">Illustrative sample</div>
+<div class="rcover">
+  <div class="kick">Nuclear &amp; Clean Energy Sector Opportunity Report</div>
+  <h2>Example Fabrication Ltd</h2>
+  <div class="rule"></div>
+  <div class="for">Prepared for Example Fabrication Ltd</div>
+  <div class="meta">Prepared by NucCol, on behalf of the Nuclear Industry Association</div>
+  <div class="meta">September 2026 &middot; Based on F4N assessment and SCRL data</div>
+  <div class="rconf">This report and its contents are confidential and prepared exclusively for the named recipient. Figures are illustrative and generated from F4N, SCRL and public programme demand data.</div>
+</div>
+<div class="pagenum">Page 1 of 12</div></div><div class="page"><div class="pagewm">Illustrative sample</div>
+<div class="psec">Section 1</div>
+<div class="ph">Executive Summary</div>
+<p>Example Fabrication Ltd holds F4N certification (granted 2025) and a strong Quality &amp; Compliance rating under SCRL. Core capability &mdash; CNC precision machining and sub-assembly &mdash; aligns closely with near-term demand from two SMR developers and one large-scale new build programme.</p>
+<p>The clearest opportunity in the next 12 months sits in <b>SMR developer demand</b> and <b>GW new build</b>, where indicative near-term needs match current capability with only moderate capacity investment required. Opportunities in STEP Fusion, hydrogen and CCUS are earlier-stage and better suited to a 2&ndash;3 year positioning horizon.</p>
+<p>The single largest gap identified is ISO 19443 certification, not yet in place. Closing this gap is the highest-leverage action available in the next two quarters, and is addressed in the 90-day action plan (Section 12).</p>
+<div class="pagenum">Page 2 of 12</div></div><div class="page"><div class="pagewm">Illustrative sample</div>
+<div class="psec">Section 2</div>
+<div class="ph">Company Capability Snapshot</div>
+<table><tbody>
+<tr><td><b>F4N status</b></td><td>Certified (granted 2025), Maintain &amp; Sustain active</td></tr>
+<tr><td><b>Core capability</b></td><td>CNC precision machining, sub-assembly, finishing</td></tr>
+<tr><td><b>Quality standard</b></td><td>ISO 9001:2015 (ISO 19443 not yet certified)</td></tr>
+<tr><td><b>SCRL overall rating</b></td><td>Amber-Green &mdash; strong quality &amp; H&amp;S, capacity rated Amber</td></tr>
+<tr><td><b>Headcount</b></td><td>42 employees</td></tr>
+<tr><td><b>Site(s)</b></td><td>Sheffield, UK &mdash; single shift operation</td></tr>
+</tbody></table>
+<p>This snapshot is drawn from Example Fabrication Ltd's own F4N assessment and SCRL profile, and forms the baseline every demand comparison in this report is measured against.</p>
+<div class="pagenum">Page 3 of 12</div></div><div class="page"><div class="pagewm">Illustrative sample</div>
+<div class="psec">Section 3</div>
+<div class="ph">SMR Developer Demand</div>
+<p>Small Modular Reactor developers represent the fastest-growing near-term demand segment for UK precision manufacturing capability.</p>
+<table><tbody>
+<tr><th>Developer</th><th>Indicative near-term need</th><th>Relevance</th></tr>
+<tr><td>Developer A</td><td>Precision machined reactor internals</td><td><span class="tag-hi">High</span> &mdash; direct capability match</td></tr>
+<tr><td>Developer B</td><td>Fabricated structural assemblies</td><td><span class="tag-med">Medium</span> &mdash; partial match, needs fabrication scale-up</td></tr>
+<tr><td>Developer C</td><td>Electrical/control cabinet assembly</td><td><span class="tag-lo">Low</span> &mdash; outside current scope</td></tr>
+</tbody></table>
+<div class="pagenum">Page 4 of 12</div></div><div class="page"><div class="pagewm">Illustrative sample</div>
+<div class="psec">Section 4</div>
+<div class="ph">GW-Scale New Build Demand</div>
+<p>Large gigawatt-scale new build programmes offer longer-duration, higher-volume contracts, typically requiring ISO 19443 as a condition of Tier 2/3 engagement.</p>
+<table><tbody>
+<tr><th>Programme</th><th>Indicative near-term need</th><th>Relevance</th></tr>
+<tr><td>Large GW new build (Tier 2)</td><td>Machined mechanical components, ongoing volume orders</td><td><span class="tag-hi">High</span> &mdash; strong volume fit once ISO 19443 is in place</td></tr>
+<tr><td>Balance-of-plant packages</td><td>Sub-assembly and finishing services</td><td><span class="tag-med">Medium</span></td></tr>
+</tbody></table>
+<div class="pagenum">Page 5 of 12</div></div><div class="page"><div class="pagewm">Illustrative sample</div>
+<div class="psec">Section 5</div>
+<div class="ph">STEP Fusion Opportunity</div>
+<p>The UK's STEP fusion programme is an earlier-stage opportunity, currently favouring specialist and R&amp;D-stage suppliers over volume manufacturing. Relevance today is limited but expected to grow through the decade.</p>
+<table><tbody>
+<tr><th>Component area</th><th>Indicative timeframe</th><th>Relevance</th></tr>
+<tr><td>Prototype tooling &amp; fixtures</td><td>Now &ndash; 2 years</td><td><span class="tag-med">Medium</span> &mdash; matches precision machining strength</td></tr>
+<tr><td>Vacuum vessel components</td><td>3+ years</td><td><span class="tag-lo">Low</span> &mdash; specialist materials expertise required</td></tr>
+</tbody></table>
+<div class="pagenum">Page 6 of 12</div></div><div class="page"><div class="pagewm">Illustrative sample</div>
+<div class="psec">Section 6</div>
+<div class="ph">Hydrogen Economy Opportunity</div>
+<p>Hydrogen production and storage infrastructure draws on adjacent pressure-vessel and precision fabrication skills, offering a diversification route beyond nuclear-only demand.</p>
+<table><tbody>
+<tr><th>Application area</th><th>Indicative near-term need</th><th>Relevance</th></tr>
+<tr><td>Electrolyser component machining</td><td>Precision machined plates and manifolds</td><td><span class="tag-med">Medium</span></td></tr>
+<tr><td>Storage vessel fabrication</td><td>Welded pressure vessel assemblies</td><td><span class="tag-lo">Low</span> &mdash; requires additional welding accreditation</td></tr>
+</tbody></table>
+<div class="pagenum">Page 7 of 12</div></div><div class="page"><div class="pagewm">Illustrative sample</div>
+<div class="psec">Section 7</div>
+<div class="ph">Carbon Capture, Usage &amp; Storage (CCUS) Opportunity</div>
+<p>CCUS infrastructure projects share quality and traceability expectations with the nuclear sector, making F4N-certified suppliers a natural fit as programmes move from planning into construction.</p>
+<table><tbody>
+<tr><th>Application area</th><th>Indicative near-term need</th><th>Relevance</th></tr>
+<tr><td>Pipeline component machining</td><td>Flanges, fittings, precision-machined connectors</td><td><span class="tag-med">Medium</span></td></tr>
+<tr><td>Compression skid assembly</td><td>Sub-assembly and integration</td><td><span class="tag-lo">Low</span> &mdash; limited current site capacity</td></tr>
+</tbody></table>
+<div class="pagenum">Page 8 of 12</div></div><div class="page"><div class="pagewm">Illustrative sample</div>
+<div class="psec">Section 8</div>
+<div class="ph">Offshore Wind Opportunity</div>
+<p>Offshore wind remains the most volume-driven adjacent sector, though margins are typically tighter than nuclear work. Best suited as a capacity-smoothing opportunity rather than a primary focus.</p>
+<table><tbody>
+<tr><th>Application area</th><th>Indicative near-term need</th><th>Relevance</th></tr>
+<tr><td>Turbine hub components</td><td>Large-format precision machining</td><td><span class="tag-lo">Low</span> &mdash; requires larger machine bed capacity</td></tr>
+<tr><td>Foundation connector fittings</td><td>Volume fabrication</td><td><span class="tag-lo">Low</span> &mdash; tighter margin profile than core work</td></tr>
+</tbody></table>
+<div class="pagenum">Page 9 of 12</div></div><div class="page"><div class="pagewm">Illustrative sample</div>
+<div class="psec">Section 9</div>
+<div class="ph">Capability Gap Analysis</div>
+<table><tbody>
+<tr><th>Area</th><th>Current position</th><th>Gap</th></tr>
+<tr><td>Quality standard</td><td>ISO 9001 held</td><td>ISO 19443 not yet in place &mdash; highest-priority gap</td></tr>
+<tr><td>Capacity</td><td>Single shift operation</td><td>Second shift likely needed to meet GW new build volumes</td></tr>
+<tr><td>Traceability</td><td>Manual, paper-based records</td><td>Digital traceability system recommended before ISO 19443 audit</td></tr>
+<tr><td>Welding accreditation</td><td>Not currently held</td><td>Would unlock hydrogen storage vessel opportunity</td></tr>
+</tbody></table>
+<div class="pagenum">Page 10 of 12</div></div><div class="page"><div class="pagewm">Illustrative sample</div>
+<div class="psec">Section 10</div>
+<div class="ph">Competitive Positioning &amp; Recommendations</div>
+<p><b>Strengths:</b> strong F4N and quality track record, precision machining depth, established relationships with two SMR developer supply chain teams.</p>
+<p><b>Watch-outs:</b> single-shift capacity constrains volume commitments; ISO 19443 gap will exclude Tier 2 GW new build packages until closed.</p>
+<ul>
+  <li>Prioritise SMR developer engagement (Section 3) and GW new build ISO 19443 readiness (Section 4) as the primary 12-month focus.</li>
+  <li>Treat STEP Fusion, hydrogen and CCUS as 2&ndash;3 year diversification options, not immediate priorities.</li>
+  <li>Defer offshore wind unless capacity becomes genuinely spare &mdash; margin profile is less favourable than core nuclear work.</li>
+</ul>
+<div class="pagenum">Page 11 of 12</div></div><div class="page"><div class="pagewm">Illustrative sample</div>
+<div class="psec">Section 11 &amp; 12</div>
+<div class="ph">90-Day Action Plan &amp; Appendix</div>
+<table><tbody>
+<tr><th>Timeframe</th><th>Action</th></tr>
+<tr><td>Days 1&ndash;30</td><td>Gap-assess against ISO 19443 requirements; scope digital traceability options</td></tr>
+<tr><td>Days 31&ndash;60</td><td>Engage Developer A's supply chain team directly; confirm SMR volume forecasts</td></tr>
+<tr><td>Days 61&ndash;90</td><td>Pilot digital traceability on one product line; begin second-shift feasibility review</td></tr>
+</tbody></table>
+<p style="margin-top:22px; font-size:12.5px;"><b>Appendix:</b> full SCRL scoring breakdown, F4N category scores and demand-model source data are provided as separate annexes in a real Sector Opportunity Report and are omitted from this illustrative sample.</p>
+<div class="pagenum">Page 12 of 12</div></div>
+  </div>
+</div>
+<div class="cta">
+  <h3>Want to see your own?</h3>
+  <p>Every NucCol Sector Opportunity Report is generated from your own F4N assessment and SCRL profile &mdash; not a template like this one.</p>
+  <a class="btn" href="https://www.nuccol.co.uk" target="_blank" rel="noopener">Ask about your report &rarr;</a>
+</div>
+<div class="footer">NucCol &middot; Nuclear Collaboration Ltd &middot; Best Practice resource, produced for ManufacturingUK.org</div>
+
+</body>
+</html>
