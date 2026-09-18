@@ -94,6 +94,26 @@ table.tbl tr:nth-child(even) td{background:var(--light);}
 .stepbox{background:var(--light); border-radius:10px; padding:14px 16px; margin-bottom:10px;}
 .stepbox b{color:var(--navy); display:block; margin-bottom:4px; font-size:14.5px;}
 :root[data-theme="dark"] .stepbox b{color:#8FCBEF;}
+.toc{display:flex; flex-wrap:wrap; gap:8px; margin-top:20px;}
+.toc a{font-size:12.5px; font-weight:600; color:#C9D9E4; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); padding:6px 12px; border-radius:999px; text-decoration:none;}
+.toc a:hover{background:rgba(255,255,255,.16); color:#fff;}
+.faq{border-bottom:1px solid var(--line); padding:14px 0;}
+.faq:last-child{border-bottom:none;}
+.faq b{display:block; color:var(--navy); font-size:15px; margin-bottom:6px;}
+:root[data-theme="dark"] .faq b{color:#8FCBEF;}
+.faq p{margin:0;}
+.example{background:var(--light2); border-left:4px solid var(--purple); border-radius:0 10px 10px 0; padding:14px 18px; margin:16px 0; font-size:14.5px;}
+.example b{color:var(--purple); display:block; margin-bottom:4px; font-size:12.5px; text-transform:uppercase; letter-spacing:.04em;}
+.deflist{margin:10px 0;}
+.deflist .term{font-weight:700; color:var(--navy); font-size:15px; margin-top:12px;}
+:root[data-theme="dark"] .deflist .term{color:#8FCBEF;}
+.deflist .def{color:var(--ink-soft); font-size:14.5px; margin:2px 0 0;}
+.glossary{display:grid; grid-template-columns:1fr; gap:2px;}
+.mistake{display:flex; gap:10px; padding:10px 0; border-bottom:1px dashed var(--line); font-size:14.5px; color:var(--ink-soft);}
+.mistake:last-child{border-bottom:none;}
+.mistake .x{color:#C1443C; font-weight:700; flex:none;}
+h3.h3{font-family:var(--font-head); font-size:16px; font-weight:600; color:var(--navy); margin:20px 0 8px;}
+:root[data-theme="dark"] h3.h3{color:#8FCBEF;}
 
 a.backlink{display:inline-flex;align-items:center;gap:6px;color:#8FCBEF;text-decoration:none;font-size:13px;font-weight:600;margin-bottom:2px;}
 a.backlink:hover{text-decoration:underline;}
@@ -101,15 +121,15 @@ a.backlink:hover{text-decoration:underline;}
 </head>
 <body>
 <div class="topband"><div class="topband-inner">
-  <a class="backlink" href="index.html">&larr; All Best Practice resources</a>
+  <a class="backlink" href="index2.html">&larr; All Best Practice resources</a>
   <div class="brand"><span class="dot"></span> NucCol &nbsp;|&nbsp; Nuclear Collaboration Ltd</div>
   <div class="kicker">Quick wins for small teams</div>
   <h1 class="title">Lean Manufacturing</h1>
-  <p class="subtitle">You don't need a lean transformation programme to get real results. Five small, practical changes you can start this week.</p>
-  <div class="meta-row"><span>5 min read</span><span>Operations</span></div>
+  <p class="subtitle">You don't need a lean transformation programme to get real results. Five small, practical changes you can start this week, with the detail behind each one.</p>
+  <div class="meta-row"><span>7 min read</span><span>Operations</span></div>
 </div></div>
 <div class="wrap">
-<div class="card"><h2 class="h2"><span class="num">01</span>Run a 5S pass on one area</h2><p class="">Sort, straighten, shine, standardise, sustain — pick one workbench or cell and just do it. Start this week.</p></div><div class="card"><h2 class="h2"><span class="num">02</span>Put up a simple visual KPI board</h2><p class="">One whiteboard, three or four numbers that matter (output, quality, on-time delivery). Start this week.</p></div><div class="card"><h2 class="h2"><span class="num">03</span>Write SOPs for your top 3 recurring problems</h2><p class="">Not everything — just the three issues that cost you the most time. Start this week.</p></div><div class="card"><h2 class="h2"><span class="num">04</span>Use a simple root-cause method</h2><p class="">Ask 'why' five times on your next defect or delay before acting. Start this week.</p></div><div class="card"><h2 class="h2"><span class="num">05</span>Hold a 10-minute daily huddle</h2><p class="">Same time, same three questions: what went well, what didn't, what needs help. Start this week.</p></div><div class="card"><h2 class="h2"><span class="num">06</span>Why this matters for F4N and CSIP</h2><p class="">These are exactly the kind of practical improvements an F4N assessment and a Continuous Improvement Plan (CSIP) look for — small, evidenced changes that compound over time, not a big-bang transformation.</p></div>
+<div class="card"><h2 class="h2"><span class="num">01</span>Run a 5S pass on one area</h2><p class="">5S stands for Sort, Straighten, Shine, Standardise, Sustain. Pick one workbench or cell — not the whole factory — and work through each step: remove what isn't needed, arrange what remains logically, clean it properly, agree a standard for how it should look, and build a habit of maintaining it. Start this week, on one small area, and let success there build the case for doing more.</p></div><div class="card"><h2 class="h2"><span class="num">02</span>Put up a simple visual KPI board</h2><p class="">One whiteboard, three or four numbers that actually matter — output, quality, on-time delivery, or whatever drives your business — updated daily or weekly where it can be seen by the whole team, not just management. The value isn't sophistication, it's visibility: problems get noticed and acted on faster when everyone can see the trend, not just read about it in a meeting.</p></div><div class="card"><h2 class="h2"><span class="num">03</span>Write SOPs for your top three recurring problems</h2><p class="">Not everything needs a written procedure — just the three issues that cost you the most time or cause the most rework. A one-page SOP that a new starter could follow without asking for help is worth more than a comprehensive manual nobody reads.</p></div><div class="card"><h2 class="h2"><span class="num">04</span>Use a simple root-cause method</h2><p class="">Ask 'why' five times on your next defect or delay before acting — most first answers describe a symptom, not the actual cause. This costs nothing but a few minutes of discipline, and it prevents the same problem recurring next month in a slightly different form.</p><div class="example"><b>A worked example</b>Defect found &rarr; why? Wrong tolerance set &rarr; why? Operator used the wrong job sheet &rarr; why? Job sheets aren't clearly labelled by revision &rarr; why? No standard for revision control on the shop floor. The fix here is a labelling standard, not just retraining one operator.</div></div><div class="card"><h2 class="h2"><span class="num">05</span>Hold a 10-minute daily huddle</h2><p class="">Same time, same three questions: what went well, what didn't, what needs help. Kept strictly to ten minutes and standing up if possible, this catches small problems while they're still small, rather than letting them accumulate into a bigger issue by the end of the week.</p></div><div class="card"><h2 class="h2"><span class="num">06</span>Why this matters for F4N and CSIP</h2><p class="">These are exactly the kind of practical, evidenced improvements an F4N assessment and a Continuous Improvement Plan (CSIP) look for — small, real changes that compound over time, not a big-bang transformation programme that's hard to sustain.</p></div><div class="card"><h2 class="h2"><span class="num">07</span>Frequently asked questions</h2><div class="glossary"><div class="faq"><b>Do I need lean consultants to do any of this?</b><p>No — everything above can be started this week with no external help and no budget. External support can add value later, but it isn't a prerequisite to begin.</p></div><div class="faq"><b>How do I know if it's working?</b><p>Your KPI board is the answer — if the numbers you chose to track are moving in the right direction over a few weeks, it's working.</p></div></div></div>
 <div class="cta">
   <h3>Want structured support for continuous improvement?</h3>
   <p>F4N's verification and CSIP process is built to recognise and build on exactly these kinds of practical steps.</p>

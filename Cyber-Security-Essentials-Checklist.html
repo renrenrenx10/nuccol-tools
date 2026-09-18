@@ -94,6 +94,26 @@ table.tbl tr:nth-child(even) td{background:var(--light);}
 .stepbox{background:var(--light); border-radius:10px; padding:14px 16px; margin-bottom:10px;}
 .stepbox b{color:var(--navy); display:block; margin-bottom:4px; font-size:14.5px;}
 :root[data-theme="dark"] .stepbox b{color:#8FCBEF;}
+.toc{display:flex; flex-wrap:wrap; gap:8px; margin-top:20px;}
+.toc a{font-size:12.5px; font-weight:600; color:#C9D9E4; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); padding:6px 12px; border-radius:999px; text-decoration:none;}
+.toc a:hover{background:rgba(255,255,255,.16); color:#fff;}
+.faq{border-bottom:1px solid var(--line); padding:14px 0;}
+.faq:last-child{border-bottom:none;}
+.faq b{display:block; color:var(--navy); font-size:15px; margin-bottom:6px;}
+:root[data-theme="dark"] .faq b{color:#8FCBEF;}
+.faq p{margin:0;}
+.example{background:var(--light2); border-left:4px solid var(--purple); border-radius:0 10px 10px 0; padding:14px 18px; margin:16px 0; font-size:14.5px;}
+.example b{color:var(--purple); display:block; margin-bottom:4px; font-size:12.5px; text-transform:uppercase; letter-spacing:.04em;}
+.deflist{margin:10px 0;}
+.deflist .term{font-weight:700; color:var(--navy); font-size:15px; margin-top:12px;}
+:root[data-theme="dark"] .deflist .term{color:#8FCBEF;}
+.deflist .def{color:var(--ink-soft); font-size:14.5px; margin:2px 0 0;}
+.glossary{display:grid; grid-template-columns:1fr; gap:2px;}
+.mistake{display:flex; gap:10px; padding:10px 0; border-bottom:1px dashed var(--line); font-size:14.5px; color:var(--ink-soft);}
+.mistake:last-child{border-bottom:none;}
+.mistake .x{color:#C1443C; font-weight:700; flex:none;}
+h3.h3{font-family:var(--font-head); font-size:16px; font-weight:600; color:var(--navy); margin:20px 0 8px;}
+:root[data-theme="dark"] h3.h3{color:#8FCBEF;}
 
 a.backlink{display:inline-flex;align-items:center;gap:6px;color:#8FCBEF;text-decoration:none;font-size:13px;font-weight:600;margin-bottom:2px;}
 a.backlink:hover{text-decoration:underline;}
@@ -101,15 +121,15 @@ a.backlink:hover{text-decoration:underline;}
 </head>
 <body>
 <div class="topband"><div class="topband-inner">
-  <a class="backlink" href="index.html">&larr; All Best Practice resources</a>
+  <a class="backlink" href="index2.html">&larr; All Best Practice resources</a>
   <div class="brand"><span class="dot"></span> NucCol &nbsp;|&nbsp; Nuclear Collaboration Ltd</div>
   <div class="kicker">A non-technical checklist</div>
   <h1 class="title">Cyber Security Essentials for Manufacturers</h1>
-  <p class="subtitle">You don't need to be a cyber expert to get the basics right. Five control areas, explained in plain English.</p>
-  <div class="meta-row"><span>5 min read</span><span>Security</span></div>
+  <p class="subtitle">You don't need to be a cyber expert to get the basics right. Five control areas, explained in plain English, with the reasoning behind each one.</p>
+  <div class="meta-row"><span>7 min read</span><span>Security</span></div>
 </div></div>
 <div class="wrap">
-<div class="card"><h2 class="h2"><span class="num">01</span>Firewalls</h2><p class="">Boundary controls that stop unauthorised traffic reaching your network.</p><ul class="blist"><li>Firewall enabled on all internet connections</li><li>Default admin passwords changed</li></ul></div><div class="card"><h2 class="h2"><span class="num">02</span>Secure Configuration</h2><p class="">Devices and software set up securely from the start, not left on defaults.</p><ul class="blist"><li>Unnecessary software/accounts removed from devices</li><li>Auto-run features disabled</li></ul></div><div class="card"><h2 class="h2"><span class="num">03</span>Security Update Management</h2><p class="">Keeping software patched against known vulnerabilities.</p><ul class="blist"><li>Operating systems and software kept up to date</li><li>Unsupported software identified and replaced</li></ul></div><div class="card"><h2 class="h2"><span class="num">04</span>User Access Control</h2><p class="">Making sure people only have access to what they need.</p><ul class="blist"><li>Unique logins for every user — no shared accounts</li><li>Admin rights limited to those who need them</li></ul></div><div class="card"><h2 class="h2"><span class="num">05</span>Malware Protection</h2><p class="">Defending against viruses and malicious software.</p><ul class="blist"><li>Anti-malware software installed and kept current</li><li>Staff know not to open unexpected attachments</li></ul></div><div class="card"><h2 class="h2"><span class="num">06</span>Why this matters beyond compliance</h2><p class="">Security of Information is one of the seven F4N categories precisely because a weak link here doesn't just risk your data — it can compromise the safety and security of the wider nuclear programme you're supplying into.</p></div>
+<div class="card"><h2 class="h2"><span class="num">01</span>Firewalls</h2><p class="lead">Boundary controls that stop unauthorised traffic reaching your network — think of it as a locked front door for your internet connection.</p><ul class="blist"><li>Firewall enabled on all internet connections</li><li>Default admin passwords changed from the factory setting</li></ul></div><div class="card"><h2 class="h2"><span class="num">02</span>Secure Configuration</h2><p class="lead">Devices and software set up securely from the start, rather than left on their factory defaults, which are often designed for ease of setup rather than security.</p><ul class="blist"><li>Unnecessary software and accounts removed from devices</li><li>Auto-run features disabled so untrusted media can't execute automatically</li></ul></div><div class="card"><h2 class="h2"><span class="num">03</span>Security Update Management</h2><p class="lead">Keeping software patched against known vulnerabilities — most breaches exploit gaps that a routine update would already have closed.</p><ul class="blist"><li>Operating systems and software kept up to date</li><li>Unsupported software identified and replaced before it becomes a liability</li></ul></div><div class="card"><h2 class="h2"><span class="num">04</span>User Access Control</h2><p class="lead">Making sure people only have access to what they actually need to do their job — the fewer people with wide access, the smaller your exposure if an account is compromised.</p><ul class="blist"><li>Unique logins for every user — no shared accounts</li><li>Admin rights limited to those who genuinely need them</li></ul></div><div class="card"><h2 class="h2"><span class="num">05</span>Malware Protection</h2><p class="lead">Defending against viruses and other malicious software that can spread through email, removable media or compromised websites.</p><ul class="blist"><li>Anti-malware software installed and kept current</li><li>Staff know not to open unexpected attachments or links, even from familiar-looking senders</li></ul></div><div class="card"><h2 class="h2"><span class="num">06</span>Why this matters beyond compliance</h2><p class="">Security of Information is one of the seven F4N categories precisely because a weak link here doesn't just risk your own data — it can compromise the safety and security of the wider nuclear programme you're supplying into. A single compromised laptop holding design drawings can have consequences well beyond your own business.</p><div class="example"><b>A realistic scenario</b>An employee's laptop is infected via a phishing email and technical drawings for a nuclear component are exposed. Even if no safety impact results, this is a reportable security event with real consequences for your customer relationship and your F4N status.</div></div><div class="card"><h2 class="h2"><span class="num">07</span>Frequently asked questions</h2><div class="glossary"><div class="faq"><b>Do I need to be Cyber Essentials certified to work in nuclear?</b><p>Not universally required for every contract, but it's widely expected across the supply chain and maps directly onto the five themes above.</p></div><div class="faq"><b>We're a very small business — is this overkill for us?</b><p>The five controls above are deliberately basic and proportionate — they're the minimum expected of any business handling sensitive information, regardless of size.</p></div></div></div>
 <div class="cta">
   <h3>Cyber Essentials is the recognised next step</h3>
   <p>UK Cyber Essentials certification maps closely onto these five control themes and is widely expected across the nuclear supply chain.</p>

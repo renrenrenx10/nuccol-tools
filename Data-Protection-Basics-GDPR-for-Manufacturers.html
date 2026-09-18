@@ -94,6 +94,26 @@ table.tbl tr:nth-child(even) td{background:var(--light);}
 .stepbox{background:var(--light); border-radius:10px; padding:14px 16px; margin-bottom:10px;}
 .stepbox b{color:var(--navy); display:block; margin-bottom:4px; font-size:14.5px;}
 :root[data-theme="dark"] .stepbox b{color:#8FCBEF;}
+.toc{display:flex; flex-wrap:wrap; gap:8px; margin-top:20px;}
+.toc a{font-size:12.5px; font-weight:600; color:#C9D9E4; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); padding:6px 12px; border-radius:999px; text-decoration:none;}
+.toc a:hover{background:rgba(255,255,255,.16); color:#fff;}
+.faq{border-bottom:1px solid var(--line); padding:14px 0;}
+.faq:last-child{border-bottom:none;}
+.faq b{display:block; color:var(--navy); font-size:15px; margin-bottom:6px;}
+:root[data-theme="dark"] .faq b{color:#8FCBEF;}
+.faq p{margin:0;}
+.example{background:var(--light2); border-left:4px solid var(--purple); border-radius:0 10px 10px 0; padding:14px 18px; margin:16px 0; font-size:14.5px;}
+.example b{color:var(--purple); display:block; margin-bottom:4px; font-size:12.5px; text-transform:uppercase; letter-spacing:.04em;}
+.deflist{margin:10px 0;}
+.deflist .term{font-weight:700; color:var(--navy); font-size:15px; margin-top:12px;}
+:root[data-theme="dark"] .deflist .term{color:#8FCBEF;}
+.deflist .def{color:var(--ink-soft); font-size:14.5px; margin:2px 0 0;}
+.glossary{display:grid; grid-template-columns:1fr; gap:2px;}
+.mistake{display:flex; gap:10px; padding:10px 0; border-bottom:1px dashed var(--line); font-size:14.5px; color:var(--ink-soft);}
+.mistake:last-child{border-bottom:none;}
+.mistake .x{color:#C1443C; font-weight:700; flex:none;}
+h3.h3{font-family:var(--font-head); font-size:16px; font-weight:600; color:var(--navy); margin:20px 0 8px;}
+:root[data-theme="dark"] h3.h3{color:#8FCBEF;}
 
 a.backlink{display:inline-flex;align-items:center;gap:6px;color:#8FCBEF;text-decoration:none;font-size:13px;font-weight:600;margin-bottom:2px;}
 a.backlink:hover{text-decoration:underline;}
@@ -101,15 +121,15 @@ a.backlink:hover{text-decoration:underline;}
 </head>
 <body>
 <div class="topband"><div class="topband-inner">
-  <a class="backlink" href="index.html">&larr; All Best Practice resources</a>
+  <a class="backlink" href="index2.html">&larr; All Best Practice resources</a>
   <div class="brand"><span class="dot"></span> NucCol &nbsp;|&nbsp; Nuclear Collaboration Ltd</div>
   <div class="kicker">GDPR for manufacturers</div>
   <h1 class="title">Data Protection Basics</h1>
-  <p class="subtitle">The practical basics of UK GDPR compliance, without the legal jargon.</p>
-  <div class="meta-row"><span>5 min read</span><span>Legal &amp; Compliance</span></div>
+  <p class="subtitle">The practical basics of UK GDPR compliance, without the legal jargon — what it actually requires of a typical manufacturing SME.</p>
+  <div class="meta-row"><span>7 min read</span><span>Legal &amp; Compliance</span></div>
 </div></div>
 <div class="wrap">
-<div class="note amber">This guide is general information, not legal advice. Always seek specific guidance for your own situation.</div><div class="card"><h2 class="h2"><span class="num">01</span>The seven principles</h2><table class="tbl"><thead><tr><th>Principle</th><th>In plain English</th></tr></thead><tbody><tr><td>Lawfulness, fairness, transparency</td><td>Have a valid reason to hold data, and be open about it</td></tr><tr><td>Purpose limitation</td><td>Only use data for the reason you collected it</td></tr><tr><td>Data minimisation</td><td>Only collect what you actually need</td></tr><tr><td>Accuracy</td><td>Keep data correct and up to date</td></tr><tr><td>Storage limitation</td><td>Don't keep data longer than necessary</td></tr><tr><td>Integrity and confidentiality</td><td>Keep data secure</td></tr><tr><td>Accountability</td><td>Be able to show you're complying, not just claim it</td></tr></tbody></table></div><div class="card"><h2 class="h2"><span class="num">02</span>Controller vs processor</h2><p class="">A <b>controller</b> decides why and how personal data is processed. A <b>processor</b> handles data on a controller's behalf (e.g. a payroll provider). Most manufacturers are controllers for their own staff and customer data, and may be processors if they handle data for a client.</p></div><div class="card"><h2 class="h2"><span class="num">03</span>A practical checklist</h2><ul class="blist"><li>Know what personal data you hold, and why</li><li>Have a basic privacy notice for staff and customers</li><li>Have a process for responding to a data access request</li><li>Report any serious data breach within 72 hours where required</li></ul></div>
+<div class="note amber">This guide is general information, not legal advice. Always seek specific guidance for your own situation.</div><div class="card"><h2 class="h2"><span class="num">01</span>The seven principles</h2><table class="tbl"><thead><tr><th>Principle</th><th>In plain English</th></tr></thead><tbody><tr><td>Lawfulness, fairness, transparency</td><td>Have a valid reason to hold data, and be open with people about it</td></tr><tr><td>Purpose limitation</td><td>Only use data for the reason you originally collected it</td></tr><tr><td>Data minimisation</td><td>Only collect what you actually need, not everything that might be useful someday</td></tr><tr><td>Accuracy</td><td>Keep data correct and up to date, and correct it when you learn it's wrong</td></tr><tr><td>Storage limitation</td><td>Don't keep data longer than necessary for the purpose you collected it for</td></tr><tr><td>Integrity and confidentiality</td><td>Keep data secure against loss, misuse or unauthorised access</td></tr><tr><td>Accountability</td><td>Be able to show you're complying, not just claim it — this usually means having some record of your decisions</td></tr></tbody></table></div><div class="card"><h2 class="h2"><span class="num">02</span>Controller vs processor — why the distinction matters</h2><p class="">A <b>controller</b> decides why and how personal data is processed. A <b>processor</b> handles data on a controller's behalf, such as a payroll provider or IT support company. Most manufacturers are controllers for their own staff and customer data, and may additionally be processors if they handle data for a client's employees, for example. Knowing which role you're in for a given piece of data determines what your obligations actually are.</p></div><div class="card"><h2 class="h2"><span class="num">03</span>A practical checklist</h2><ul class="blist"><li>Know what personal data you hold, and why you're holding it</li><li>Have a basic privacy notice available to staff and customers, explaining what you do with their data</li><li>Have a process for responding to a data access request within the required timeframe</li><li>Report any serious data breach within 72 hours where required by law</li></ul></div><div class="card"><h2 class="h2"><span class="num">04</span>Common mistakes SMEs make here</h2><div class="mistake"><span class="x">&#10007;</span><span>Collecting more personal data than is actually needed, 'just in case'.</span></div><div class="mistake"><span class="x">&#10007;</span><span>Having no clear process for what to do if someone asks what data you hold on them.</span></div><div class="mistake"><span class="x">&#10007;</span><span>Assuming GDPR only applies to large organisations with big customer databases.</span></div></div><div class="card"><h2 class="h2"><span class="num">05</span>Frequently asked questions</h2><div class="glossary"><div class="faq"><b>Does GDPR really apply to a small manufacturer like us?</b><p>Yes — if you hold personal data on staff, customers or suppliers, the principles above apply regardless of company size.</p></div><div class="faq"><b>What counts as a 'serious' data breach?</b><p>Broadly, one likely to result in risk to people's rights and freedoms — if in doubt, treat it seriously and seek advice rather than assuming it's too minor to matter.</p></div></div></div>
 <div class="cta">
   <h3>Keep it proportionate</h3>
   <p>Data protection doesn't need to be complicated for a typical SME — the basics above cover most day-to-day risk.</p>

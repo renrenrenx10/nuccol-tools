@@ -94,6 +94,26 @@ table.tbl tr:nth-child(even) td{background:var(--light);}
 .stepbox{background:var(--light); border-radius:10px; padding:14px 16px; margin-bottom:10px;}
 .stepbox b{color:var(--navy); display:block; margin-bottom:4px; font-size:14.5px;}
 :root[data-theme="dark"] .stepbox b{color:#8FCBEF;}
+.toc{display:flex; flex-wrap:wrap; gap:8px; margin-top:20px;}
+.toc a{font-size:12.5px; font-weight:600; color:#C9D9E4; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); padding:6px 12px; border-radius:999px; text-decoration:none;}
+.toc a:hover{background:rgba(255,255,255,.16); color:#fff;}
+.faq{border-bottom:1px solid var(--line); padding:14px 0;}
+.faq:last-child{border-bottom:none;}
+.faq b{display:block; color:var(--navy); font-size:15px; margin-bottom:6px;}
+:root[data-theme="dark"] .faq b{color:#8FCBEF;}
+.faq p{margin:0;}
+.example{background:var(--light2); border-left:4px solid var(--purple); border-radius:0 10px 10px 0; padding:14px 18px; margin:16px 0; font-size:14.5px;}
+.example b{color:var(--purple); display:block; margin-bottom:4px; font-size:12.5px; text-transform:uppercase; letter-spacing:.04em;}
+.deflist{margin:10px 0;}
+.deflist .term{font-weight:700; color:var(--navy); font-size:15px; margin-top:12px;}
+:root[data-theme="dark"] .deflist .term{color:#8FCBEF;}
+.deflist .def{color:var(--ink-soft); font-size:14.5px; margin:2px 0 0;}
+.glossary{display:grid; grid-template-columns:1fr; gap:2px;}
+.mistake{display:flex; gap:10px; padding:10px 0; border-bottom:1px dashed var(--line); font-size:14.5px; color:var(--ink-soft);}
+.mistake:last-child{border-bottom:none;}
+.mistake .x{color:#C1443C; font-weight:700; flex:none;}
+h3.h3{font-family:var(--font-head); font-size:16px; font-weight:600; color:var(--navy); margin:20px 0 8px;}
+:root[data-theme="dark"] h3.h3{color:#8FCBEF;}
 
 a.backlink{display:inline-flex;align-items:center;gap:6px;color:#8FCBEF;text-decoration:none;font-size:13px;font-weight:600;margin-bottom:2px;}
 a.backlink:hover{text-decoration:underline;}
@@ -101,15 +121,15 @@ a.backlink:hover{text-decoration:underline;}
 </head>
 <body>
 <div class="topband"><div class="topband-inner">
-  <a class="backlink" href="index.html">&larr; All Best Practice resources</a>
+  <a class="backlink" href="index2.html">&larr; All Best Practice resources</a>
   <div class="brand"><span class="dot"></span> NucCol &nbsp;|&nbsp; Nuclear Collaboration Ltd</div>
   <div class="kicker"></div>
   <h1 class="title">Export Controls &amp; Customs for Nuclear Exporters</h1>
-  <p class="subtitle">The key concepts you need to know before exporting nuclear-relevant goods or technology.</p>
-  <div class="meta-row"><span>6 min read</span><span>Legal &amp; Compliance</span></div>
+  <p class="subtitle">The key concepts you need to know before exporting nuclear-relevant goods or technology, explained in plain English.</p>
+  <div class="meta-row"><span>7 min read</span><span>Legal &amp; Compliance</span></div>
 </div></div>
 <div class="wrap">
-<div class="note amber">This guide is general information, not legal advice. Always seek specific guidance for your own situation.</div><div class="card"><h2 class="h2"><span class="num">01</span>Key concepts</h2><table class="tbl"><thead><tr><th>Term</th><th>What it means</th></tr></thead><tbody><tr><td>Dual-use items</td><td>Goods or technology with both civilian and military/strategic applications</td></tr><tr><td>Strategic export controls</td><td>UK rules restricting export of sensitive goods, software and technology</td></tr><tr><td>Commodity codes</td><td>Codes used to classify goods for customs and control purposes</td></tr><tr><td>Sanctions regimes</td><td>Restrictions on trade with specific countries, entities or individuals</td></tr><tr><td>SPIRE</td><td>The UK's system for applying for export licences</td></tr><tr><td>AEO</td><td>Authorised Economic Operator — a trusted-trader customs status</td></tr></tbody></table></div><div class="card"><h2 class="h2"><span class="num">02</span>A sensible starting checklist</h2><ul class="blist"><li>Check whether what you're exporting could be classed as dual-use or nuclear-related.</li><li>Screen your customer and destination country against current sanctions lists.</li><li>Confirm the correct commodity code before shipping.</li><li>Establish whether an export licence is required before you commit to a contract.</li></ul></div>
+<div class="note amber">This guide is general information, not legal advice. Always seek specific guidance for your own situation before acting.</div><div class="card"><h2 class="h2"><span class="num">01</span>Why this applies even if you feel like a small player</h2><p class="lead">Export controls apply based on what you're exporting and to whom, not on the size of your business. Many SME manufacturers are surprised to learn that a component that seems generic can be classed as dual-use or nuclear-related once its intended application is considered — which is exactly why checking early matters more than assuming you're too small to be affected.</p></div><div class="card"><h2 class="h2"><span class="num">02</span>Key concepts</h2><div class="deflist"><div class="term">Dual-use items</div><p class="def">Goods or technology with both civilian and military/strategic applications — the same part can be entirely benign in one context and controlled in another, depending on its end use.</p><div class="term">Strategic export controls</div><p class="def">UK rules restricting the export of sensitive goods, software and technology, administered separately from ordinary customs processes.</p><div class="term">Commodity codes</div><p class="def">Codes used to classify goods for customs and control purposes — getting the wrong code can trigger delays or compliance issues even for a routine shipment.</p><div class="term">Sanctions regimes</div><p class="def">Restrictions on trade with specific countries, entities or individuals, which can change with little notice and need to be checked at the time of each shipment.</p><div class="term">SPIRE</div><p class="def">The UK's system for applying for export licences, used when a licence is required before goods can be shipped.</p><div class="term">AEO (Authorised Economic Operator)</div><p class="def">A trusted-trader customs status that can simplify and speed up customs processes for businesses that hold it.</p></div></div><div class="card"><h2 class="h2"><span class="num">03</span>A sensible starting checklist</h2><ul class="blist"><li>Check whether what you're exporting could be classed as dual-use or nuclear-related, even if it seems generic at first glance.</li><li>Screen your customer and destination country against current sanctions lists before committing to an order.</li><li>Confirm the correct commodity code before shipping, rather than reusing a code from a previous, similar shipment without checking.</li><li>Establish whether an export licence is required before you commit to a contract, not after goods are ready to ship.</li></ul></div><div class="card"><h2 class="h2"><span class="num">04</span>Frequently asked questions</h2><div class="glossary"><div class="faq"><b>How do I know if my product needs an export licence?</b><p>This depends on the specific goods, their classification, and the destination — specialist export control guidance is the right route to a definitive answer, not a general assumption either way.</p></div><div class="faq"><b>What happens if I get this wrong?</b><p>Export control breaches can carry serious legal and financial consequences, which is exactly why checking in advance, even for routine-seeming exports, is worth the time.</p></div></div></div>
 <div class="cta">
   <h3>Not sure where you stand?</h3>
   <p>NucCol can point you towards specialist export control guidance relevant to nuclear-sector suppliers.</p>

@@ -94,6 +94,26 @@ table.tbl tr:nth-child(even) td{background:var(--light);}
 .stepbox{background:var(--light); border-radius:10px; padding:14px 16px; margin-bottom:10px;}
 .stepbox b{color:var(--navy); display:block; margin-bottom:4px; font-size:14.5px;}
 :root[data-theme="dark"] .stepbox b{color:#8FCBEF;}
+.toc{display:flex; flex-wrap:wrap; gap:8px; margin-top:20px;}
+.toc a{font-size:12.5px; font-weight:600; color:#C9D9E4; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); padding:6px 12px; border-radius:999px; text-decoration:none;}
+.toc a:hover{background:rgba(255,255,255,.16); color:#fff;}
+.faq{border-bottom:1px solid var(--line); padding:14px 0;}
+.faq:last-child{border-bottom:none;}
+.faq b{display:block; color:var(--navy); font-size:15px; margin-bottom:6px;}
+:root[data-theme="dark"] .faq b{color:#8FCBEF;}
+.faq p{margin:0;}
+.example{background:var(--light2); border-left:4px solid var(--purple); border-radius:0 10px 10px 0; padding:14px 18px; margin:16px 0; font-size:14.5px;}
+.example b{color:var(--purple); display:block; margin-bottom:4px; font-size:12.5px; text-transform:uppercase; letter-spacing:.04em;}
+.deflist{margin:10px 0;}
+.deflist .term{font-weight:700; color:var(--navy); font-size:15px; margin-top:12px;}
+:root[data-theme="dark"] .deflist .term{color:#8FCBEF;}
+.deflist .def{color:var(--ink-soft); font-size:14.5px; margin:2px 0 0;}
+.glossary{display:grid; grid-template-columns:1fr; gap:2px;}
+.mistake{display:flex; gap:10px; padding:10px 0; border-bottom:1px dashed var(--line); font-size:14.5px; color:var(--ink-soft);}
+.mistake:last-child{border-bottom:none;}
+.mistake .x{color:#C1443C; font-weight:700; flex:none;}
+h3.h3{font-family:var(--font-head); font-size:16px; font-weight:600; color:var(--navy); margin:20px 0 8px;}
+:root[data-theme="dark"] h3.h3{color:#8FCBEF;}
 
 a.backlink{display:inline-flex;align-items:center;gap:6px;color:#8FCBEF;text-decoration:none;font-size:13px;font-weight:600;margin-bottom:2px;}
 a.backlink:hover{text-decoration:underline;}
@@ -101,15 +121,15 @@ a.backlink:hover{text-decoration:underline;}
 </head>
 <body>
 <div class="topband"><div class="topband-inner">
-  <a class="backlink" href="index.html">&larr; All Best Practice resources</a>
+  <a class="backlink" href="index2.html">&larr; All Best Practice resources</a>
   <div class="brand"><span class="dot"></span> NucCol &nbsp;|&nbsp; Nuclear Collaboration Ltd</div>
   <div class="kicker">A tip sheet for growing manufacturers</div>
   <h1 class="title">Skills Pipeline Planning</h1>
-  <p class="subtitle">Five practical steps to make sure your skills pipeline keeps pace with nuclear-scale growth.</p>
-  <div class="meta-row"><span>4 min read</span><span>Skills &amp; Workforce</span></div>
+  <p class="subtitle">Five practical steps to make sure your skills pipeline keeps pace with nuclear-scale growth, with the detail behind each one.</p>
+  <div class="meta-row"><span>7 min read</span><span>Skills &amp; Workforce</span></div>
 </div></div>
 <div class="wrap">
-<div class="card"><h2 class="h2"><span class="num">01</span>Build a skills matrix — before you need it</h2><p class="">A simple grid of who can do what (and to what level) turns skills gaps from a surprise into a visible, manageable risk. Start this week with a spreadsheet, not a system.</p></div><div class="card"><h2 class="h2"><span class="num">02</span>Plan for vetting lead time</h2><p class="">Nuclear-sector vetting and security clearances can take weeks or months. Build that lead time into your recruitment planning now, not when a contract is already signed.</p></div><div class="card"><h2 class="h2"><span class="num">03</span>Cross-train your critical roles</h2><p class="">Identify the two or three roles where a single point of failure would hurt most, and start cross-training a second person into each of them.</p></div><div class="card"><h2 class="h2"><span class="num">04</span>Keep competence records, not just certificates</h2><p class="">Buyers increasingly want evidence of ongoing competence, not just a certificate on a wall. A simple log of training, sign-offs and refreshers goes a long way in an audit.</p></div><div class="card"><h2 class="h2"><span class="num">05</span>Use the sector's skills support</h2><p class="">The National Nuclear Strategic Plan for Skills exists precisely to help companies like yours plan and fund training. Don't try to solve this alone.</p></div>
+<div class="card"><h2 class="h2"><span class="num">01</span>Build a skills matrix — before you need it</h2><p class="">A simple grid of who can do what, and to what level, turns skills gaps from a surprise into a visible, manageable risk. List every critical task down one side and every team member across the top, then mark each cell as trained, competent, or expert. Start this week with a spreadsheet, not a system — the value is in having it exist, not in how sophisticated it looks.</p><div class="example"><b>What it reveals</b>Most SMEs discover through this exercise that one or two people hold knowledge nobody else has. That's the single-point-of-failure risk the next tip addresses directly.</div></div><div class="card"><h2 class="h2"><span class="num">02</span>Plan for vetting lead time</h2><p class="">Nuclear-sector vetting and security clearances can take weeks or, in some cases, months longer than a typical recruitment process. Build that lead time into your recruitment planning now, rather than discovering it once a contract is already signed and the clock is running against you.</p><ul class="blist"><li>Ask your customer early what level of clearance or vetting their contract will require.</li><li>Start the process as soon as an offer is accepted, not once someone starts work.</li><li>Keep a small buffer of pre-vetted contingency staff if your workload is likely to spike.</li></ul></div><div class="card"><h2 class="h2"><span class="num">03</span>Cross-train your critical roles</h2><p class="">Use your skills matrix to identify the two or three roles where a single point of failure would hurt most &mdash; typically a specialist machine operator, a quality sign-off role, or someone holding an unwritten process in their head. Start cross-training a second person into each of them, even at a basic level.</p></div><div class="card"><h2 class="h2"><span class="num">04</span>Keep competence records, not just certificates</h2><p class="">Buyers increasingly want evidence of ongoing competence, not just a certificate on a wall from several years ago. A simple log of training completed, sign-offs given, and refreshers scheduled goes a long way in an audit, and is far easier to produce on the day if it's kept up to date continuously rather than reconstructed after the fact.</p></div><div class="card"><h2 class="h2"><span class="num">05</span>Use the sector's skills support, rather than solving this alone</h2><p class="">The National Nuclear Strategic Plan for Skills exists precisely to help companies like yours plan and fund training, apprenticeships and career pathways into the sector. Many SMEs aren't aware this support exists, or assume it's only for larger organisations — it isn't.</p></div><div class="card"><h2 class="h2"><span class="num">06</span>A simple 90-day starting plan</h2><div class="stepbox"><b>Weeks 1–2</b>Build your skills matrix and identify your top single-point-of-failure risks.</div><div class="stepbox"><b>Weeks 3–6</b>Start cross-training on your highest-risk role; begin a simple competence-record log.</div><div class="stepbox"><b>Weeks 7–12</b>Contact a sector skills body about funding or apprenticeship support relevant to your gaps.</div></div><div class="card"><h2 class="h2"><span class="num">07</span>Frequently asked questions</h2><div class="glossary"><div class="faq"><b>We're a small team — is a skills matrix overkill for us?</b><p>The smaller the team, the more a single-point-of-failure risk can hurt you. A basic matrix for even five or six people is worth the hour it takes to build.</p></div><div class="faq"><b>Where do I find out about nuclear-sector skills funding?</b><p>NucCol can point you towards the relevant sector skills programmes for your size and type of business — get in touch to be pointed in the right direction.</p></div></div></div>
 <div class="cta">
   <h3>Need help planning your pipeline?</h3>
   <p>NucCol can point you towards sector skills programmes and funding routes relevant to your workforce plan.</p>

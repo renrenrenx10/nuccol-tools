@@ -94,14 +94,36 @@ table.tbl tr:nth-child(even) td{background:var(--light);}
 .stepbox{background:var(--light); border-radius:10px; padding:14px 16px; margin-bottom:10px;}
 .stepbox b{color:var(--navy); display:block; margin-bottom:4px; font-size:14.5px;}
 :root[data-theme="dark"] .stepbox b{color:#8FCBEF;}
+.toc{display:flex; flex-wrap:wrap; gap:8px; margin-top:20px;}
+.toc a{font-size:12.5px; font-weight:600; color:#C9D9E4; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); padding:6px 12px; border-radius:999px; text-decoration:none;}
+.toc a:hover{background:rgba(255,255,255,.16); color:#fff;}
+.faq{border-bottom:1px solid var(--line); padding:14px 0;}
+.faq:last-child{border-bottom:none;}
+.faq b{display:block; color:var(--navy); font-size:15px; margin-bottom:6px;}
+:root[data-theme="dark"] .faq b{color:#8FCBEF;}
+.faq p{margin:0;}
+.example{background:var(--light2); border-left:4px solid var(--purple); border-radius:0 10px 10px 0; padding:14px 18px; margin:16px 0; font-size:14.5px;}
+.example b{color:var(--purple); display:block; margin-bottom:4px; font-size:12.5px; text-transform:uppercase; letter-spacing:.04em;}
+.deflist{margin:10px 0;}
+.deflist .term{font-weight:700; color:var(--navy); font-size:15px; margin-top:12px;}
+:root[data-theme="dark"] .deflist .term{color:#8FCBEF;}
+.deflist .def{color:var(--ink-soft); font-size:14.5px; margin:2px 0 0;}
+.glossary{display:grid; grid-template-columns:1fr; gap:2px;}
+.mistake{display:flex; gap:10px; padding:10px 0; border-bottom:1px dashed var(--line); font-size:14.5px; color:var(--ink-soft);}
+.mistake:last-child{border-bottom:none;}
+.mistake .x{color:#C1443C; font-weight:700; flex:none;}
+h3.h3{font-family:var(--font-head); font-size:16px; font-weight:600; color:var(--navy); margin:20px 0 8px;}
+:root[data-theme="dark"] h3.h3{color:#8FCBEF;}
 
 .topband{background:linear-gradient(135deg,var(--purple) 0%,var(--navy) 100%);}
-.catlabel{font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--blue); font-weight:700; margin:22px 0 8px;}
+.catlabel{font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--blue); font-weight:700; margin:26px 0 2px;}
 .catlabel:first-child{margin-top:4px;}
+.catdesc{font-size:13.5px; color:var(--ink-soft); margin:0 0 10px;}
 .qrow{display:flex; align-items:flex-start; gap:12px; padding:12px; border-radius:10px; cursor:pointer; margin-bottom:6px; transition:background .15s;}
 .qrow:hover{background:var(--light);}
 .qbox{width:20px; height:20px; margin-top:2px; accent-color:var(--blue); flex:none; cursor:pointer;}
-.qtext{font-size:15px; color:var(--ink);}
+.qtext{font-size:15px; color:var(--ink); display:block;}
+.qwhy{display:block; font-size:13px; color:var(--ink-soft); font-weight:400; margin-top:4px;}
 #scorewrap{position:sticky; top:12px; z-index:5;}
 .scorecard{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:20px 22px; margin-top:-40px; margin-bottom:22px; box-shadow:0 8px 24px rgba(0,0,0,.12);}
 .scoretop{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;}
@@ -115,6 +137,12 @@ table.tbl tr:nth-child(even) td{background:var(--light);}
 :root[data-theme="dark"] .scoreband b{color:#8FCBEF;}
 .resetbtn{background:none; border:1px solid var(--line); color:var(--ink-soft); font-size:13px; padding:6px 14px; border-radius:999px; cursor:pointer; margin-top:14px;}
 .resetbtn:hover{border-color:var(--blue); color:var(--blue);}
+.intro{color:var(--ink-soft); font-size:15px; margin:0 0 18px;}
+.h2b{font-family:var(--font-head); font-size:19px; font-weight:600; color:var(--navy); margin:0 0 12px; padding-bottom:8px; border-bottom:2px solid var(--light);}
+:root[data-theme="dark"] .h2b{color:#8FCBEF;}
+.afterlist{margin:10px 0; padding-left:0; list-style:none;}
+.afterlist li{position:relative; padding-left:24px; margin-bottom:10px; font-size:14.5px; color:var(--ink-soft);}
+.afterlist li:before{content:"—"; position:absolute; left:0; color:var(--blue); font-weight:700;}
 
 a.backlink{display:inline-flex;align-items:center;gap:6px;color:#8FCBEF;text-decoration:none;font-size:13px;font-weight:600;margin-bottom:2px;}
 a.backlink:hover{text-decoration:underline;}
@@ -122,7 +150,7 @@ a.backlink:hover{text-decoration:underline;}
 </head>
 <body>
 <div class="topband"><div class="topband-inner">
-  <a class="backlink" href="index.html">&larr; All Best Practice resources</a>
+  <a class="backlink" href="index2.html">&larr; All Best Practice resources</a>
   <div class="brand"><span class="dot"></span> NucCol &nbsp;|&nbsp; Nuclear Collaboration Ltd</div>
   <div class="kicker">Interactive Self-Assessment</div>
   <h1 class="title">Is Your Business Nuclear-Ready?</h1>
@@ -139,71 +167,84 @@ a.backlink:hover{text-decoration:underline;}
   </div>
 </div>
 <div class="card">
-<div class="catlabel">Nuclear Industry Fundamentals</div>
+  <div class="h2b">About this self-assessment</div>
+  <p class="intro">This is based on the seven categories F4N (Fit For Nuclear) uses to assess UK manufacturers: Nuclear Industry Fundamentals, Nuclear Safety Culture, Quality &amp; Compliance, Leadership &amp; Governance, Human Performance, Supply Chain Readiness, and Security of Information. Each question below has a short note explaining why it matters &mdash; read it even if you're unsure how to answer, since understanding the "why" is often more useful than the tick itself. There's no pass mark and nobody sees your answers but you; it exists purely to help you have an honest conversation with yourself (and your team) about where you actually stand today.</p>
+</div>
+<div class="card">
+<div class="catlabel">Nuclear Industry Fundamentals</div><p class="catdesc">The basics of how the sector works, what buyers expect, and what recognised certification signals.</p>
         <label class="qrow" for="q1">
           <input type="checkbox" id="q1" class="qbox" data-cat="Nuclear Industry Fundamentals">
-          <span class="qtext">We understand the basics of the UK civil nuclear sector and how our products/services could fit in.</span>
+          <span class="qtext">We understand the basics of the UK civil nuclear sector and how our products/services could fit in.<span class="qwhy">This isn&#x27;t about being a nuclear expert — it&#x27;s about knowing enough of the landscape (reactor types, key programmes, typical supply chain tiers) to talk credibly with a buyer.</span></span>
         </label>
         <label class="qrow" for="q2">
           <input type="checkbox" id="q2" class="qbox" data-cat="Nuclear Industry Fundamentals">
-          <span class="qtext">We know what F4N (Fit For Nuclear) is and what a certificate signals to buyers.</span>
-        </label><div class="catlabel">Nuclear Safety Culture</div>
+          <span class="qtext">We know what F4N (Fit For Nuclear) is and what a certificate signals to buyers.<span class="qwhy">F4N is the recognised assessment route into this sector. Buyers use it as a fast, trusted signal of readiness — not knowing what it is puts you a step behind before a conversation even starts.</span></span>
+        </label><div class="catlabel">Nuclear Safety Culture</div><p class="catdesc">How safety thinking actually shows up day to day, not just in a policy document.</p>
         <label class="qrow" for="q3">
           <input type="checkbox" id="q3" class="qbox" data-cat="Nuclear Safety Culture">
-          <span class="qtext">Our leadership can describe what &#x27;safety culture&#x27; means in practice, not just in policy.</span>
+          <span class="qtext">Our leadership can describe what &#x27;safety culture&#x27; means in practice, not just in policy.<span class="qwhy">If a leader can only point to a document rather than describe a real behaviour or decision, that&#x27;s usually a sign the culture is aspirational rather than lived.</span></span>
         </label>
         <label class="qrow" for="q4">
           <input type="checkbox" id="q4" class="qbox" data-cat="Nuclear Safety Culture">
-          <span class="qtext">Employees would feel comfortable raising a safety concern without fear of blame.</span>
-        </label><div class="catlabel">Quality &amp; Compliance</div>
+          <span class="qtext">Employees would feel comfortable raising a safety concern without fear of blame.<span class="qwhy">This is one of the most reliable predictors of a healthy safety culture — and one assessors specifically probe for by talking to staff directly, not just management.</span></span>
+        </label><div class="catlabel">Quality &amp; Compliance</div><p class="catdesc">Your quality management foundation, and how it maps onto nuclear-specific expectations.</p>
         <label class="qrow" for="q5">
           <input type="checkbox" id="q5" class="qbox" data-cat="Quality &amp; Compliance">
-          <span class="qtext">We hold ISO 9001 certification (or are actively working towards it).</span>
+          <span class="qtext">We hold ISO 9001 certification (or are actively working towards it).<span class="qwhy">This is the non-negotiable foundation almost everything else in this category builds on.</span></span>
         </label>
         <label class="qrow" for="q6">
           <input type="checkbox" id="q6" class="qbox" data-cat="Quality &amp; Compliance">
-          <span class="qtext">We understand what ISO 19443 adds on top of ISO 9001 for the nuclear supply chain.</span>
+          <span class="qtext">We understand what ISO 19443 adds on top of ISO 9001 for the nuclear supply chain.<span class="qwhy">ISO 19443 adds nuclear-specific expectations — independence of verification, traceability, safety culture — for items classed as Important To Nuclear Safety (ITNS).</span></span>
         </label>
         <label class="qrow" for="q7">
           <input type="checkbox" id="q7" class="qbox" data-cat="Quality &amp; Compliance">
-          <span class="qtext">We have a document control and traceability system for parts and records.</span>
-        </label><div class="catlabel">Leadership &amp; Governance</div>
+          <span class="qtext">We have a document control and traceability system for parts and records.<span class="qwhy">Traceability is consistently the biggest practical gap SMEs discover once they start engaging with nuclear-specific requirements — worth checking honestly now.</span></span>
+        </label><div class="catlabel">Leadership &amp; Governance</div><p class="catdesc">Whether safety and quality decisions have clear, visible ownership at the top.</p>
         <label class="qrow" for="q8">
           <input type="checkbox" id="q8" class="qbox" data-cat="Leadership &amp; Governance">
-          <span class="qtext">Senior leaders are visibly and personally involved in quality and safety decisions.</span>
+          <span class="qtext">Senior leaders are visibly and personally involved in quality and safety decisions.<span class="qwhy">Visible involvement — not just sign-off — is what assessors and buyers are actually looking for here.</span></span>
         </label>
         <label class="qrow" for="q9">
           <input type="checkbox" id="q9" class="qbox" data-cat="Leadership &amp; Governance">
-          <span class="qtext">We have clear governance for who signs off design, quality and safety-critical decisions.</span>
-        </label><div class="catlabel">Human Performance</div>
+          <span class="qtext">We have clear governance for who signs off design, quality and safety-critical decisions.<span class="qwhy">Ambiguity about who has final authority on a safety-relevant decision is a common and serious gap in growing SMEs.</span></span>
+        </label><div class="catlabel">Human Performance</div><p class="catdesc">The everyday tools and habits that prevent small mistakes becoming big problems.</p>
         <label class="qrow" for="q10">
           <input type="checkbox" id="q10" class="qbox" data-cat="Human Performance">
-          <span class="qtext">We use error-prevention tools (e.g. checklists, self-checking, peer-checking) on critical tasks.</span>
+          <span class="qtext">We use error-prevention tools (e.g. checklists, self-checking, peer-checking) on critical tasks.<span class="qwhy">Simple tools like these are proven to catch mistakes before they become defects — and cost very little to introduce.</span></span>
         </label>
         <label class="qrow" for="q11">
           <input type="checkbox" id="q11" class="qbox" data-cat="Human Performance">
-          <span class="qtext">We have a formal process for investigating mistakes and near-misses, not just outcomes.</span>
-        </label><div class="catlabel">Supply Chain Readiness</div>
+          <span class="qtext">We have a formal process for investigating mistakes and near-misses, not just outcomes.<span class="qwhy">Investigating near-misses, not just actual failures, is what separates a mature operation from one that only reacts after harm has already occurred.</span></span>
+        </label><div class="catlabel">Supply Chain Readiness</div><p class="catdesc">How well you understand your own supply chain, capacity and exposure to risk.</p>
         <label class="qrow" for="q12">
           <input type="checkbox" id="q12" class="qbox" data-cat="Supply Chain Readiness">
-          <span class="qtext">We know our own supply chain well enough to answer a customer&#x27;s traceability questions.</span>
+          <span class="qtext">We know our own supply chain well enough to answer a customer&#x27;s traceability questions.<span class="qwhy">Buyers will ask where your materials and sub-components come from — being able to answer confidently and quickly is a real differentiator.</span></span>
         </label>
         <label class="qrow" for="q13">
           <input type="checkbox" id="q13" class="qbox" data-cat="Supply Chain Readiness">
-          <span class="qtext">We have assessed our financial and operational capacity to take on nuclear-scale contracts.</span>
+          <span class="qtext">We have assessed our financial and operational capacity to take on nuclear-scale contracts.<span class="qwhy">This protects you as much as the buyer — taking on more than you can safely deliver is a risk to your own business, not just theirs.</span></span>
         </label>
         <label class="qrow" for="q14">
           <input type="checkbox" id="q14" class="qbox" data-cat="Supply Chain Readiness">
-          <span class="qtext">We understand basic export control and counterfeit-parts (CFSI) awareness.</span>
-        </label><div class="catlabel">Security of Information</div>
+          <span class="qtext">We understand basic export control and counterfeit-parts (CFSI) awareness.<span class="qwhy">Both are areas where a small, proactive awareness effort now prevents a much bigger problem later.</span></span>
+        </label><div class="catlabel">Security of Information</div><p class="catdesc">Protecting the sensitive technical and commercial information nuclear work involves.</p>
         <label class="qrow" for="q15">
           <input type="checkbox" id="q15" class="qbox" data-cat="Security of Information">
-          <span class="qtext">We have basic cyber security controls in place (e.g. aligned to Cyber Essentials).</span>
+          <span class="qtext">We have basic cyber security controls in place (e.g. aligned to Cyber Essentials).<span class="qwhy">The five Cyber Essentials control themes (firewalls, secure configuration, patching, access control, malware protection) are the recognised baseline expected across the sector.</span></span>
         </label>
         <label class="qrow" for="q16">
           <input type="checkbox" id="q16" class="qbox" data-cat="Security of Information">
-          <span class="qtext">We control who can access sensitive technical and commercial information.</span>
+          <span class="qtext">We control who can access sensitive technical and commercial information.<span class="qwhy">Limiting access to only those who need it is one of the simplest, lowest-cost controls available — and one of the most commonly overlooked in growing businesses.</span></span>
         </label>
+</div>
+<div class="card">
+  <div class="h2b">What to do with your result</div>
+  <ul class="afterlist">
+    <li>Don't treat a low score as bad news — it simply tells you where a formal F4N assessment is likely to add the most value first.</li>
+    <li>Share this with a colleague or two and compare answers — differences between how people at different levels of the business see things are often the most useful finding of all.</li>
+    <li>Use the category names above to jump to the matching guide on the Best Practice Hub for a deeper dive into any area where you scored lower than expected.</li>
+    <li>Revisit this in three to six months — readiness is something you build over time, and tracking change is more useful than a single snapshot.</li>
+  </ul>
 </div>
 
 <div class="cta">
@@ -228,11 +269,11 @@ a.backlink:hover{text-decoration:underline;}
   function bandFor(score, total){
     var pct = score/total;
     if(pct <= 0.28){
-      return {t:'Early stage', d:'Nuclear readiness is still an early conversation for you. That is completely normal — most manufacturers start here. Focus first on understanding F4N and what it assesses.'};
+      return {t:'Early stage', d:'Nuclear readiness is still an early conversation for you. That is completely normal — most manufacturers start here, often with no nuclear-specific experience at all. The most useful next step is not to try to close every gap at once, but to understand the F4N framework properly, since it will show you exactly which of the seven areas above matter most for your specific business. Many of the guides linked from this hub (starting with the Beginner\'s Guide) were written for exactly this stage.'};
     } else if(pct <= 0.66){
-      return {t:'Building the foundations', d:'You have real building blocks in place. The gaps are likely specific and fixable — a formal assessment (like F4N) will show you exactly where to focus next.'};
+      return {t:'Building the foundations', d:'You have real building blocks in place across several of the seven areas. The gaps that remain are likely specific and fixable rather than fundamental — a formal F4N assessment will show you precisely where to focus next, rather than leaving you guessing. This is a good stage to start engaging with sector events and to gap-assess against ISO 19443 if you haven\'t already.'};
     } else {
-      return {t:'Well placed to engage', d:'You look well positioned for the nuclear supply chain. A F4N assessment would likely confirm strong readiness and highlight the final steps to certification.'};
+      return {t:'Well placed to engage', d:'You look well positioned for the nuclear supply chain across most of the seven areas assessed here. A formal F4N assessment would likely confirm strong readiness overall and highlight the final, specific steps needed for certification. At this stage, the priority shifts from foundational readiness to visibility — getting onto the Nuclear Supplier Database and building buyer relationships through events.'};
     }
   }
 

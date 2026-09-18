@@ -94,6 +94,26 @@ table.tbl tr:nth-child(even) td{background:var(--light);}
 .stepbox{background:var(--light); border-radius:10px; padding:14px 16px; margin-bottom:10px;}
 .stepbox b{color:var(--navy); display:block; margin-bottom:4px; font-size:14.5px;}
 :root[data-theme="dark"] .stepbox b{color:#8FCBEF;}
+.toc{display:flex; flex-wrap:wrap; gap:8px; margin-top:20px;}
+.toc a{font-size:12.5px; font-weight:600; color:#C9D9E4; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); padding:6px 12px; border-radius:999px; text-decoration:none;}
+.toc a:hover{background:rgba(255,255,255,.16); color:#fff;}
+.faq{border-bottom:1px solid var(--line); padding:14px 0;}
+.faq:last-child{border-bottom:none;}
+.faq b{display:block; color:var(--navy); font-size:15px; margin-bottom:6px;}
+:root[data-theme="dark"] .faq b{color:#8FCBEF;}
+.faq p{margin:0;}
+.example{background:var(--light2); border-left:4px solid var(--purple); border-radius:0 10px 10px 0; padding:14px 18px; margin:16px 0; font-size:14.5px;}
+.example b{color:var(--purple); display:block; margin-bottom:4px; font-size:12.5px; text-transform:uppercase; letter-spacing:.04em;}
+.deflist{margin:10px 0;}
+.deflist .term{font-weight:700; color:var(--navy); font-size:15px; margin-top:12px;}
+:root[data-theme="dark"] .deflist .term{color:#8FCBEF;}
+.deflist .def{color:var(--ink-soft); font-size:14.5px; margin:2px 0 0;}
+.glossary{display:grid; grid-template-columns:1fr; gap:2px;}
+.mistake{display:flex; gap:10px; padding:10px 0; border-bottom:1px dashed var(--line); font-size:14.5px; color:var(--ink-soft);}
+.mistake:last-child{border-bottom:none;}
+.mistake .x{color:#C1443C; font-weight:700; flex:none;}
+h3.h3{font-family:var(--font-head); font-size:16px; font-weight:600; color:var(--navy); margin:20px 0 8px;}
+:root[data-theme="dark"] h3.h3{color:#8FCBEF;}
 
 a.backlink{display:inline-flex;align-items:center;gap:6px;color:#8FCBEF;text-decoration:none;font-size:13px;font-weight:600;margin-bottom:2px;}
 a.backlink:hover{text-decoration:underline;}
@@ -101,15 +121,15 @@ a.backlink:hover{text-decoration:underline;}
 </head>
 <body>
 <div class="topband"><div class="topband-inner">
-  <a class="backlink" href="index.html">&larr; All Best Practice resources</a>
+  <a class="backlink" href="index2.html">&larr; All Best Practice resources</a>
   <div class="brand"><span class="dot"></span> NucCol &nbsp;|&nbsp; Nuclear Collaboration Ltd</div>
   <div class="kicker">A CFSI awareness guide</div>
   <h1 class="title">Spotting Counterfeit Parts</h1>
-  <p class="subtitle">Counterfeit, Fraudulent and Suspect Items (CFSI) are a real and growing risk in complex supply chains &amp;mdash; here's what to watch for.</p>
-  <div class="meta-row"><span>5 min read</span><span>Supply Chain</span></div>
+  <p class="subtitle">Counterfeit, Fraudulent and Suspect Items (CFSI) are a real and growing risk in complex supply chains — here's what to watch for, and exactly what to do if you're suspicious.</p>
+  <div class="meta-row"><span>7 min read</span><span>Supply Chain</span></div>
 </div></div>
 <div class="wrap">
-<div class="card"><h2 class="h2"><span class="num">01</span>What CFSI actually covers</h2><table class="tbl"><thead><tr><th>Category</th><th>Meaning</th></tr></thead><tbody><tr><td>Counterfeit</td><td>Deliberately made to look like a genuine, approved item</td></tr><tr><td>Fraudulent</td><td>Misrepresented origin, certification or test results</td></tr><tr><td>Suspect</td><td>Not confirmed genuine — insufficient evidence either way</td></tr></tbody></table></div><div class="card"><h2 class="h2"><span class="num">02</span>Warning signs at purchasing stage</h2><ul class="blist"><li>Price significantly below market rate for the specification</li><li>Vague or unverifiable supply chain history</li><li>Pressure to bypass normal procurement or verification steps</li><li>Documentation that looks inconsistent or recently altered</li></ul></div><div class="card"><h2 class="h2"><span class="num">03</span>Warning signs at goods-receipt</h2><ul class="blist"><li>Packaging, labelling or markings that don't quite match the expected standard</li><li>Physical inconsistencies (finish, weight, dimensions) versus known-good parts</li><li>Missing or incomplete certificates of conformity</li></ul></div><div class="note amber">Warning signs are not proof. They're reasons to stop and check &mdash; not to make accusations.</div><div class="card"><h2 class="h2"><span class="num">04</span>What to do if you're suspicious</h2><table class="tbl"><thead><tr><th>Step</th><th>Action</th></tr></thead><tbody><tr><td>1. Stop & quarantine</td><td>Isolate the item — don't use it, don't return it yet.</td></tr><tr><td>2. Report</td><td>Notify your quality function and your customer, per your reporting procedure.</td></tr><tr><td>3. Don't investigate alone</td><td>CFSI investigations follow specific protocols — this isn't a DIY task.</td></tr><tr><td>4. Follow through</td><td>Track the item and outcome to closure, and feed learning back into your process.</td></tr></tbody></table></div>
+<div class="card"><h2 class="h2"><span class="num">01</span>What CFSI actually covers</h2><table class="tbl"><thead><tr><th>Category</th><th>Meaning</th></tr></thead><tbody><tr><td>Counterfeit</td><td>Deliberately made to look like a genuine, approved item, without authorisation</td></tr><tr><td>Fraudulent</td><td>Misrepresented origin, certification or test results, whether or not the physical item itself is genuine</td></tr><tr><td>Suspect</td><td>Not confirmed genuine — insufficient evidence either way, and treated with caution until resolved</td></tr></tbody></table></div><div class="card"><h2 class="h2"><span class="num">02</span>Why this risk exists at all</h2><p class="">Complex, multi-tier supply chains create opportunities for counterfeit or misrepresented items to enter the chain, sometimes unknowingly even to the immediate seller. This isn't about assuming bad faith everywhere — it's about building routine checks that catch the rare cases before they cause harm.</p></div><div class="card"><h2 class="h2"><span class="num">03</span>Warning signs at purchasing stage</h2><ul class="blist"><li>Price significantly below market rate for the specification, with no clear explanation</li><li>Vague or unverifiable supply chain history for the item</li><li>Pressure to bypass normal procurement or verification steps to secure a deal quickly</li><li>Documentation that looks inconsistent, incomplete, or recently altered</li></ul></div><div class="card"><h2 class="h2"><span class="num">04</span>Warning signs at goods-receipt</h2><ul class="blist"><li>Packaging, labelling or markings that don't quite match the expected standard or previous deliveries</li><li>Physical inconsistencies — finish, weight, dimensions — versus known-good parts you've received before</li><li>Missing or incomplete certificates of conformity accompanying the delivery</li></ul></div><div class="note amber">Warning signs are not proof. They're reasons to stop and check &mdash; not to make accusations. Most flagged items turn out to have an innocent explanation, and the process exists precisely to resolve that quickly and fairly.</div><div class="card"><h2 class="h2"><span class="num">05</span>What to do if you're suspicious</h2><table class="tbl"><thead><tr><th>Step</th><th>Action</th></tr></thead><tbody><tr><td>1. Stop &amp; quarantine</td><td>Isolate the item physically — don't use it, and don't return it to the supplier yet.</td></tr><tr><td>2. Report</td><td>Notify your quality function and your customer promptly, following your own reporting procedure.</td></tr><tr><td>3. Don't investigate alone</td><td>CFSI investigations follow specific protocols involving specialist input — this isn't a task to handle informally.</td></tr><tr><td>4. Follow through</td><td>Track the item and the outcome to closure, and feed the learning back into your purchasing and goods-receipt process.</td></tr></tbody></table></div><div class="card"><h2 class="h2"><span class="num">06</span>Frequently asked questions</h2><div class="glossary"><div class="faq"><b>What if I'm wrong and the item turns out to be genuine?</b><p>That's a normal and expected outcome of a healthy CFSI process — raising a concern that turns out unfounded is far preferable to missing a genuine one.</p></div><div class="faq"><b>Do I need special training to spot CFSI?</b><p>Basic awareness, like the warning signs above, is enough for most staff. Specialist investigation, if a concern is confirmed, is a separate step handled by trained personnel.</p></div></div></div>
 <div class="cta">
   <h3>Build this into your quality system</h3>
   <p>CFSI awareness is a practical part of the Supply Chain Readiness area assessed under F4N.</p>

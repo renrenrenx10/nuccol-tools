@@ -94,6 +94,26 @@ table.tbl tr:nth-child(even) td{background:var(--light);}
 .stepbox{background:var(--light); border-radius:10px; padding:14px 16px; margin-bottom:10px;}
 .stepbox b{color:var(--navy); display:block; margin-bottom:4px; font-size:14.5px;}
 :root[data-theme="dark"] .stepbox b{color:#8FCBEF;}
+.toc{display:flex; flex-wrap:wrap; gap:8px; margin-top:20px;}
+.toc a{font-size:12.5px; font-weight:600; color:#C9D9E4; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); padding:6px 12px; border-radius:999px; text-decoration:none;}
+.toc a:hover{background:rgba(255,255,255,.16); color:#fff;}
+.faq{border-bottom:1px solid var(--line); padding:14px 0;}
+.faq:last-child{border-bottom:none;}
+.faq b{display:block; color:var(--navy); font-size:15px; margin-bottom:6px;}
+:root[data-theme="dark"] .faq b{color:#8FCBEF;}
+.faq p{margin:0;}
+.example{background:var(--light2); border-left:4px solid var(--purple); border-radius:0 10px 10px 0; padding:14px 18px; margin:16px 0; font-size:14.5px;}
+.example b{color:var(--purple); display:block; margin-bottom:4px; font-size:12.5px; text-transform:uppercase; letter-spacing:.04em;}
+.deflist{margin:10px 0;}
+.deflist .term{font-weight:700; color:var(--navy); font-size:15px; margin-top:12px;}
+:root[data-theme="dark"] .deflist .term{color:#8FCBEF;}
+.deflist .def{color:var(--ink-soft); font-size:14.5px; margin:2px 0 0;}
+.glossary{display:grid; grid-template-columns:1fr; gap:2px;}
+.mistake{display:flex; gap:10px; padding:10px 0; border-bottom:1px dashed var(--line); font-size:14.5px; color:var(--ink-soft);}
+.mistake:last-child{border-bottom:none;}
+.mistake .x{color:#C1443C; font-weight:700; flex:none;}
+h3.h3{font-family:var(--font-head); font-size:16px; font-weight:600; color:var(--navy); margin:20px 0 8px;}
+:root[data-theme="dark"] h3.h3{color:#8FCBEF;}
 
 a.backlink{display:inline-flex;align-items:center;gap:6px;color:#8FCBEF;text-decoration:none;font-size:13px;font-weight:600;margin-bottom:2px;}
 a.backlink:hover{text-decoration:underline;}
@@ -101,15 +121,15 @@ a.backlink:hover{text-decoration:underline;}
 </head>
 <body>
 <div class="topband"><div class="topband-inner">
-  <a class="backlink" href="index.html">&larr; All Best Practice resources</a>
+  <a class="backlink" href="index2.html">&larr; All Best Practice resources</a>
   <div class="brand"><span class="dot"></span> NucCol &nbsp;|&nbsp; Nuclear Collaboration Ltd</div>
   <div class="kicker"></div>
   <h1 class="title">Building a Nuclear Safety Culture</h1>
-  <p class="subtitle">The INPO/WANO 'Ten Traits' framework, explained for an SME context.</p>
-  <div class="meta-row"><span>6 min read</span><span>Safety Culture</span></div>
+  <p class="subtitle">The INPO/WANO 'Ten Traits' framework, explained in depth for an SME context — what each trait actually looks like in a small manufacturing business.</p>
+  <div class="meta-row"><span>8 min read</span><span>Safety Culture</span></div>
 </div></div>
 <div class="wrap">
-<div class="card"><h2 class="h2"><span class="num">01</span>Individual Commitment to Safety</h2><table class="tbl"><tbody><tr><td><b>Personal accountability</b></td><td>Everyone knows their own role in keeping things safe — not just 'someone else's job'.</td></tr><tr><td><b>Questioning attitude</b></td><td>People are encouraged to ask 'is this right?' rather than assume it is.</td></tr><tr><td><b>Effective safety communication</b></td><td>Concerns and lessons are shared openly, not filtered upward.</td></tr></tbody></table></div><div class="card"><h2 class="h2"><span class="num">02</span>Management Commitment to Safety</h2><table class="tbl"><tbody><tr><td><b>Leadership safety values and actions</b></td><td>Leaders visibly prioritise safety, especially when it's inconvenient.</td></tr><tr><td><b>Decision-making</b></td><td>Safety is weighed explicitly in decisions, not assumed to be 'fine'.</td></tr><tr><td><b>Respectful work environment</b></td><td>People feel able to raise issues without fear of blame.</td></tr></tbody></table></div><div class="card"><h2 class="h2"><span class="num">03</span>Management Systems</h2><table class="tbl"><tbody><tr><td><b>Continuous learning</b></td><td>Near-misses and mistakes are treated as learning opportunities.</td></tr><tr><td><b>Problem identification and resolution</b></td><td>Issues are tracked to genuine closure, not just logged.</td></tr><tr><td><b>Environment for raising concerns</b></td><td>There's a clear, safe route to raise a concern at any level.</td></tr><tr><td><b>Work processes</b></td><td>Procedures reflect how work is actually done, and are kept current.</td></tr></tbody></table></div>
+<div class="card"><h2 class="h2"><span class="num">01</span>What 'safety culture' actually means</h2><p class="lead">Safety culture isn't a poster on the wall or a line in a policy document — it's the sum of the everyday, often unspoken assumptions and behaviours that shape how people in your business actually act when nobody's watching. The INPO/WANO Ten Traits framework, widely used across the international nuclear industry, breaks this into ten observable traits across three categories, giving you something concrete to assess and build, rather than an abstract aspiration.</p></div><div class="card"><h2 class="h2"><span class="num">02</span>Individual Commitment to Safety</h2><table class="tbl"><tbody><tr><td><b>Personal accountability</b></td><td>Everyone knows their own role in keeping things safe — not just 'someone else's job'. In an SME, this often means an operator feeling genuinely responsible for flagging a concern, not just following instructions.</td></tr><tr><td><b>Questioning attitude</b></td><td>People are encouraged to ask 'is this right?' rather than assume it is, even when under time pressure. A healthy sign is a junior team member feeling comfortable pausing a job to check something.</td></tr><tr><td><b>Effective safety communication</b></td><td>Concerns and lessons are shared openly, not filtered upward or softened before reaching management.</td></tr></tbody></table></div><div class="card"><h2 class="h2"><span class="num">03</span>Management Commitment to Safety</h2><table class="tbl"><tbody><tr><td><b>Leadership safety values and actions</b></td><td>Leaders visibly prioritise safety, especially when it's inconvenient — for example, accepting a delay to fix an issue rather than pushing through a deadline.</td></tr><tr><td><b>Decision-making</b></td><td>Safety is weighed explicitly in decisions, not assumed to be 'fine' by default. This shows up as a documented rationale, not just a gut call.</td></tr><tr><td><b>Respectful work environment</b></td><td>People feel able to raise issues without fear of blame — the test is whether someone would raise a mistake themselves before being asked.</td></tr></tbody></table></div><div class="card"><h2 class="h2"><span class="num">04</span>Management Systems</h2><table class="tbl"><tbody><tr><td><b>Continuous learning</b></td><td>Near-misses and mistakes are treated as learning opportunities, with lessons actually fed back into practice, not just recorded.</td></tr><tr><td><b>Problem identification and resolution</b></td><td>Issues are tracked to genuine closure, not just logged and forgotten once the immediate pressure passes.</td></tr><tr><td><b>Environment for raising concerns</b></td><td>There's a clear, safe route to raise a concern at any level, and people know what it is without having to ask.</td></tr><tr><td><b>Work processes</b></td><td>Procedures reflect how work is actually done, and are kept current — a sign of trouble is when 'the way we really do it' differs from what's written down.</td></tr></tbody></table></div><div class="card"><h2 class="h2"><span class="num">05</span>A simple way to start assessing your own culture</h2><p class="">Pick three of the ten traits above that feel most relevant to your business right now, and ask a handful of people at different levels — not just managers — how they'd honestly rate the business against each one. The gaps between how different levels of the business see things are often more revealing than any single score.</p></div><div class="card"><h2 class="h2"><span class="num">06</span>Frequently asked questions</h2><div class="glossary"><div class="faq"><b>Do we need a formal safety culture programme to get started?</b><p>No — start with honest conversations against the ten traits above. Formal programmes can follow once you understand where your real gaps are.</p></div><div class="faq"><b>How is this assessed under F4N?</b><p>Nuclear Safety Culture is one of the seven F4N categories, and assessors will look for evidence against traits very similar to those described here.</p></div></div></div>
 <div class="cta">
   <h3>Safety culture is assessed, not assumed</h3>
   <p>Nuclear Safety Culture is one of the seven F4N categories — this framework is exactly what assessors look for.</p>
