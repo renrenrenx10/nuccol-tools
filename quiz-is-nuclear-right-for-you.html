@@ -124,19 +124,28 @@ h3.h3{font-family:var(--font-head); font-size:16px; font-weight:600; color:var(-
 .qbox{width:20px; height:20px; margin-top:2px; accent-color:var(--blue); flex:none; cursor:pointer;}
 .qtext{font-size:15px; color:var(--ink); display:block;}
 .qwhy{display:block; font-size:13px; color:var(--ink-soft); font-weight:400; margin-top:4px;}
-#scorewrap{position:sticky; top:12px; z-index:5;}
-.scorecard{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:20px 22px; margin-top:-40px; margin-bottom:22px; box-shadow:0 8px 24px rgba(0,0,0,.12);}
-.scoretop{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;}
-.scorenum{font-family:var(--font-head); font-size:34px; color:var(--navy); font-weight:600;}
-:root[data-theme="dark"] .scorenum{color:#8FCBEF;}
-.scoremax{font-size:14px; color:var(--ink-soft);}
-.barouter{height:10px; background:var(--light); border-radius:999px; overflow:hidden;}
-.barinner{height:100%; width:0%; background:linear-gradient(90deg,var(--blue),var(--purple)); transition:width .3s;}
-.scoreband{margin-top:12px; font-size:14.5px; padding:12px 14px; border-radius:10px; background:var(--light); color:var(--ink);}
+/* Slim sticky progress strip — stays out of the way, never covers a question */
+#scorebar{
+  position:sticky; top:0; z-index:20; margin:0 -20px 22px; padding:10px 20px;
+  background:var(--card); border-bottom:1px solid var(--line); box-shadow:0 2px 10px rgba(0,0,0,.06);
+  display:flex; align-items:center; gap:14px;
+}
+#scorebar .sb-num{font-family:var(--font-head); font-size:19px; font-weight:600; color:var(--navy); flex:none;}
+:root[data-theme="dark"] #scorebar .sb-num{color:#8FCBEF;}
+#scorebar .sb-max{font-size:12.5px; color:var(--ink-soft); flex:none; margin-left:-8px;}
+#scorebar .sb-bartrack{flex:1; height:7px; background:var(--light); border-radius:999px; overflow:hidden; min-width:60px;}
+#scorebar .sb-barfill{height:100%; width:0%; background:linear-gradient(90deg,var(--blue),var(--purple)); transition:width .3s;}
+#scorebar .sb-label{font-size:12.5px; font-weight:700; color:var(--blue); flex:none; white-space:nowrap;}
+#scorebar .sb-reset{flex:none; background:none; border:1px solid var(--line); color:var(--ink-soft); font-size:11.5px; padding:5px 10px; border-radius:999px; cursor:pointer; white-space:nowrap;}
+#scorebar .sb-reset:hover{border-color:var(--blue); color:var(--blue);}
+@media(max-width:560px){
+  #scorebar{gap:8px; padding:8px 16px; margin:0 -16px 18px;}
+  #scorebar .sb-label{display:none;}
+}
+/* Full result detail — sits in normal flow, never sticky, never blocks content */
+.scoreband{font-size:14.5px; padding:14px 16px; border-radius:10px; background:var(--light); color:var(--ink);}
 .scoreband b{color:var(--navy);}
 :root[data-theme="dark"] .scoreband b{color:#8FCBEF;}
-.resetbtn{background:none; border:1px solid var(--line); color:var(--ink-soft); font-size:13px; padding:6px 14px; border-radius:999px; cursor:pointer; margin-top:14px;}
-.resetbtn:hover{border-color:var(--blue); color:var(--blue);}
 .intro{color:var(--ink-soft); font-size:15px; margin:0 0 18px;}
 .h2b{font-family:var(--font-head); font-size:19px; font-weight:600; color:var(--navy); margin:0 0 12px; padding-bottom:8px; border-bottom:2px solid var(--light);}
 :root[data-theme="dark"] .h2b{color:#8FCBEF;}
@@ -158,17 +167,19 @@ a.backlink:hover{text-decoration:underline;}
   <div class="meta-row"><span>18 quick checks</span><span>~4 minutes</span><span>Based on the F4N NSS framework</span></div>
 </div></div>
 <div class="wrap">
-<div id="scorewrap">
-  <div class="scorecard">
-    <div class="scoretop"><div><span class="scorenum" id="scoreNum">0</span> <span class="scoremax" id="scoreMax">/ 36</span></div></div>
-    <div class="barouter"><div class="barinner" id="barInner"></div></div>
-    <div class="scoreband" id="scoreBand"></div>
-    <button class="resetbtn" id="resetBtn">Reset answers</button>
-  </div>
+<div id="scorebar">
+  <span class="sb-num" id="scoreNum">0</span><span class="sb-max" id="scoreMax">/ 36</span>
+  <div class="sb-bartrack"><div class="sb-barfill" id="barInner"></div></div>
+  <span class="sb-label" id="sbLabel">Early stage</span>
+  <button class="sb-reset" id="resetBtn">Reset</button>
 </div>
 <div class="card">
   <div class="h2b">About this self-assessment</div>
   <p class="intro">This is based on the seven categories F4N (Fit For Nuclear) uses to assess UK manufacturers: Nuclear Industry Fundamentals, Nuclear Safety Culture, Quality &amp; Compliance, Leadership &amp; Governance, Human Performance, Supply Chain Readiness, and Security of Information. Each question below has a short note explaining why it matters &mdash; read it even if you're unsure how to answer, since understanding the "why" is often more useful than the tick itself. There's no pass mark and nobody sees your answers but you; it exists purely to help you have an honest conversation with yourself (and your team) about where you actually stand today.</p>
+</div>
+<div class="card">
+  <div class="h2b">Your result</div>
+  <div class="scoreband" id="scoreBand"></div>
 </div>
 <div class="card">
 <div class="catlabel">Nuclear Industry Fundamentals</div><p class="catdesc">The basics of how the sector works, what buyers expect, and what recognised certification signals.</p>
@@ -277,6 +288,8 @@ a.backlink:hover{text-decoration:underline;}
     }
   }
 
+  var sbLabel = document.getElementById('sbLabel');
+
   function recalc(){
     var score = 0;
     boxes.forEach(function(b){ if(b.checked) score += 2; });
@@ -285,6 +298,7 @@ a.backlink:hover{text-decoration:underline;}
     barEl.style.width = pct + '%';
     var band = bandFor(score, TOTAL);
     bandEl.innerHTML = '<b>' + band.t + '.</b> ' + band.d;
+    if(sbLabel) sbLabel.textContent = band.t;
     try{ localStorage.setItem('nuccol_quiz_state', JSON.stringify(Array.from(boxes).map(function(b){return b.checked;}))); }catch(e){}
   }
 
