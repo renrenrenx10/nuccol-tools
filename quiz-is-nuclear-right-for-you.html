@@ -60,7 +60,7 @@ h2.h2{
   font-family:var(--font-head); font-size:21px; font-weight:600; color:var(--navy);
   margin:0 0 12px; padding-bottom:10px; border-bottom:2px solid var(--light);
 }
-:root[data-theme="dark"] h2.h2, @media (prefers-color-scheme: dark){ }
+:root[data-theme="dark"] h2.h2{color:#8FCBEF;}
 h2.h2 .num{color:var(--blue); margin-right:8px;}
 p{color:var(--ink-soft); font-size:15.5px;}
 p.lead{color:var(--ink); font-size:16.5px;}
@@ -115,6 +115,15 @@ table.tbl tr:nth-child(even) td{background:var(--light);}
 h3.h3{font-family:var(--font-head); font-size:16px; font-weight:600; color:var(--navy); margin:20px 0 8px;}
 :root[data-theme="dark"] h3.h3{color:#8FCBEF;}
 
+@media (prefers-color-scheme: dark){
+:root:not([data-theme="light"]) h2.h2{color:#8FCBEF;}
+:root:not([data-theme="light"]) .note b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .stepbox b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .faq b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .deflist .term{color:#8FCBEF;}
+:root:not([data-theme="light"]) h3.h3{color:#8FCBEF;}
+}
+
 .topband{background:linear-gradient(135deg,var(--purple) 0%,var(--navy) 100%);}
 .catlabel{font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--blue); font-weight:700; margin:26px 0 2px;}
 .catlabel:first-child{margin-top:4px;}
@@ -152,6 +161,12 @@ h3.h3{font-family:var(--font-head); font-size:16px; font-weight:600; color:var(-
 .afterlist{margin:10px 0; padding-left:0; list-style:none;}
 .afterlist li{position:relative; padding-left:24px; margin-bottom:10px; font-size:14.5px; color:var(--ink-soft);}
 .afterlist li:before{content:"—"; position:absolute; left:0; color:var(--blue); font-weight:700;}
+
+@media (prefers-color-scheme: dark){
+:root:not([data-theme="light"]) #scorebar .sb-num{color:#8FCBEF;}
+:root:not([data-theme="light"]) .scoreband b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .h2b{color:#8FCBEF;}
+}
 
 a.backlink{display:inline-flex;align-items:center;gap:6px;color:#8FCBEF;text-decoration:none;font-size:13px;font-weight:600;margin-bottom:2px;}
 a.backlink:hover{text-decoration:underline;}

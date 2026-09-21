@@ -26,6 +26,13 @@
   --bg:#0E1720; --card:#152230; --ink:#EAF1F6; --ink-soft:#AFC1CE;
   --line:#28394A; --light:#152B3A; --light2:#2A1F33;
 }
+/* Text-color overrides below only fire on an explicit data-theme="dark" toggle.
+   This duplicates them for automatic OS/browser dark mode too, so headings stay
+   legible whichever way dark mode was triggered. */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .section-title{color:#8FCBEF;}
+  :root:not([data-theme="light"]) .card h3{color:#EAF1F6;}
+}
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;}
 body{background:var(--bg); color:var(--ink); font-family:var(--font-body); line-height:1.55; -webkit-font-smoothing:antialiased;}

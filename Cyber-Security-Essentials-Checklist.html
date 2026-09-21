@@ -60,7 +60,7 @@ h2.h2{
   font-family:var(--font-head); font-size:21px; font-weight:600; color:var(--navy);
   margin:0 0 12px; padding-bottom:10px; border-bottom:2px solid var(--light);
 }
-:root[data-theme="dark"] h2.h2, @media (prefers-color-scheme: dark){ }
+:root[data-theme="dark"] h2.h2{color:#8FCBEF;}
 h2.h2 .num{color:var(--blue); margin-right:8px;}
 p{color:var(--ink-soft); font-size:15.5px;}
 p.lead{color:var(--ink); font-size:16.5px;}
@@ -114,6 +114,15 @@ table.tbl tr:nth-child(even) td{background:var(--light);}
 .mistake .x{color:#C1443C; font-weight:700; flex:none;}
 h3.h3{font-family:var(--font-head); font-size:16px; font-weight:600; color:var(--navy); margin:20px 0 8px;}
 :root[data-theme="dark"] h3.h3{color:#8FCBEF;}
+
+@media (prefers-color-scheme: dark){
+:root:not([data-theme="light"]) h2.h2{color:#8FCBEF;}
+:root:not([data-theme="light"]) .note b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .stepbox b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .faq b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .deflist .term{color:#8FCBEF;}
+:root:not([data-theme="light"]) h3.h3{color:#8FCBEF;}
+}
 
 a.backlink{display:inline-flex;align-items:center;gap:6px;color:#8FCBEF;text-decoration:none;font-size:13px;font-weight:600;margin-bottom:2px;}
 a.backlink:hover{text-decoration:underline;}
