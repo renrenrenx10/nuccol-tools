@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registering for Nuclear Frameworks | NucCol Best Practice</title>
+<meta name="description" content="NucCol Best Practice resource for the UK nuclear supply chain.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#12314F; --blue:#1C7FBB; --purple:#7B2D8E;
+  --bg:#F7FAFC; --card:#FFFFFF; --ink:#16232E; --ink-soft:#4A5C6A;
+  --line:#DCE4EA; --light:#EEF4F8; --light2:#F7F2F9;
+  --amber-bg:#FFF6E5; --amber-line:#E9C46A;
+  --good:#1E8A5F; --focus:#1C7FBB;
+  --radius:14px; --maxw:840px;
+  --font-head:'Fraunces', Georgia, serif;
+  --font-body:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1720; --card:#152230; --ink:#EAF1F6; --ink-soft:#AFC1CE;
+    --line:#28394A; --light:#152B3A; --light2:#2A1F33;
+    --amber-bg:#2E2410; --amber-line:#7A5C1E;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1720; --card:#152230; --ink:#EAF1F6; --ink-soft:#AFC1CE;
+  --line:#28394A; --light:#152B3A; --light2:#2A1F33;
+  --amber-bg:#2E2410; --amber-line:#7A5C1E;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--font-body);
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 20px 72px;}
+.topband{
+  background:linear-gradient(135deg,var(--navy) 0%,#0B2036 100%);
+  color:#fff; padding:34px 20px 40px;
+}
+.topband-inner{max-width:var(--maxw); margin:0 auto;}
+.brand{display:flex; align-items:center; gap:10px; font-size:13px; letter-spacing:.08em; text-transform:uppercase; opacity:.85; font-weight:600;}
+.brand .dot{width:8px;height:8px;border-radius:50%;background:var(--blue);}
+.kicker{margin-top:18px; font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:#8FCBEF; font-weight:700;}
+h1.title{
+  font-family:var(--font-head); font-weight:600; font-size:clamp(26px,5vw,38px);
+  margin:8px 0 10px; line-height:1.15; color:#fff;
+}
+.subtitle{font-size:16px; color:#C9D9E4; max-width:640px; margin:0;}
+.meta-row{display:flex; gap:18px; flex-wrap:wrap; margin-top:22px; font-size:13px; color:#9FB6C6;}
+.meta-row span{display:flex; align-items:center; gap:6px;}
+.card{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+  padding:26px 24px; margin-top:22px;
+}
+h2.h2{
+  font-family:var(--font-head); font-size:21px; font-weight:600; color:var(--navy);
+  margin:0 0 12px; padding-bottom:10px; border-bottom:2px solid var(--light);
+}
+:root[data-theme="dark"] h2.h2{color:#8FCBEF;}
+h2.h2 .num{color:var(--blue); margin-right:8px;}
+p{color:var(--ink-soft); font-size:15.5px;}
+p.lead{color:var(--ink); font-size:16.5px;}
+ul.blist{margin:10px 0; padding-left:0; list-style:none;}
+ul.blist li{position:relative; padding-left:24px; margin-bottom:10px; font-size:15px; color:var(--ink-soft);}
+ul.blist li:before{content:"—"; position:absolute; left:0; color:var(--blue); font-weight:700;}
+table.tbl{width:100%; border-collapse:collapse; margin:14px 0; font-size:14px;}
+table.tbl th{background:var(--navy); color:#fff; text-align:left; padding:10px 12px; font-weight:600; font-size:13px;}
+table.tbl td{padding:10px 12px; border-bottom:1px solid var(--line); color:var(--ink-soft); vertical-align:top;}
+table.tbl tr:last-child td{border-bottom:none;}
+table.tbl tr:nth-child(even) td{background:var(--light);}
+.note{border-radius:10px; padding:16px 18px; margin:16px 0; font-size:14.5px;}
+.note.amber{background:var(--amber-bg); border:1px solid var(--amber-line); color:var(--ink);}
+.note.blue{background:var(--light); border:1px solid var(--line); color:var(--ink);}
+.note b{color:var(--navy);}
+:root[data-theme="dark"] .note b{color:#8FCBEF;}
+.cta{
+  background:linear-gradient(135deg,var(--blue),var(--navy)); color:#fff; border-radius:var(--radius);
+  padding:26px 24px; margin-top:26px; text-align:center;
+}
+.cta h3{font-family:var(--font-head); margin:0 0 8px; font-size:19px;}
+.cta p{color:#D7E7F0; margin:0 0 16px; font-size:14.5px;}
+.cta a.btn{
+  display:inline-block; background:#fff; color:var(--navy); font-weight:700; text-decoration:none;
+  padding:11px 26px; border-radius:999px; font-size:14px;
+}
+.footer{text-align:center; color:var(--ink-soft); font-size:12.5px; margin-top:30px; padding-top:18px; border-top:1px solid var(--line);}
+.pill{display:inline-block; background:var(--light2); color:var(--purple); font-size:11.5px; font-weight:700; padding:4px 10px; border-radius:999px; letter-spacing:.03em; margin-right:6px;}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+@media(max-width:560px){.grid2{grid-template-columns:1fr;}}
+.stepbox{background:var(--light); border-radius:10px; padding:14px 16px; margin-bottom:10px;}
+.stepbox b{color:var(--navy); display:block; margin-bottom:4px; font-size:14.5px;}
+:root[data-theme="dark"] .stepbox b{color:#8FCBEF;}
+.toc{display:flex; flex-wrap:wrap; gap:8px; margin-top:20px;}
+.toc a{font-size:12.5px; font-weight:600; color:#C9D9E4; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); padding:6px 12px; border-radius:999px; text-decoration:none;}
+.toc a:hover{background:rgba(255,255,255,.16); color:#fff;}
+.faq{border-bottom:1px solid var(--line); padding:14px 0;}
+.faq:last-child{border-bottom:none;}
+.faq b{display:block; color:var(--navy); font-size:15px; margin-bottom:6px;}
+:root[data-theme="dark"] .faq b{color:#8FCBEF;}
+.faq p{margin:0;}
+.example{background:var(--light2); border-left:4px solid var(--purple); border-radius:0 10px 10px 0; padding:14px 18px; margin:16px 0; font-size:14.5px;}
+.example b{color:var(--purple); display:block; margin-bottom:4px; font-size:12.5px; text-transform:uppercase; letter-spacing:.04em;}
+.deflist{margin:10px 0;}
+.deflist .term{font-weight:700; color:var(--navy); font-size:15px; margin-top:12px;}
+:root[data-theme="dark"] .deflist .term{color:#8FCBEF;}
+.deflist .def{color:var(--ink-soft); font-size:14.5px; margin:2px 0 0;}
+.glossary{display:grid; grid-template-columns:1fr; gap:2px;}
+.mistake{display:flex; gap:10px; padding:10px 0; border-bottom:1px dashed var(--line); font-size:14.5px; color:var(--ink-soft);}
+.mistake:last-child{border-bottom:none;}
+.mistake .x{color:#C1443C; font-weight:700; flex:none;}
+h3.h3{font-family:var(--font-head); font-size:16px; font-weight:600; color:var(--navy); margin:20px 0 8px;}
+:root[data-theme="dark"] h3.h3{color:#8FCBEF;}
+
+@media (prefers-color-scheme: dark){
+:root:not([data-theme="light"]) h2.h2{color:#8FCBEF;}
+:root:not([data-theme="light"]) .note b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .stepbox b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .faq b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .deflist .term{color:#8FCBEF;}
+:root:not([data-theme="light"]) h3.h3{color:#8FCBEF;}
+}
+
+a.backlink{display:inline-flex;align-items:center;gap:6px;color:#8FCBEF;text-decoration:none;font-size:13px;font-weight:600;margin-bottom:2px;}
+a.backlink:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+<div class="topband"><div class="topband-inner">
+  <a class="backlink" href="index2.html">&larr; All Best Practice resources</a>
+  <div class="brand"><span class="dot"></span> NucCol &nbsp;|&nbsp; Nuclear Collaboration Ltd</div>
+  <div class="kicker">A Practical Walkthrough</div>
+  <h1 class="title">Registering for Nuclear Frameworks &amp; Portals</h1>
+  <p class="subtitle">AVLs, supplier portals and framework registration can look like a wall of paperwork from the outside. Here's what's actually involved, using the real portals and processes UK nuclear buyers use.</p>
+  <div class="meta-row"><span>10 min read</span><span>Winning Work</span></div>
+</div></div>
+<div class="wrap">
+<div class="card"><h2 class="h2"><span class="num">01</span>What you're actually registering for</h2><p class="lead">"Registering for a framework" usually means one of three things: joining a pre-qualification database that multiple buyers draw from (like Achilles UVDB), registering directly with one buyer's own supplier portal (many nuclear buyers use Atamis-powered portals), or registering on the government's central platform for public contracts (Find a Tender). Most established suppliers end up doing more than one, because different buyers use different systems.</p><div class="note blue">An Approved Vendor List (AVL) is simply a buyer's own shortlist of suppliers who've been through their due diligence and can be invited to quote without repeating it every time. Getting onto one doesn't guarantee work — it means you're now eligible to be asked.</div></div><div class="card"><h2 class="h2"><span class="num">02</span>Route 1 — Achilles UVDB (used widely across utilities and infrastructure)</h2><p class="">Achilles UVDB is a pre-qualification database used by a wide range of buyers, including infrastructure and utilities clients. Registration is designed around a single questionnaire that collects your company information once, so buyers who use UVDB can pull your validated profile rather than each running their own separate checks.</p><div class="stepbox"><b>Step 1 — Gather your company information</b>Company name, address, website, tax number, registration number and a copy of your company registration certificate.</div><div class="stepbox"><b>Step 2 — List what you supply</b>A clear description of your products and services, and which regions you can supply into.</div><div class="stepbox"><b>Step 3 — Have your certificates and policies ready</b>Quality management, environmental and health & safety certificates, plus corporate social responsibility, environmental management and QMS policies.</div><div class="stepbox"><b>Step 4 — Provide financial and contact information</b>Annual turnover for the last year, staff numbers, and named business and admin contacts.</div><p class="">Once submitted, your information is validated before your profile is published — Achilles offers online training webinars, a local Supplier Account Manager, and a product code guide to help you find the right classification for what you supply.</p></div><div class="card"><h2 class="h2"><span class="num">03</span>Route 2 — a buyer's own supplier portal (e.g. Atamis-powered portals)</h2><p class="">Many individual nuclear buyers run their own supplier portal rather than relying solely on a shared database like UVDB. A number of these run on the Atamis platform — each portal is independent to that one buying organisation, so registering with one buyer's portal doesn't carry over to another's, even if both happen to use the same underlying software.</p><table class="tbl"><thead><tr><th>Stage</th><th>What happens</th></tr></thead><tbody><tr><td>Register a portal account</td><td>Create an account against that specific buyer's portal (a unique link per organisation) — if you already work with other buyers on the same platform, you'll get a distinct username per portal rather than one login for all of them.</td></tr><tr><td>Complete your supplier profile</td><td>Populate company information the buyer requests, similar in shape to UVDB's checklist.</td></tr><tr><td>Find opportunities and express interest</td><td>Browse published opportunities; where a project is open for expressions of interest, a Register Interest button lets you flag interest and access supporting documentation packs.</td></tr><tr><td>Respond to selection questionnaires and tenders</td><td>Once invited (or once your expression of interest is accepted), you complete Selection Questionnaire responses and, later, full tender submissions through the same portal.</td></tr></tbody></table><div class="note blue">If a buyer has already invited you to tender directly, you don't need to register interest separately — the opportunity should already be visible under your account's proposals and quotes.</div></div><div class="card"><h2 class="h2"><span class="num">04</span>Route 3 — Find a Tender (the government's central platform)</h2><p class="">Find a Tender (the Central Digital Platform) is where UK public sector contract opportunities, including many nuclear ones, are advertised under the Procurement Act 2023. Registration is designed to be quick and reusable across multiple bids.</p><div class="stepbox"><b>Step 1 — Register for a GOV.UK One Login</b>This is your personal sign-in, used across government digital services.</div><div class="stepbox"><b>Step 2 — Complete Central Digital Platform registration</b>Register your organisation and receive your unique supplier identifier, which you'll quote on every future bid.</div><div class="stepbox"><b>Step 3 — Keep your core business details current</b>Your registered details are reused across multiple bids, so keeping them accurate saves re-entering the same information every time.</div></div><div class="card"><h2 class="h2"><span class="num">05</span>Social value — what buyers now expect alongside the paperwork</h2><p class="">Since Procurement Policy Note 002/026 (the Social Value Model), central government buyers must, for most contracts, assess how a supplier will benefit communities — good jobs, skills and opportunities — alongside price and technical merit. It applies most strictly to central government contracts above £1m, but many public and quasi-public nuclear buyers now expect a social value response as standard regardless of the exact contract value.</p><ul class="blist"><li>Expect a specific award criterion scored alongside price and quality, not a tick-box afterthought.</li><li>Common themes: local employment, apprenticeships and skills, supply chain diversity, and community benefit in the areas where you operate.</li><li>Have a short, honest social value statement ready before you need one — retrofitting one under bid deadline pressure rarely reads well.</li><li>NucCol's own toolbox includes a Social Value Action Plan template and an Ethical Sourcing Policy template that map directly onto what buyers are looking for.</li></ul></div><div class="card"><h2 class="h2"><span class="num">06</span>Common mistakes SMEs make here</h2><div class="mistake"><span class="x">&#10007;</span><span>Assuming one registration (say, UVDB) covers every buyer — most SMEs end up needing at least two of the three routes above.</span></div><div class="mistake"><span class="x">&#10007;</span><span>Leaving certificates, policies and financial information to gather at the point of registering, rather than having a ready folder maintained year-round.</span></div><div class="mistake"><span class="x">&#10007;</span><span>Registering once and letting the profile go stale — buyers use these portals to check you're still active and current, not just that you once qualified.</span></div><div class="mistake"><span class="x">&#10007;</span><span>Treating social value as generic corporate wording rather than something specific and locally grounded — vague answers score poorly.</span></div></div><div class="card"><h2 class="h2"><span class="num">07</span>Frequently asked questions</h2><div class="glossary"><div class="faq"><b>Do I need to be on Achilles UVDB to work in nuclear?</b><p>Not always — it depends which buyers you're targeting. Some nuclear buyers use UVDB, others run their own portal, and public sector opportunities may only require Find a Tender registration. Check what your target buyer actually uses before registering anywhere.</p></div><div class="faq"><b>How long does registration usually take?</b><p>A well-prepared UVDB or portal registration, with your certificates and policies already gathered, can often be completed in a single sitting. The slow part is usually gathering the supporting documents, not filling in the form.</p></div><div class="faq"><b>Does getting onto an AVL guarantee I'll be invited to quote?</b><p>No — it makes you eligible to be invited. Being visible, credible and easy to find (a good profile, current certificates, clear capability description) still matters for actually being approached.</p></div><div class="faq"><b>Is social value only relevant for very large contracts?</b><p>The formal PPN 002/026 threshold is £1m for central government contracts, but many nuclear buyers apply similar expectations well below that threshold as good practice — worth having a social value answer ready regardless of contract size.</p></div></div></div>
+<div class="cta">
+  <h3>Want help preparing before you register anywhere?</h3>
+  <p>F4N certification and a Nuclear Supplier Database listing give buyers a validated profile they already trust — a strong foundation before you tackle any of the portals above.</p>
+  <a class="btn" href="https://www.nuccol.co.uk" target="_blank" rel="noopener">Check your F4N status &rarr;</a>
+</div>
+<div class="footer">NucCol &middot; Nuclear Collaboration Ltd &middot; Best Practice resource, produced for ManufacturingUK.org</div>
+</div>
+
+</body>
+</html>

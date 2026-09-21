@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relationships Before the Tender | NucCol Best Practice</title>
+<meta name="description" content="NucCol Best Practice resource for the UK nuclear supply chain.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#12314F; --blue:#1C7FBB; --purple:#7B2D8E;
+  --bg:#F7FAFC; --card:#FFFFFF; --ink:#16232E; --ink-soft:#4A5C6A;
+  --line:#DCE4EA; --light:#EEF4F8; --light2:#F7F2F9;
+  --amber-bg:#FFF6E5; --amber-line:#E9C46A;
+  --good:#1E8A5F; --focus:#1C7FBB;
+  --radius:14px; --maxw:840px;
+  --font-head:'Fraunces', Georgia, serif;
+  --font-body:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1720; --card:#152230; --ink:#EAF1F6; --ink-soft:#AFC1CE;
+    --line:#28394A; --light:#152B3A; --light2:#2A1F33;
+    --amber-bg:#2E2410; --amber-line:#7A5C1E;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1720; --card:#152230; --ink:#EAF1F6; --ink-soft:#AFC1CE;
+  --line:#28394A; --light:#152B3A; --light2:#2A1F33;
+  --amber-bg:#2E2410; --amber-line:#7A5C1E;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--font-body);
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 20px 72px;}
+.topband{
+  background:linear-gradient(135deg,var(--navy) 0%,#0B2036 100%);
+  color:#fff; padding:34px 20px 40px;
+}
+.topband-inner{max-width:var(--maxw); margin:0 auto;}
+.brand{display:flex; align-items:center; gap:10px; font-size:13px; letter-spacing:.08em; text-transform:uppercase; opacity:.85; font-weight:600;}
+.brand .dot{width:8px;height:8px;border-radius:50%;background:var(--blue);}
+.kicker{margin-top:18px; font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:#8FCBEF; font-weight:700;}
+h1.title{
+  font-family:var(--font-head); font-weight:600; font-size:clamp(26px,5vw,38px);
+  margin:8px 0 10px; line-height:1.15; color:#fff;
+}
+.subtitle{font-size:16px; color:#C9D9E4; max-width:640px; margin:0;}
+.meta-row{display:flex; gap:18px; flex-wrap:wrap; margin-top:22px; font-size:13px; color:#9FB6C6;}
+.meta-row span{display:flex; align-items:center; gap:6px;}
+.card{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+  padding:26px 24px; margin-top:22px;
+}
+h2.h2{
+  font-family:var(--font-head); font-size:21px; font-weight:600; color:var(--navy);
+  margin:0 0 12px; padding-bottom:10px; border-bottom:2px solid var(--light);
+}
+:root[data-theme="dark"] h2.h2{color:#8FCBEF;}
+h2.h2 .num{color:var(--blue); margin-right:8px;}
+p{color:var(--ink-soft); font-size:15.5px;}
+p.lead{color:var(--ink); font-size:16.5px;}
+ul.blist{margin:10px 0; padding-left:0; list-style:none;}
+ul.blist li{position:relative; padding-left:24px; margin-bottom:10px; font-size:15px; color:var(--ink-soft);}
+ul.blist li:before{content:"—"; position:absolute; left:0; color:var(--blue); font-weight:700;}
+table.tbl{width:100%; border-collapse:collapse; margin:14px 0; font-size:14px;}
+table.tbl th{background:var(--navy); color:#fff; text-align:left; padding:10px 12px; font-weight:600; font-size:13px;}
+table.tbl td{padding:10px 12px; border-bottom:1px solid var(--line); color:var(--ink-soft); vertical-align:top;}
+table.tbl tr:last-child td{border-bottom:none;}
+table.tbl tr:nth-child(even) td{background:var(--light);}
+.note{border-radius:10px; padding:16px 18px; margin:16px 0; font-size:14.5px;}
+.note.amber{background:var(--amber-bg); border:1px solid var(--amber-line); color:var(--ink);}
+.note.blue{background:var(--light); border:1px solid var(--line); color:var(--ink);}
+.note b{color:var(--navy);}
+:root[data-theme="dark"] .note b{color:#8FCBEF;}
+.cta{
+  background:linear-gradient(135deg,var(--blue),var(--navy)); color:#fff; border-radius:var(--radius);
+  padding:26px 24px; margin-top:26px; text-align:center;
+}
+.cta h3{font-family:var(--font-head); margin:0 0 8px; font-size:19px;}
+.cta p{color:#D7E7F0; margin:0 0 16px; font-size:14.5px;}
+.cta a.btn{
+  display:inline-block; background:#fff; color:var(--navy); font-weight:700; text-decoration:none;
+  padding:11px 26px; border-radius:999px; font-size:14px;
+}
+.footer{text-align:center; color:var(--ink-soft); font-size:12.5px; margin-top:30px; padding-top:18px; border-top:1px solid var(--line);}
+.pill{display:inline-block; background:var(--light2); color:var(--purple); font-size:11.5px; font-weight:700; padding:4px 10px; border-radius:999px; letter-spacing:.03em; margin-right:6px;}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+@media(max-width:560px){.grid2{grid-template-columns:1fr;}}
+.stepbox{background:var(--light); border-radius:10px; padding:14px 16px; margin-bottom:10px;}
+.stepbox b{color:var(--navy); display:block; margin-bottom:4px; font-size:14.5px;}
+:root[data-theme="dark"] .stepbox b{color:#8FCBEF;}
+.toc{display:flex; flex-wrap:wrap; gap:8px; margin-top:20px;}
+.toc a{font-size:12.5px; font-weight:600; color:#C9D9E4; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); padding:6px 12px; border-radius:999px; text-decoration:none;}
+.toc a:hover{background:rgba(255,255,255,.16); color:#fff;}
+.faq{border-bottom:1px solid var(--line); padding:14px 0;}
+.faq:last-child{border-bottom:none;}
+.faq b{display:block; color:var(--navy); font-size:15px; margin-bottom:6px;}
+:root[data-theme="dark"] .faq b{color:#8FCBEF;}
+.faq p{margin:0;}
+.example{background:var(--light2); border-left:4px solid var(--purple); border-radius:0 10px 10px 0; padding:14px 18px; margin:16px 0; font-size:14.5px;}
+.example b{color:var(--purple); display:block; margin-bottom:4px; font-size:12.5px; text-transform:uppercase; letter-spacing:.04em;}
+.deflist{margin:10px 0;}
+.deflist .term{font-weight:700; color:var(--navy); font-size:15px; margin-top:12px;}
+:root[data-theme="dark"] .deflist .term{color:#8FCBEF;}
+.deflist .def{color:var(--ink-soft); font-size:14.5px; margin:2px 0 0;}
+.glossary{display:grid; grid-template-columns:1fr; gap:2px;}
+.mistake{display:flex; gap:10px; padding:10px 0; border-bottom:1px dashed var(--line); font-size:14.5px; color:var(--ink-soft);}
+.mistake:last-child{border-bottom:none;}
+.mistake .x{color:#C1443C; font-weight:700; flex:none;}
+h3.h3{font-family:var(--font-head); font-size:16px; font-weight:600; color:var(--navy); margin:20px 0 8px;}
+:root[data-theme="dark"] h3.h3{color:#8FCBEF;}
+
+@media (prefers-color-scheme: dark){
+:root:not([data-theme="light"]) h2.h2{color:#8FCBEF;}
+:root:not([data-theme="light"]) .note b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .stepbox b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .faq b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .deflist .term{color:#8FCBEF;}
+:root:not([data-theme="light"]) h3.h3{color:#8FCBEF;}
+}
+
+a.backlink{display:inline-flex;align-items:center;gap:6px;color:#8FCBEF;text-decoration:none;font-size:13px;font-weight:600;margin-bottom:2px;}
+a.backlink:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+<div class="topband"><div class="topband-inner">
+  <a class="backlink" href="index2.html">&larr; All Best Practice resources</a>
+  <div class="brand"><span class="dot"></span> NucCol &nbsp;|&nbsp; Nuclear Collaboration Ltd</div>
+  <div class="kicker">Why the ITT Isn't Where It Starts</div>
+  <h1 class="title">Building Nuclear Relationships Before the Tender</h1>
+  <p class="subtitle">By the time a tender is published, the buyer's preferred delivery model, likely partners and credible suppliers are often already understood. Here's how that early picture forms &amp;mdash; and how to be part of it.</p>
+  <div class="meta-row"><span>9 min read</span><span>Winning Work</span></div>
+</div></div>
+<div class="wrap">
+<div class="card"><h2 class="h2"><span class="num">01</span>The uncomfortable truth about tenders</h2><p class="lead">Formal competitive tendering has to be fair and transparent once it starts &mdash; that's the law, and rightly so. But "once it starts" is doing a lot of work in that sentence. Buyers routinely engage the market for months, sometimes a year or more, before a tender notice is ever published. If your first contact with a buyer is the Invitation to Tender itself, you're starting the relationship at the exact moment your competitors who engaged earlier are finishing theirs.</p><div class="note blue">This is deliberately built into procurement law, not a grey area to be wary of. The Procurement Act 2023 explicitly enables and encourages preliminary market engagement &mdash; provided it doesn't give any one supplier an unfair advantage or distort competition.</div></div><div class="card"><h2 class="h2"><span class="num">02</span>The mechanisms buyers actually use</h2><table class="tbl"><thead><tr><th>Mechanism</th><th>What it is</th><th>When it happens</th></tr></thead><tbody><tr><td>Prior Information Notice (PIN)</td><td>An early notice signalling a buyer's intention to procure, without committing anyone to bid. Responding registers your interest and can influence how the procurement is designed.</td><td>35–365 days before the formal contract notice — sometimes much earlier</td></tr><tr><td>Pre-Market Engagement (PME)</td><td>Formal consultation with suppliers to test specifications and understand market capability, disclosed in the eventual contract notice for transparency.</td><td>Typically 3–12 months before the formal notice</td></tr><tr><td>Supplier Engagement Day</td><td>A structured, buyer-hosted event — presentations in the morning, workshops or breakouts in the afternoon — covering technical, commercial and social value themes.</td><td>Ahead of major programmes, framework refreshes or complex procurements</td></tr><tr><td>Expression of Interest (EOI)</td><td>An initial, non-binding signal of interest, often submitted in response to a PIN or engagement event. It's not a bid and isn't scored — it puts you on the distribution list for what follows.</td><td>As the first step of a two-stage process, or after a PIN/engagement event</td></tr><tr><td>Pipeline Notice</td><td>A forward look at a buyer's planned procurements over a longer horizon, useful for planning which relationships to prioritise well in advance</td><td>Published periodically, often annually</td></tr></tbody></table></div><div class="card"><h2 class="h2"><span class="num">03</span>What this looks like from a real nuclear buyer</h2><p class="">Sellafield Ltd's own Supply Chain Strategy update makes the mechanism explicit: rather than simply publishing a tender and waiting for bids, it runs structured supply chain engagement well ahead of major contract awards, and is explicit that its major delivery models are designed for the wider supply chain to benefit, not just the handful of prime contractors named at the top.</p><div class="example"><b>A live public example</b>Nuclear Waste Services has published a genuine Market Engagement PIN for its Inventory & Wasteform Evolution Framework on Find a Tender &mdash; inviting the market to respond and shape the eventual procurement before the formal tender exists. This is exactly the kind of notice worth actively watching for in your own specialism, rather than only searching Find a Tender once a live opportunity appears.</div><p class="">At Hinkley Point C, EDF's Supply Chain Engagement team (run jointly with the Somerset Chamber of Commerce) proactively identifies and engages local and national businesses and makes introductions to the Tier 1 contractors already delivering the project &mdash; a relationship-first model rather than a tender-first one.</p></div><div class="card"><h2 class="h2"><span class="num">04</span>What good early engagement actually looks like</h2><ul class="blist"><li><b>Responding to PINs and pipeline notices</b> in your specialism, even when a formal tender is a year away &mdash; this is how you get onto the radar before anyone is deciding who to shortlist.</li><li><b>Attending Supplier Engagement Days</b> and asking substantive questions about scope and technical requirements, not just collecting a brochure.</li><li><b>Submitting a genuine, specific Expression of Interest</b> rather than a generic capability statement &mdash; buyers use EOI volume to judge whether their procurement design will attract real competition.</li><li><b>Building the relationship with the right level</b> &mdash; procurement teams manage the formal process, but technical and programme staff often shape the requirement long before procurement is even involved.</li><li><b>Being visible between opportunities</b> &mdash; through NucCol events, F4N certification and the Nuclear Supplier Database &mdash; so you're a known quantity, not a cold approach, when engagement does begin.</li></ul></div><div class="card"><h2 class="h2"><span class="num">05</span>The line you can't cross</h2><div class="note amber">Early engagement must never give one supplier an unfair advantage over another — this is a legal requirement under the Procurement Act 2023, not just good etiquette. Buyers must disclose their pre-market engagement activity in the eventual contract notice, and any information shared with one supplier that materially affects the competition generally has to be shared with all bidders. Engage openly, ask genuine questions, and expect the buyer to manage the process carefully &mdash; that's a sign it's being done properly, not a barrier to worry about.</div></div><div class="card"><h2 class="h2"><span class="num">06</span>A realistic first step</h2><div class="stepbox"><b>Step 1 — Identify your target buyers and watch their pipelines</b>NDA, Sellafield, EDF and Nuclear Waste Services all publish forward-looking procurement information — start watching the ones relevant to your capability, not just Find a Tender's live opportunities.</div><div class="stepbox"><b>Step 2 — Respond to PINs and market engagement invitations genuinely</b>Treat an EOI or PIN response as seriously as a bid — it's the first thing a buyer sees from you, and first impressions here carry forward.</div><div class="stepbox"><b>Step 3 — Show up to Supplier Engagement Days prepared</b>Bring specific, informed questions about the scope, not generic sales material — this is a technical and capability conversation, not a marketing pitch.</div><div class="stepbox"><b>Step 4 — Keep the relationship warm between opportunities</b>Meet the Buyer events, sector Summits and NucCol's own network all exist to keep you visible in the gaps between formal procurement activity.</div></div><div class="card"><h2 class="h2"><span class="num">07</span>Common mistakes SMEs make here</h2><div class="mistake"><span class="x">&#10007;</span><span>Only searching Find a Tender for live opportunities, and missing PINs and pipeline notices that signal what's coming months in advance.</span></div><div class="mistake"><span class="x">&#10007;</span><span>Treating an Expression of Interest as a formality rather than the first real impression a buyer forms of you.</span></div><div class="mistake"><span class="x">&#10007;</span><span>Assuming pre-market engagement is only for large Tier 1 contractors, when it's specifically designed to also surface capable SMEs the buyer doesn't already know about.</span></div><div class="mistake"><span class="x">&#10007;</span><span>Going quiet between opportunities, so the buyer has to rediscover you from scratch each time a new procurement starts.</span></div></div><div class="card"><h2 class="h2"><span class="num">08</span>Frequently asked questions</h2><div class="glossary"><div class="faq"><b>Is it legal for a buyer to talk to me before a tender exists?</b><p>Yes — the Procurement Act 2023 explicitly provides for preliminary market engagement, provided it's conducted fairly and doesn't distort the eventual competition. It's a recognised, encouraged part of the process, not a workaround.</p></div><div class="faq"><b>What's the difference between a PIN and an Expression of Interest?</b><p>A PIN is published by the buyer to signal an upcoming procurement. An Expression of Interest is submitted by a supplier, usually in response to a PIN or an engagement event, to register interest — the PIN comes from the buyer, the EOI comes from you.</p></div><div class="faq"><b>Will engaging early guarantee I win the eventual tender?</b><p>No — the formal tender still has to be fair and competitive, and everyone eligible gets to bid. Early engagement improves your chances by making you known, credible and better informed about the real requirement, not by guaranteeing the outcome.</p></div><div class="faq"><b>Where do I find PINs and pipeline notices for nuclear work?</b><p>Find a Tender publishes PINs and Market Engagement notices publicly. NDA, Sellafield and other site licensees also publish their own procurement pipelines and plan schedules directly on their websites.</p></div></div></div>
+<div class="cta">
+  <h3>Want to be visible before the next PIN drops?</h3>
+  <p>NucCol's Meet the Buyer events and Sector Opportunity Reports exist specifically to put credible SME suppliers in front of buyers ahead of formal procurement.</p>
+  <a class="btn" href="https://www.nuccol.co.uk" target="_blank" rel="noopener">See NucCol events &rarr;</a>
+</div>
+<div class="footer">NucCol &middot; Nuclear Collaboration Ltd &middot; Best Practice resource, produced for ManufacturingUK.org</div>
+</div>
+
+</body>
+</html>

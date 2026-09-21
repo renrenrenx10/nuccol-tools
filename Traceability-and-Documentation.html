@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Traceability &amp; Documentation | NucCol Best Practice</title>
+<meta name="description" content="NucCol Best Practice resource for the UK nuclear supply chain.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#12314F; --blue:#1C7FBB; --purple:#7B2D8E;
+  --bg:#F7FAFC; --card:#FFFFFF; --ink:#16232E; --ink-soft:#4A5C6A;
+  --line:#DCE4EA; --light:#EEF4F8; --light2:#F7F2F9;
+  --amber-bg:#FFF6E5; --amber-line:#E9C46A;
+  --good:#1E8A5F; --focus:#1C7FBB;
+  --radius:14px; --maxw:840px;
+  --font-head:'Fraunces', Georgia, serif;
+  --font-body:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1720; --card:#152230; --ink:#EAF1F6; --ink-soft:#AFC1CE;
+    --line:#28394A; --light:#152B3A; --light2:#2A1F33;
+    --amber-bg:#2E2410; --amber-line:#7A5C1E;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1720; --card:#152230; --ink:#EAF1F6; --ink-soft:#AFC1CE;
+  --line:#28394A; --light:#152B3A; --light2:#2A1F33;
+  --amber-bg:#2E2410; --amber-line:#7A5C1E;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--font-body);
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 20px 72px;}
+.topband{
+  background:linear-gradient(135deg,var(--navy) 0%,#0B2036 100%);
+  color:#fff; padding:34px 20px 40px;
+}
+.topband-inner{max-width:var(--maxw); margin:0 auto;}
+.brand{display:flex; align-items:center; gap:10px; font-size:13px; letter-spacing:.08em; text-transform:uppercase; opacity:.85; font-weight:600;}
+.brand .dot{width:8px;height:8px;border-radius:50%;background:var(--blue);}
+.kicker{margin-top:18px; font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:#8FCBEF; font-weight:700;}
+h1.title{
+  font-family:var(--font-head); font-weight:600; font-size:clamp(26px,5vw,38px);
+  margin:8px 0 10px; line-height:1.15; color:#fff;
+}
+.subtitle{font-size:16px; color:#C9D9E4; max-width:640px; margin:0;}
+.meta-row{display:flex; gap:18px; flex-wrap:wrap; margin-top:22px; font-size:13px; color:#9FB6C6;}
+.meta-row span{display:flex; align-items:center; gap:6px;}
+.card{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+  padding:26px 24px; margin-top:22px;
+}
+h2.h2{
+  font-family:var(--font-head); font-size:21px; font-weight:600; color:var(--navy);
+  margin:0 0 12px; padding-bottom:10px; border-bottom:2px solid var(--light);
+}
+:root[data-theme="dark"] h2.h2{color:#8FCBEF;}
+h2.h2 .num{color:var(--blue); margin-right:8px;}
+p{color:var(--ink-soft); font-size:15.5px;}
+p.lead{color:var(--ink); font-size:16.5px;}
+ul.blist{margin:10px 0; padding-left:0; list-style:none;}
+ul.blist li{position:relative; padding-left:24px; margin-bottom:10px; font-size:15px; color:var(--ink-soft);}
+ul.blist li:before{content:"—"; position:absolute; left:0; color:var(--blue); font-weight:700;}
+table.tbl{width:100%; border-collapse:collapse; margin:14px 0; font-size:14px;}
+table.tbl th{background:var(--navy); color:#fff; text-align:left; padding:10px 12px; font-weight:600; font-size:13px;}
+table.tbl td{padding:10px 12px; border-bottom:1px solid var(--line); color:var(--ink-soft); vertical-align:top;}
+table.tbl tr:last-child td{border-bottom:none;}
+table.tbl tr:nth-child(even) td{background:var(--light);}
+.note{border-radius:10px; padding:16px 18px; margin:16px 0; font-size:14.5px;}
+.note.amber{background:var(--amber-bg); border:1px solid var(--amber-line); color:var(--ink);}
+.note.blue{background:var(--light); border:1px solid var(--line); color:var(--ink);}
+.note b{color:var(--navy);}
+:root[data-theme="dark"] .note b{color:#8FCBEF;}
+.cta{
+  background:linear-gradient(135deg,var(--blue),var(--navy)); color:#fff; border-radius:var(--radius);
+  padding:26px 24px; margin-top:26px; text-align:center;
+}
+.cta h3{font-family:var(--font-head); margin:0 0 8px; font-size:19px;}
+.cta p{color:#D7E7F0; margin:0 0 16px; font-size:14.5px;}
+.cta a.btn{
+  display:inline-block; background:#fff; color:var(--navy); font-weight:700; text-decoration:none;
+  padding:11px 26px; border-radius:999px; font-size:14px;
+}
+.footer{text-align:center; color:var(--ink-soft); font-size:12.5px; margin-top:30px; padding-top:18px; border-top:1px solid var(--line);}
+.pill{display:inline-block; background:var(--light2); color:var(--purple); font-size:11.5px; font-weight:700; padding:4px 10px; border-radius:999px; letter-spacing:.03em; margin-right:6px;}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+@media(max-width:560px){.grid2{grid-template-columns:1fr;}}
+.stepbox{background:var(--light); border-radius:10px; padding:14px 16px; margin-bottom:10px;}
+.stepbox b{color:var(--navy); display:block; margin-bottom:4px; font-size:14.5px;}
+:root[data-theme="dark"] .stepbox b{color:#8FCBEF;}
+.toc{display:flex; flex-wrap:wrap; gap:8px; margin-top:20px;}
+.toc a{font-size:12.5px; font-weight:600; color:#C9D9E4; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); padding:6px 12px; border-radius:999px; text-decoration:none;}
+.toc a:hover{background:rgba(255,255,255,.16); color:#fff;}
+.faq{border-bottom:1px solid var(--line); padding:14px 0;}
+.faq:last-child{border-bottom:none;}
+.faq b{display:block; color:var(--navy); font-size:15px; margin-bottom:6px;}
+:root[data-theme="dark"] .faq b{color:#8FCBEF;}
+.faq p{margin:0;}
+.example{background:var(--light2); border-left:4px solid var(--purple); border-radius:0 10px 10px 0; padding:14px 18px; margin:16px 0; font-size:14.5px;}
+.example b{color:var(--purple); display:block; margin-bottom:4px; font-size:12.5px; text-transform:uppercase; letter-spacing:.04em;}
+.deflist{margin:10px 0;}
+.deflist .term{font-weight:700; color:var(--navy); font-size:15px; margin-top:12px;}
+:root[data-theme="dark"] .deflist .term{color:#8FCBEF;}
+.deflist .def{color:var(--ink-soft); font-size:14.5px; margin:2px 0 0;}
+.glossary{display:grid; grid-template-columns:1fr; gap:2px;}
+.mistake{display:flex; gap:10px; padding:10px 0; border-bottom:1px dashed var(--line); font-size:14.5px; color:var(--ink-soft);}
+.mistake:last-child{border-bottom:none;}
+.mistake .x{color:#C1443C; font-weight:700; flex:none;}
+h3.h3{font-family:var(--font-head); font-size:16px; font-weight:600; color:var(--navy); margin:20px 0 8px;}
+:root[data-theme="dark"] h3.h3{color:#8FCBEF;}
+
+@media (prefers-color-scheme: dark){
+:root:not([data-theme="light"]) h2.h2{color:#8FCBEF;}
+:root:not([data-theme="light"]) .note b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .stepbox b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .faq b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .deflist .term{color:#8FCBEF;}
+:root:not([data-theme="light"]) h3.h3{color:#8FCBEF;}
+}
+
+a.backlink{display:inline-flex;align-items:center;gap:6px;color:#8FCBEF;text-decoration:none;font-size:13px;font-weight:600;margin-bottom:2px;}
+a.backlink:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+<div class="topband"><div class="topband-inner">
+  <a class="backlink" href="index2.html">&larr; All Best Practice resources</a>
+  <div class="brand"><span class="dot"></span> NucCol &nbsp;|&nbsp; Nuclear Collaboration Ltd</div>
+  <div class="kicker">Why It's Non-Negotiable in Nuclear</div>
+  <h1 class="title">Traceability &amp; Documentation</h1>
+  <p class="subtitle">In most industries, missing paperwork is an inconvenience. In nuclear, it can mean a licensee can no longer prove a component is safe &amp;mdash; here's what regulators actually check, and how to build traceability into daily practice.</p>
+  <div class="meta-row"><span>8 min read</span><span>Supply Chain &amp; Quality</span></div>
+</div></div>
+<div class="wrap">
+<div class="card"><h2 class="h2"><span class="num">01</span>Why nuclear treats documentation as a safety issue</h2><p class="lead">The Office for Nuclear Regulation (ONR) regulates UK nuclear licensees against a set of Licence Conditions. Licence Condition 6 (Documents, records, authorities and certificates) requires that the licensee "make adequate records to demonstrate compliance with any of the conditions attached to this licence", and that those records, once approved, are preserved for <b>30 years</b> unless ONR agrees otherwise.</p><p class="">That obligation doesn't stop at the licensee's own gate &mdash; it flows down through the supply chain. If your component fails ten years after installation, someone needs to be able to trace exactly what it was, who made it, what it was tested to, and who signed it off. If that record doesn't exist, or can't be found, the licensee has a genuine safety and regulatory problem &mdash; and it traces straight back to you.</p></div><div class="card"><h2 class="h2"><span class="num">02</span>What LC6 actually requires, in plain terms</h2><table class="tbl"><thead><tr><th>Requirement</th><th>What it means for you as a supplier</th></tr></thead><tbody><tr><td>Adequate records of compliance</td><td>You need to be able to show, with paperwork, that what you delivered met the specification &mdash; not just assert that it did</td></tr><tr><td>30-year preservation</td><td>Records can't be treated as disposable once a job is invoiced and closed &mdash; the retention period is decades, not years</td></tr><tr><td>ONR approval of arrangements</td><td>For the highest safety-significance work, your customer's own record-keeping arrangements (which your evidence feeds into) may themselves be subject to ONR approval</td></tr><tr><td>No unapproved changes to approved arrangements</td><td>If a customer's documented process for handling your records is ONR-approved, they can't quietly change it without going back to the regulator</td></tr></tbody></table><div class="note blue">ONR inspectors have carried out real, published compliance inspections against LC6 (and its close companion, LC25 — Operational records) at major sites including Sellafield — this isn't a theoretical requirement, it's actively checked.</div></div><div class="card"><h2 class="h2"><span class="num">03</span>Traceability and CFSI — two sides of the same coin</h2><p class="">Traceability isn't just about proving your own good work &mdash; it's the primary defence against Counterfeit, Fraudulent and Suspect Items (CFSI) entering the nuclear supply chain. The Nuclear Industry Safety Directors Forum defines CFSI as goods illegally labelled and represented as original, and warns that almost anything can be copied &mdash; including machined parts.</p><div class="example"><b>Why this matters more in nuclear than elsewhere</b>A counterfeit part can look identical to the genuine article from the outside, while containing different materials or skipping the testing the real part underwent. Full traceability — knowing the genuine provenance of every part, material and record — is the main practical defence, because it makes a counterfeit substitution visible before it's installed, not after something fails.</div><p class="">For engineering and design roles, that means defining technical specifications, critical characteristics and acceptance criteria as early as possible. For procurement, it means passing those requirements down through your own supply chain so they form part of goods acceptance — and, wherever practical, trading directly with the manufacturer rather than through unverified intermediaries.</p></div><div class="card"><h2 class="h2"><span class="num">04</span>What good traceability looks like in practice</h2><ul class="blist"><li>A unique, unbroken reference linking raw material, in-process records, test/inspection results and the finished item &mdash; so any one of them leads you back to the others.</li><li>Records created at the point of work, not reconstructed afterwards from memory or a rough note.</li><li>A clear owner for record retention &mdash; someone actually responsible for making sure records exist for the full retention period, not just until the invoice is paid.</li><li>Certificates and authorities kept alongside the physical or digital record they relate to, not in a separate system nobody remembers to check.</li><li>A documented process for what happens when a record is found to be missing or wrong &mdash; not just prevention, but a defined response.</li></ul></div><div class="card"><h2 class="h2"><span class="num">05</span>A realistic path to building this in</h2><div class="stepbox"><b>Stage 1 — Map your current record trail</b>Walk one recent job from raw material through to delivery and see whether you could actually reconstruct full traceability today. Most gaps are found here, not invented.</div><div class="stepbox"><b>Stage 2 — Fix the weakest link first</b>Traceability is only as strong as its weakest connection — usually the handover between two systems or two people, not any single record itself.</div><div class="stepbox"><b>Stage 3 — Build a retention plan, not just a filing habit</b>Decide, in writing, who owns record retention and for how long, rather than relying on records surviving by accident.</div><div class="stepbox"><b>Stage 4 — Treat CFSI awareness as part of the same system</b>Traceability and counterfeit-item awareness reinforce each other — train the same people on both together rather than as separate topics.</div><div class="stepbox"><b>Stage 5 — Ask your customer what they actually need to see</b>Requirements vary by grade and criticality (see the Nuclear Standards Quick Guide for ISO 19443 grading) — confirm what's expected rather than assuming the highest bar always applies.</div></div><div class="card"><h2 class="h2"><span class="num">06</span>Common mistakes SMEs make here</h2><div class="mistake"><span class="x">&#10007;</span><span>Treating traceability as paperwork to complete just before an audit, rather than a routine part of daily work.</span></div><div class="mistake"><span class="x">&#10007;</span><span>Losing traceability at a handover point — between departments, between systems, or between your business and a sub-supplier.</span></div><div class="mistake"><span class="x">&#10007;</span><span>Assuming retention obligations end when the contract does — LC6's 30-year preservation requirement runs long past project closeout.</span></div><div class="mistake"><span class="x">&#10007;</span><span>Not knowing where records for a specific job actually are, even when they technically exist somewhere.</span></div></div><div class="card"><h2 class="h2"><span class="num">07</span>Frequently asked questions</h2><div class="glossary"><div class="faq"><b>Does LC6 apply directly to my business, or only to the licensee?</b><p>LC6 is a legal condition on the licensee (e.g. the site operator), but it can only be satisfied if the records your work depends on actually exist and are adequate — so the practical obligation flows down to you as a supplier.</p></div><div class="faq"><b>How long do I really need to keep records for?</b><p>The standard reference point is 30 years unless ONR has approved a different period for the specific arrangement — treat this as the default assumption unless your customer tells you otherwise.</p></div><div class="faq"><b>What's the difference between LC6 and LC25?</b><p>LC6 covers documents, records, authorities and certificates broadly. LC25 (Operational records) specifically covers records of the operation, inspection and maintenance of plant that may affect safety — the two are usually inspected together.</p></div><div class="faq"><b>How is this different from the Spotting Counterfeit Parts guide?</b><p>They're closely related — traceability is the main practical defence against CFSI. This guide focuses on the documentation and record-keeping obligation itself; the CFSI guide focuses on recognising and responding to suspect items.</p></div></div></div>
+<div class="cta">
+  <h3>Want to see where you stand on this?</h3>
+  <p>Traceability, Non-Conformance and CFSI is a dedicated evidence area within the F4N Quality &amp; Compliance category.</p>
+  <a class="btn" href="https://www.nuccol.co.uk" target="_blank" rel="noopener">Check your F4N status &rarr;</a>
+</div>
+<div class="footer">NucCol &middot; Nuclear Collaboration Ltd &middot; Best Practice resource, produced for ManufacturingUK.org</div>
+</div>
+
+</body>
+</html>

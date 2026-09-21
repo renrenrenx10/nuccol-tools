@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>New Build vs Decommissioning | NucCol Best Practice</title>
+<meta name="description" content="NucCol Best Practice resource for the UK nuclear supply chain.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#12314F; --blue:#1C7FBB; --purple:#7B2D8E;
+  --bg:#F7FAFC; --card:#FFFFFF; --ink:#16232E; --ink-soft:#4A5C6A;
+  --line:#DCE4EA; --light:#EEF4F8; --light2:#F7F2F9;
+  --amber-bg:#FFF6E5; --amber-line:#E9C46A;
+  --good:#1E8A5F; --focus:#1C7FBB;
+  --radius:14px; --maxw:840px;
+  --font-head:'Fraunces', Georgia, serif;
+  --font-body:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1720; --card:#152230; --ink:#EAF1F6; --ink-soft:#AFC1CE;
+    --line:#28394A; --light:#152B3A; --light2:#2A1F33;
+    --amber-bg:#2E2410; --amber-line:#7A5C1E;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1720; --card:#152230; --ink:#EAF1F6; --ink-soft:#AFC1CE;
+  --line:#28394A; --light:#152B3A; --light2:#2A1F33;
+  --amber-bg:#2E2410; --amber-line:#7A5C1E;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--font-body);
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 20px 72px;}
+.topband{
+  background:linear-gradient(135deg,var(--navy) 0%,#0B2036 100%);
+  color:#fff; padding:34px 20px 40px;
+}
+.topband-inner{max-width:var(--maxw); margin:0 auto;}
+.brand{display:flex; align-items:center; gap:10px; font-size:13px; letter-spacing:.08em; text-transform:uppercase; opacity:.85; font-weight:600;}
+.brand .dot{width:8px;height:8px;border-radius:50%;background:var(--blue);}
+.kicker{margin-top:18px; font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:#8FCBEF; font-weight:700;}
+h1.title{
+  font-family:var(--font-head); font-weight:600; font-size:clamp(26px,5vw,38px);
+  margin:8px 0 10px; line-height:1.15; color:#fff;
+}
+.subtitle{font-size:16px; color:#C9D9E4; max-width:640px; margin:0;}
+.meta-row{display:flex; gap:18px; flex-wrap:wrap; margin-top:22px; font-size:13px; color:#9FB6C6;}
+.meta-row span{display:flex; align-items:center; gap:6px;}
+.card{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+  padding:26px 24px; margin-top:22px;
+}
+h2.h2{
+  font-family:var(--font-head); font-size:21px; font-weight:600; color:var(--navy);
+  margin:0 0 12px; padding-bottom:10px; border-bottom:2px solid var(--light);
+}
+:root[data-theme="dark"] h2.h2{color:#8FCBEF;}
+h2.h2 .num{color:var(--blue); margin-right:8px;}
+p{color:var(--ink-soft); font-size:15.5px;}
+p.lead{color:var(--ink); font-size:16.5px;}
+ul.blist{margin:10px 0; padding-left:0; list-style:none;}
+ul.blist li{position:relative; padding-left:24px; margin-bottom:10px; font-size:15px; color:var(--ink-soft);}
+ul.blist li:before{content:"—"; position:absolute; left:0; color:var(--blue); font-weight:700;}
+table.tbl{width:100%; border-collapse:collapse; margin:14px 0; font-size:14px;}
+table.tbl th{background:var(--navy); color:#fff; text-align:left; padding:10px 12px; font-weight:600; font-size:13px;}
+table.tbl td{padding:10px 12px; border-bottom:1px solid var(--line); color:var(--ink-soft); vertical-align:top;}
+table.tbl tr:last-child td{border-bottom:none;}
+table.tbl tr:nth-child(even) td{background:var(--light);}
+.note{border-radius:10px; padding:16px 18px; margin:16px 0; font-size:14.5px;}
+.note.amber{background:var(--amber-bg); border:1px solid var(--amber-line); color:var(--ink);}
+.note.blue{background:var(--light); border:1px solid var(--line); color:var(--ink);}
+.note b{color:var(--navy);}
+:root[data-theme="dark"] .note b{color:#8FCBEF;}
+.cta{
+  background:linear-gradient(135deg,var(--blue),var(--navy)); color:#fff; border-radius:var(--radius);
+  padding:26px 24px; margin-top:26px; text-align:center;
+}
+.cta h3{font-family:var(--font-head); margin:0 0 8px; font-size:19px;}
+.cta p{color:#D7E7F0; margin:0 0 16px; font-size:14.5px;}
+.cta a.btn{
+  display:inline-block; background:#fff; color:var(--navy); font-weight:700; text-decoration:none;
+  padding:11px 26px; border-radius:999px; font-size:14px;
+}
+.footer{text-align:center; color:var(--ink-soft); font-size:12.5px; margin-top:30px; padding-top:18px; border-top:1px solid var(--line);}
+.pill{display:inline-block; background:var(--light2); color:var(--purple); font-size:11.5px; font-weight:700; padding:4px 10px; border-radius:999px; letter-spacing:.03em; margin-right:6px;}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+@media(max-width:560px){.grid2{grid-template-columns:1fr;}}
+.stepbox{background:var(--light); border-radius:10px; padding:14px 16px; margin-bottom:10px;}
+.stepbox b{color:var(--navy); display:block; margin-bottom:4px; font-size:14.5px;}
+:root[data-theme="dark"] .stepbox b{color:#8FCBEF;}
+.toc{display:flex; flex-wrap:wrap; gap:8px; margin-top:20px;}
+.toc a{font-size:12.5px; font-weight:600; color:#C9D9E4; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); padding:6px 12px; border-radius:999px; text-decoration:none;}
+.toc a:hover{background:rgba(255,255,255,.16); color:#fff;}
+.faq{border-bottom:1px solid var(--line); padding:14px 0;}
+.faq:last-child{border-bottom:none;}
+.faq b{display:block; color:var(--navy); font-size:15px; margin-bottom:6px;}
+:root[data-theme="dark"] .faq b{color:#8FCBEF;}
+.faq p{margin:0;}
+.example{background:var(--light2); border-left:4px solid var(--purple); border-radius:0 10px 10px 0; padding:14px 18px; margin:16px 0; font-size:14.5px;}
+.example b{color:var(--purple); display:block; margin-bottom:4px; font-size:12.5px; text-transform:uppercase; letter-spacing:.04em;}
+.deflist{margin:10px 0;}
+.deflist .term{font-weight:700; color:var(--navy); font-size:15px; margin-top:12px;}
+:root[data-theme="dark"] .deflist .term{color:#8FCBEF;}
+.deflist .def{color:var(--ink-soft); font-size:14.5px; margin:2px 0 0;}
+.glossary{display:grid; grid-template-columns:1fr; gap:2px;}
+.mistake{display:flex; gap:10px; padding:10px 0; border-bottom:1px dashed var(--line); font-size:14.5px; color:var(--ink-soft);}
+.mistake:last-child{border-bottom:none;}
+.mistake .x{color:#C1443C; font-weight:700; flex:none;}
+h3.h3{font-family:var(--font-head); font-size:16px; font-weight:600; color:var(--navy); margin:20px 0 8px;}
+:root[data-theme="dark"] h3.h3{color:#8FCBEF;}
+
+@media (prefers-color-scheme: dark){
+:root:not([data-theme="light"]) h2.h2{color:#8FCBEF;}
+:root:not([data-theme="light"]) .note b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .stepbox b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .faq b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .deflist .term{color:#8FCBEF;}
+:root:not([data-theme="light"]) h3.h3{color:#8FCBEF;}
+}
+
+a.backlink{display:inline-flex;align-items:center;gap:6px;color:#8FCBEF;text-decoration:none;font-size:13px;font-weight:600;margin-bottom:2px;}
+a.backlink:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+<div class="topband"><div class="topband-inner">
+  <a class="backlink" href="index2.html">&larr; All Best Practice resources</a>
+  <div class="brand"><span class="dot"></span> NucCol &nbsp;|&nbsp; Nuclear Collaboration Ltd</div>
+  <div class="kicker">Two Different Markets, Two Different Routes In</div>
+  <h1 class="title">New Build vs Decommissioning</h1>
+  <p class="subtitle">SMR and gigawatt new build get most of the headlines, but decommissioning is the UK's biggest and longest-running nuclear market. Here's how the two actually differ, and which entry route fits your business.</p>
+  <div class="meta-row"><span>9 min read</span><span>Getting Started</span></div>
+</div></div>
+<div class="wrap">
+<div class="card"><h2 class="h2"><span class="num">01</span>Why this distinction matters</h2><p class="lead">It's easy to assume "the nuclear supply chain" is one market with one set of buyers and one set of rules. It isn't. New build (Hinkley Point C, Sizewell C, SMR programmes) and decommissioning (Sellafield, Magnox sites, Dounreay) are run by different organisations, buy in different ways, and reward different things from a supplier. Chasing both with the same pitch usually means landing neither.</p><p class="">The good news: both are enormous. The UK's decommissioning mission alone is a multi-decade, multi-billion-pound programme — the Nuclear Decommissioning Authority's own strategy describes safely and cost-effectively cleaning up the UK's earliest nuclear sites as a mission running well past 2050. New build is younger but growing fast, with Hinkley Point C alone reporting over 4,000 companies engaged and £5 billion already spent with businesses in the South West.</p></div><div class="card"><h2 class="h2"><span class="num">02</span>New build vs decommissioning, at a glance</h2><table class="tbl"><thead><tr><th>Area</th><th>New Build</th><th>Decommissioning</th></tr></thead><tbody><tr><td>Who buys</td><td>EDF (Hinkley Point C, Sizewell C), SMR developers (Rolls-Royce SMR, GE-Hitachi, etc.), Great British Nuclear</td><td>Nuclear Decommissioning Authority (NDA) and its site licensee companies — Sellafield Ltd, Magnox, Dounreay Site Restoration Ltd, Nuclear Waste Services</td></tr><tr><td>What's being bought</td><td>Design, construction, plant, equipment and commissioning for facilities that don't exist yet</td><td>Dismantling, waste characterisation, remediation and site restoration of facilities that already exist</td></tr><tr><td>Typical contract shape</td><td>Large capital construction packages, often through a Tier 1/Tier 2 structure feeding a single project</td><td>Long-term framework and partnership contracts (NDA's Programme and Project Partners model runs 20 years) plus smaller call-offs beneath them</td></tr><tr><td>How you find work</td><td>Tier 1/Tier 2 supplier days, direct approach to main contractors, sector consortiums (see below)</td><td>NDA and site licensee procurement pages, Find a Tender, and framework call-off routes</td></tr><tr><td>Entry route for an SME</td><td>Usually via a Tier 1 or Tier 2 contractor rather than bidding NDA-style frameworks directly</td><td>Often via a framework call-off, or as a specialist sub-contractor to a Programme and Project Partner</td></tr></tbody></table></div><div class="card"><h2 class="h2"><span class="num">03</span>New build: what the opportunity actually looks like</h2><p class="">New build work is concentrated in a small number of very large programmes, so the practical route in for most SMEs is not bidding the main contract — it's getting in front of the Tier 1 and Tier 2 contractors who are already delivering it.</p><div class="example"><b>Worked example — Hinkley Point C</b>EDF doesn't run a single open tender that an SME applies to. Instead, its Supply Chain Engagement team (run in partnership with the Somerset Chamber of Commerce) actively identifies and engages local and national businesses, then makes the introductions that lead to work with the Tier 1s already on site. Registering interest with that team, rather than waiting for a public tender, is the realistic way in.</div><p class="">SMR programmes are still earlier in their journey, which is an advantage for suppliers who position themselves now — developers are actively mapping their future supply chains well before construction starts, and being visible early (through NucCol's own Sector Opportunity Reports, Meet the Buyer events, and F4N certification) matters more than it will once contracts are already let.</p></div><div class="card"><h2 class="h2"><span class="num">04</span>Decommissioning: what the opportunity actually looks like</h2><p class="">Decommissioning runs on a different rhythm. The NDA and its site licensees publish clear procurement strategies, run supplier events, and increasingly favour long-term framework and partnership models over one-off tenders.</p><div class="example"><b>Worked example — Sellafield's Programme and Project Partners model</b>Sellafield Ltd's supply chain strategy is explicit that its major delivery model is not designed to close the market to SMEs — it's structured in Lots (Integration, Design & Engineering, Civil Construction, Process Construction), each run by a Management Contractor who then needs their own supply chain and trade pack to deliver the work. The practical opportunity for most SMEs sits underneath those Lot partners, not at the top of them.</div><p class="">Site licensees publish rolling procurement plan schedules (Sellafield issues a quarterly one) and each has its own supplier-facing procurement page — NDA, Sellafield, Dounreay and Nuclear Waste Services each publish their own. The NDA also runs an annual SME Action Plan with specific targets for SME and start-up spend, and a dedicated SME Hub for support.</p></div><div class="card"><h2 class="h2"><span class="num">05</span>Which one fits your business?</h2><ul class="blist"><li><b>You make bespoke, novel or safety-critical components</b> — new build tends to have more genuinely novel engineering scope, especially in the earlier SMR programmes.</li><li><b>You do characterisation, remediation, waste handling or demolition-adjacent work</b> — this is decommissioning's bread and butter, and a much smaller pool of specialist competitors than new build attracts.</li><li><b>You want long-term, framework-shaped revenue over one big capital project</b> — decommissioning's framework and partnership contracts often run 10–20 years, which suits businesses wanting predictable, recurring work.</li><li><b>You're already embedded with a Tier 1 or Tier 2 in construction</b> — new build's Tier-driven model rewards relationships you may already have from other construction/engineering sectors.</li><li><b>You can do both</b> — many established F4N companies deliberately serve both markets; the entry route and buyer relationship simply need to be built separately for each.</li></ul></div><div class="card"><h2 class="h2"><span class="num">06</span>A realistic first step for each route</h2><div class="stepbox"><b>New build — start with the Tier 1/Tier 2, not the developer</b>Identify who's already delivering the programme you're targeting, and find their supplier engagement route (often run via a regional Chamber of Commerce, as at Hinkley Point C) rather than approaching the developer directly.</div><div class="stepbox"><b>Decommissioning — start with the site licensee's procurement page</b>NDA, Sellafield, Dounreay and Nuclear Waste Services each publish their own procurement pages and rolling procurement plan schedules — read the current one for your target site before approaching anyone.</div><div class="stepbox"><b>Either route — get F4N certified first</b>F4N certification and a Nuclear Supplier Database listing are recognised across both markets, so this single step opens doors on both sides rather than committing you to one.</div><div class="stepbox"><b>Either route — watch for supplier consortiums</b>Groups of complementary SMEs sometimes form proactively (see the FAQ below) to bid for work too large for any one of them alone — worth knowing whether one already exists in your specialism.</div></div><div class="card"><h2 class="h2"><span class="num">07</span>Common mistakes SMEs make here</h2><div class="mistake"><span class="x">&#10007;</span><span>Pitching decommissioning-style credentials (waste handling, characterisation) to a new build buyer, or vice versa, without adapting the message.</span></div><div class="mistake"><span class="x">&#10007;</span><span>Waiting for a public tender to appear for new build work, when the real route in is usually through a Tier 1/Tier 2 relationship built well before any tender exists.</span></div><div class="mistake"><span class="x">&#10007;</span><span>Assuming a 20-year framework model like Sellafield's Programme and Project Partners closes the market, rather than recognising it as an opportunity to supply the Lot partners underneath it.</span></div><div class="mistake"><span class="x">&#10007;</span><span>Not reading the site licensee's own procurement plan schedule, and missing genuine near-term opportunities that are already published.</span></div></div><div class="card"><h2 class="h2"><span class="num">08</span>Frequently asked questions</h2><div class="glossary"><div class="faq"><b>Is one market bigger than the other?</b><p>Decommissioning is currently the larger, longer-running programme in pure spend terms — it's the UK's biggest environmental restoration project, running for decades. New build is smaller today but growing quickly as Hinkley Point C, Sizewell C and the SMR programmes scale up.</p></div><div class="faq"><b>Can a small business really win decommissioning work directly from the NDA?</b><p>Rarely as a prime contractor — most decommissioning spend flows through the site licensees' framework and partnership contracts. The realistic entry point is as a specialist sub-contractor or framework call-off supplier, which the NDA's own SME Action Plan is designed to encourage.</p></div><div class="faq"><b>What's a supplier consortium, and do I need one?</b><p>Some SMEs proactively group together — pooling complementary skills — to bid for work too large for any one of them, ahead of any specific requirement being identified. It's not essential, but worth exploring if your capability is narrow relative to the scale of packages being let.</p></div><div class="faq"><b>Does F4N certification work for both markets?</b><p>Yes — F4N and a Nuclear Supplier Database listing are recognised across the sector, so certifying once supports entry into either market rather than committing you to one.</p></div></div></div>
+<div class="cta">
+  <h3>Not sure which route fits your business?</h3>
+  <p>NucCol's Sector Opportunity Reports break down demand by reactor type and market, including both new build and decommissioning programmes.</p>
+  <a class="btn" href="https://www.nuccol.co.uk" target="_blank" rel="noopener">See a Sector Opportunity Report &rarr;</a>
+</div>
+<div class="footer">NucCol &middot; Nuclear Collaboration Ltd &middot; Best Practice resource, produced for ManufacturingUK.org</div>
+</div>
+
+</body>
+</html>
