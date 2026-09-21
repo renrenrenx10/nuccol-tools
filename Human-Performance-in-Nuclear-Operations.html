@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Human Performance in Nuclear Operations | NucCol Best Practice</title>
+<meta name="description" content="NucCol Best Practice resource for the UK nuclear supply chain.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#12314F; --blue:#1C7FBB; --purple:#7B2D8E;
+  --bg:#F7FAFC; --card:#FFFFFF; --ink:#16232E; --ink-soft:#4A5C6A;
+  --line:#DCE4EA; --light:#EEF4F8; --light2:#F7F2F9;
+  --amber-bg:#FFF6E5; --amber-line:#E9C46A;
+  --good:#1E8A5F; --focus:#1C7FBB;
+  --radius:14px; --maxw:840px;
+  --font-head:'Fraunces', Georgia, serif;
+  --font-body:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1720; --card:#152230; --ink:#EAF1F6; --ink-soft:#AFC1CE;
+    --line:#28394A; --light:#152B3A; --light2:#2A1F33;
+    --amber-bg:#2E2410; --amber-line:#7A5C1E;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1720; --card:#152230; --ink:#EAF1F6; --ink-soft:#AFC1CE;
+  --line:#28394A; --light:#152B3A; --light2:#2A1F33;
+  --amber-bg:#2E2410; --amber-line:#7A5C1E;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--font-body);
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 20px 72px;}
+.topband{
+  background:linear-gradient(135deg,var(--navy) 0%,#0B2036 100%);
+  color:#fff; padding:34px 20px 40px;
+}
+.topband-inner{max-width:var(--maxw); margin:0 auto;}
+.brand{display:flex; align-items:center; gap:10px; font-size:13px; letter-spacing:.08em; text-transform:uppercase; opacity:.85; font-weight:600;}
+.brand .dot{width:8px;height:8px;border-radius:50%;background:var(--blue);}
+.kicker{margin-top:18px; font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:#8FCBEF; font-weight:700;}
+h1.title{
+  font-family:var(--font-head); font-weight:600; font-size:clamp(26px,5vw,38px);
+  margin:8px 0 10px; line-height:1.15; color:#fff;
+}
+.subtitle{font-size:16px; color:#C9D9E4; max-width:640px; margin:0;}
+.meta-row{display:flex; gap:18px; flex-wrap:wrap; margin-top:22px; font-size:13px; color:#9FB6C6;}
+.meta-row span{display:flex; align-items:center; gap:6px;}
+.card{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+  padding:26px 24px; margin-top:22px;
+}
+h2.h2{
+  font-family:var(--font-head); font-size:21px; font-weight:600; color:var(--navy);
+  margin:0 0 12px; padding-bottom:10px; border-bottom:2px solid var(--light);
+}
+:root[data-theme="dark"] h2.h2{color:#8FCBEF;}
+h2.h2 .num{color:var(--blue); margin-right:8px;}
+p{color:var(--ink-soft); font-size:15.5px;}
+p.lead{color:var(--ink); font-size:16.5px;}
+ul.blist{margin:10px 0; padding-left:0; list-style:none;}
+ul.blist li{position:relative; padding-left:24px; margin-bottom:10px; font-size:15px; color:var(--ink-soft);}
+ul.blist li:before{content:"—"; position:absolute; left:0; color:var(--blue); font-weight:700;}
+table.tbl{width:100%; border-collapse:collapse; margin:14px 0; font-size:14px;}
+table.tbl th{background:var(--navy); color:#fff; text-align:left; padding:10px 12px; font-weight:600; font-size:13px;}
+table.tbl td{padding:10px 12px; border-bottom:1px solid var(--line); color:var(--ink-soft); vertical-align:top;}
+table.tbl tr:last-child td{border-bottom:none;}
+table.tbl tr:nth-child(even) td{background:var(--light);}
+.note{border-radius:10px; padding:16px 18px; margin:16px 0; font-size:14.5px;}
+.note.amber{background:var(--amber-bg); border:1px solid var(--amber-line); color:var(--ink);}
+.note.blue{background:var(--light); border:1px solid var(--line); color:var(--ink);}
+.note b{color:var(--navy);}
+:root[data-theme="dark"] .note b{color:#8FCBEF;}
+.cta{
+  background:linear-gradient(135deg,var(--blue),var(--navy)); color:#fff; border-radius:var(--radius);
+  padding:26px 24px; margin-top:26px; text-align:center;
+}
+.cta h3{font-family:var(--font-head); margin:0 0 8px; font-size:19px;}
+.cta p{color:#D7E7F0; margin:0 0 16px; font-size:14.5px;}
+.cta a.btn{
+  display:inline-block; background:#fff; color:var(--navy); font-weight:700; text-decoration:none;
+  padding:11px 26px; border-radius:999px; font-size:14px;
+}
+.footer{text-align:center; color:var(--ink-soft); font-size:12.5px; margin-top:30px; padding-top:18px; border-top:1px solid var(--line);}
+.pill{display:inline-block; background:var(--light2); color:var(--purple); font-size:11.5px; font-weight:700; padding:4px 10px; border-radius:999px; letter-spacing:.03em; margin-right:6px;}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+@media(max-width:560px){.grid2{grid-template-columns:1fr;}}
+.stepbox{background:var(--light); border-radius:10px; padding:14px 16px; margin-bottom:10px;}
+.stepbox b{color:var(--navy); display:block; margin-bottom:4px; font-size:14.5px;}
+:root[data-theme="dark"] .stepbox b{color:#8FCBEF;}
+.toc{display:flex; flex-wrap:wrap; gap:8px; margin-top:20px;}
+.toc a{font-size:12.5px; font-weight:600; color:#C9D9E4; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); padding:6px 12px; border-radius:999px; text-decoration:none;}
+.toc a:hover{background:rgba(255,255,255,.16); color:#fff;}
+.faq{border-bottom:1px solid var(--line); padding:14px 0;}
+.faq:last-child{border-bottom:none;}
+.faq b{display:block; color:var(--navy); font-size:15px; margin-bottom:6px;}
+:root[data-theme="dark"] .faq b{color:#8FCBEF;}
+.faq p{margin:0;}
+.example{background:var(--light2); border-left:4px solid var(--purple); border-radius:0 10px 10px 0; padding:14px 18px; margin:16px 0; font-size:14.5px;}
+.example b{color:var(--purple); display:block; margin-bottom:4px; font-size:12.5px; text-transform:uppercase; letter-spacing:.04em;}
+.deflist{margin:10px 0;}
+.deflist .term{font-weight:700; color:var(--navy); font-size:15px; margin-top:12px;}
+:root[data-theme="dark"] .deflist .term{color:#8FCBEF;}
+.deflist .def{color:var(--ink-soft); font-size:14.5px; margin:2px 0 0;}
+.glossary{display:grid; grid-template-columns:1fr; gap:2px;}
+.mistake{display:flex; gap:10px; padding:10px 0; border-bottom:1px dashed var(--line); font-size:14.5px; color:var(--ink-soft);}
+.mistake:last-child{border-bottom:none;}
+.mistake .x{color:#C1443C; font-weight:700; flex:none;}
+h3.h3{font-family:var(--font-head); font-size:16px; font-weight:600; color:var(--navy); margin:20px 0 8px;}
+:root[data-theme="dark"] h3.h3{color:#8FCBEF;}
+
+@media (prefers-color-scheme: dark){
+:root:not([data-theme="light"]) h2.h2{color:#8FCBEF;}
+:root:not([data-theme="light"]) .note b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .stepbox b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .faq b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .deflist .term{color:#8FCBEF;}
+:root:not([data-theme="light"]) h3.h3{color:#8FCBEF;}
+}
+
+a.backlink{display:inline-flex;align-items:center;gap:6px;color:#8FCBEF;text-decoration:none;font-size:13px;font-weight:600;margin-bottom:2px;}
+a.backlink:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+<div class="topband"><div class="topband-inner">
+  <a class="backlink" href="index2.html">&larr; All Best Practice resources</a>
+  <div class="brand"><span class="dot"></span> NucCol &nbsp;|&nbsp; Nuclear Collaboration Ltd</div>
+  <div class="kicker">Tools That Catch Human Error Before It Matters</div>
+  <h1 class="title">Human Performance in Nuclear Operations</h1>
+  <p class="subtitle">Most failures don't start with bad people — they start with good people under pressure making human mistakes. Here's how nuclear organisations build in tools to catch that before it becomes an incident.</p>
+  <div class="meta-row"><span>8 min read</span><span>Training &amp; Development</span></div>
+</div></div>
+<div class="wrap">
+<div class="card"><h2 class="h2"><span class="num">01</span>Why human performance is managed as a system</h2><p class="lead">In nuclear, small errors can have large consequences. A mature organisation treats human performance tools and error prevention as standard daily practice, not an occasional add-on for high-risk tasks only.</p></div><div class="card"><h2 class="h2"><span class="num">02</span>Core human performance tools</h2><div class="deflist"><div class="term">STAR (Stop, Think, Act, Review)</div><p class="def">A simple discipline for pausing before a task step, thinking through the intended action and its risks, acting deliberately, then reviewing the outcome before moving on.</p><div class="term">Three-way communication</div><p class="def">The receiver repeats back an instruction in their own words and the sender confirms it's correct — closing the loop on verbal instructions that are easy to mishear.</p><div class="term">Pre-job briefs and post-job reviews</div><p class="def">Structured discussion before a task starts (what could go wrong, who's doing what) and after it finishes (what actually happened, what to change next time).</p><div class="term">Peer checks / independent verification</div><p class="def">A second, independent person checks safety-critical work before it's signed off, rather than relying on a single person's self-check.</p><div class="term">Time-outs / stop-work authority</div><p class="def">Any team member can pause work if something doesn't look or feel right, without needing management approval first.</p></div></div><div class="card"><h2 class="h2"><span class="num">03</span>Tailoring tools to role and environment</h2><ul class="blist"><li>Adapt tools to fit shop floor, engineering and admin roles differently — a tool that works for a repetitive production task may need adapting for a one-off critical engineering task.</li><li>Recognise high-pressure versus steady-state work needs different levels of formality — build that flexibility in rather than a single rigid process.</li><li>Make tools practical with real examples relevant to your own operation, not abstract theory.</li></ul></div><div class="card"><h2 class="h2"><span class="num">04</span>Measuring and reinforcing usage</h2><p class="">A tool that exists in a procedure but isn't actually used doesn't reduce risk. Supervisors should observe and give feedback on use of pre-job briefs, communication discipline and situational awareness, and human performance tool usage should be part of routine audit and assurance checks — with incident learning feeding back into which tools were or weren't used and why.</p></div><div class="card"><h2 class="h2"><span class="num">05</span>Fatigue management and workload control</h2><p class="">Performance, decision-making and safety all collapse when people are running on empty — fatigue management is a planning discipline, not an afterthought.</p><div class="stepbox"><b>Design work patterns with fatigue in mind</b>Clear limits on working hours, rest breaks, shift lengths and rotation cycles, following HSE and sector-specific guidance.</div><div class="stepbox"><b>Monitor actual workload in real time</b>Track hours worked and overtime, including travel and on-call duties, and give supervisors authority to stop work or rotate people out when needed.</div><div class="stepbox"><b>Train staff to recognise and report fatigue</b>Cover the signs of fatigue and how to report concerns without stigma — including fitness-for-duty checks as part of pre-job briefs.</div><div class="stepbox"><b>Build fatigue into planning</b>Risk assessments, staffing plans for complex work, and contingency planning for late shifts or delays.</div></div><div class="card"><h2 class="h2"><span class="num">06</span>Monitoring human performance to drive improvement</h2><ul class="blist"><li>Define what good human performance looks like — procedural adherence, communication discipline, use of the tools above, safety-first decision-making.</li><li>Observe performance proactively through supervisor coaching, peer review of high-risk tasks and human performance walkdowns.</li><li>Analyse near-misses and behavioural trends (rule-bending, last-minute workarounds) to focus improvement effort.</li><li>Ask teams directly where they're most likely to make mistakes, rather than assuming leadership already knows.</li></ul></div><div class="card"><h2 class="h2"><span class="num">07</span>Common mistakes SMEs make here</h2><div class="mistake"><span class="x">&#10007;</span><span>Treating human performance tools as an occasional add-on for high-risk tasks rather than standard daily practice.</span></div><div class="mistake"><span class="x">&#10007;</span><span>Running root cause analysis after an incident but not checking which human performance tools were or weren't used.</span></div><div class="mistake"><span class="x">&#10007;</span><span>Monitoring workload on paper (contracted hours) without tracking real overtime, travel and on-call time that contributes to fatigue.</span></div><div class="mistake"><span class="x">&#10007;</span><span>Punishing rather than learning from self-reported near-misses, which discourages honest reporting.</span></div></div>
+<div class="cta">
+  <h3>Building a human performance programme?</h3>
+  <p>NucCol's Leadership and Governance and Nuclear Industry Fundamentals guides cover the wider safety culture context.</p>
+  <a class="btn" href="https://www.nuccol.co.uk" target="_blank" rel="noopener">See more resources &rarr;</a>
+</div>
+<div class="footer">NucCol &middot; Nuclear Collaboration Ltd &middot; Best Practice resource, produced for ManufacturingUK.org</div>
+</div>
+
+</body>
+</html>

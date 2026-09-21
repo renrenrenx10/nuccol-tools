@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nuclear Reactor Types and Their Developers | NucCol Best Practice</title>
+<meta name="description" content="NucCol Best Practice resource for the UK nuclear supply chain.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#12314F; --blue:#1C7FBB; --purple:#7B2D8E;
+  --bg:#F7FAFC; --card:#FFFFFF; --ink:#16232E; --ink-soft:#4A5C6A;
+  --line:#DCE4EA; --light:#EEF4F8; --light2:#F7F2F9;
+  --amber-bg:#FFF6E5; --amber-line:#E9C46A;
+  --good:#1E8A5F; --focus:#1C7FBB;
+  --radius:14px; --maxw:840px;
+  --font-head:'Fraunces', Georgia, serif;
+  --font-body:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1720; --card:#152230; --ink:#EAF1F6; --ink-soft:#AFC1CE;
+    --line:#28394A; --light:#152B3A; --light2:#2A1F33;
+    --amber-bg:#2E2410; --amber-line:#7A5C1E;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1720; --card:#152230; --ink:#EAF1F6; --ink-soft:#AFC1CE;
+  --line:#28394A; --light:#152B3A; --light2:#2A1F33;
+  --amber-bg:#2E2410; --amber-line:#7A5C1E;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--font-body);
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 20px 72px;}
+.topband{
+  background:linear-gradient(135deg,var(--navy) 0%,#0B2036 100%);
+  color:#fff; padding:34px 20px 40px;
+}
+.topband-inner{max-width:var(--maxw); margin:0 auto;}
+.brand{display:flex; align-items:center; gap:10px; font-size:13px; letter-spacing:.08em; text-transform:uppercase; opacity:.85; font-weight:600;}
+.brand .dot{width:8px;height:8px;border-radius:50%;background:var(--blue);}
+.kicker{margin-top:18px; font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:#8FCBEF; font-weight:700;}
+h1.title{
+  font-family:var(--font-head); font-weight:600; font-size:clamp(26px,5vw,38px);
+  margin:8px 0 10px; line-height:1.15; color:#fff;
+}
+.subtitle{font-size:16px; color:#C9D9E4; max-width:640px; margin:0;}
+.meta-row{display:flex; gap:18px; flex-wrap:wrap; margin-top:22px; font-size:13px; color:#9FB6C6;}
+.meta-row span{display:flex; align-items:center; gap:6px;}
+.card{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+  padding:26px 24px; margin-top:22px;
+}
+h2.h2{
+  font-family:var(--font-head); font-size:21px; font-weight:600; color:var(--navy);
+  margin:0 0 12px; padding-bottom:10px; border-bottom:2px solid var(--light);
+}
+:root[data-theme="dark"] h2.h2{color:#8FCBEF;}
+h2.h2 .num{color:var(--blue); margin-right:8px;}
+p{color:var(--ink-soft); font-size:15.5px;}
+p.lead{color:var(--ink); font-size:16.5px;}
+ul.blist{margin:10px 0; padding-left:0; list-style:none;}
+ul.blist li{position:relative; padding-left:24px; margin-bottom:10px; font-size:15px; color:var(--ink-soft);}
+ul.blist li:before{content:"—"; position:absolute; left:0; color:var(--blue); font-weight:700;}
+table.tbl{width:100%; border-collapse:collapse; margin:14px 0; font-size:14px;}
+table.tbl th{background:var(--navy); color:#fff; text-align:left; padding:10px 12px; font-weight:600; font-size:13px;}
+table.tbl td{padding:10px 12px; border-bottom:1px solid var(--line); color:var(--ink-soft); vertical-align:top;}
+table.tbl tr:last-child td{border-bottom:none;}
+table.tbl tr:nth-child(even) td{background:var(--light);}
+.note{border-radius:10px; padding:16px 18px; margin:16px 0; font-size:14.5px;}
+.note.amber{background:var(--amber-bg); border:1px solid var(--amber-line); color:var(--ink);}
+.note.blue{background:var(--light); border:1px solid var(--line); color:var(--ink);}
+.note b{color:var(--navy);}
+:root[data-theme="dark"] .note b{color:#8FCBEF;}
+.cta{
+  background:linear-gradient(135deg,var(--blue),var(--navy)); color:#fff; border-radius:var(--radius);
+  padding:26px 24px; margin-top:26px; text-align:center;
+}
+.cta h3{font-family:var(--font-head); margin:0 0 8px; font-size:19px;}
+.cta p{color:#D7E7F0; margin:0 0 16px; font-size:14.5px;}
+.cta a.btn{
+  display:inline-block; background:#fff; color:var(--navy); font-weight:700; text-decoration:none;
+  padding:11px 26px; border-radius:999px; font-size:14px;
+}
+.footer{text-align:center; color:var(--ink-soft); font-size:12.5px; margin-top:30px; padding-top:18px; border-top:1px solid var(--line);}
+.pill{display:inline-block; background:var(--light2); color:var(--purple); font-size:11.5px; font-weight:700; padding:4px 10px; border-radius:999px; letter-spacing:.03em; margin-right:6px;}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+@media(max-width:560px){.grid2{grid-template-columns:1fr;}}
+.stepbox{background:var(--light); border-radius:10px; padding:14px 16px; margin-bottom:10px;}
+.stepbox b{color:var(--navy); display:block; margin-bottom:4px; font-size:14.5px;}
+:root[data-theme="dark"] .stepbox b{color:#8FCBEF;}
+.toc{display:flex; flex-wrap:wrap; gap:8px; margin-top:20px;}
+.toc a{font-size:12.5px; font-weight:600; color:#C9D9E4; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); padding:6px 12px; border-radius:999px; text-decoration:none;}
+.toc a:hover{background:rgba(255,255,255,.16); color:#fff;}
+.faq{border-bottom:1px solid var(--line); padding:14px 0;}
+.faq:last-child{border-bottom:none;}
+.faq b{display:block; color:var(--navy); font-size:15px; margin-bottom:6px;}
+:root[data-theme="dark"] .faq b{color:#8FCBEF;}
+.faq p{margin:0;}
+.example{background:var(--light2); border-left:4px solid var(--purple); border-radius:0 10px 10px 0; padding:14px 18px; margin:16px 0; font-size:14.5px;}
+.example b{color:var(--purple); display:block; margin-bottom:4px; font-size:12.5px; text-transform:uppercase; letter-spacing:.04em;}
+.deflist{margin:10px 0;}
+.deflist .term{font-weight:700; color:var(--navy); font-size:15px; margin-top:12px;}
+:root[data-theme="dark"] .deflist .term{color:#8FCBEF;}
+.deflist .def{color:var(--ink-soft); font-size:14.5px; margin:2px 0 0;}
+.glossary{display:grid; grid-template-columns:1fr; gap:2px;}
+.mistake{display:flex; gap:10px; padding:10px 0; border-bottom:1px dashed var(--line); font-size:14.5px; color:var(--ink-soft);}
+.mistake:last-child{border-bottom:none;}
+.mistake .x{color:#C1443C; font-weight:700; flex:none;}
+h3.h3{font-family:var(--font-head); font-size:16px; font-weight:600; color:var(--navy); margin:20px 0 8px;}
+:root[data-theme="dark"] h3.h3{color:#8FCBEF;}
+
+@media (prefers-color-scheme: dark){
+:root:not([data-theme="light"]) h2.h2{color:#8FCBEF;}
+:root:not([data-theme="light"]) .note b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .stepbox b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .faq b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .deflist .term{color:#8FCBEF;}
+:root:not([data-theme="light"]) h3.h3{color:#8FCBEF;}
+}
+
+a.backlink{display:inline-flex;align-items:center;gap:6px;color:#8FCBEF;text-decoration:none;font-size:13px;font-weight:600;margin-bottom:2px;}
+a.backlink:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+<div class="topband"><div class="topband-inner">
+  <a class="backlink" href="index2.html">&larr; All Best Practice resources</a>
+  <div class="brand"><span class="dot"></span> NucCol &nbsp;|&nbsp; Nuclear Collaboration Ltd</div>
+  <div class="kicker">Know Your Market Before You Pitch</div>
+  <h1 class="title">Nuclear Reactor Types and Their Developers</h1>
+  <p class="subtitle">PWR, SMR, CANDU, Gen IV — the acronyms matter because each reactor type has a different developer, different supply chain and different point of entry for an SME.</p>
+  <div class="meta-row"><span>7 min read</span><span>Training &amp; Development</span></div>
+</div></div>
+<div class="wrap">
+<div class="card"><h2 class="h2"><span class="num">01</span>Why reactor type matters to your pitch</h2><p class="lead">Nuclear isn't one market — it's several, each built around a different reactor technology with its own design authority, supply chain structure and procurement rhythm. Knowing which reactor type your target customer is building changes what you should be pitching and to whom.</p></div><div class="card"><h2 class="h2"><span class="num">02</span>The main reactor types</h2><table class="tbl"><thead><tr><th>Type</th><th>How it works</th><th>Where it's used</th></tr></thead><tbody><tr><td>PWR (Pressurised Water Reactor)</td><td>Water kept under high pressure to stop it boiling, transferring heat via a steam generator to a secondary loop that drives the turbine</td><td>The most common reactor type globally, including Hinkley Point C and Sizewell C (EPR design)</td></tr><tr><td>BWR (Boiling Water Reactor)</td><td>Water boils directly in the reactor core, producing steam that drives the turbine directly — simpler design, one less heat-exchange loop</td><td>Used internationally, notably by GE Hitachi designs</td></tr><tr><td>CANDU (Canada Deuterium Uranium)</td><td>Uses heavy water as both coolant and moderator, allowing it to run on natural (unenriched) uranium</td><td>Canadian-developed, used internationally including parts of the UK's historic fleet lineage</td></tr><tr><td>Gas-Cooled Reactor</td><td>Uses gas (historically carbon dioxide) rather than water as coolant</td><td>The UK's AGR (Advanced Gas-Cooled Reactor) fleet, now largely retiring/decommissioning</td></tr><tr><td>Fast Neutron Reactor</td><td>Uses fast, unmoderated neutrons, enabling different fuel cycles including reuse of spent fuel</td><td>Emerging and advanced designs, relevant to future Gen IV programmes</td></tr><tr><td>SMR (Small Modular Reactor)</td><td>Smaller-output reactors built largely from factory-manufactured modules, reducing on-site construction</td><td>Rolls-Royce SMR, GE-Hitachi and others — the UK's fastest-growing new build segment</td></tr></tbody></table></div><div class="card"><h2 class="h2"><span class="num">03</span>Major developers active in the UK market</h2><ul class="blist"><li><b>EDF Energy</b> — operates the UK's existing fleet and is delivering Hinkley Point C and Sizewell C (EPR/PWR technology).</li><li><b>Framatome</b> — French nuclear engineering group supplying major components and fuel technology into EPR programmes.</li><li><b>GE Hitachi</b> — BWR technology and SMR designs, active in UK SMR competition activity.</li><li><b>Rosatom</b> — Russian state nuclear corporation, a major global developer (not currently active in UK new build given sanctions context).</li><li><b>Westinghouse</b> — US-headquartered PWR technology and fuel supplier with a long UK supply chain presence.</li><li><b>Rolls-Royce SMR</b> — UK-based SMR developer, one of the most active near-term UK supply chain opportunities for SMEs.</li></ul></div><div class="card"><h2 class="h2"><span class="num">04</span>What drives where a reactor gets built</h2><ul class="blist"><li>Proximity to a large, reliable water source for cooling.</li><li>Grid connection capacity and proximity to demand centres.</li><li>Existing nuclear licensed site status (new build is heavily concentrated on or near existing nuclear sites).</li><li>Geological and seismic suitability.</li><li>Local community and existing workforce factors.</li></ul></div><div class="card"><h2 class="h2"><span class="num">05</span>Emerging technology worth watching</h2><ul class="blist"><li><b>Generation IV designs</b> — next-generation reactor concepts aiming for improved safety, efficiency and waste characteristics, still largely at research and early deployment stage.</li><li><b>Advanced SMRs</b> — beyond first-generation SMRs, using novel coolants or fuel forms; earlier-stage supply chain opportunity than established PWR/BWR designs.</li><li><b>Fusion</b> — a fundamentally different technology to fission, covered in NucCol's dedicated Introduction to Fusion Power guide.</li></ul></div><div class="card"><h2 class="h2"><span class="num">06</span>A realistic first step</h2><div class="stepbox"><b>Identify which developer and reactor type your target site actually uses</b>Don't pitch generic "nuclear experience" — name the specific programme (Hinkley Point C, Sizewell C, a named SMR developer) and speak to what that technology's supply chain actually needs.</div><div class="stepbox"><b>Match your capability to the technology, not just the sector</b>A component qualified for a PWR's primary circuit is not automatically relevant to an SMR's modular fabrication process — check before assuming transferability.</div><div class="stepbox"><b>Track SMR developer supply chain events specifically</b>SMR programmes are earlier-stage and actively mapping their future supply chains now — this is often a lower-competition entry point than established fleet suppliers.</div></div><div class="card"><h2 class="h2"><span class="num">07</span>Frequently asked questions</h2><div class="glossary"><div class="faq"><b>Do I need to specialise in one reactor type?</b><p>Not necessarily — many components and services (fabrication, testing, civils, logistics) transfer across reactor types, but your pitch and qualification evidence should still be specific to the technology you're targeting.</p></div><div class="faq"><b>Is SMR really different from a supply chain perspective?</b><p>Yes — SMRs are designed around factory-built modules rather than extensive on-site construction, which shifts demand towards precision manufacturing and modular fabrication capability rather than large-scale civils.</p></div><div class="faq"><b>Where do I find out which reactor type a given UK programme uses?</b><p>NucCol's Sector Opportunity Reports break down UK programmes by reactor type and developer.</p></div></div></div>
+<div class="cta">
+  <h3>Want a breakdown of demand by reactor type?</h3>
+  <p>NucCol's Sector Opportunity Reports map current UK programmes against the reactor technologies driving them.</p>
+  <a class="btn" href="https://www.nuccol.co.uk" target="_blank" rel="noopener">See a Sector Opportunity Report &rarr;</a>
+</div>
+<div class="footer">NucCol &middot; Nuclear Collaboration Ltd &middot; Best Practice resource, produced for ManufacturingUK.org</div>
+</div>
+
+</body>
+</html>

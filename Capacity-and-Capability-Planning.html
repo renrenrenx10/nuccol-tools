@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capacity and Capability Planning | NucCol Best Practice</title>
+<meta name="description" content="NucCol Best Practice resource for the UK nuclear supply chain.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#12314F; --blue:#1C7FBB; --purple:#7B2D8E;
+  --bg:#F7FAFC; --card:#FFFFFF; --ink:#16232E; --ink-soft:#4A5C6A;
+  --line:#DCE4EA; --light:#EEF4F8; --light2:#F7F2F9;
+  --amber-bg:#FFF6E5; --amber-line:#E9C46A;
+  --good:#1E8A5F; --focus:#1C7FBB;
+  --radius:14px; --maxw:840px;
+  --font-head:'Fraunces', Georgia, serif;
+  --font-body:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1720; --card:#152230; --ink:#EAF1F6; --ink-soft:#AFC1CE;
+    --line:#28394A; --light:#152B3A; --light2:#2A1F33;
+    --amber-bg:#2E2410; --amber-line:#7A5C1E;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1720; --card:#152230; --ink:#EAF1F6; --ink-soft:#AFC1CE;
+  --line:#28394A; --light:#152B3A; --light2:#2A1F33;
+  --amber-bg:#2E2410; --amber-line:#7A5C1E;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--font-body);
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 20px 72px;}
+.topband{
+  background:linear-gradient(135deg,var(--navy) 0%,#0B2036 100%);
+  color:#fff; padding:34px 20px 40px;
+}
+.topband-inner{max-width:var(--maxw); margin:0 auto;}
+.brand{display:flex; align-items:center; gap:10px; font-size:13px; letter-spacing:.08em; text-transform:uppercase; opacity:.85; font-weight:600;}
+.brand .dot{width:8px;height:8px;border-radius:50%;background:var(--blue);}
+.kicker{margin-top:18px; font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:#8FCBEF; font-weight:700;}
+h1.title{
+  font-family:var(--font-head); font-weight:600; font-size:clamp(26px,5vw,38px);
+  margin:8px 0 10px; line-height:1.15; color:#fff;
+}
+.subtitle{font-size:16px; color:#C9D9E4; max-width:640px; margin:0;}
+.meta-row{display:flex; gap:18px; flex-wrap:wrap; margin-top:22px; font-size:13px; color:#9FB6C6;}
+.meta-row span{display:flex; align-items:center; gap:6px;}
+.card{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+  padding:26px 24px; margin-top:22px;
+}
+h2.h2{
+  font-family:var(--font-head); font-size:21px; font-weight:600; color:var(--navy);
+  margin:0 0 12px; padding-bottom:10px; border-bottom:2px solid var(--light);
+}
+:root[data-theme="dark"] h2.h2{color:#8FCBEF;}
+h2.h2 .num{color:var(--blue); margin-right:8px;}
+p{color:var(--ink-soft); font-size:15.5px;}
+p.lead{color:var(--ink); font-size:16.5px;}
+ul.blist{margin:10px 0; padding-left:0; list-style:none;}
+ul.blist li{position:relative; padding-left:24px; margin-bottom:10px; font-size:15px; color:var(--ink-soft);}
+ul.blist li:before{content:"—"; position:absolute; left:0; color:var(--blue); font-weight:700;}
+table.tbl{width:100%; border-collapse:collapse; margin:14px 0; font-size:14px;}
+table.tbl th{background:var(--navy); color:#fff; text-align:left; padding:10px 12px; font-weight:600; font-size:13px;}
+table.tbl td{padding:10px 12px; border-bottom:1px solid var(--line); color:var(--ink-soft); vertical-align:top;}
+table.tbl tr:last-child td{border-bottom:none;}
+table.tbl tr:nth-child(even) td{background:var(--light);}
+.note{border-radius:10px; padding:16px 18px; margin:16px 0; font-size:14.5px;}
+.note.amber{background:var(--amber-bg); border:1px solid var(--amber-line); color:var(--ink);}
+.note.blue{background:var(--light); border:1px solid var(--line); color:var(--ink);}
+.note b{color:var(--navy);}
+:root[data-theme="dark"] .note b{color:#8FCBEF;}
+.cta{
+  background:linear-gradient(135deg,var(--blue),var(--navy)); color:#fff; border-radius:var(--radius);
+  padding:26px 24px; margin-top:26px; text-align:center;
+}
+.cta h3{font-family:var(--font-head); margin:0 0 8px; font-size:19px;}
+.cta p{color:#D7E7F0; margin:0 0 16px; font-size:14.5px;}
+.cta a.btn{
+  display:inline-block; background:#fff; color:var(--navy); font-weight:700; text-decoration:none;
+  padding:11px 26px; border-radius:999px; font-size:14px;
+}
+.footer{text-align:center; color:var(--ink-soft); font-size:12.5px; margin-top:30px; padding-top:18px; border-top:1px solid var(--line);}
+.pill{display:inline-block; background:var(--light2); color:var(--purple); font-size:11.5px; font-weight:700; padding:4px 10px; border-radius:999px; letter-spacing:.03em; margin-right:6px;}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+@media(max-width:560px){.grid2{grid-template-columns:1fr;}}
+.stepbox{background:var(--light); border-radius:10px; padding:14px 16px; margin-bottom:10px;}
+.stepbox b{color:var(--navy); display:block; margin-bottom:4px; font-size:14.5px;}
+:root[data-theme="dark"] .stepbox b{color:#8FCBEF;}
+.toc{display:flex; flex-wrap:wrap; gap:8px; margin-top:20px;}
+.toc a{font-size:12.5px; font-weight:600; color:#C9D9E4; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); padding:6px 12px; border-radius:999px; text-decoration:none;}
+.toc a:hover{background:rgba(255,255,255,.16); color:#fff;}
+.faq{border-bottom:1px solid var(--line); padding:14px 0;}
+.faq:last-child{border-bottom:none;}
+.faq b{display:block; color:var(--navy); font-size:15px; margin-bottom:6px;}
+:root[data-theme="dark"] .faq b{color:#8FCBEF;}
+.faq p{margin:0;}
+.example{background:var(--light2); border-left:4px solid var(--purple); border-radius:0 10px 10px 0; padding:14px 18px; margin:16px 0; font-size:14.5px;}
+.example b{color:var(--purple); display:block; margin-bottom:4px; font-size:12.5px; text-transform:uppercase; letter-spacing:.04em;}
+.deflist{margin:10px 0;}
+.deflist .term{font-weight:700; color:var(--navy); font-size:15px; margin-top:12px;}
+:root[data-theme="dark"] .deflist .term{color:#8FCBEF;}
+.deflist .def{color:var(--ink-soft); font-size:14.5px; margin:2px 0 0;}
+.glossary{display:grid; grid-template-columns:1fr; gap:2px;}
+.mistake{display:flex; gap:10px; padding:10px 0; border-bottom:1px dashed var(--line); font-size:14.5px; color:var(--ink-soft);}
+.mistake:last-child{border-bottom:none;}
+.mistake .x{color:#C1443C; font-weight:700; flex:none;}
+h3.h3{font-family:var(--font-head); font-size:16px; font-weight:600; color:var(--navy); margin:20px 0 8px;}
+:root[data-theme="dark"] h3.h3{color:#8FCBEF;}
+
+@media (prefers-color-scheme: dark){
+:root:not([data-theme="light"]) h2.h2{color:#8FCBEF;}
+:root:not([data-theme="light"]) .note b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .stepbox b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .faq b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .deflist .term{color:#8FCBEF;}
+:root:not([data-theme="light"]) h3.h3{color:#8FCBEF;}
+}
+
+a.backlink{display:inline-flex;align-items:center;gap:6px;color:#8FCBEF;text-decoration:none;font-size:13px;font-weight:600;margin-bottom:2px;}
+a.backlink:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+<div class="topband"><div class="topband-inner">
+  <a class="backlink" href="index2.html">&larr; All Best Practice resources</a>
+  <div class="brand"><span class="dot"></span> NucCol &nbsp;|&nbsp; Nuclear Collaboration Ltd</div>
+  <div class="kicker">Know What You Can Actually Deliver</div>
+  <h1 class="title">Capacity and Capability Planning</h1>
+  <p class="subtitle">Winning nuclear work is only half the challenge — proving you can deliver it at the volume and quality required is what buyers actually assess before they award. Here's how to plan for it.</p>
+  <div class="meta-row"><span>7 min read</span><span>Training &amp; Development</span></div>
+</div></div>
+<div class="wrap">
+<div class="card"><h2 class="h2"><span class="num">01</span>Why buyers scrutinise capacity separately from capability</h2><p class="lead">Capability answers "can you make this?" Capacity answers "can you make enough of this, reliably, alongside everything else you already do?" Nuclear buyers assess both separately because a supplier with the right skills but insufficient spare capacity is just as much a delivery risk as one lacking the skills entirely.</p></div><div class="card"><h2 class="h2"><span class="num">02</span>Capacity planning fundamentals</h2><ul class="blist"><li><b>Understand your current utilisation</b> — know what proportion of your capacity is already committed before quoting for new work.</li><li><b>Model demand realistically</b> — nuclear programmes often have long lead times followed by concentrated delivery windows; plan for peaks, not just averages.</li><li><b>Build in contingency</b> — equipment downtime, staff absence and rework all eat into theoretical capacity; buyers expect to see this accounted for, not assumed away.</li></ul></div><div class="card"><h2 class="h2"><span class="num">03</span>Assessing your own capacity honestly</h2><div class="stepbox"><b>Map your production/delivery capacity by process step</b>Identify the actual bottleneck in your process, not just headline output — most operations have one constraining step that governs true throughput.</div><div class="stepbox"><b>Track capacity utilisation over time, not just headline output</b>A single good month doesn't prove sustained capacity — buyers on multi-year frameworks want evidence of consistency.</div><div class="stepbox"><b>Be explicit about what would need to change to scale up</b>Additional shifts, equipment, subcontracting or premises — know your own scale-up plan before a buyer asks about it.</div></div><div class="card"><h2 class="h2"><span class="num">04</span>Assessing supplier and partner capacity</h2><p class="">If you rely on subcontractors or key suppliers to deliver nuclear work, their capacity constraints become your capacity constraints from the buyer's perspective. A capacity assessment that stops at your own gates understates the real risk in your supply chain.</p><ul class="blist"><li>Ask key suppliers directly about their own current utilisation and capacity headroom.</li><li>Understand where a single point of failure exists — one sole-source supplier with no spare capacity is a live risk to flag and manage.</li><li>Build these assessments into your own risk register, not just a one-off supplier onboarding exercise.</li></ul></div><div class="card"><h2 class="h2"><span class="num">05</span>Resource allocation and optimisation</h2><ul class="blist"><li>Prioritise resource allocation against contractual commitments and penalties, not just revenue value.</li><li>Use scheduling and planning tools proportionate to your scale — a spreadsheet used consistently beats an expensive system used badly.</li><li>Review allocation regularly as new work is won, not just at the point of quoting.</li></ul></div><div class="card"><h2 class="h2"><span class="num">06</span>Continuous improvement</h2><p class="">Capacity and capability planning isn't a one-off exercise done at tender stage — the strongest suppliers treat it as an ongoing discipline, reviewing actual versus planned utilisation after each contract and feeding lessons back into how the next capacity assessment is done.</p></div><div class="card"><h2 class="h2"><span class="num">07</span>Common mistakes SMEs make here</h2><div class="mistake"><span class="x">&#10007;</span><span>Quoting for new work based on theoretical maximum capacity rather than realistic, contingency-adjusted capacity.</span></div><div class="mistake"><span class="x">&#10007;</span><span>Not accounting for a key subcontractor's own capacity constraints when committing to a delivery schedule.</span></div><div class="mistake"><span class="x">&#10007;</span><span>Treating capacity assessment as a one-off tender exercise rather than an ongoing operational discipline.</span></div><div class="mistake"><span class="x">&#10007;</span><span>Overpromising scale-up speed without a concrete, costed plan for how that scale-up would actually happen.</span></div></div>
+<div class="cta">
+  <h3>Building a capacity case for a tender response?</h3>
+  <p>NucCol's Beginner's Guide and Meet the Buyer resources help you present capacity credibly to nuclear buyers.</p>
+  <a class="btn" href="https://www.nuccol.co.uk" target="_blank" rel="noopener">See more resources &rarr;</a>
+</div>
+<div class="footer">NucCol &middot; Nuclear Collaboration Ltd &middot; Best Practice resource, produced for ManufacturingUK.org</div>
+</div>
+
+</body>
+</html>

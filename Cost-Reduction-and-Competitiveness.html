@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cost Reduction and Competitiveness | NucCol Best Practice</title>
+<meta name="description" content="NucCol Best Practice resource for the UK nuclear supply chain.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#12314F; --blue:#1C7FBB; --purple:#7B2D8E;
+  --bg:#F7FAFC; --card:#FFFFFF; --ink:#16232E; --ink-soft:#4A5C6A;
+  --line:#DCE4EA; --light:#EEF4F8; --light2:#F7F2F9;
+  --amber-bg:#FFF6E5; --amber-line:#E9C46A;
+  --good:#1E8A5F; --focus:#1C7FBB;
+  --radius:14px; --maxw:840px;
+  --font-head:'Fraunces', Georgia, serif;
+  --font-body:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1720; --card:#152230; --ink:#EAF1F6; --ink-soft:#AFC1CE;
+    --line:#28394A; --light:#152B3A; --light2:#2A1F33;
+    --amber-bg:#2E2410; --amber-line:#7A5C1E;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1720; --card:#152230; --ink:#EAF1F6; --ink-soft:#AFC1CE;
+  --line:#28394A; --light:#152B3A; --light2:#2A1F33;
+  --amber-bg:#2E2410; --amber-line:#7A5C1E;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--font-body);
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 20px 72px;}
+.topband{
+  background:linear-gradient(135deg,var(--navy) 0%,#0B2036 100%);
+  color:#fff; padding:34px 20px 40px;
+}
+.topband-inner{max-width:var(--maxw); margin:0 auto;}
+.brand{display:flex; align-items:center; gap:10px; font-size:13px; letter-spacing:.08em; text-transform:uppercase; opacity:.85; font-weight:600;}
+.brand .dot{width:8px;height:8px;border-radius:50%;background:var(--blue);}
+.kicker{margin-top:18px; font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:#8FCBEF; font-weight:700;}
+h1.title{
+  font-family:var(--font-head); font-weight:600; font-size:clamp(26px,5vw,38px);
+  margin:8px 0 10px; line-height:1.15; color:#fff;
+}
+.subtitle{font-size:16px; color:#C9D9E4; max-width:640px; margin:0;}
+.meta-row{display:flex; gap:18px; flex-wrap:wrap; margin-top:22px; font-size:13px; color:#9FB6C6;}
+.meta-row span{display:flex; align-items:center; gap:6px;}
+.card{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+  padding:26px 24px; margin-top:22px;
+}
+h2.h2{
+  font-family:var(--font-head); font-size:21px; font-weight:600; color:var(--navy);
+  margin:0 0 12px; padding-bottom:10px; border-bottom:2px solid var(--light);
+}
+:root[data-theme="dark"] h2.h2{color:#8FCBEF;}
+h2.h2 .num{color:var(--blue); margin-right:8px;}
+p{color:var(--ink-soft); font-size:15.5px;}
+p.lead{color:var(--ink); font-size:16.5px;}
+ul.blist{margin:10px 0; padding-left:0; list-style:none;}
+ul.blist li{position:relative; padding-left:24px; margin-bottom:10px; font-size:15px; color:var(--ink-soft);}
+ul.blist li:before{content:"—"; position:absolute; left:0; color:var(--blue); font-weight:700;}
+table.tbl{width:100%; border-collapse:collapse; margin:14px 0; font-size:14px;}
+table.tbl th{background:var(--navy); color:#fff; text-align:left; padding:10px 12px; font-weight:600; font-size:13px;}
+table.tbl td{padding:10px 12px; border-bottom:1px solid var(--line); color:var(--ink-soft); vertical-align:top;}
+table.tbl tr:last-child td{border-bottom:none;}
+table.tbl tr:nth-child(even) td{background:var(--light);}
+.note{border-radius:10px; padding:16px 18px; margin:16px 0; font-size:14.5px;}
+.note.amber{background:var(--amber-bg); border:1px solid var(--amber-line); color:var(--ink);}
+.note.blue{background:var(--light); border:1px solid var(--line); color:var(--ink);}
+.note b{color:var(--navy);}
+:root[data-theme="dark"] .note b{color:#8FCBEF;}
+.cta{
+  background:linear-gradient(135deg,var(--blue),var(--navy)); color:#fff; border-radius:var(--radius);
+  padding:26px 24px; margin-top:26px; text-align:center;
+}
+.cta h3{font-family:var(--font-head); margin:0 0 8px; font-size:19px;}
+.cta p{color:#D7E7F0; margin:0 0 16px; font-size:14.5px;}
+.cta a.btn{
+  display:inline-block; background:#fff; color:var(--navy); font-weight:700; text-decoration:none;
+  padding:11px 26px; border-radius:999px; font-size:14px;
+}
+.footer{text-align:center; color:var(--ink-soft); font-size:12.5px; margin-top:30px; padding-top:18px; border-top:1px solid var(--line);}
+.pill{display:inline-block; background:var(--light2); color:var(--purple); font-size:11.5px; font-weight:700; padding:4px 10px; border-radius:999px; letter-spacing:.03em; margin-right:6px;}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+@media(max-width:560px){.grid2{grid-template-columns:1fr;}}
+.stepbox{background:var(--light); border-radius:10px; padding:14px 16px; margin-bottom:10px;}
+.stepbox b{color:var(--navy); display:block; margin-bottom:4px; font-size:14.5px;}
+:root[data-theme="dark"] .stepbox b{color:#8FCBEF;}
+.toc{display:flex; flex-wrap:wrap; gap:8px; margin-top:20px;}
+.toc a{font-size:12.5px; font-weight:600; color:#C9D9E4; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); padding:6px 12px; border-radius:999px; text-decoration:none;}
+.toc a:hover{background:rgba(255,255,255,.16); color:#fff;}
+.faq{border-bottom:1px solid var(--line); padding:14px 0;}
+.faq:last-child{border-bottom:none;}
+.faq b{display:block; color:var(--navy); font-size:15px; margin-bottom:6px;}
+:root[data-theme="dark"] .faq b{color:#8FCBEF;}
+.faq p{margin:0;}
+.example{background:var(--light2); border-left:4px solid var(--purple); border-radius:0 10px 10px 0; padding:14px 18px; margin:16px 0; font-size:14.5px;}
+.example b{color:var(--purple); display:block; margin-bottom:4px; font-size:12.5px; text-transform:uppercase; letter-spacing:.04em;}
+.deflist{margin:10px 0;}
+.deflist .term{font-weight:700; color:var(--navy); font-size:15px; margin-top:12px;}
+:root[data-theme="dark"] .deflist .term{color:#8FCBEF;}
+.deflist .def{color:var(--ink-soft); font-size:14.5px; margin:2px 0 0;}
+.glossary{display:grid; grid-template-columns:1fr; gap:2px;}
+.mistake{display:flex; gap:10px; padding:10px 0; border-bottom:1px dashed var(--line); font-size:14.5px; color:var(--ink-soft);}
+.mistake:last-child{border-bottom:none;}
+.mistake .x{color:#C1443C; font-weight:700; flex:none;}
+h3.h3{font-family:var(--font-head); font-size:16px; font-weight:600; color:var(--navy); margin:20px 0 8px;}
+:root[data-theme="dark"] h3.h3{color:#8FCBEF;}
+
+@media (prefers-color-scheme: dark){
+:root:not([data-theme="light"]) h2.h2{color:#8FCBEF;}
+:root:not([data-theme="light"]) .note b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .stepbox b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .faq b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .deflist .term{color:#8FCBEF;}
+:root:not([data-theme="light"]) h3.h3{color:#8FCBEF;}
+}
+
+a.backlink{display:inline-flex;align-items:center;gap:6px;color:#8FCBEF;text-decoration:none;font-size:13px;font-weight:600;margin-bottom:2px;}
+a.backlink:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+<div class="topband"><div class="topband-inner">
+  <a class="backlink" href="index2.html">&larr; All Best Practice resources</a>
+  <div class="brand"><span class="dot"></span> NucCol &nbsp;|&nbsp; Nuclear Collaboration Ltd</div>
+  <div class="kicker">Compete on Value, Not Just Price</div>
+  <h1 class="title">Cost Reduction and Competitiveness</h1>
+  <p class="subtitle">Cutting costs without a clear value proposition just makes you cheaper, not more competitive. Here's how to build both together.</p>
+  <div class="meta-row"><span>7 min read</span><span>Training &amp; Development</span></div>
+</div></div>
+<div class="wrap">
+<div class="card"><h2 class="h2"><span class="num">01</span>Value proposition first, cost reduction second</h2><p class="lead">It's tempting to treat cost reduction and competitiveness as the same exercise, but they aren't. A clear, differentiated value proposition is what determines whether a buyer chooses you at all; cost reduction is what determines your margin once they do. Getting the order wrong — cutting costs before defining what makes you worth choosing — tends to produce a business that's cheaper but not more competitive.</p></div><div class="card"><h2 class="h2"><span class="num">02</span>Building a value proposition</h2><div class="stepbox"><b>Understand customer needs and pain points</b>Go beyond the stated specification to what the buyer is actually trying to solve — reliability, lead time, technical risk reduction — and build your pitch around that.</div><div class="stepbox"><b>Identify your unique strengths and capabilities</b>What can you genuinely do that competitors can't, or can't do as well — a specific certification, a niche process capability, a track record in a hard-to-serve niche?</div><div class="stepbox"><b>Communicate the value proposition effectively</b>A strong value proposition that's never clearly articulated to the buyer doesn't function as one — invest in how you present it, not just what it is.</div></div><div class="card"><h2 class="h2"><span class="num">03</span>Setting competitiveness targets</h2><p class="">Vague ambitions to "be more competitive" don't drive change. Structured targets do.</p><ul class="blist"><li>Analyse industry benchmarks and best practice for your specific process or product category.</li><li>Identify your actual key cost drivers, not assumed ones — materials, labour, overhead and quality cost each behave differently.</li><li>Set SMART (specific, measurable, achievable, relevant, time-bound) competitiveness targets rather than open-ended aspirations.</li><li>Track progress against targets regularly and adjust rather than setting and forgetting them.</li></ul></div><div class="card"><h2 class="h2"><span class="num">04</span>Innovation as a competitiveness lever</h2><ul class="blist"><li><b>Product innovation</b> — new or improved products that create differentiated value, not just incremental cost saving.</li><li><b>Service innovation</b> — new ways of delivering value around the core product, such as faster lead times or added technical support.</li><li><b>Process innovation</b> — new or improved ways of producing existing products, often the most direct route to genuine cost reduction.</li><li>Fostering a culture where staff are encouraged to identify innovation opportunities, rather than treating innovation as something only R&D does.</li></ul></div><div class="card"><h2 class="h2"><span class="num">05</span>Understanding the competitive landscape</h2><div class="stepbox"><b>Conduct structured competitor analysis</b>Understand competitors' strengths, weaknesses and likely strategy, not just their headline pricing.</div><div class="stepbox"><b>Monitor market trends and technology</b>New materials, processes or entrants can shift the competitive landscape faster than internal cost-cutting can respond to.</div><div class="stepbox"><b>Identify potential disruptors early</b>New entrants or substitute technologies are often easier to respond to if spotted early rather than after they've taken share.</div></div><div class="card"><h2 class="h2"><span class="num">06</span>Practical cost reduction strategies</h2><ul class="blist"><li>Lean manufacturing principles and waste reduction (see NucCol's Lean Manufacturing guide for detail).</li><li>Supply chain optimisation and procurement strategy — consolidating spend, renegotiating terms, reducing supplier risk.</li><li>Process improvement and targeted automation where volume justifies the investment.</li><li>Energy efficiency and resource conservation — increasingly a genuine cost lever, not just a sustainability message.</li><li>Overhead cost management, reviewed as rigorously as direct production cost.</li></ul></div><div class="card"><h2 class="h2"><span class="num">07</span>Common mistakes SMEs make here</h2><div class="mistake"><span class="x">&#10007;</span><span>Competing purely on price without a differentiated value proposition to support the margin that remains.</span></div><div class="mistake"><span class="x">&#10007;</span><span>Setting cost reduction targets with no reference to actual cost driver data, so effort goes to the wrong place.</span></div><div class="mistake"><span class="x">&#10007;</span><span>Treating innovation as a project rather than an ongoing capability, so gains aren't sustained.</span></div><div class="mistake"><span class="x">&#10007;</span><span>Missing a market-shifting competitor or technology because competitor analysis was a one-off exercise rather than ongoing monitoring.</span></div></div>
+<div class="cta">
+  <h3>Sharpening your competitive position?</h3>
+  <p>NucCol's Marketing for Manufacturers and Lean Manufacturing guides pair well with this one.</p>
+  <a class="btn" href="https://www.nuccol.co.uk" target="_blank" rel="noopener">See more resources &rarr;</a>
+</div>
+<div class="footer">NucCol &middot; Nuclear Collaboration Ltd &middot; Best Practice resource, produced for ManufacturingUK.org</div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Commercial Risk Management for Nuclear Contracts | NucCol Best Practice</title>
+<meta name="description" content="NucCol Best Practice resource for the UK nuclear supply chain.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#12314F; --blue:#1C7FBB; --purple:#7B2D8E;
+  --bg:#F7FAFC; --card:#FFFFFF; --ink:#16232E; --ink-soft:#4A5C6A;
+  --line:#DCE4EA; --light:#EEF4F8; --light2:#F7F2F9;
+  --amber-bg:#FFF6E5; --amber-line:#E9C46A;
+  --good:#1E8A5F; --focus:#1C7FBB;
+  --radius:14px; --maxw:840px;
+  --font-head:'Fraunces', Georgia, serif;
+  --font-body:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1720; --card:#152230; --ink:#EAF1F6; --ink-soft:#AFC1CE;
+    --line:#28394A; --light:#152B3A; --light2:#2A1F33;
+    --amber-bg:#2E2410; --amber-line:#7A5C1E;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1720; --card:#152230; --ink:#EAF1F6; --ink-soft:#AFC1CE;
+  --line:#28394A; --light:#152B3A; --light2:#2A1F33;
+  --amber-bg:#2E2410; --amber-line:#7A5C1E;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--font-body);
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 20px 72px;}
+.topband{
+  background:linear-gradient(135deg,var(--navy) 0%,#0B2036 100%);
+  color:#fff; padding:34px 20px 40px;
+}
+.topband-inner{max-width:var(--maxw); margin:0 auto;}
+.brand{display:flex; align-items:center; gap:10px; font-size:13px; letter-spacing:.08em; text-transform:uppercase; opacity:.85; font-weight:600;}
+.brand .dot{width:8px;height:8px;border-radius:50%;background:var(--blue);}
+.kicker{margin-top:18px; font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:#8FCBEF; font-weight:700;}
+h1.title{
+  font-family:var(--font-head); font-weight:600; font-size:clamp(26px,5vw,38px);
+  margin:8px 0 10px; line-height:1.15; color:#fff;
+}
+.subtitle{font-size:16px; color:#C9D9E4; max-width:640px; margin:0;}
+.meta-row{display:flex; gap:18px; flex-wrap:wrap; margin-top:22px; font-size:13px; color:#9FB6C6;}
+.meta-row span{display:flex; align-items:center; gap:6px;}
+.card{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+  padding:26px 24px; margin-top:22px;
+}
+h2.h2{
+  font-family:var(--font-head); font-size:21px; font-weight:600; color:var(--navy);
+  margin:0 0 12px; padding-bottom:10px; border-bottom:2px solid var(--light);
+}
+:root[data-theme="dark"] h2.h2{color:#8FCBEF;}
+h2.h2 .num{color:var(--blue); margin-right:8px;}
+p{color:var(--ink-soft); font-size:15.5px;}
+p.lead{color:var(--ink); font-size:16.5px;}
+ul.blist{margin:10px 0; padding-left:0; list-style:none;}
+ul.blist li{position:relative; padding-left:24px; margin-bottom:10px; font-size:15px; color:var(--ink-soft);}
+ul.blist li:before{content:"—"; position:absolute; left:0; color:var(--blue); font-weight:700;}
+table.tbl{width:100%; border-collapse:collapse; margin:14px 0; font-size:14px;}
+table.tbl th{background:var(--navy); color:#fff; text-align:left; padding:10px 12px; font-weight:600; font-size:13px;}
+table.tbl td{padding:10px 12px; border-bottom:1px solid var(--line); color:var(--ink-soft); vertical-align:top;}
+table.tbl tr:last-child td{border-bottom:none;}
+table.tbl tr:nth-child(even) td{background:var(--light);}
+.note{border-radius:10px; padding:16px 18px; margin:16px 0; font-size:14.5px;}
+.note.amber{background:var(--amber-bg); border:1px solid var(--amber-line); color:var(--ink);}
+.note.blue{background:var(--light); border:1px solid var(--line); color:var(--ink);}
+.note b{color:var(--navy);}
+:root[data-theme="dark"] .note b{color:#8FCBEF;}
+.cta{
+  background:linear-gradient(135deg,var(--blue),var(--navy)); color:#fff; border-radius:var(--radius);
+  padding:26px 24px; margin-top:26px; text-align:center;
+}
+.cta h3{font-family:var(--font-head); margin:0 0 8px; font-size:19px;}
+.cta p{color:#D7E7F0; margin:0 0 16px; font-size:14.5px;}
+.cta a.btn{
+  display:inline-block; background:#fff; color:var(--navy); font-weight:700; text-decoration:none;
+  padding:11px 26px; border-radius:999px; font-size:14px;
+}
+.footer{text-align:center; color:var(--ink-soft); font-size:12.5px; margin-top:30px; padding-top:18px; border-top:1px solid var(--line);}
+.pill{display:inline-block; background:var(--light2); color:var(--purple); font-size:11.5px; font-weight:700; padding:4px 10px; border-radius:999px; letter-spacing:.03em; margin-right:6px;}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+@media(max-width:560px){.grid2{grid-template-columns:1fr;}}
+.stepbox{background:var(--light); border-radius:10px; padding:14px 16px; margin-bottom:10px;}
+.stepbox b{color:var(--navy); display:block; margin-bottom:4px; font-size:14.5px;}
+:root[data-theme="dark"] .stepbox b{color:#8FCBEF;}
+.toc{display:flex; flex-wrap:wrap; gap:8px; margin-top:20px;}
+.toc a{font-size:12.5px; font-weight:600; color:#C9D9E4; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); padding:6px 12px; border-radius:999px; text-decoration:none;}
+.toc a:hover{background:rgba(255,255,255,.16); color:#fff;}
+.faq{border-bottom:1px solid var(--line); padding:14px 0;}
+.faq:last-child{border-bottom:none;}
+.faq b{display:block; color:var(--navy); font-size:15px; margin-bottom:6px;}
+:root[data-theme="dark"] .faq b{color:#8FCBEF;}
+.faq p{margin:0;}
+.example{background:var(--light2); border-left:4px solid var(--purple); border-radius:0 10px 10px 0; padding:14px 18px; margin:16px 0; font-size:14.5px;}
+.example b{color:var(--purple); display:block; margin-bottom:4px; font-size:12.5px; text-transform:uppercase; letter-spacing:.04em;}
+.deflist{margin:10px 0;}
+.deflist .term{font-weight:700; color:var(--navy); font-size:15px; margin-top:12px;}
+:root[data-theme="dark"] .deflist .term{color:#8FCBEF;}
+.deflist .def{color:var(--ink-soft); font-size:14.5px; margin:2px 0 0;}
+.glossary{display:grid; grid-template-columns:1fr; gap:2px;}
+.mistake{display:flex; gap:10px; padding:10px 0; border-bottom:1px dashed var(--line); font-size:14.5px; color:var(--ink-soft);}
+.mistake:last-child{border-bottom:none;}
+.mistake .x{color:#C1443C; font-weight:700; flex:none;}
+h3.h3{font-family:var(--font-head); font-size:16px; font-weight:600; color:var(--navy); margin:20px 0 8px;}
+:root[data-theme="dark"] h3.h3{color:#8FCBEF;}
+
+@media (prefers-color-scheme: dark){
+:root:not([data-theme="light"]) h2.h2{color:#8FCBEF;}
+:root:not([data-theme="light"]) .note b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .stepbox b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .faq b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .deflist .term{color:#8FCBEF;}
+:root:not([data-theme="light"]) h3.h3{color:#8FCBEF;}
+}
+
+a.backlink{display:inline-flex;align-items:center;gap:6px;color:#8FCBEF;text-decoration:none;font-size:13px;font-weight:600;margin-bottom:2px;}
+a.backlink:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+<div class="topband"><div class="topband-inner">
+  <a class="backlink" href="index2.html">&larr; All Best Practice resources</a>
+  <div class="brand"><span class="dot"></span> NucCol &nbsp;|&nbsp; Nuclear Collaboration Ltd</div>
+  <div class="kicker">Understand the Risk Before You Sign</div>
+  <h1 class="title">Commercial Risk Management for Nuclear Contracts</h1>
+  <p class="subtitle">Parent company guarantees, performance bonds and letters of credit aren't just paperwork — they're how nuclear buyers transfer risk onto suppliers. Know what you're agreeing to before you agree to it.</p>
+  <div class="meta-row"><span>7 min read</span><span>Training &amp; Development</span></div>
+</div></div>
+<div class="wrap">
+<div class="card"><h2 class="h2"><span class="num">01</span>Why commercial risk needs its own system</h2><p class="lead">Nuclear contracts carry commercial risk that general commercial experience doesn't always prepare you for — long programme durations, high-consequence failure modes, and buyers who routinely require formal security instruments as a condition of contract. Treating commercial risk management as a system, not a one-off legal review, is what separates SMEs that get burned by a bad clause from those that don't.</p></div><div class="card"><h2 class="h2"><span class="num">02</span>Building sector contractual knowledge</h2><ul class="blist"><li>Understand the standard contract forms used across the sector (e.g. NEC, bespoke nuclear buyer terms) before you're negotiating one under time pressure.</li><li>Know which clauses are genuinely standard versus which are buyer-specific additions worth pushing back on.</li><li>Build institutional knowledge that survives one person leaving — don't let contract expertise live in a single individual's head.</li></ul></div><div class="card"><h2 class="h2"><span class="num">03</span>Common security provisions in nuclear contracts</h2><div class="deflist"><div class="term">Parent company guarantee (PCG)</div><p class="def">A guarantee from a supplier's parent company to cover its obligations if the contracting entity fails to deliver — relevant if you operate as part of a group structure.</p><div class="term">Performance bond</div><p class="def">A financial instrument, usually provided by a bank or insurer, that pays out to the buyer if the supplier fails to perform — understand the cost and working-capital impact of holding one before agreeing to it.</p><div class="term">Letter of credit</div><p class="def">A bank's guarantee of payment, often used to provide the buyer assurance of a supplier's financial standing or to secure advance payments.</p></div></div><div class="card"><h2 class="h2"><span class="num">04</span>Building a contract commercial risk system</h2><div class="stepbox"><b>Establish a standard contract review process</b>Define who reviews what, and at what value threshold escalation to specialist legal advice is required — don't leave it to individual judgement on a case-by-case basis.</div><div class="stepbox"><b>Track security provisions across your live contract book</b>Know your total live exposure across all bonds, guarantees and letters of credit at any point in time, not just per-contract.</div><div class="stepbox"><b>Understand the financial and working-capital impact before signing</b>A performance bond ties up facility headroom for the life of the contract — model this impact before committing, not after.</div><div class="stepbox"><b>Build organisational risk management systems that outlive individual contracts</b>A risk register, an escalation process and a lessons-learned loop that apply across your whole contract book, not reinvented for each new deal.</div></div><div class="card"><h2 class="h2"><span class="num">05</span>Organisational risk management systems</h2><p class="">The strongest suppliers don't manage commercial risk contract-by-contract — they run a standing organisational system: a live risk register, clear escalation thresholds, and a habit of feeding contract-close lessons back into how the next contract is reviewed.</p></div><div class="card"><h2 class="h2"><span class="num">06</span>Common mistakes SMEs make here</h2><div class="mistake"><span class="x">&#10007;</span><span>Signing a performance bond or parent company guarantee without modelling its impact on working capital and banking facilities.</span></div><div class="mistake"><span class="x">&#10007;</span><span>Treating each new contract's commercial terms as a one-off review, with no institutional memory of past negotiating positions.</span></div><div class="mistake"><span class="x">&#10007;</span><span>Not distinguishing between genuinely standard sector terms and buyer-specific clauses that are actually negotiable.</span></div><div class="mistake"><span class="x">&#10007;</span><span>Escalating every contract to expensive external legal review rather than building in-house capability for standard terms.</span></div></div><div class="card"><h2 class="h2"><span class="num">07</span>Frequently asked questions</h2><div class="glossary"><div class="faq"><b>Can I negotiate a performance bond down or out entirely?</b><p>Sometimes — smaller-value or shorter-duration contracts, or a strong track record with a buyer, can support negotiating the requirement down; it's rarely worth assuming it's fixed without asking.</p></div><div class="faq"><b>What's the practical difference between a PCG and a performance bond?</b><p>A PCG relies on your parent company's own covenant strength and doesn't tie up cash directly; a performance bond usually requires facility headroom with a bank or insurer and has a direct cost.</p></div></div></div>
+<div class="cta">
+  <h3>Reviewing a nuclear contract for the first time?</h3>
+  <p>NucCol's Beginner's Guide and Nuclear Standards Quick Guide cover the wider compliance context these commercial terms sit within.</p>
+  <a class="btn" href="https://www.nuccol.co.uk" target="_blank" rel="noopener">See more resources &rarr;</a>
+</div>
+<div class="footer">NucCol &middot; Nuclear Collaboration Ltd &middot; Best Practice resource, produced for ManufacturingUK.org</div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Funding &amp; Grants Navigator | NucCol Best Practice</title>
+<meta name="description" content="NucCol Best Practice resource for the UK nuclear supply chain.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#12314F; --blue:#1C7FBB; --purple:#7B2D8E;
+  --bg:#F7FAFC; --card:#FFFFFF; --ink:#16232E; --ink-soft:#4A5C6A;
+  --line:#DCE4EA; --light:#EEF4F8; --light2:#F7F2F9;
+  --amber-bg:#FFF6E5; --amber-line:#E9C46A;
+  --good:#1E8A5F; --focus:#1C7FBB;
+  --radius:14px; --maxw:840px;
+  --font-head:'Fraunces', Georgia, serif;
+  --font-body:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1720; --card:#152230; --ink:#EAF1F6; --ink-soft:#AFC1CE;
+    --line:#28394A; --light:#152B3A; --light2:#2A1F33;
+    --amber-bg:#2E2410; --amber-line:#7A5C1E;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1720; --card:#152230; --ink:#EAF1F6; --ink-soft:#AFC1CE;
+  --line:#28394A; --light:#152B3A; --light2:#2A1F33;
+  --amber-bg:#2E2410; --amber-line:#7A5C1E;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--font-body);
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 20px 72px;}
+.topband{
+  background:linear-gradient(135deg,var(--navy) 0%,#0B2036 100%);
+  color:#fff; padding:34px 20px 40px;
+}
+.topband-inner{max-width:var(--maxw); margin:0 auto;}
+.brand{display:flex; align-items:center; gap:10px; font-size:13px; letter-spacing:.08em; text-transform:uppercase; opacity:.85; font-weight:600;}
+.brand .dot{width:8px;height:8px;border-radius:50%;background:var(--blue);}
+.kicker{margin-top:18px; font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:#8FCBEF; font-weight:700;}
+h1.title{
+  font-family:var(--font-head); font-weight:600; font-size:clamp(26px,5vw,38px);
+  margin:8px 0 10px; line-height:1.15; color:#fff;
+}
+.subtitle{font-size:16px; color:#C9D9E4; max-width:640px; margin:0;}
+.meta-row{display:flex; gap:18px; flex-wrap:wrap; margin-top:22px; font-size:13px; color:#9FB6C6;}
+.meta-row span{display:flex; align-items:center; gap:6px;}
+.card{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+  padding:26px 24px; margin-top:22px;
+}
+h2.h2{
+  font-family:var(--font-head); font-size:21px; font-weight:600; color:var(--navy);
+  margin:0 0 12px; padding-bottom:10px; border-bottom:2px solid var(--light);
+}
+:root[data-theme="dark"] h2.h2{color:#8FCBEF;}
+h2.h2 .num{color:var(--blue); margin-right:8px;}
+p{color:var(--ink-soft); font-size:15.5px;}
+p.lead{color:var(--ink); font-size:16.5px;}
+ul.blist{margin:10px 0; padding-left:0; list-style:none;}
+ul.blist li{position:relative; padding-left:24px; margin-bottom:10px; font-size:15px; color:var(--ink-soft);}
+ul.blist li:before{content:"—"; position:absolute; left:0; color:var(--blue); font-weight:700;}
+table.tbl{width:100%; border-collapse:collapse; margin:14px 0; font-size:14px;}
+table.tbl th{background:var(--navy); color:#fff; text-align:left; padding:10px 12px; font-weight:600; font-size:13px;}
+table.tbl td{padding:10px 12px; border-bottom:1px solid var(--line); color:var(--ink-soft); vertical-align:top;}
+table.tbl tr:last-child td{border-bottom:none;}
+table.tbl tr:nth-child(even) td{background:var(--light);}
+.note{border-radius:10px; padding:16px 18px; margin:16px 0; font-size:14.5px;}
+.note.amber{background:var(--amber-bg); border:1px solid var(--amber-line); color:var(--ink);}
+.note.blue{background:var(--light); border:1px solid var(--line); color:var(--ink);}
+.note b{color:var(--navy);}
+:root[data-theme="dark"] .note b{color:#8FCBEF;}
+.cta{
+  background:linear-gradient(135deg,var(--blue),var(--navy)); color:#fff; border-radius:var(--radius);
+  padding:26px 24px; margin-top:26px; text-align:center;
+}
+.cta h3{font-family:var(--font-head); margin:0 0 8px; font-size:19px;}
+.cta p{color:#D7E7F0; margin:0 0 16px; font-size:14.5px;}
+.cta a.btn{
+  display:inline-block; background:#fff; color:var(--navy); font-weight:700; text-decoration:none;
+  padding:11px 26px; border-radius:999px; font-size:14px;
+}
+.footer{text-align:center; color:var(--ink-soft); font-size:12.5px; margin-top:30px; padding-top:18px; border-top:1px solid var(--line);}
+.pill{display:inline-block; background:var(--light2); color:var(--purple); font-size:11.5px; font-weight:700; padding:4px 10px; border-radius:999px; letter-spacing:.03em; margin-right:6px;}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+@media(max-width:560px){.grid2{grid-template-columns:1fr;}}
+.stepbox{background:var(--light); border-radius:10px; padding:14px 16px; margin-bottom:10px;}
+.stepbox b{color:var(--navy); display:block; margin-bottom:4px; font-size:14.5px;}
+:root[data-theme="dark"] .stepbox b{color:#8FCBEF;}
+.toc{display:flex; flex-wrap:wrap; gap:8px; margin-top:20px;}
+.toc a{font-size:12.5px; font-weight:600; color:#C9D9E4; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); padding:6px 12px; border-radius:999px; text-decoration:none;}
+.toc a:hover{background:rgba(255,255,255,.16); color:#fff;}
+.faq{border-bottom:1px solid var(--line); padding:14px 0;}
+.faq:last-child{border-bottom:none;}
+.faq b{display:block; color:var(--navy); font-size:15px; margin-bottom:6px;}
+:root[data-theme="dark"] .faq b{color:#8FCBEF;}
+.faq p{margin:0;}
+.example{background:var(--light2); border-left:4px solid var(--purple); border-radius:0 10px 10px 0; padding:14px 18px; margin:16px 0; font-size:14.5px;}
+.example b{color:var(--purple); display:block; margin-bottom:4px; font-size:12.5px; text-transform:uppercase; letter-spacing:.04em;}
+.deflist{margin:10px 0;}
+.deflist .term{font-weight:700; color:var(--navy); font-size:15px; margin-top:12px;}
+:root[data-theme="dark"] .deflist .term{color:#8FCBEF;}
+.deflist .def{color:var(--ink-soft); font-size:14.5px; margin:2px 0 0;}
+.glossary{display:grid; grid-template-columns:1fr; gap:2px;}
+.mistake{display:flex; gap:10px; padding:10px 0; border-bottom:1px dashed var(--line); font-size:14.5px; color:var(--ink-soft);}
+.mistake:last-child{border-bottom:none;}
+.mistake .x{color:#C1443C; font-weight:700; flex:none;}
+h3.h3{font-family:var(--font-head); font-size:16px; font-weight:600; color:var(--navy); margin:20px 0 8px;}
+:root[data-theme="dark"] h3.h3{color:#8FCBEF;}
+
+@media (prefers-color-scheme: dark){
+:root:not([data-theme="light"]) h2.h2{color:#8FCBEF;}
+:root:not([data-theme="light"]) .note b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .stepbox b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .faq b{color:#8FCBEF;}
+:root:not([data-theme="light"]) .deflist .term{color:#8FCBEF;}
+:root:not([data-theme="light"]) h3.h3{color:#8FCBEF;}
+}
+
+a.backlink{display:inline-flex;align-items:center;gap:6px;color:#8FCBEF;text-decoration:none;font-size:13px;font-weight:600;margin-bottom:2px;}
+a.backlink:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+<div class="topband"><div class="topband-inner">
+  <a class="backlink" href="index2.html">&larr; All Best Practice resources</a>
+  <div class="brand"><span class="dot"></span> NucCol &nbsp;|&nbsp; Nuclear Collaboration Ltd</div>
+  <div class="kicker">National and Regional Support for UK Manufacturers</div>
+  <h1 class="title">Funding &amp; Grants Navigator</h1>
+  <p class="subtitle">You don't need to fund everything yourself. From Innovate UK grants to your own regional Growth Hub, here's the real funding landscape available to UK manufacturing SMEs right now.</p>
+  <div class="meta-row"><span>10 min read</span><span>Growth &amp; Funding</span></div>
+</div></div>
+<div class="wrap">
+<div class="card"><h2 class="h2"><span class="num">01</span>Why this is worth ten minutes of your time</h2><p class="lead">Most SMEs default to self-funding growth, R&amp;D and equipment because chasing grants feels like a distraction from the day job. In practice, a surprising amount of funding is designed specifically for manufacturers your size &mdash; and several sources can be combined rather than chosen between.</p><div class="note blue">Since April 2024, receiving a grant no longer prevents you from also claiming R&amp;D tax relief on the subsidised portion of the same project. Stacking sources &mdash; a grant, tax relief on the balance, and a skills programme for the team &mdash; is now standard practice, not a loophole.</div></div><div class="card"><h2 class="h2"><span class="num">02</span>National funding and support programmes</h2><table class="tbl"><thead><tr><th>Programme</th><th>Typical value</th><th>What it's for</th></tr></thead><tbody><tr><td>Innovate UK (UKRI)</td><td>£25k–£1m+ (up to ~70% of costs)</td><td>Innovation grants for high-impact R&amp;D. Open-access Smart Grants are currently paused &mdash; focus on themed competitions through the Innovation Funding Service (IFS) portal instead.</td></tr><tr><td>Innovate UK Business Growth</td><td>Fully/heavily subsidised advisory</td><td>Free or subsidised advisory support to help SMEs access funding, commercialise innovation and scale — not a grant itself, but often the route into one.</td></tr><tr><td>DESNZ (Dept. for Energy Security & Net Zero)</td><td>£5k–£500k+</td><td>Energy transition and net zero schemes — industrial decarbonisation, heat pumps, EV infrastructure. SMEs eligible where the work aligns with energy/clean growth.</td></tr><tr><td>UK Shared Prosperity Fund (UKSPF)</td><td>£10k–£500k (region dependent)</td><td>Regional growth funding for SME investment, productivity and innovation. Administered locally, so criteria vary — 2025/26 is a transitional year, with successor arrangements expected.</td></tr><tr><td>Made Smarter</td><td>£20k–£100k, match-funded</td><td>Digital transformation grants specifically for manufacturing SMEs — robotics, automation, AI adoption. National roll-out across English regions is time-limited, so registering early matters.</td></tr><tr><td>Catapult Network</td><td>£10k–£50k per SME + in-kind support</td><td>Innovation accelerator programmes and testbeds. Most centres offer a free initial scoping conversation before you commit to a collaborative project.</td></tr><tr><td>Knowledge Transfer Partnerships (KTPs)</td><td>Up to 75% of associate costs funded</td><td>Links your business to academic expertise via a part-funded KTP associate. Strong track record and less competitive than direct R&amp;D grants.</td></tr><tr><td>R&amp;D Tax Relief (HMRC)</td><td>Enhanced tax credit on qualifying spend</td><td>Up to 33p per £1 spent for loss-making SMEs on qualifying R&amp;D. Can now be combined with grant funding on the same project.</td></tr><tr><td>Combined Authorities (WMCA, GMCA etc.)</td><td>£5k–£250k</td><td>Regional business support funds — capital grants, innovation vouchers and skills programmes. Must be based in the relevant region.</td></tr><tr><td>Start Up Loans</td><td>£500–£25,000</td><td>Government-backed loans for new businesses or those trading under 3 years, at a fixed 6% interest rate with free mentoring included.</td></tr><tr><td>Nuclear Sector Deal Programmes</td><td>Varies by programme</td><td>Sector-specific support including workforce development, supply chain capability building and collaborative R&amp;D initiatives.</td></tr></tbody></table></div><div class="card"><h2 class="h2"><span class="num">03</span>Nine things worth knowing before you apply</h2><ul class="blist"><li><b>Check your local Growth Hub first.</b> Many UKSPF grants are administered locally, so your regional Growth Hub is often the fastest way to see what's actually open right now.</li><li><b>Stack funding sources where you can.</b> An Innovate UK grant, R&amp;D tax credits on the balance, and a Skills Bootcamp for workforce development can often run alongside each other.</li><li><b>Grants and R&amp;D tax relief are no longer mutually exclusive.</b> Since April 2024 you can claim relief on the subsidised portion of a grant-funded project.</li><li><b>Made Smarter is time-limited.</b> The national roll-out across English regions in 2025/26 has limited capacity — registering early at madesmarter.uk matters more than usual.</li><li><b>Innovate UK's open-access Smart Grants are currently paused.</b> Themed competitions through the Innovation Funding Service (IFS) portal are the live route in for 2025/26.</li><li><b>KTPs have a strong success rate.</b> They're less competitive than direct R&amp;D grants and a good fit when you have a specific challenge that needs academic expertise.</li><li><b>UKSPF is in a transitional year.</b> 2025/26 successor arrangements are expected via the Spending Review — worth a watching brief rather than assuming continuity.</li><li><b>The Growth & Skills Levy is changing.</b> Expect new apprenticeship unit rules from April 2026, and a £2,000 incentive for under-25 apprenticeship starts from October 2026.</li><li><b>Most Catapult centres offer a free first conversation.</b> A good, low-risk way to test whether a collaborative R&amp;D route is worth pursuing before committing.</li></ul></div><div class="card"><h2 class="h2"><span class="num">04</span>Regional funding matrix</h2><p class="">Below is a snapshot of region-by-region business support &mdash; Combined Authorities, Growth Hubs and devolved government schemes. Coverage and criteria change often, so treat this as a starting point for your own region's Growth Hub, not a final answer.</p><table class="tbl"><thead><tr><th>Region</th><th>Organisation</th><th>Opportunity</th><th>Typical value</th></tr></thead><tbody><tr><td>East Midlands</td><td>East Midlands Combined County Authority (EMCCA)</td><td>£25m Regional Investment Fund</td><td>Up to £25m total fund</td></tr><tr><td>East Midlands</td><td>East Midlands Growth Hub</td><td>Business support & grant access</td><td>Advisory (high indirect value)</td></tr><tr><td>North East</td><td>UK Government</td><td>Apprenticeship Levy / Skills Funding</td><td>95–100% of training cost covered</td></tr><tr><td>North West</td><td>GM Business Growth Hub</td><td>Business support & innovation grants</td><td>£5k–£100k equivalent support</td></tr><tr><td>North West</td><td>Cheshire & Warrington Growth Hub</td><td>Business support & funding access</td><td>Advisory + indirect funding</td></tr><tr><td>North West</td><td>Lancashire Enterprise Partnership</td><td>Business support & investment readiness</td><td>Advisory</td></tr><tr><td>South Yorkshire</td><td>South Yorkshire Mayoral Combined Authority</td><td>Business productivity & digitisation grant</td><td>£5k–£50k</td></tr><tr><td>West Midlands</td><td>West Midlands Combined Authority</td><td>Regional business support funds</td><td>£5k–£250k</td></tr><tr><td>West Midlands</td><td>Black Country Growth Hub</td><td>Business growth & innovation support</td><td>£5k–£100k</td></tr><tr><td>West Midlands</td><td>Greater Birmingham Chambers / Growth Hub</td><td>Business growth & investment support</td><td>Advisory + £10k–£250k</td></tr><tr><td>West Midlands</td><td>Worcestershire Growth Hub</td><td>Business support & innovation grants</td><td>£5k–£100k</td></tr><tr><td>South West</td><td>Cornwall & Isles of Scilly Growth Hub</td><td>Business grants & innovation support</td><td>£5k–£250k</td></tr><tr><td>South West</td><td>Heart of the South West Growth Hub</td><td>Business growth & innovation support</td><td>Advisory + £5k–£100k</td></tr><tr><td>South West</td><td>West of England Growth Hub</td><td>Business support & finance access</td><td>Advisory + grant access</td></tr><tr><td>South West</td><td>South West Net Zero Hub</td><td>Community energy & net zero funding</td><td>£10k–£250k+</td></tr><tr><td>East of England</td><td>Cambridgeshire & Peterborough Combined Authority</td><td>Business growth & innovation funding</td><td>£10k–£250k</td></tr><tr><td>East of England</td><td>Essex Growth Hub</td><td>Business growth & innovation support</td><td>£5k–£150k</td></tr><tr><td>East of England</td><td>New Anglia Growth Hub (Norfolk & Suffolk)</td><td>Business support & growth programme</td><td>Advisory + £5k–£100k</td></tr><tr><td>South East — Suffolk</td><td>East Suffolk Council</td><td>Business Ambition Fund</td><td>£10k–£50k+</td></tr><tr><td>South East — Suffolk</td><td>West Suffolk Council</td><td>Business growth & productivity grants (UKSPF)</td><td>£1k–£20k</td></tr><tr><td>Lincolnshire</td><td>South Kesteven DC / Lincolnshire Chamber</td><td>Business growth grant</td><td>£5k–£100k</td></tr><tr><td>Lincolnshire</td><td>Business Lincolnshire Growth Hub</td><td>Business support & grant navigation</td><td>Advisory + grant access</td></tr><tr><td>Scotland</td><td>Scottish Government</td><td>Business Growth Accelerator / regional grants</td><td>£10k–£250k</td></tr><tr><td>Scotland</td><td>South of Scotland Enterprise (SOSE)</td><td>Business support & growth funding</td><td>£5k–£250k</td></tr><tr><td>North Wales</td><td>Development Bank of Wales</td><td>Business finance (loans & investment)</td><td>£25k–£10m+</td></tr><tr><td>North Wales</td><td>Ambition North Wales</td><td>Clean Energy Fund & decarbonisation support</td><td>£5k–£15k feasibility, higher for capital</td></tr><tr><td>South Wales</td><td>Business Wales</td><td>Advisory & grant gateway</td><td>Advisory (high indirect value)</td></tr><tr><td>South Wales</td><td>UK Government</td><td>Apprenticeships / Skills Funding</td><td>95–100% of training funded</td></tr><tr><td>National</td><td>Innovate UK</td><td>Innovation grants (IFS themed calls)</td><td>£25k–£1m+ (up to 70% of costs)</td></tr><tr><td>National</td><td>Made Smarter (all English regions)</td><td>Digital transformation for manufacturers</td><td>£20k–£100k, match-funded</td></tr></tbody></table></div><div class="card"><h2 class="h2"><span class="num">05</span>A realistic path to actually getting funded</h2><div class="stepbox"><b>Step 1 — Start with your Growth Hub, not a grant search</b>Your regional Growth Hub acts as a single gateway to most local schemes, and can point you to what's genuinely open right now rather than what's simply listed online.</div><div class="stepbox"><b>Step 2 — Separate 'advisory' from 'grant' support</b>Several organisations above (Growth Hubs, Innovate UK Business Growth, Business Wales) don't hand out money directly, but materially improve your odds with the schemes that do — don't skip them assuming only cash counts.</div><div class="stepbox"><b>Step 3 — Match the funding type to what you actually need</b>R&amp;D and innovation work points toward Innovate UK, KTPs or a Catapult. Digital/automation adoption points toward Made Smarter. Workforce development points toward the Growth & Skills Levy and Skills Bootcamps.</div><div class="stepbox"><b>Step 4 — Talk to your accountant about stacking</b>Since grants and R&amp;D tax relief can now be combined, involve whoever handles your tax position early, not after the grant funding decision is made.</div><div class="stepbox"><b>Step 5 — Build a simple funding calendar</b>Time-limited rounds (UKSPF, Made Smarter's regional roll-out, specific Growth Hub calls) reward planning ahead rather than reacting when you happen to see one advertised.</div></div><div class="card"><h2 class="h2"><span class="num">06</span>Common mistakes SMEs make here</h2><div class="mistake"><span class="x">&#10007;</span><span>Assuming grants and R&amp;D tax relief are mutually exclusive — that restriction was lifted for subsidised spend from April 2024.</span></div><div class="mistake"><span class="x">&#10007;</span><span>Searching nationally first and missing better-fit regional or local schemes administered through your own Growth Hub.</span></div><div class="mistake"><span class="x">&#10007;</span><span>Treating advisory-only support (Growth Hubs, Business Wales, Innovate UK Business Growth) as not worth engaging with, when it often materially improves grant success rates.</span></div><div class="mistake"><span class="x">&#10007;</span><span>Missing time-limited windows — Made Smarter's regional roll-out and UKSPF's transitional year both reward early registration over a wait-and-see approach.</span></div><div class="mistake"><span class="x">&#10007;</span><span>Overlooking Knowledge Transfer Partnerships because they sound academic — they have a strong success rate precisely because they're less competitive than direct grants.</span></div></div><div class="card"><h2 class="h2"><span class="num">07</span>Frequently asked questions</h2><div class="glossary"><div class="faq"><b>Can I combine a grant with R&amp;amp;D tax relief on the same project?</b><p>Yes, since April 2024 — you can claim enhanced R&amp;D tax relief on the portion of a project not covered by the grant, where previously the grant could block the claim entirely.</p></div><div class="faq"><b>Are Innovate UK's Smart Grants still open?</b><p>The open-access Smart Grants have been paused for 2025/26. The live route in is through themed competitions on the Innovation Funding Service (IFS) portal, so check that regularly rather than only the general Smart Grants page.</p></div><div class="faq"><b>What's the fastest way to find out what's available in my area?</b><p>Start with your regional Growth Hub or Combined Authority (see the regional matrix above) — they act as a single point of contact for most local and UKSPF-administered schemes, and can tell you what's currently open rather than what's simply listed.</p></div><div class="faq"><b>Is UKSPF worth pursuing given it's described as transitional?</b><p>Yes — 2025/26 funding is still live even though successor arrangements for 2026/27 onwards are still being finalised through the Spending Review. Don't rule it out on the basis of the transition alone.</p></div><div class="faq"><b>What if I don't have a specific R&amp;amp;D project, just general growth ambitions?</b><p>Look first at Combined Authority and Growth Hub business support funds, Start Up Loans (if trading under 3 years), and Made Smarter if digital/automation adoption is part of the plan — these are typically more accessible than the R&amp;D-focused schemes.</p></div></div></div>
+<div class="cta">
+  <h3>Want help identifying which of these actually fits your business?</h3>
+  <p>NucCol's F4N assessment and Sector Opportunity Reports can help you see where growth investment would have the most impact before you apply for funding to support it.</p>
+  <a class="btn" href="https://www.nuccol.co.uk" target="_blank" rel="noopener">Check your F4N status &rarr;</a>
+</div>
+<div class="footer">NucCol &middot; Nuclear Collaboration Ltd &middot; Best Practice resource, produced for ManufacturingUK.org</div>
+</div>
+
+</body>
+</html>
