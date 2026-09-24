@@ -60,7 +60,7 @@ body{font-family:'Barlow',sans-serif;background:var(--white);color:var(--text);l
 
 /* HERO */
 #hero {
-  min-height:100vh;background:var(--navy);
+  min-height:82vh;background:var(--navy);
   display:flex;flex-direction:column;justify-content:center;
   position:relative;overflow:hidden;padding:120px 40px 80px;
 }
@@ -137,10 +137,11 @@ body{font-family:'Barlow',sans-serif;background:var(--white);color:var(--text);l
 }
 
 /* NEWS */
-#news{padding:80px 40px;background:var(--navy);}
+#news{padding:56px 40px 64px;background:#0E1D33;border-top:1px solid rgba(41,182,232,0.25);}
 #news .section-label{color:var(--cyan);}
-#news .section-h2{color:#fff;margin-bottom:36px;}
-.news-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;}
+#news .section-h2{color:#fff;margin-bottom:28px;}
+.news-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+@media(max-width:1000px){.news-grid{grid-template-columns:1fr;}}
 .news-card{
   background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);
   border-radius:10px;padding:24px;transition:border-color .18s;
@@ -232,8 +233,8 @@ footer{background:var(--navy);padding:48px 40px 28px;border-top:1px solid rgba(2
   <div class="topbar-pipe"></div>
   <div class="topbar-nav-links">
     <a class="nav-link" href="#about">About F4N</a>
-    <a class="nav-link" href="#news">News</a>
-    <a class="nav-cta" href="NuclearReady_Explorer_v8.html">Open Explorer →</a>
+    <a class="nav-link" href="#news" id="nav-news" style="display:none">News</a>
+    <a class="nav-cta" href="NuclearReady.html">Open Explorer →</a>
   </div>
 </div>
 
@@ -251,7 +252,7 @@ footer{background:var(--navy);padding:48px 40px 28px;border-top:1px solid rgba(2
       NuclearReady is the directory of UK manufacturers that have been assessed through NucCol's F4N programme — independently verified and ready to compete for nuclear contracts.
     </p>
     <div class="hero-actions">
-      <a class="btn-primary" href="NuclearReady_Explorer_v8.html">
+      <a class="btn-primary" href="NuclearReady.html">
         Explore the Directory
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
       </a>
@@ -260,6 +261,18 @@ footer{background:var(--navy);padding:48px 40px 28px;border-top:1px solid rgba(2
     <div class="hero-stats">
       <div class="hstat"><div class="hstat-num" id="hs-granted">–</div><div class="hstat-label">F4N Granted</div></div>
       <div class="hstat"><div class="hstat-num" id="hs-journey">–</div><div class="hstat-label">On Journey</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- NEWS -->
+<section id="news" style="display:none">
+  <div class="section-inner">
+    <div class="section-label">Latest from Members</div>
+    <h2 class="section-h2">Member News &amp; Updates</h2>
+    <div class="news-grid" id="news-grid"></div>
+    <div class="news-note" id="news-note">
+      <strong>Coming soon:</strong> F4N members will be able to share their own news, case studies and contract wins from the NucCol members area — appearing here after review by the NucCol team.
     </div>
   </div>
 </section>
@@ -295,23 +308,13 @@ footer{background:var(--navy);padding:48px 40px 28px;border-top:1px solid rgba(2
   </div>
 </section>
 
-<!-- NEWS -->
-<section id="news">
-  <div class="section-inner">
-    <div class="section-label">Latest from Members</div>
-    <h2 class="section-h2">Member News &amp; Updates</h2>
-    <div class="news-grid" id="news-grid"></div>
-    <div class="news-note" id="news-note">
-      <strong>Coming soon:</strong> F4N members will be able to share their own news, case studies and contract wins from the NucCol members area — appearing here after review by the NucCol team.
-    </div>
-  </div>
-</section>
+
 
 <!-- CTA -->
 <section id="cta">
   <h2 class="cta-h2">Find Your Next Nuclear Supplier</h2>
   <p class="cta-sub">Search and filter the full directory of F4N-assessed UK companies — free, public, no login required.</p>
-  <a class="btn-navy" href="NuclearReady_Explorer_v8.html">
+  <a class="btn-navy" href="NuclearReady.html">
     Open the Explorer
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
   </a>
@@ -333,9 +336,9 @@ footer{background:var(--navy);padding:48px 40px 28px;border-top:1px solid rgba(2
       <div class="footer-col">
         <h4>Directory</h4>
         <ul>
-          <li><a href="NuclearReady_Explorer_v8.html">Company Explorer</a></li>
-          <li><a href="NuclearReady_Explorer_v8.html">Search by Capability</a></li>
-          <li><a href="NuclearReady_Explorer_v8.html">Search by Region</a></li>
+          <li><a href="NuclearReady.html">Company Explorer</a></li>
+          <li><a href="NuclearReady.html">Search by Capability</a></li>
+          <li><a href="NuclearReady.html">Search by Region</a></li>
         </ul>
       </div>
       <div class="footer-col">
@@ -410,7 +413,7 @@ renderStats();
   const TAG = { 'Contract Win':'contract', 'F4N Achievement':'achievement', 'New Capability':'new-member',
                 'Investment & Growth':'new-member', 'Industry Event':'industry', 'Company News':'industry' };
   try {
-    const r = await fetch(`${SUPA_URL}/rest/v1/public_nr_news?select=*&order=published_at.desc&limit=6`, {
+    const r = await fetch(`${SUPA_URL}/rest/v1/public_nr_news?select=*&order=pinned.desc,published_at.desc&limit=3`, {
       headers: { apikey: SUPA_ANON, Authorization: `Bearer ${SUPA_ANON}` }
     });
     if (!r.ok) return;
@@ -427,6 +430,8 @@ renderStats();
         <div class="news-meta"><span class="news-company">${esc(n.company_name)}</span><span>${esc(when)}</span></div>
       </div>`;
     }).join('');
+    document.getElementById('news').style.display = '';
+    const navNews = document.getElementById('nav-news'); if (navNews) navNews.style.display = '';
     const note = document.getElementById('news-note');
     if (note) note.innerHTML = 'F4N members share their news from the NucCol members area. Every item is reviewed by the NucCol team before it appears here.';
   } catch (e) { /* feed unavailable — note stays */ }
