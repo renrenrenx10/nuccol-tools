@@ -1214,6 +1214,8 @@ function openDetail(id) {
   if (c.description) {
     overviewHtml += `<div class="dc-section"><div class="dc-label">About</div><div class="dc-desc-text">${esc(c.description)}</div></div>`;
   }
+  // [2026-09-24] Company news — filled in by loadCompanyNews() below
+  overviewHtml += `<div class="dc-section" id="dc-news" style="display:none"><div class="dc-label">News &amp; Updates</div><div class="dc-recent-work" id="dc-news-list"></div></div>`;
 
   // Contact & company details (Phase 1 schema)
   overviewHtml += `<div class="dc-section"><div class="dc-label">Company Details</div>`;
@@ -1268,6 +1270,7 @@ function openDetail(id) {
   if (!marketsHtml) marketsHtml = `<div class="dc-section"><div class="dc-desc-text">No market or accreditation data listed.</div></div>`;
 
   document.getElementById('dh-pane-overview').innerHTML = overviewHtml;
+  loadCompanyNews(c.id);
   document.getElementById('dh-pane-capabilities').innerHTML = capsHtml;
   document.getElementById('dh-pane-markets').innerHTML = marketsHtml;
   setDetailTab('overview');
@@ -1285,11 +1288,37 @@ function openDetail(id) {
   });
 }
 
+// Approved member news for one company (public_nr_news view: approved and not
+// removed from site). Cached per company for the page visit.
+const NEWS_CACHE = {};
+async function loadCompanyNews(companyId) {
+  let items = NEWS_CACHE[companyId];
+  if (!items) {
+    const { data, error } = await db.from('public_nr_news')
+      .select('title,type,body,published_at').eq('company_id', companyId)
+      .order('published_at', { ascending: false }).limit(20);
+    if (error) { console.warn('Company news unavailable:', error.message); return; }
+    items = NEWS_CACHE[companyId] = data || [];
+  }
+  if (state.selected !== companyId) return;          // user already opened another company
+  const sec = document.getElementById('dc-news'), list = document.getElementById('dc-news-list');
+  if (!sec || !list || !items.length) return;
+  list.innerHTML = items.map(n => {
+    const when = n.published_at ? new Date(n.published_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) : '';
+    return `<div class="dc-work-item">
+      <div class="dc-work-title">${esc(n.title)}</div>
+      <div class="dc-work-desc" style="white-space:pre-wrap">${esc(n.body)}</div>
+      <div class="dc-work-year">${esc([n.type, when].filter(Boolean).join(' · '))}</div>
+    </div>`;
+  }).join('');
+  sec.style.display = '';
+}
+
 function setDetailTab(name) {
   document.querySelectorAll('.dh-pane').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.dh-tabbtn').forEach(b => b.classList.remove('active'));
   document.getElementById('dh-pane-' + name).classList.add('active');
-  if (typeof event !== 'undefined' && event && event.target && event.target.classList.contains('dh-tabbtn')) {
+  if (typeof event !== 'undefined' && event && event.target && event.target.classList && event.target.classList.contains('dh-tabbtn')) {
     event.target.classList.add('active');
   } else {
     const idx = { overview: 0, capabilities: 1, markets: 2 }[name];
@@ -1327,7 +1356,10 @@ function setView(v) {
 // ─────────────────────────────────────────────
 function handleRoute() {
   const hash = window.location.hash;
-  if (hash.startsWith('#company/')) {
+  if (hash.startsWith('#id/')) {
+    const c = COMPANIES.find(x => String(x.id) === hash.slice('#id/'.length));
+    if (c) openDetail(c.id);   // openDetail rewrites the URL to #company/<slug>
+  } else if (hash.startsWith('#company/')) {
     const slug = hash.slice('#company/'.length);
     const c = COMPANY_BY_SLUG[slug];
     if (c) openDetail(c.id);

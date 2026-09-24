@@ -147,6 +147,8 @@ body{font-family:'Barlow',sans-serif;background:var(--white);color:var(--text);l
   border-radius:10px;padding:24px;transition:border-color .18s;
 }
 .news-card:hover{border-color:rgba(41,182,232,0.4);}
+a.news-card{display:block;text-decoration:none;color:inherit;}
+a.news-card .news-more{margin-top:12px;font-size:11px;font-weight:700;color:var(--cyan);letter-spacing:0.04em;}
 .news-tag{display:inline-block;padding:3px 10px;border-radius:10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;}
 .news-tag.new-member{background:rgba(41,182,232,0.15);color:var(--cyan);}
 .news-tag.achievement{background:rgba(26,122,74,0.2);color:#4ec98a;}
@@ -423,12 +425,14 @@ renderStats();
       const body = String(n.body || '');
       const excerpt = body.length > 240 ? body.slice(0, 237).replace(/\s+\S*$/, '') + '…' : body;
       const when = n.published_at ? new Date(n.published_at).toLocaleDateString('en-GB', { month:'long', year:'numeric' }) : '';
-      return `<div class="news-card">
+      const href = n.company_id ? `NuclearReady.html#id/${encodeURIComponent(n.company_id)}` : '';
+      return `<${href ? `a href="${href}"` : 'div'} class="news-card">
         <span class="news-tag ${TAG[n.type] || 'industry'}">${esc(n.type || 'News')}</span>
         <div class="news-title">${esc(n.title)}</div>
         <div class="news-excerpt">${esc(excerpt)}</div>
         <div class="news-meta"><span class="news-company">${esc(n.company_name)}</span><span>${esc(when)}</span></div>
-      </div>`;
+        ${href ? '<div class="news-more">View company profile →</div>' : ''}
+      </${href ? 'a' : 'div'}>`;
     }).join('');
     document.getElementById('news').style.display = '';
     const navNews = document.getElementById('nav-news'); if (navNews) navNews.style.display = '';
