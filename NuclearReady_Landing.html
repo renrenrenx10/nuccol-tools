@@ -300,37 +300,8 @@ footer{background:var(--navy);padding:48px 40px 28px;border-top:1px solid rgba(2
   <div class="section-inner">
     <div class="section-label">Latest from Members</div>
     <h2 class="section-h2">Member News &amp; Updates</h2>
-    <div class="news-grid">
-      <div class="news-card">
-        <span class="news-tag new-member">New Member</span>
-        <div class="news-title">Belfast Precision Components joins F4N Journey</div>
-        <div class="news-excerpt">The Northern Ireland precision machining specialist has begun its F4N assessment journey, bringing high-tolerance Inconel and titanium capability into the directory for the first time.</div>
-        <div class="news-meta">
-          <span class="news-company">Belfast Precision Components</span>
-          <span>June 2025</span>
-        </div>
-      </div>
-      <div class="news-card">
-        <span class="news-tag achievement">Achievement</span>
-        <div class="news-title">Strachan &amp; Henshaw Nuclear achieves F4N Granted status</div>
-        <div class="news-excerpt">Bristol-based fuel handling specialists have successfully completed the full F4N assessment, earning Granted status for their remote handling systems and polar crane capability.</div>
-        <div class="news-meta">
-          <span class="news-company">Strachan &amp; Henshaw Nuclear</span>
-          <span>May 2025</span>
-        </div>
-      </div>
-      <div class="news-card">
-        <span class="news-tag contract">Contract Win</span>
-        <div class="news-title">F4N members secure Hinkley Point C contracts</div>
-        <div class="news-excerpt">Several F4N Granted members have secured supply chain positions on the Hinkley Point C new-build programme, demonstrating the commercial value of the assessment pathway.</div>
-        <div class="news-meta">
-          <span class="news-company">NucCol</span>
-          <span>April 2025</span>
-        </div>
-      </div>
-    </div>
     <div class="news-note">
-      <strong>Coming soon:</strong> F4N members will be able to post their own news, case studies and contract wins directly from the NuclearReady members area — appearing here after moderation review.
+      <strong>Coming soon:</strong> F4N members will be able to share their own news, case studies and contract wins from the NucCol members area — appearing here after review by the NucCol team.
     </div>
   </div>
 </section>
@@ -387,7 +358,7 @@ footer{background:var(--navy);padding:48px 40px 28px;border-top:1px solid rgba(2
 
 <script>
 // Fallback figures only used if the live feed can't be reached — kept in
-// sync with the static company grid in f4n-companies.html.
+// roughly in sync with nr_companies.
 let GRANTED = 27;
 let JOURNEY = 13;
 
@@ -406,20 +377,24 @@ function renderStats(){
 }
 renderStats();
 
-// Pull true, live counts from the same CMS feed f4n-companies.html uses,
-// so both pages always agree.
+// [2026-09-24 pre-launch] Live counts come from Supabase nr_companies — the same
+// source the Explorer uses — so both pages always agree. Public anon key only
+// (read access is controlled by RLS). The old Azure Blob SAS has been removed.
 (async function(){
   try {
-    const BASE = 'https://nuccolmedia.blob.core.windows.net/content';
-    const SAS  = 'sv=2026-02-06&ss=b&srt=o&sp=rwdctfx&se=2032-01-01T20:14:16Z&st=2026-06-16T10:59:16Z&spr=https&sig=JVx5ozHDrnCCcLKtK6npIZrswRrTi9njeifMBXgRHg4%3D';
-    const r = await fetch(`${BASE}/site-pages/f4n-companies.json?${SAS}`);
+    const SUPA_URL  = 'https://qkyvmtouwrzrcyagkheo.supabase.co';
+    const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFreXZtdG91d3J6cmN5YWdraGVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzODQzNjMsImV4cCI6MjA5MDk2MDM2M30.gKEgkVA-VjOnS_084W79kpzOdZhFQkhFp63MAe_FTd4';
+    const r = await fetch(`${SUPA_URL}/rest/v1/nr_companies?select=status&hidden=eq.false`, {
+      headers: { apikey: SUPA_ANON, Authorization: `Bearer ${SUPA_ANON}` }
+    });
     if (!r.ok) return;
     const rows = await r.json();
-    GRANTED = rows.filter(x => x.section === 'Granted').length;
-    JOURNEY = rows.filter(x => x.section === 'Journey').length;
+    if (!Array.isArray(rows) || !rows.length) return;
+    GRANTED = rows.filter(x => x.status === 'granted').length;
+    JOURNEY = rows.filter(x => x.status !== 'granted').length;
     renderStats();
   } catch (e) {
-    // Network/CORS failure — fallback figures above stay on screen.
+    // Network failure — fallback figures above stay on screen.
   }
 })();
 </script>

@@ -796,6 +796,24 @@ const db = supabase.createClient(SUPA_URL, SUPA_ANON);
 let COMPANIES = [];
 const COMPANY_BY_SLUG = {};
 
+// [2026-09-24 pre-launch] Escape member-edited text before it goes into innerHTML,
+// and only allow http(s) links, so a stray '<' or a javascript: URL can't break
+// or hijack the public page.
+function esc(v) {
+  return String(v == null ? '' : v)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function safeUrl(u) {
+  u = String(u || '').trim();
+  if (!u) return '';
+  if (!/^https?:\/\//i.test(u)) {
+    if (/^[a-z][a-z0-9+.-]*:/i.test(u)) return '';   // other schemes (javascript:, data: ...) blocked
+    u = 'https://' + u;                               // bare "www.example.com"
+  }
+  return esc(u);
+}
+
 function mapCompany(row) {
   let caps = row.capabilities;
   if (typeof caps === 'string') { try { caps = JSON.parse(caps); } catch(e) { caps = caps ? [caps] : []; } }
@@ -838,6 +856,7 @@ function mapCompany(row) {
     turnover:       row.turnover || '',
     main_commodity_group: row.main_commodity_group || '',
     contact_name:   row.contact_name  || null,
+    contact_phone:  row.contact_phone || null,
     contact_email:  row.contact_email || null,
     linkedin:       row.linkedin      || null,
     slug:           slugify(row.name),
@@ -1132,18 +1151,18 @@ function renderGrid(companies) {
     const locationText = [c.city, c.county].filter(Boolean).join(', ');
     return `<div class="company-card${state.selected === c.id ? ' selected' : ''}" onclick="openDetail('${c.id}')" style="animation-delay:${Math.min(i,18)*0.025}s">
       <div class="card-logoband">
-        ${c.logo_url
-          ? `<img src="${c.logo_url}" alt="${c.name} logo" onerror="this.outerHTML='<div class=&quot;card-avatar&quot;>${initials}</div>'">`
+        ${safeUrl(c.logo_url)
+          ? `<img src="${safeUrl(c.logo_url)}" alt="${esc(c.name)} logo" onerror="this.outerHTML='<div class=&quot;card-avatar&quot;>${initials}</div>'">`
           : `<div class="card-avatar">${initials}</div>`}
       </div>
       <div class="card-body">
         <div class="card-textblock">
-          <div class="card-name" title="${c.name}">${c.name}</div>
-          <div class="card-desc">${c.description || ''}</div>
+          <div class="card-name" title="${esc(c.name)}">${esc(c.name)}</div>
+          <div class="card-desc">${esc(c.description)}</div>
         </div>
-        <div class="card-location">${locationText ? `<svg viewBox="0 0 12 12" fill="currentColor"><path d="M6 0C3.79 0 2 1.79 2 4c0 3 4 8 4 8s4-5 4-8c0-2.21-1.79-4-4-4zm0 5.5A1.5 1.5 0 1 1 6 2.5a1.5 1.5 0 0 1 0 3z"/></svg>${locationText}` : ''}</div>
+        <div class="card-location">${locationText ? `<svg viewBox="0 0 12 12" fill="currentColor"><path d="M6 0C3.79 0 2 1.79 2 4c0 3 4 8 4 8s4-5 4-8c0-2.21-1.79-4-4-4zm0 5.5A1.5 1.5 0 1 1 6 2.5a1.5 1.5 0 0 1 0 3z"/></svg>${esc(locationText)}` : ''}</div>
         <div class="card-caps-row">
-          ${shownCaps.map(cap => `<span class="cap-chip" title="${cap}">${cap}</span>`).join('')}
+          ${shownCaps.map(cap => `<span class="cap-chip" title="${esc(cap)}">${esc(cap)}</span>`).join('')}
           ${moreCaps > 0 ? `<span class="cap-chip-more">+${moreCaps}</span>` : ''}
         </div>
       </div>
@@ -1164,9 +1183,9 @@ function openDetail(id) {
   const isGranted = c.status === 'Granted';
 
   const dhAvatar = document.getElementById('dh-avatar');
-  if (c.logo_url) {
+  if (safeUrl(c.logo_url)) {
     dhAvatar.className = 'dh-avatar dh-avatar-logo';
-    dhAvatar.innerHTML = `<img src="${c.logo_url}" alt="${c.name} logo" onerror="this.parentNode.classList.remove('dh-avatar-logo');this.parentNode.textContent='${initials}'">`;
+    dhAvatar.innerHTML = `<img src="${safeUrl(c.logo_url)}" alt="${esc(c.name)} logo" onerror="this.parentNode.classList.remove('dh-avatar-logo');this.parentNode.textContent='${initials}'">`;
   } else {
     dhAvatar.className = 'dh-avatar' + (isGranted ? '' : ' journey');
     dhAvatar.textContent = initials;
@@ -1175,14 +1194,14 @@ function openDetail(id) {
   document.getElementById('dh-status-row').innerHTML = `<div class="card-status-badge ${isGranted ? 'badge-granted' : 'badge-journey'}" style="display:inline-flex;margin-top:4px;">${isGranted ? '✓ Granted' : '◎ On Journey'}</div>`;
 
   const dhChips = [];
-  if (c.city || c.county) dhChips.push(`<div class="dh-info-chip"><svg viewBox="0 0 12 12" fill="currentColor"><path d="M6 0C3.79 0 2 1.79 2 4c0 3 4 8 4 8s4-5 4-8c0-2.21-1.79-4-4-4zm0 5.5A1.5 1.5 0 1 1 6 2.5a1.5 1.5 0 0 1 0 3z"/></svg>${[c.city, c.county].filter(Boolean).join(', ')}</div>`);
+  if (c.city || c.county) dhChips.push(`<div class="dh-info-chip"><svg viewBox="0 0 12 12" fill="currentColor"><path d="M6 0C3.79 0 2 1.79 2 4c0 3 4 8 4 8s4-5 4-8c0-2.21-1.79-4-4-4zm0 5.5A1.5 1.5 0 1 1 6 2.5a1.5 1.5 0 0 1 0 3z"/></svg>${esc([c.city, c.county].filter(Boolean).join(', '))}</div>`);
   if (c.year_joined) dhChips.push(`<div class="dh-info-chip"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="2" width="10" height="8" rx="1"/><path d="M1 5h10"/><path d="M4 2V1M8 2V1"/></svg>Member since ${c.year_joined}</div>`);
-  if (c.employees) dhChips.push(`<div class="dh-info-chip"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5" cy="4" r="2"/><path d="M1 10c0-2.2 1.8-4 4-4s4 1.8 4 4"/><circle cx="10" cy="4" r="1.5"/><path d="M10 8.5c1.1 0 2 .9 2 2"/></svg>${c.employees} employees</div>`);
+  if (c.employees) dhChips.push(`<div class="dh-info-chip"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5" cy="4" r="2"/><path d="M1 10c0-2.2 1.8-4 4-4s4 1.8 4 4"/><circle cx="10" cy="4" r="1.5"/><path d="M10 8.5c1.1 0 2 .9 2 2"/></svg>${esc(c.employees)} employees</div>`);
   document.getElementById('dh-info').innerHTML = dhChips.join('');
 
   const mapQuery = encodeURIComponent(c.postcode ? [c.name, c.postcode, 'UK'].filter(Boolean).join(' ')
     : [c.name, c.city, c.county, 'UK'].filter(Boolean).join(' '));
-  document.getElementById('dh-website').href = c.website || '#';
+  document.getElementById('dh-website').href = (c.website && /^https?:/i.test(c.website.trim())) ? c.website.trim() : (c.website && !/^[a-z][a-z0-9+.-]*:/i.test(c.website.trim()) ? 'https://' + c.website.trim() : '#');
   document.getElementById('dh-map-btn').href = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
 
   // ── Overview pane: about, company details, recent work, links ──
@@ -1193,36 +1212,36 @@ function openDetail(id) {
   }
 
   if (c.description) {
-    overviewHtml += `<div class="dc-section"><div class="dc-label">About</div><div class="dc-desc-text">${c.description}</div></div>`;
+    overviewHtml += `<div class="dc-section"><div class="dc-label">About</div><div class="dc-desc-text">${esc(c.description)}</div></div>`;
   }
 
   // Contact & company details (Phase 1 schema)
   overviewHtml += `<div class="dc-section"><div class="dc-label">Company Details</div>`;
   const locationText = [c.address, c.city, c.county, c.postcode].filter(Boolean).join(', ');
-  if (locationText) overviewHtml += `<div class="dc-field-row"><span class="dc-field-label">Address</span><span class="dc-field-value">${locationText}</span></div>`;
-  if (c.contact_name) overviewHtml += `<div class="dc-field-row"><span class="dc-field-label">Contact</span><span class="dc-field-value">${c.contact_name}</span></div>`;
-  if (c.contact_phone) overviewHtml += `<div class="dc-field-row"><span class="dc-field-label">Phone</span><span class="dc-field-value"><a href="tel:${c.contact_phone}">${c.contact_phone}</a></span></div>`;
-  if (c.contact_email) overviewHtml += `<div class="dc-field-row"><span class="dc-field-label">Email</span><span class="dc-field-value"><a href="mailto:${c.contact_email}">${c.contact_email}</a></span></div>`;
-  if (c.turnover) overviewHtml += `<div class="dc-field-row"><span class="dc-field-label">Turnover</span><span class="dc-field-value">${c.turnover}</span></div>`;
-  if (c.main_commodity_group) overviewHtml += `<div class="dc-field-row"><span class="dc-field-label">Main Commodity Group</span><span class="dc-field-value">${c.main_commodity_group}</span></div>`;
-  if (c.employees) overviewHtml += `<div class="dc-field-row"><span class="dc-field-label">Employees</span><span class="dc-field-value">${c.employees}</span></div>`;
+  if (locationText) overviewHtml += `<div class="dc-field-row"><span class="dc-field-label">Address</span><span class="dc-field-value">${esc(locationText)}</span></div>`;
+  if (c.contact_name) overviewHtml += `<div class="dc-field-row"><span class="dc-field-label">Contact</span><span class="dc-field-value">${esc(c.contact_name)}</span></div>`;
+  if (c.contact_phone) overviewHtml += `<div class="dc-field-row"><span class="dc-field-label">Phone</span><span class="dc-field-value"><a href="tel:${esc(String(c.contact_phone).replace(/[^0-9+]/g,''))}">${esc(c.contact_phone)}</a></span></div>`;
+  if (c.contact_email) overviewHtml += `<div class="dc-field-row"><span class="dc-field-label">Email</span><span class="dc-field-value"><a href="mailto:${esc(c.contact_email)}">${esc(c.contact_email)}</a></span></div>`;
+  if (c.turnover) overviewHtml += `<div class="dc-field-row"><span class="dc-field-label">Turnover</span><span class="dc-field-value">${esc(c.turnover)}</span></div>`;
+  if (c.main_commodity_group) overviewHtml += `<div class="dc-field-row"><span class="dc-field-label">Main Commodity Group</span><span class="dc-field-value">${esc(c.main_commodity_group)}</span></div>`;
+  if (c.employees) overviewHtml += `<div class="dc-field-row"><span class="dc-field-label">Employees</span><span class="dc-field-value">${esc(c.employees)}</span></div>`;
   overviewHtml += `</div>`;
 
   // Recent Work / Case Studies
   if (c.recent_work && c.recent_work.length) {
     overviewHtml += `<div class="dc-section"><div class="dc-label">Recent Work</div><div class="dc-recent-work">`;
     c.recent_work.forEach(w => {
-      overviewHtml += `<div class="dc-work-item"><div class="dc-work-title">${w.title}</div><div class="dc-work-desc">${w.description}</div>${w.year ? `<div class="dc-work-year">${w.year}</div>` : ''}</div>`;
+      overviewHtml += `<div class="dc-work-item"><div class="dc-work-title">${esc(w.title)}</div><div class="dc-work-desc">${esc(w.description)}</div>${w.year ? `<div class="dc-work-year">${esc(w.year)}</div>` : ''}</div>`;
     });
     overviewHtml += `</div></div>`;
   }
 
   // Social links
-  if (c.linkedin || c.twitter || c.website) {
+  if (safeUrl(c.linkedin) || safeUrl(c.twitter) || safeUrl(c.website)) {
     overviewHtml += `<div class="dc-section"><div class="dc-label">Links</div><div class="dc-social-row">`;
-    if (c.website) overviewHtml += `<a class="dc-social-btn" href="${c.website}" target="_blank" rel="noopener">🌐 Website</a>`;
-    if (c.linkedin) overviewHtml += `<a class="dc-social-btn" href="${c.linkedin}" target="_blank" rel="noopener">in LinkedIn</a>`;
-    if (c.twitter) overviewHtml += `<a class="dc-social-btn" href="${c.twitter}" target="_blank" rel="noopener">𝕏 X</a>`;
+    if (safeUrl(c.website)) overviewHtml += `<a class="dc-social-btn" href="${safeUrl(c.website)}" target="_blank" rel="noopener">🌐 Website</a>`;
+    if (safeUrl(c.linkedin)) overviewHtml += `<a class="dc-social-btn" href="${safeUrl(c.linkedin)}" target="_blank" rel="noopener">in LinkedIn</a>`;
+    if (safeUrl(c.twitter)) overviewHtml += `<a class="dc-social-btn" href="${safeUrl(c.twitter)}" target="_blank" rel="noopener">𝕏 X</a>`;
     overviewHtml += `</div>`;
     overviewHtml += `<div class="dc-permalink">Profile link: <a href="${window.location.pathname}#company/${c.slug}">#company/${c.slug}</a></div>`;
     overviewHtml += `</div>`;
@@ -1231,20 +1250,20 @@ function openDetail(id) {
   // ── Capabilities pane: capabilities + services ──
   let capsHtml = '';
   if (c.capabilities && c.capabilities.length) {
-    capsHtml += `<div class="dc-section"><div class="dc-label">Capabilities</div><div class="dc-tags">${c.capabilities.map(x => `<span class="dc-tag">${x}</span>`).join('')}</div></div>`;
+    capsHtml += `<div class="dc-section"><div class="dc-label">Capabilities</div><div class="dc-tags">${c.capabilities.map(x => `<span class="dc-tag">${esc(x)}</span>`).join('')}</div></div>`;
   }
   if (c.services && c.services.length) {
-    capsHtml += `<div class="dc-section"><div class="dc-label">Services</div><div class="dc-tags">${c.services.map(x => `<span class="dc-tag t-service">${x}</span>`).join('')}</div></div>`;
+    capsHtml += `<div class="dc-section"><div class="dc-label">Services</div><div class="dc-tags">${c.services.map(x => `<span class="dc-tag t-service">${esc(x)}</span>`).join('')}</div></div>`;
   }
   if (!capsHtml) capsHtml = `<div class="dc-section"><div class="dc-desc-text">No capability or service data listed.</div></div>`;
 
   // ── Markets & Accreditations pane ──
   let marketsHtml = '';
   if (c.markets && c.markets.length) {
-    marketsHtml += `<div class="dc-section"><div class="dc-label">Markets Served</div><div class="dc-tags">${c.markets.map(x => `<span class="dc-tag ${x === 'Nuclear Civil' ? 't-nuclear' : ''}">${x}</span>`).join('')}</div></div>`;
+    marketsHtml += `<div class="dc-section"><div class="dc-label">Markets Served</div><div class="dc-tags">${c.markets.map(x => `<span class="dc-tag ${x === 'Nuclear Civil' ? 't-nuclear' : ''}">${esc(x)}</span>`).join('')}</div></div>`;
   }
   if (c.accreditations && c.accreditations.length) {
-    marketsHtml += `<div class="dc-section"><div class="dc-label">Accreditations & Standards</div><div class="dc-tags">${c.accreditations.map(x => `<span class="dc-tag t-accred">${x}</span>`).join('')}</div></div>`;
+    marketsHtml += `<div class="dc-section"><div class="dc-label">Accreditations & Standards</div><div class="dc-tags">${c.accreditations.map(x => `<span class="dc-tag t-accred">${esc(x)}</span>`).join('')}</div></div>`;
   }
   if (!marketsHtml) marketsHtml = `<div class="dc-section"><div class="dc-desc-text">No market or accreditation data listed.</div></div>`;
 
@@ -1262,7 +1281,7 @@ function openDetail(id) {
   // Highlight card
   document.querySelectorAll('.company-card').forEach(el => el.classList.remove('selected'));
   document.querySelectorAll('.company-card[onclick]').forEach(el => {
-    if (el.getAttribute('onclick') === `openDetail(${id})`) el.classList.add('selected');
+    if (el.getAttribute('onclick') === `openDetail('${id}')`) el.classList.add('selected');
   });
 }
 
