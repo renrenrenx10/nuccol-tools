@@ -300,7 +300,8 @@ footer{background:var(--navy);padding:48px 40px 28px;border-top:1px solid rgba(2
   <div class="section-inner">
     <div class="section-label">Latest from Members</div>
     <h2 class="section-h2">Member News &amp; Updates</h2>
-    <div class="news-note">
+    <div class="news-grid" id="news-grid"></div>
+    <div class="news-note" id="news-note">
       <strong>Coming soon:</strong> F4N members will be able to share their own news, case studies and contract wins from the NucCol members area — appearing here after review by the NucCol team.
     </div>
   </div>
@@ -396,6 +397,39 @@ renderStats();
   } catch (e) {
     // Network failure — fallback figures above stay on screen.
   }
+})();
+
+// [2026-09-24] Member news: approved items from the public_nr_news view
+// (only approved rows, only public columns — see nr_news_feed.sql).
+(async function(){
+  const grid = document.getElementById('news-grid');
+  if (!grid) return;
+  const SUPA_URL  = 'https://qkyvmtouwrzrcyagkheo.supabase.co';
+  const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFreXZtdG91d3J6cmN5YWdraGVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzODQzNjMsImV4cCI6MjA5MDk2MDM2M30.gKEgkVA-VjOnS_084W79kpzOdZhFQkhFp63MAe_FTd4';
+  const esc = v => String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const TAG = { 'Contract Win':'contract', 'F4N Achievement':'achievement', 'New Capability':'new-member',
+                'Investment & Growth':'new-member', 'Industry Event':'industry', 'Company News':'industry' };
+  try {
+    const r = await fetch(`${SUPA_URL}/rest/v1/public_nr_news?select=*&order=published_at.desc&limit=6`, {
+      headers: { apikey: SUPA_ANON, Authorization: `Bearer ${SUPA_ANON}` }
+    });
+    if (!r.ok) return;
+    const items = await r.json();
+    if (!Array.isArray(items) || !items.length) return;
+    grid.innerHTML = items.map(n => {
+      const body = String(n.body || '');
+      const excerpt = body.length > 240 ? body.slice(0, 237).replace(/\s+\S*$/, '') + '…' : body;
+      const when = n.published_at ? new Date(n.published_at).toLocaleDateString('en-GB', { month:'long', year:'numeric' }) : '';
+      return `<div class="news-card">
+        <span class="news-tag ${TAG[n.type] || 'industry'}">${esc(n.type || 'News')}</span>
+        <div class="news-title">${esc(n.title)}</div>
+        <div class="news-excerpt">${esc(excerpt)}</div>
+        <div class="news-meta"><span class="news-company">${esc(n.company_name)}</span><span>${esc(when)}</span></div>
+      </div>`;
+    }).join('');
+    const note = document.getElementById('news-note');
+    if (note) note.innerHTML = 'F4N members share their news from the NucCol members area. Every item is reviewed by the NucCol team before it appears here.';
+  } catch (e) { /* feed unavailable — note stays */ }
 })();
 </script>
 </body>
