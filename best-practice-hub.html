@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Best Practice Hub | NucCol</title>
+<meta name="description" content="Free guides from NucCol on the UK nuclear supply chain &mdash; what the sector is, why it matters, and where the opportunities are. Deeper, practical how-to guides are reserved for NucCol members.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0A1628; --dark:#060F1C; --blue:#29B6E8; --accent:#0E7CB0;
+  --bg:#FFFFFF; --card:#FFFFFF; --ink:#1A1A2E; --ink-soft:#4A5C6A;
+  --line:#E2E8EF; --light:#F2F6F9; --light2:#EAF6FC;
+  --amber-bg:#FFF6E5; --amber-line:#E9C46A;
+  --radius:4px; --maxw:1180px; --read:820px;
+  --font-head:'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --font-body:'Barlow', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0B1522; --card:#121F30; --ink:#EAF1F6; --ink-soft:#AFC1CE;
+    --line:#243546; --light:#132536; --light2:#102a3c;
+    --amber-bg:#2E2410; --amber-line:#7A5C1E; --accent:#5CC6EE;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0B1522; --card:#121F30; --ink:#EAF1F6; --ink-soft:#AFC1CE;
+  --line:#243546; --light:#132536; --light2:#102a3c; --accent:#5CC6EE;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{background:var(--bg); color:var(--ink); font-family:var(--font-body); line-height:1.6; -webkit-font-smoothing:antialiased;}
+
+/* ---- site header (matches nuccol.co.uk) ---- */
+.sitehead{position:sticky; top:0; z-index:50; background:var(--navy); border-bottom:1px solid rgba(255,255,255,.06);}
+.sh-inner{max-width:1240px; margin:0 auto; display:flex; align-items:center; gap:18px; padding:10px 22px;}
+.sh-logo{display:flex; align-items:center; flex:none;}
+.sh-logo img{height:46px; width:46px; border-radius:8px; display:block; background:#fff;}
+.sh-logo-txt{font-family:var(--font-head); font-weight:800; text-transform:lowercase; font-size:30px; letter-spacing:.01em; color:#fff; line-height:1;}
+.sh-logo-txt b{color:var(--blue);}
+.sh-nav{display:flex; flex-wrap:wrap; gap:18px; margin-left:12px; flex:1;}
+.sh-nav a{color:#D7E3EE; text-decoration:none; font-family:var(--font-head); font-weight:600; text-transform:uppercase; font-size:14px; letter-spacing:.04em;}
+.sh-nav a:hover{color:var(--blue);}
+.sh-login{flex:none; background:var(--blue); color:var(--navy); text-decoration:none; font-family:var(--font-head); font-weight:700; text-transform:uppercase; font-size:14px; letter-spacing:.06em; padding:9px 18px; border-radius:var(--radius);}
+.sh-login:hover{filter:brightness(1.07);}
+@media(max-width:900px){ .sh-nav{display:none;} }
+
+/* ---- hero ---- */
+.topband{background:linear-gradient(135deg,#0E2238 0%,var(--dark) 100%); color:#fff; padding:48px 22px 50px;}
+.topband-inner{max-width:var(--maxw); margin:0 auto;}
+.kicker{font-size:13px; letter-spacing:.18em; text-transform:uppercase; color:var(--blue); font-weight:600; font-family:var(--font-head); display:flex; align-items:center; gap:10px;}
+.kicker:before{content:""; width:34px; height:2px; background:var(--blue); display:inline-block;}
+h1.title{font-family:var(--font-head); font-weight:800; font-size:clamp(32px,5.5vw,50px); line-height:1.04; text-transform:uppercase; margin:12px 0 14px; color:#fff; letter-spacing:.005em; max-width:780px;}
+.subtitle{font-size:17px; color:#C4D2DE; max-width:700px; margin:0; line-height:1.55;}
+.hero-stats{display:flex; gap:30px; flex-wrap:wrap; margin-top:28px;}
+.stat b{display:block; font-family:var(--font-head); font-size:30px; color:#fff; font-weight:800;}
+.stat span{font-size:12.5px; color:#9FB6C6; letter-spacing:.04em; text-transform:uppercase;}
+
+/* ---- body ---- */
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 22px 72px;}
+.section-title{font-family:var(--font-head); font-size:24px; font-weight:700; text-transform:uppercase; color:var(--navy); margin:50px 0 4px; letter-spacing:.01em;}
+:root[data-theme="dark"] .section-title{color:#fff;}
+.section-sub{color:var(--ink-soft); font-size:15px; margin:0 0 20px; max-width:620px;}
+.grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(270px,1fr)); gap:18px;}
+.card{
+  background:var(--card); border:1px solid var(--line); border-radius:8px;
+  padding:22px 22px 20px; display:flex; flex-direction:column; text-decoration:none; color:inherit;
+  transition:transform .15s, box-shadow .15s, border-color .15s;
+}
+.card:hover{transform:translateY(-2px); box-shadow:0 10px 26px rgba(10,22,40,.1); border-color:var(--blue);}
+.tag{display:inline-block; font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; padding:4px 10px; border-radius:999px; margin-bottom:12px; width:fit-content; font-family:var(--font-head);}
+.tag.sector{background:var(--light2); color:var(--accent);}
+.tag.sales{background:var(--amber-bg); color:#8A6412; border:1px solid var(--amber-line);}
+.card h3{font-family:var(--font-head); font-size:18px; font-weight:700; margin:0 0 8px; color:var(--navy); text-transform:none; letter-spacing:0;}
+:root[data-theme="dark"] .card h3{color:#fff;}
+.card p{font-size:14px; color:var(--ink-soft); margin:0; flex:1;}
+.card .go{margin-top:14px; font-size:13px; font-weight:700; color:var(--accent); font-family:var(--font-head); text-transform:uppercase; letter-spacing:.03em;}
+
+/* ---- member upsell band ---- */
+.upsell{background:linear-gradient(135deg,var(--navy),var(--dark)); color:#fff; border-radius:8px; padding:36px 32px; margin-top:58px; border:1px solid rgba(41,182,232,.25); display:flex; flex-wrap:wrap; align-items:center; gap:24px; justify-content:space-between;}
+.upsell-text{max-width:620px;}
+.upsell h3{font-family:var(--font-head); font-weight:800; text-transform:uppercase; margin:0 0 10px; font-size:24px; letter-spacing:.01em;}
+.upsell p{color:#C4D2DE; margin:0; font-size:15px; line-height:1.6;}
+.upsell a.btn{flex:none; display:inline-block; background:var(--blue); color:var(--navy); font-family:var(--font-head); font-weight:700; text-transform:uppercase; letter-spacing:.06em; text-decoration:none; padding:14px 30px; border-radius:var(--radius); font-size:15px; white-space:nowrap;}
+.upsell a.btn:hover{filter:brightness(1.07);}
+
+/* ---- site footer (matches nuccol.co.uk) ---- */
+.sitefoot{background:var(--dark); color:#9FB2C2; margin-top:10px;}
+.sf-inner{max-width:1240px; margin:0 auto; padding:46px 22px 20px; display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:30px;}
+.sf-inner h4{font-family:var(--font-head); font-weight:700; text-transform:uppercase; color:#fff; font-size:15px; letter-spacing:.05em; margin:0 0 14px;}
+.sf-inner p, .sf-inner a{font-size:14px; color:#9FB2C2; line-height:1.7;}
+.sf-inner a{display:block; text-decoration:none;}
+.sf-inner a:hover{color:var(--blue);}
+.sf-desc{max-width:320px;}
+.sf-addr{margin-top:12px; font-style:normal; color:#8097A8; font-size:13.5px; line-height:1.6;}
+.sf-bottom{border-top:1px solid rgba(255,255,255,.08); max-width:1240px; margin:0 auto; padding:16px 22px; display:flex; flex-wrap:wrap; justify-content:space-between; gap:10px; font-size:12.5px; color:#73889A;}
+.sf-bottom a{color:#73889A; text-decoration:none; margin-left:16px;}
+.sf-bottom a:hover{color:var(--blue);}
+@media(max-width:760px){ .sf-inner{grid-template-columns:1fr 1fr;} }
+@media(max-width:480px){ .sf-inner{grid-template-columns:1fr;} }
+@media(max-width:700px){ .upsell{flex-direction:column; align-items:flex-start;} }
+
+@media (prefers-color-scheme: dark){
+:root:not([data-theme="light"]) .section-title{color:#fff;}
+:root:not([data-theme="light"]) .card h3{color:#fff;}
+}
+</style>
+</head>
+<body>
+<header class="sitehead"><div class="sh-inner"><a class="sh-logo" href="https://www.nuccol.co.uk/"><img src="https://nuccolmedia.blob.core.windows.net/videos/wp-1727694383470.webp?sp=r&amp;st=2026-09-24T11:08:22Z&amp;se=2028-01-03T20:23:22Z&amp;spr=https&amp;sv=2026-02-06&amp;sr=c&amp;sig=gRa4tlsXXIJUNYk3aydlSSdXzn73cBO5obcIbLFVPSE%3D" alt="NucCol" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block'"><span class="sh-logo-txt" style="display:none">nuc<b>col</b></span></a><nav class="sh-nav"><a href="/index.html">Home</a><a href="/about.html">Who We Are</a><a href="/markets.html">Markets</a><a href="/services.html">Services</a><a href="/who-we-work-with.html">Who We Work With</a><a href="/events.html">Events</a><a href="/f4n.html">F4N</a><a href="/our-thoughts.html">Our Thoughts</a><a href="/work-with-us.html">Work With Us</a><a href="/contact.html">Contact</a></nav><a class="sh-login" href="/members.html">Members Login</a></div></header>
+
+<div class="topband"><div class="topband-inner">
+  <div class="kicker">Best Practice Hub</div>
+  <h1 class="title">Get to know the UK nuclear supply chain</h1>
+  <p class="subtitle">Eleven free guides from NucCol &mdash; the team behind the Fit For Nuclear (F4N) programme &mdash; on what the sector is, why it matters, and where the real opportunities sit. For the practical, step-by-step guides on actually winning and running nuclear work, that depth is reserved for NucCol members.</p>
+  <div class="hero-stats">
+    <div class="stat"><b>11</b><span>Free guides</span></div>
+    <div class="stat"><b>4</b><span>Topic areas</span></div>
+    <div class="stat"><b>0&pound;</b><span>Cost to read</span></div>
+  </div>
+</div></div>
+
+<div class="wrap">
+
+  <div class="section-title">Getting started</div>
+  <p class="section-sub">New to nuclear, or weighing it up? Start here.</p>
+  <div class="grid">
+    <a class="card" href="Beginners-Guide-Winning-First-Nuclear-Contract.html">
+      <span class="tag sector">Guide</span>
+      <h3>A Beginner's Guide to Winning Your First Nuclear Contract</h3>
+      <p>Five realistic stages, from first considering the sector to staying on buyers' radar long-term.</p>
+      <span class="go">Read the guide &rarr;</span>
+    </a>
+    <a class="card" href="Nuclear-Standards-Quick-Guide.html">
+      <span class="tag sector">Quick guide</span>
+      <h3>Nuclear Standards Quick Guide</h3>
+      <p>What ISO 9001, ISO 19443, RCC-M and the other standards actually mean, and why buyers ask for them.</p>
+      <span class="go">Read the guide &rarr;</span>
+    </a>
+    <a class="card" href="Nuclear-Reactor-Types-and-Developers.html">
+      <span class="tag sector">Sector map</span>
+      <h3>Nuclear Reactor Types and Their Developers</h3>
+      <p>PWR, SMR, Gen IV and more &mdash; and who's building what, from EDF to Rolls-Royce SMR.</p>
+      <span class="go">Read the guide &rarr;</span>
+    </a>
+  </div>
+
+  <div class="section-title">Why nuclear, why now</div>
+  <p class="section-sub">What's actually happening in the sector, and why it's worth your attention.</p>
+  <div class="grid">
+    <a class="card" href="Becoming-Part-of-the-Nuclear-Ecosystem.html">
+      <span class="tag sector">Guide</span>
+      <h3>Becoming Part of the Nuclear Ecosystem</h3>
+      <p>NIA membership, supplier consortiums, and how companies build a presence in the sector.</p>
+      <span class="go">Read the guide &rarr;</span>
+    </a>
+    <a class="card" href="New-Build-vs-Decommissioning.html">
+      <span class="tag sector">Guide</span>
+      <h3>New Build vs Decommissioning</h3>
+      <p>Two very different markets, compared with real examples from Hinkley Point C and Sellafield.</p>
+      <span class="go">Read the guide &rarr;</span>
+    </a>
+    <a class="card" href="Introduction-to-Fusion-Power.html">
+      <span class="tag sector">Guide</span>
+      <h3>Introduction to Fusion Power</h3>
+      <p>Where fusion stands today, and the supply chain opportunities starting to open up around it.</p>
+      <span class="go">Read the guide &rarr;</span>
+    </a>
+    <a class="card" href="Introduction-to-Hydrogen-Power.html">
+      <span class="tag sector">Guide</span>
+      <h3>Introduction to Hydrogen Power</h3>
+      <p>Grey, blue and green hydrogen explained, and where clean-energy manufacturers fit in.</p>
+      <span class="go">Read the guide &rarr;</span>
+    </a>
+  </div>
+
+  <div class="section-title">What good looks like</div>
+  <p class="section-sub">The standards NucCol works to, and how we help manufacturers meet them.</p>
+  <div class="grid">
+    <a class="card" href="Building-a-Nuclear-Safety-Culture.html">
+      <span class="tag sector">Guide</span>
+      <h3>Building a Nuclear Safety Culture</h3>
+      <p>The INPO/WANO Ten Traits, and what a genuine safety culture looks like day to day.</p>
+      <span class="go">Read the guide &rarr;</span>
+    </a>
+    <a class="card" href="Demystifying-Supply-Chain-Readiness.html">
+      <span class="tag sector">Guide</span>
+      <h3>Demystifying Supply Chain Readiness (SCRL)</h3>
+      <p>NucCol's own readiness methodology, explained &mdash; and how a scored assessment works.</p>
+      <span class="go">Read the guide &rarr;</span>
+    </a>
+  </div>
+
+  <div class="section-title">See what F4N companies get</div>
+  <p class="section-sub">A preview of the market intelligence available to F4N-certified companies.</p>
+  <div class="grid">
+    <a class="card" href="F4N-Sector-Opportunity-Report-Sample-Extract.html">
+      <span class="tag sales">Preview</span>
+      <h3>Sector Opportunity Report &mdash; Sample Extract</h3>
+      <p>A short, illustrative extract from a real Sector Opportunity Report.</p>
+      <span class="go">See the extract &rarr;</span>
+    </a>
+    <a class="card" href="F4N-Sector-Opportunity-Report-Full-Mockup.html">
+      <span class="tag sales">Preview</span>
+      <h3>Sector Opportunity Report &mdash; Full Mock-up</h3>
+      <p>A full, page-by-page look at what a complete report covers.</p>
+      <span class="go">See the mock-up &rarr;</span>
+    </a>
+  </div>
+
+  <div class="upsell">
+    <div class="upsell-text">
+      <h3>Want the practical, step-by-step guides?</h3>
+      <p>Audits and accreditations, cyber security, risk management, bid preparation and more &mdash; the how-to library NucCol members get as part of their subscription, kept current and organised by someone who does this for a living.</p>
+    </div>
+    <a class="btn" href="/f4n.html">Find out about membership &rarr;</a>
+  </div>
+
+</div>
+
+<footer class="sitefoot">
+<div class="sf-inner">
+  <div>
+    <h4>NucCol</h4>
+    <p class="sf-desc">NucCol is a specialist supply chain solutions provider dedicated to enhancing the UK's nuclear and clean energy manufacturing capabilities.</p>
+    <address class="sf-addr">Unit 8, Riverside Court<br>Riverside Road, Pride Park<br>Derby, DE24 8HY</address>
+  </div>
+  <div>
+    <h4>Services</h4>
+    <a href="/services.html">Supply Chain Development</a>
+    <a href="/services.html">Manufacturing Innovation</a>
+    <a href="/services.html">IT Services</a>
+    <a href="/events.html">Networking &amp; Events</a>
+    <a href="/services.html">People Services</a>
+  </div>
+  <div>
+    <h4>Company</h4>
+    <a href="/about.html">Who We Are</a>
+    <a href="/markets.html">Markets</a>
+    <a href="/who-we-work-with.html">Who We Work With</a>
+    <a href="/f4n.html">F4N Programme</a>
+    <a href="/work-with-us.html">Work With Us</a>
+    <a href="/contact.html">Contact</a>
+  </div>
+  <div>
+    <h4>Connect</h4>
+    <a href="https://www.linkedin.com/company/nuccol" target="_blank" rel="noopener">LinkedIn &#8599;</a>
+    <a href="mailto:enquiries@nuccol.co.uk">enquiries@nuccol.co.uk</a>
+    <a href="/members.html">Members Login</a>
+  </div>
+</div>
+<div class="sf-bottom">
+  <span>&copy; 2026 NucCol, Nuclear Collaboration Ltd. All rights reserved.</span>
+  <span><a href="/privacy-policy.html">Privacy Policy</a><a href="/terms-of-use.html">Terms of Use</a></span>
+</div>
+</footer>
+
+</body>
+</html>
