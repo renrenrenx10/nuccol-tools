@@ -859,6 +859,7 @@ function mapCompany(row) {
     contact_phone:  row.contact_phone || null,
     contact_email:  row.contact_email || null,
     linkedin:       row.linkedin      || null,
+    case_study_url: row.case_study_url || null,
     slug:           slugify(row.name),
   };
 }
@@ -1239,8 +1240,9 @@ function openDetail(id) {
   }
 
   // Social links
-  if (safeUrl(c.linkedin) || safeUrl(c.twitter) || safeUrl(c.website)) {
+  if (safeUrl(c.linkedin) || safeUrl(c.twitter) || safeUrl(c.website) || safeUrl(c.case_study_url)) {
     overviewHtml += `<div class="dc-section"><div class="dc-label">Links</div><div class="dc-social-row">`;
+    if (safeUrl(c.case_study_url)) overviewHtml += `<a class="dc-social-btn" href="${safeUrl(c.case_study_url)}" target="_blank" rel="noopener">📖 Read Case Study</a>`;
     if (safeUrl(c.website)) overviewHtml += `<a class="dc-social-btn" href="${safeUrl(c.website)}" target="_blank" rel="noopener">🌐 Website</a>`;
     if (safeUrl(c.linkedin)) overviewHtml += `<a class="dc-social-btn" href="${safeUrl(c.linkedin)}" target="_blank" rel="noopener">in LinkedIn</a>`;
     if (safeUrl(c.twitter)) overviewHtml += `<a class="dc-social-btn" href="${safeUrl(c.twitter)}" target="_blank" rel="noopener">𝕏 X</a>`;
