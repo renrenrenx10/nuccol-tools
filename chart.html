@@ -110,25 +110,110 @@
     .btn-outline:hover { background: rgba(13,59,110,.07); }
 
     /* ── Suppliers block sits on the dark sidebar, so it needs its own palette ── */
-    #iSupBody .btn-outline {
-      padding: 3px 10px; font-size: 12px;
-      border: 1px solid rgba(0,168,232,.55);
-      color: var(--cyan); background: transparent;
+    /* ── Suppliers summary in the dark side panel: numbers, not a list ── */
+    .sup-nums { display: flex; gap: 8px; margin: 2px 0 10px; }
+    .sup-num {
+      flex: 1; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.09);
+      border-radius: 6px; padding: 8px 6px; text-align: center;
     }
-    #iSupBody .btn-outline:hover { background: rgba(0,168,232,.15); color: #fff; }
-    #iSupBody a { color: #5fc4ef; text-decoration: none; }
-    #iSupBody a:hover { color: #fff; text-decoration: underline; }
-    #iSupBody .info-row { align-items: baseline; }
-    #iSupBody .info-key { color: rgba(255,255,255,.85); font-size: 12.5px; }
-    .sup-head { font-size: 12px; color: rgba(255,255,255,.85); margin-bottom: 7px; }
-    .sup-head strong { font-size: 16px; color: var(--cyan); }
-    .sup-f4n {
-      display: inline-block; padding: 0 5px; border-radius: 3px; margin-left: 4px;
-      background: rgba(0,168,232,.2); color: #7cd4f7;
-      font-size: 9.5px; font-weight: 700; letter-spacing: .04em; vertical-align: middle;
+    .sup-num-v {
+      font-family: 'Share Tech Mono', monospace; font-size: 22px; line-height: 1.1;
+      font-weight: 700; color: #fff;
+    }
+    .sup-num-v.acc { color: var(--cyan); }
+    .sup-num-v.gen { color: rgba(255,255,255,.55); }
+    .sup-num-l {
+      font-size: 9.5px; letter-spacing: .07em; text-transform: uppercase;
+      color: rgba(255,255,255,.5); margin-top: 3px;
       font-family: 'Share Tech Mono', monospace;
     }
+    .sup-cta {
+      display: block; width: 100%; cursor: pointer;
+      background: var(--cyan); color: #04223c; border: 0; border-radius: 6px;
+      padding: 9px 12px; font-family: 'Barlow', sans-serif;
+      font-size: 13.5px; font-weight: 700; letter-spacing: .01em;
+    }
+    .sup-cta:hover { background: #2bbcf2; }
+    #iSupBody .sup-csv {
+      margin-top: 6px; width: 100%; padding: 6px 12px; font-size: 12px;
+      border: 1px solid rgba(255,255,255,.22); color: rgba(255,255,255,.75); background: transparent;
+    }
+    #iSupBody .sup-csv:hover { background: rgba(255,255,255,.08); color: #fff; }
     #iSupBody .info-src { background: transparent; padding-left: 0; }
+
+    /* ── Map view: companies down one side, map on the other ── */
+    #supMapWrap {
+      display: none; position: fixed; inset: 0; z-index: 9000;
+      background: rgba(8,20,36,.6); padding: 26px;
+    }
+    #supMapWrap.open { display: flex; align-items: center; justify-content: center; }
+    #supMapShell {
+      background: #fff; border-radius: 10px; width: 100%; max-width: 1240px; height: 88vh;
+      display: flex; flex-direction: column; overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,.35); font-family: 'Barlow', sans-serif;
+    }
+    #supMapTop {
+      display: flex; align-items: center; gap: 18px;
+      padding: 13px 18px; border-bottom: 1px solid #d8e2ec; background: #10243a;
+    }
+    #supMapTitle { font-size: 17px; font-weight: 700; color: #fff; line-height: 1.2; }
+    #supMapFilter { font-size: 11.5px; color: #8fb6d4; margin-top: 2px; }
+    #supMapLegend { margin-left: auto; display: flex; gap: 14px; font-size: 11.5px; color: #c6d9e8; }
+    #supMapLegend span { display: flex; align-items: center; gap: 5px; }
+    .sup-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    .sup-dot.acc { background: #26a9d8; }
+    .sup-dot.gen { background: #b9c6d3; }
+    #supMapClose {
+      cursor: pointer; background: rgba(255,255,255,.12); color: #fff;
+      border: 1px solid rgba(255,255,255,.3); border-radius: 5px;
+      padding: 5px 13px; font-size: 12.5px; font-weight: 600; font-family: 'Barlow', sans-serif;
+    }
+    #supMapClose:hover { background: rgba(255,255,255,.22); }
+    #supMapBody { flex: 1; display: flex; min-height: 0; }
+    #supMapList {
+      width: 340px; min-width: 340px; display: flex; flex-direction: column;
+      border-right: 1px solid #d8e2ec; background: #fff; min-height: 0;
+    }
+    #supMapSearch {
+      margin: 10px 10px 6px; padding: 7px 10px; font-size: 13px;
+      border: 1px solid #d8e2ec; border-radius: 6px; font-family: 'Barlow', sans-serif;
+      color: #142132; outline: none;
+    }
+    #supMapSearch:focus { border-color: #26a9d8; }
+    #supMapCount {
+      padding: 0 12px 6px; font-size: 10px; letter-spacing: .07em;
+      text-transform: uppercase; color: #65758a; font-weight: 700;
+    }
+    #supMapCards { flex: 1; overflow-y: auto; padding: 0 8px 10px; }
+    #supMapCards::-webkit-scrollbar { width: 5px; }
+    #supMapCards::-webkit-scrollbar-thumb { background: #c3d3e2; border-radius: 3px; }
+    .sup-card {
+      padding: 9px 10px; border-radius: 8px; border: 1px solid #d8e2ec;
+      background: #fff; cursor: pointer; margin-bottom: 6px;
+    }
+    .sup-card:hover { background: #f7fbff; border-color: #26a9d8; }
+    .sup-card.selected { background: #e5f4fa; border-color: #26a9d8; }
+    .sup-card-name { font-size: 13.5px; font-weight: 700; color: #142132; line-height: 1.25; }
+    .sup-card-sub {
+      font-size: 10.5px; color: #65758a; text-transform: uppercase;
+      letter-spacing: .05em; font-weight: 600; margin-top: 2px;
+    }
+    .sup-card-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+    .sup-chip {
+      font-size: 9px; padding: 2px 7px; border-radius: 10px;
+      font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+    }
+    .sup-chip.acc { background: #e5f4fa; color: #1a86b0; }
+    .sup-chip.gen { background: #eef2f6; color: #65758a; }
+    .sup-chip.f4n { background: #d7f5ea; color: #087f5b; }
+    .sup-chip.nopin { background: #fff0ee; color: #c0392b; }
+    .sup-card-via { font-size: 10px; color: #8a97a6; margin-top: 4px; font-style: italic; }
+    #supMapCanvas { flex: 1; position: relative; }
+    #supMap { position: absolute; inset: 0; }
+    #supMapFoot {
+      padding: 8px 18px; border-top: 1px solid #d8e2ec;
+      font-size: 11px; color: #65758a; background: #f7fbff;
+    }
 
     /* ── BODY: chart + right sidebar ── */
     .body-wrap { flex: 1; display: flex; overflow: hidden; min-height: 0; }
@@ -161,7 +246,7 @@
 
     /* ── RIGHT SIDEBAR ── */
     .sidebar {
-      width: 300px; flex-shrink: 0;
+      width: 370px; flex-shrink: 0;
       background: var(--navy-dark);
       display: flex; flex-direction: column;
       overflow: hidden;
@@ -251,14 +336,14 @@
     /* info rows */
     .info-group { margin-bottom: 12px; }
     .info-group-title {
-      font-size: 9px; font-weight: 700; color: rgba(255,255,255,.3);
+      font-size: 10.5px; font-weight: 700; color: rgba(255,255,255,.55);
       text-transform: uppercase; letter-spacing: .08em;
       font-family: 'Share Tech Mono', monospace; margin-bottom: 5px;
       padding-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,.08);
     }
     .info-row { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; margin-bottom: 5px; }
-    .info-key { font-size: 13px; color: rgba(255,255,255,.5); flex: 1; }
-    .info-val { font-family: 'Share Tech Mono', monospace; font-size: 13px; color: rgba(255,255,255,.9); font-weight: 600; text-align: right; }
+    .info-key { font-size: 13.5px; color: rgba(255,255,255,.8); flex: 1; }
+    .info-val { font-family: 'Share Tech Mono', monospace; font-size: 13.5px; color: rgba(255,255,255,.95); font-weight: 600; text-align: right; }
     .info-val.good { color: #2ecc71; }
     .info-val.warn { color: #f39c12; }
     .info-val.bad  { color: #e74c3c; }
@@ -309,7 +394,7 @@
     .it-table .imp { font-family: 'Share Tech Mono', monospace; }
     .pill.log-pill { border-color: var(--navy-mid); color: var(--navy-mid); }
     .pill.log-pill.active { background: var(--navy-mid); color: #fff; }
-    .info-src { font-size: 12px; color: rgba(255,255,255,.55); line-height: 1.5; background: rgba(255,255,255,.04); border-radius: 5px; padding: 7px 9px; }
+    .info-src { font-size: 12.5px; color: rgba(255,255,255,.72); line-height: 1.5; background: rgba(255,255,255,.04); border-radius: 5px; padding: 7px 9px; }
     .legend-unit { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: rgba(255,255,255,.35); margin-left: 4px; }
     #itemTable { position: absolute; inset: 0; overflow-y: auto; display: none; background: var(--white); border: 1px solid var(--border); border-radius: 8px; }
     .it-table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -1254,46 +1339,18 @@ function supRender(item) {
       '. For this line that may be the correct answer rather than missing data.</div>';
     return;
   }
-  cnt.textContent = '(' + r.all.length + ')';
+  cnt.textContent = '';
   const pinnable = r.all.filter(c => !isNaN(c.lat) && !isNaN(c.lng)).length;
-  let h = '<div class="sup-head">' +
-          '<strong>' + r.all.length + '</strong> companies' +
-          (r.a.length ? ' &middot; <span style="color:#00a8e8">' + r.a.length + ' assessed</span>' : '') +
-          (r.b.length ? ' &middot; <span style="color:#8a94a6">' + r.b.length + ' general</span>' : '') +
-          '</div>';
-  h += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">' +
-       '<button class="btn-outline" onclick="supToggleList()">Show list</button>' +
-       '<button class="btn-outline" onclick="supOpenMap(\'' + escJ(item) + '\')">On a map (' + pinnable + ')</button>' +
-       '<button class="btn-outline" onclick="supExport(\'' + escJ(item) + '\')">CSV</button></div>';
-  h += '<div id="iSupList" style="display:none;margin-top:8px">';
-  if (r.a.length) {
-    h += '<div class="info-src" style="margin-bottom:4px">Assessed against this commodity</div>' + supList(r.a);
-  }
-  if (r.b.length) {
-    h += '<div class="info-src" style="margin:8px 0 4px">General manufacturing capability ' +
-         '<span style="color:#8a94a6">(broad pool, not an assessment)</span></div>';
-    if (r.b.length <= 6) h += supList(r.b);
-    else h += '<div class="info-src">' + r.b.length + ' firms &mdash; use the map or CSV</div>';
-  }
+  let h = '<div class="sup-nums">';
+  h += '<div class="sup-num"><div class="sup-num-v">' + r.all.length + '</div><div class="sup-num-l">Companies</div></div>';
+  if (r.a.length) h += '<div class="sup-num"><div class="sup-num-v acc">' + r.a.length + '</div><div class="sup-num-l">Assessed</div></div>';
+  if (r.b.length) h += '<div class="sup-num"><div class="sup-num-v gen">' + r.b.length + '</div><div class="sup-num-l">General</div></div>';
   h += '</div>';
+  h += '<button class="sup-cta" onclick="supOpenMap(\'' + escJ(item) + '\')">View ' + pinnable + ' on the map &rarr;</button>';
+  h += '<button class="btn-outline sup-csv" onclick="supExport(\'' + escJ(item) + '\')">Export CSV</button>';
+  if (r.b.length) h += '<div class="info-src" style="margin-top:8px">Assessed = named against this commodity. ' +
+      'General = broad manufacturing capability, not an assessment.</div>';
   body.innerHTML = h;
-}
-function supToggleList() {
-  const el = document.getElementById('iSupList');
-  if (!el) return;
-  const open = el.style.display !== 'none';
-  el.style.display = open ? 'none' : 'block';
-  const btn = document.querySelector('#iSupBody .btn-outline');
-  if (btn) btn.textContent = open ? 'Show list' : 'Hide list';
-}
-function supList(arr) {
-  const show = arr.slice(0, 6);
-  let h = show.map(c =>
-    '<div class="info-row"><span class="info-key">' + (c.url ? '<a href="' + escH(c.url) + '" target="_blank" rel="noopener">' + escH(c.name) + '</a>' : escH(c.name)) +
-    (c.f4n ? ' <span class="sup-f4n">F4N</span>' : '') +
-    '</span><span class="info-val" style="color:#8a94a6;font-size:11px">' + escH(c.town || '—') + '</span></div>').join('');
-  if (arr.length > show.length) h += '<div class="info-src">+' + (arr.length - show.length) + ' more</div>';
-  return h;
 }
 function supExport(item) {
   const r = supFor(item);
@@ -1306,61 +1363,119 @@ function supExport(item) {
   a.download = 'DM_suppliers_' + item.replace(/[^A-Za-z0-9]+/g, '_') + '.csv';
   a.click();
 }
+let _supRows = [], _supSel = null, _supMarkers = {};
 async function supOpenMap(item) {
   const r = supFor(item);
-  const pins = r.all.filter(c => !isNaN(c.lat) && !isNaN(c.lng));
-  document.getElementById('supMapWrap').style.display = 'flex';
-  document.getElementById('supMapTitle').textContent = item + ' — ' + pins.length + ' companies';
+  _supRows = r.all.map(c => Object.assign({ assessed: r.a.indexOf(c) > -1 }, c));
+  const pins = _supRows.filter(c => !isNaN(c.lat) && !isNaN(c.lng));
+  document.getElementById('supMapWrap').classList.add('open');
+  document.getElementById('supMapTitle').textContent = item;
+  document.getElementById('supMapFilter').textContent =
+    'Filtered to companies that could supply ' + item;
+  document.getElementById('supMapFoot').textContent =
+    r.all.length + ' companies · ' + r.a.length + ' assessed against this commodity · ' +
+    r.b.length + ' general manufacturing capability · ' + pins.length + ' mappable. ' +
+    'Source: NucCol data vault. Pins are registered or site postcodes.';
+  document.getElementById('supMapSearch').value = '';
+  supBuildCards(_supRows);
   try {
     supLoadCss(SUP.lfCss); supLoadCss(SUP.mcCss); supLoadCss(SUP.mcCss2);
     await supLoadScript(SUP.lf);
     await supLoadScript(SUP.mc);
   } catch (e) {
-    document.getElementById('supMapNote').textContent = 'Map libraries could not load — needs an internet connection.';
+    document.getElementById('supMapCanvas').innerHTML =
+      '<div style="padding:28px;color:#c0392b;font-size:13px">Map libraries could not load — this view needs an internet connection. The list is still usable.</div>';
     return;
   }
-  document.getElementById('supMapNote').textContent =
-    (r.a.length ? r.a.length + ' assessed' : '') + (r.a.length && r.b.length ? ' · ' : '') +
-    (r.b.length ? r.b.length + ' general capability' : '');
   if (!_supMap) {
     _supMap = L.map('supMap', { center: [54.5, -2.5], zoom: 5, attributionControl: false });
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(_supMap);
   }
   if (_supCluster) _supMap.removeLayer(_supCluster);
   _supCluster = L.markerClusterGroup();
-  const aIds = {}; r.a.forEach(c => aIds[c.id] = 1);
+  _supMarkers = {};
   pins.forEach(c => {
-    const assessed = !!aIds[c.id];
-    L.circleMarker([c.lat, c.lng], {
-      radius: assessed ? 7 : 5, weight: 2,
-      color: assessed ? '#00a8e8' : '#9aa6b4',
-      fillColor: assessed ? '#00a8e8' : '#cdd5de', fillOpacity: .85
-    }).bindPopup('<strong>' + escH(c.name) + '</strong><br>' + escH(c.town || '') +
+    const mk = L.circleMarker([c.lat, c.lng], {
+      radius: c.assessed ? 8 : 6, weight: 2,
+      color: c.assessed ? '#26a9d8' : '#9aa6b4',
+      fillColor: c.assessed ? '#26a9d8' : '#cdd5de', fillOpacity: .9
+    }).bindPopup('<div style="font-family:Barlow,sans-serif;min-width:200px">' +
+      '<strong style="font-size:14px">' + escH(c.name) + '</strong><br>' +
+      '<span style="color:#65758a;font-size:12px">' + escH(c.town || '') + '</span>' +
       (c.url ? '<br><a href="' + escH(c.url) + '" target="_blank" rel="noopener">website</a>' : '') +
-      '<br><span style="color:#667">' + (assessed ? 'Assessed against this commodity' : 'General capability') +
-      '</span><br><span style="color:#889;font-size:11px">via ' + escH(c.via) + '</span>').addTo(_supCluster);
+      '<br><span style="font-size:11px;color:#1a86b0">' +
+      (c.assessed ? 'Assessed against this commodity' : 'General manufacturing capability') + '</span>' +
+      '<br><span style="font-size:10px;color:#8a97a6">via ' + escH(c.via) + '</span></div>');
+    _supMarkers[c.id] = mk;
+    _supCluster.addLayer(mk);
   });
   _supMap.addLayer(_supCluster);
   setTimeout(() => {
     _supMap.invalidateSize();
     if (pins.length) _supMap.fitBounds(_supCluster.getBounds().pad(0.15));
-  }, 60);
+  }, 80);
 }
-function supCloseMap() { document.getElementById('supMapWrap').style.display = 'none'; }
+function supBuildCards(rows) {
+  const el = document.getElementById('supMapCards');
+  document.getElementById('supMapCount').textContent =
+    rows.length + (rows.length === 1 ? ' company' : ' companies');
+  if (!rows.length) { el.innerHTML = '<div style="padding:14px;color:#65758a;font-size:12.5px">Nothing matches that search.</div>'; return; }
+  el.innerHTML = rows.map(c => {
+    const nopin = isNaN(c.lat) || isNaN(c.lng);
+    return '<div class="sup-card' + (_supSel === c.id ? ' selected' : '') + '" data-id="' + escH(c.id) + '">' +
+      '<div class="sup-card-name">' + escH(c.name) + '</div>' +
+      '<div class="sup-card-sub">' + escH(c.town || 'Location not recorded') + '</div>' +
+      '<div class="sup-card-tags">' +
+        '<span class="sup-chip ' + (c.assessed ? 'acc">Assessed' : 'gen">General') + '</span>' +
+        (c.f4n ? '<span class="sup-chip f4n">F4N</span>' : '') +
+        (nopin ? '<span class="sup-chip nopin">No map pin</span>' : '') +
+      '</div>' +
+      '<div class="sup-card-via">via ' + escH(c.via) + '</div>' +
+    '</div>';
+  }).join('');
+  [].forEach.call(el.querySelectorAll('.sup-card'), card => {
+    card.addEventListener('click', () => {
+      const id = card.getAttribute('data-id');
+      _supSel = id;
+      [].forEach.call(el.querySelectorAll('.sup-card'), c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      const mk = _supMarkers[id];
+      if (mk && _supCluster && _supCluster.zoomToShowLayer) {
+        _supCluster.zoomToShowLayer(mk, () => mk.openPopup());
+      }
+    });
+  });
+}
+function supFilterList() {
+  const q = (document.getElementById('supMapSearch').value || '').toLowerCase().trim();
+  supBuildCards(!q ? _supRows : _supRows.filter(c =>
+    (c.name || '').toLowerCase().indexOf(q) > -1 || (c.town || '').toLowerCase().indexOf(q) > -1));
+}
+function supCloseMap() { document.getElementById('supMapWrap').classList.remove('open'); }
 
 </script>
-  <div id="supMapWrap" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(10,20,35,.55);align-items:center;justify-content:center;padding:24px">
-    <div style="background:#fff;border-radius:8px;width:100%;max-width:1000px;height:80vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,.3)">
-      <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #e3e8ef">
-        <strong id="supMapTitle" style="flex:1;font-size:14px;color:#0d3b6e"></strong>
-        <span id="supMapNote" style="font-size:11px;color:#8a94a6"></span>
-        <button class="btn-outline" onclick="supCloseMap()">Close</button>
+  <div id="supMapWrap">
+    <div id="supMapShell">
+      <div id="supMapTop">
+        <div>
+          <div id="supMapTitle"></div>
+          <div id="supMapFilter"></div>
+        </div>
+        <div id="supMapLegend">
+          <span><i class="sup-dot acc"></i>Assessed</span>
+          <span><i class="sup-dot gen"></i>General capability</span>
+        </div>
+        <button id="supMapClose" onclick="supCloseMap()">Close</button>
       </div>
-      <div id="supMap" style="flex:1"></div>
-      <div style="padding:8px 16px;border-top:1px solid #e3e8ef;font-size:11px;color:#8a94a6">
-        Solid cyan = assessed against this commodity. Grey = general manufacturing capability, a broad pool rather than an assessment.
-        Company data from the NucCol data vault; pins are registered or site postcodes.
+      <div id="supMapBody">
+        <div id="supMapList">
+          <input id="supMapSearch" type="search" placeholder="Search these companies…" oninput="supFilterList()">
+          <div id="supMapCount"></div>
+          <div id="supMapCards"></div>
+        </div>
+        <div id="supMapCanvas"><div id="supMap"></div></div>
       </div>
+      <div id="supMapFoot"></div>
     </div>
   </div>
 </body>
