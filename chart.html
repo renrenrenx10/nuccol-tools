@@ -139,16 +139,25 @@
       border: 1px solid rgba(255,255,255,.22); color: rgba(255,255,255,.75); background: transparent;
     }
     #iSupBody .sup-csv:hover { background: rgba(255,255,255,.08); color: #fff; }
+    #iSupBody .btn-outline {
+      padding: 6px 12px; font-size: 12.5px; font-weight: 600;
+      border: 1px solid rgba(0,168,232,.6);
+      color: var(--cyan); background: transparent; border-radius: 6px;
+      font-family: 'Barlow', sans-serif; cursor: pointer;
+    }
+    #iSupBody .btn-outline:hover { background: rgba(0,168,232,.16); color: #fff; }
+    #iSupBody a { color: #5fc4ef; text-decoration: none; }
+    #iSupBody a:hover { color: #fff; text-decoration: underline; }
     #iSupBody .info-src { background: transparent; padding-left: 0; }
 
     /* ── Map view: companies down one side, map on the other ── */
     #supMapWrap {
       display: none; position: fixed; inset: 0; z-index: 9000;
-      background: rgba(8,20,36,.6); padding: 26px;
+      background: rgba(8,20,36,.6); padding: 14px;
     }
     #supMapWrap.open { display: flex; align-items: center; justify-content: center; }
     #supMapShell {
-      background: #fff; border-radius: 10px; width: 100%; max-width: 1240px; height: 88vh;
+      background: #fff; border-radius: 10px; width: 100%; max-width: 1760px; height: 95vh;
       display: flex; flex-direction: column; overflow: hidden;
       box-shadow: 0 20px 60px rgba(0,0,0,.35); font-family: 'Barlow', sans-serif;
     }
@@ -171,7 +180,7 @@
     #supMapClose:hover { background: rgba(255,255,255,.22); }
     #supMapBody { flex: 1; display: flex; min-height: 0; }
     #supMapList {
-      width: 340px; min-width: 340px; display: flex; flex-direction: column;
+      width: 380px; min-width: 380px; display: flex; flex-direction: column;
       border-right: 1px solid #d8e2ec; background: #fff; min-height: 0;
     }
     #supMapSearch {
@@ -1319,13 +1328,13 @@ function supRender(item) {
   cnt.textContent = '';
   if (SUP_STATE === 'idle') {
     body.innerHTML = '<div class="info-src" style="margin-bottom:8px">Company data lives in the data vault and needs your Microsoft sign-in.</div>' +
-      '<button class="btn-outline" onclick="supSignInAndLoad()">Sign in to load suppliers</button>';
+      '<button class="sup-cta" onclick="supSignInAndLoad()">Sign in to load suppliers</button>';
     return;
   }
   if (SUP_STATE === 'loading') { body.innerHTML = '<div class="info-src">Loading company data…</div>'; return; }
   if (SUP_STATE === 'error') {
     body.innerHTML = '<div class="info-src" style="color:#c0392b">Could not load: ' + escH(SUP_ERR) + '</div>' +
-      '<button class="btn-outline" onclick="supSignInAndLoad()">Try again</button>';
+      '<button class="sup-cta" onclick="supSignInAndLoad()">Try again</button>';
     return;
   }
   const r = supFor(item);
