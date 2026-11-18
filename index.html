@@ -909,6 +909,17 @@ textarea.form-control { height: 72px; resize: vertical; }
         <p style="margin:8px 0 0 18px;">For some items there is simply no UK producer and no meaningful statistic — fusion magnet components, for instance. Rather than invent a figure, the model says what it looked at and found nothing. That gap is a finding in itself.</p></details>
 
       <hr style="margin:28px 0;border:none;border-top:1px solid var(--border,#ddd);">
+      <h2 style="margin:0 0 14px;font-size:20px;">Where the companies come from</h2>
+      <p style="font-size:16px;">The model knows <b>what</b> is needed. The data vault knows <b>who</b> might make it. Joining the two is a translation job, because the two lists do not use the same words: the model says <i>Rebar</i>, the vault says <i>Materials Embedment's &amp; Rebar</i>. So there is a hand-written crosswalk, one line per pairing, that says which vault capability means which item in the model. That is why a company appears under an item &mdash; it holds a capability the crosswalk points at.</p>
+      <p style="font-size:16px;">Two kinds of answer come back, and the difference matters:</p>
+      <ul style="font-size:16px;padding-left:22px;">
+        <li style="margin-bottom:10px;"><b>Assessed</b> &mdash; a person judged that company against that specific component in a supply chain readiness review, and gave it a red, amber or green. The card tells you which components and what the rating was. This is the strongest thing the tool says, and at the moment it only exists for the fusion first wall and divertor.</li>
+        <li style="margin-bottom:10px;"><b>Capability match</b> &mdash; the company is tagged in the vault with a capability that means this item. Real, but lighter: nobody has looked at them for this particular job.</li>
+      </ul>
+      <p style="font-size:16px;">Deliberately left out: companies that only hold a broad capability such as heavy fabrication. Nearly every engineering firm in the vault holds one, so including them returned hundreds of companies for a fusion magnet and told you nothing. A short, defensible list is more use than a long one.</p>
+      <p style="font-size:16px;">Material lines behave differently from component lines. <i>Divertor cassettes</i> asks who can make the part. <i>Tungsten</i> is a tonnage &mdash; it asks who can supply the metal, which is a different question and usually a thinner answer. Nobody has been assessed as a tungsten supplier, so that line shows none.</p>
+      <p style="font-size:16px;">Nothing here is a quote or a commitment. It is a starting point for a conversation.</p>
+
       <h2 style="margin:0 0 10px;font-size:20px;">If you remember one thing</h2>
       <p style="font-size:16px;">Every figure in here is traceable to a published document, and where we do not know something, the model says so rather than filling the gap. That is the point of it. The gaps are not embarrassments — they are precisely the questions worth putting to a developer, and they are the reason to have the conversation in the first place.</p>
       <p style="color:var(--muted);font-size:13px;margin-top:24px;">Full source list on the References screen. Every individual figure shows its own source on the Products screen.</p>
@@ -935,6 +946,28 @@ textarea.form-control { height: 72px; resize: vertical; }
       </ol>
       <p style="font-size:15px;color:var(--muted);">That is the whole thing. The rest of this page is only worth reading if something puzzles you.</p>
 
+        <hr style="margin:28px 0;border:none;border-top:1px solid var(--border,#ddd);">
+        <h2 style="margin:0 0 6px;font-size:20px;">Seeing who could supply it</h2>
+        <p style="font-size:15px;color:var(--muted);margin:0 0 14px;">New. The chart now links through to the NucCol data vault, so you can see which UK companies could supply an item, as a list and on a map.</p>
+        <ol style="font-size:16px;padding-left:22px;">
+          <li style="margin-bottom:12px;">Build a plan with <b>three different kinds of build</b> in it, so you see the whole picture at once. Try <i>EDF &mdash; Sizewell C</i> for a conventional large reactor, <i>UK Fusion Energy</i> for fusion, and <i>GeoPura &mdash; HyMarnham</i> for hydrogen. The fusion build is the one that opens the <b>Fusion Island</b> group in the chart's item list &mdash; without it, those items are not there to click.</li>
+          <li style="margin-bottom:12px;">Generate demand and open the chart as before.</li>
+          <li style="margin-bottom:12px;">Click any item in the list down the right. A panel slides over with the item name at the top and a <b>✕</b> to close it again.</li>
+          <li style="margin-bottom:12px;">The first block is <b>Who could supply this</b>. Click <b>Sign in to load suppliers</b> and a Microsoft sign-in opens in a pop-up &mdash; your normal work account. You do this once per session, not once per item.</li>
+          <li style="margin-bottom:12px;">You then get a count. Click <b>View N on the map</b> for the companies listed down one side and plotted on the other. Clicking a company zooms the map to it. <b>Export CSV</b> gives you the same list for Excel.</li>
+        </ol>
+
+        <details style="margin:10px 0;"><summary style="cursor:pointer;font-weight:600;">Why do some items show no companies at all?</summary>
+          <p style="margin:8px 0 0 18px;">Because for that item, nobody has been identified yet &mdash; and we would rather say so than pad the list out. TF coils, PF coils and gyrotrons all come back empty, because the fusion supply chain work we hold covers the first wall and the divertor and does not reach the magnets. An empty answer is a real finding, not a broken screen.</p></details>
+
+        <details style="margin:10px 0;"><summary style="cursor:pointer;font-weight:600;">Assessed and Capability match &mdash; what is the difference?</summary>
+          <p style="margin:8px 0 0 18px;"><b>Assessed</b> means a person looked at that company against that specific component in a supply chain readiness review and formed a view, with a red/amber/green rating. The card shows which components and the rating. <b>Capability match</b> is lighter: the company is tagged in the vault with a capability that means this item, but nobody has assessed them for it.</p>
+          <p style="margin:8px 0 0 18px;">Neither is a quote or a commitment to supply. Both mean &ldquo;worth a conversation&rdquo;, not &ldquo;they have agreed to do it&rdquo;.</p></details>
+
+        <details style="margin:10px 0;"><summary style="cursor:pointer;font-weight:600;">Why does it make me sign in?</summary>
+          <p style="margin:8px 0 0 18px;">The demand side of the model is open &mdash; anyone with the link can build a plan and read the chart. The company data is ours and sits behind the normal Microsoft login, so it only loads once you have signed in. Nothing about your plan is sent anywhere either way.</p></details>
+
+
       <hr style="margin:28px 0;border:none;border-top:1px solid var(--border,#ddd);">
       <h2 style="margin:0 0 14px;font-size:20px;">If something puzzles you</h2>
 
@@ -960,7 +993,7 @@ textarea.form-control { height: 72px; resize: vertical; }
         <p style="margin:8px 0 0 18px;"><b>🗑 Clear All</b> on the Search tab empties your plan so you can start a fresh one. Nothing is saved anywhere and nothing can be broken — if it ever looks wrong, close the browser tab and open <b>index.html</b> again.</p></details>
 
       <hr style="margin:28px 0;border:none;border-top:1px solid var(--border,#ddd);">
-      <p style="font-size:15px;">Nothing here sends anything anywhere. It all runs on your own machine, and closing it loses nothing you cannot make again in thirty seconds.</p>
+      <p style="font-size:15px;">Your plan is never sent anywhere &mdash; it is built in your own browser, and closing the page loses nothing you cannot make again in thirty seconds. The one exception is the company list, which is read from the NucCol data vault after you sign in.</p>
     </div>
   </div>
 
