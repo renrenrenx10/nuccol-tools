@@ -1222,6 +1222,8 @@ const SUP = {
 let SUP_BY_CAP = null;   // capability name -> [companyID]
 let SUP_CO     = null;   // companyID -> {name, town, lat, lng, url, f4n}
 let SUP_STATE  = 'idle'; // idle | loading | ready | error
+/* F4NCandidate in the vault is stale, so it is not shown. Set true once refreshed. */
+const SHOW_F4N = false;
 let SUP_FETCH  = '';
 let SUP_ERR    = '';
 let _supMap = null, _supCluster = null;
@@ -1395,10 +1397,16 @@ function supRender(item) {
 }
 function supExport(item) {
   const r = supFor(item);
-  const rows = [['Commodity', 'Company', 'CompanyID', 'Town', 'Website', 'F4N', 'Basis', 'Matched via capability', 'SCRL components', 'SCRL RAG']];
-  r.all.forEach(c => rows.push([item, c.name, c.id, c.town, c.url, c.f4n ? 'Yes' : '',
-    c.scrl ? 'Assessed (SCRL)' : 'Capability match', c.via,
-    c.scrl ? c.scrl.c : '', c.scrl ? c.scrl.r : '']));
+  const head = ['Commodity', 'Company', 'CompanyID', 'Town', 'Website', 'Basis', 'Matched via capability', 'SCRL components', 'SCRL RAG'];
+  if (SHOW_F4N) head.splice(5, 0, 'F4N');
+  const rows = [head];
+  r.all.forEach(c => {
+    const row = [item, c.name, c.id, c.town, c.url,
+      c.scrl ? 'Assessed (SCRL)' : 'Capability match', c.via,
+      c.scrl ? c.scrl.c : '', c.scrl ? c.scrl.r : ''];
+    if (SHOW_F4N) row.splice(5, 0, c.f4n ? 'Yes' : '');
+    rows.push(row);
+  });
   const csv = rows.map(r2 => r2.map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(',')).join('\r\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
@@ -1472,7 +1480,7 @@ function supBuildCards(rows) {
       '<div class="sup-card-sub">' + escH(c.town || 'Location not recorded') + '</div>' +
       '<div class="sup-card-tags">' +
         '<span class="sup-chip ' + (c.assessed ? 'acc">Assessed &middot; SCRL' : 'gen">Capability match') + '</span>' +
-        (c.f4n ? '<span class="sup-chip f4n">F4N</span>' : '') +
+        (SHOW_F4N && c.f4n ? '<span class="sup-chip f4n">F4N</span>' : '') +
         (nopin ? '<span class="sup-chip nopin">No map pin</span>' : '') +
       '</div>' +
       '<div class="sup-card-via">' + (c.scrl
