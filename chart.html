@@ -227,6 +227,59 @@
     .sup-chip.f4n { background: #d7f5ea; color: #087f5b; }
     .sup-chip.nopin { background: #fff0ee; color: #c0392b; }
     .sup-card-via { font-size: 10px; color: #8a97a6; margin-top: 4px; font-style: italic; }
+    /* [2026-11-23] "Company card" button on each result, and the card it opens. */
+    .sup-card-open {
+      margin-top: 7px; font-family: 'Barlow', sans-serif; font-size: 10px; font-weight: 700;
+      letter-spacing: .04em; text-transform: uppercase; padding: 3px 9px; border-radius: 5px;
+      border: 1px solid #26a9d8; background: #fff; color: #1a86b0; cursor: pointer;
+    }
+    .sup-card-open:hover { background: #26a9d8; color: #fff; }
+    #supCoWrap {
+      display: none; position: fixed; inset: 0; z-index: 9500;
+      background: rgba(8,20,36,.55); padding: 20px;
+    }
+    #supCoWrap.open { display: flex; align-items: center; justify-content: center; }
+    #supCoCard {
+      background: #fff; border-radius: 10px; width: 560px; max-width: 95vw; max-height: 88vh;
+      overflow-y: auto; font-family: 'Barlow', sans-serif;
+      box-shadow: 0 20px 60px rgba(0,0,0,.35);
+    }
+    #supCoHead {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 14px 18px; background: #10243a; border-radius: 10px 10px 0 0;
+    }
+    #supCoName { font-size: 17px; font-weight: 700; color: #fff; line-height: 1.2; }
+    #supCoSub { font-size: 11.5px; color: #8fb6d4; margin-top: 2px; }
+    #supCoClose {
+      margin-left: auto; background: none; border: 1px solid #3d5a76; color: #8fb6d4;
+      border-radius: 5px; padding: 3px 9px; font-size: 12px; cursor: pointer; font-family: inherit;
+    }
+    #supCoClose:hover { color: #fff; border-color: #8fb6d4; }
+    #supCoBody { padding: 16px 18px 18px; }
+    .sup-co-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; margin-bottom: 14px;
+    }
+    .sup-co-k {
+      font-size: 9.5px; letter-spacing: .07em; text-transform: uppercase;
+      color: #65758a; font-weight: 700;
+    }
+    .sup-co-v { font-size: 13px; color: #142132; margin-top: 1px; word-break: break-word; }
+    .sup-co-sec {
+      font-size: 9.5px; letter-spacing: .07em; text-transform: uppercase;
+      color: #65758a; font-weight: 700; margin: 0 0 6px;
+    }
+    .sup-co-block { border-top: 1px solid #e4ecf3; padding-top: 12px; margin-top: 4px; }
+    .sup-co-comp {
+      display: inline-block; background: #eef2f6; color: #3d5266; border-radius: 10px;
+      padding: 2px 9px; font-size: 11px; margin: 0 4px 4px 0;
+    }
+    .sup-co-vault {
+      display: inline-block; margin-top: 14px; font-size: 12px; font-weight: 700;
+      color: #1a86b0; text-decoration: none; border: 1px solid #26a9d8;
+      border-radius: 6px; padding: 6px 12px;
+    }
+    .sup-co-vault:hover { background: #26a9d8; color: #fff; }
+    .sup-co-note { font-size: 11px; color: #8a97a6; margin-top: 10px; line-height: 1.45; }
     #supMapCanvas { flex: 1; position: relative; }
     #supMap { position: absolute; inset: 0; }
     #supMapFoot {
@@ -1459,6 +1512,9 @@ async function supOpenMap(item) {
       '<br><span style="font-size:10px;color:#8a97a6">' +
       (c.scrl ? 'assessed on ' + escH(c.scrl.c) + (c.scrl.r ? ' (' + escH(c.scrl.r) + ')' : '') : 'via ' + escH(c.via)) +
       '</span></div>');
+    // [2026-11-23] Pin -> card. Card -> pin already worked; this is the other
+    // direction: clicking a pin selects and scrolls to its card on the left.
+    mk.on('click', () => supSelectCard(c.id, true));
     _supMarkers[c.id] = mk;
     _supCluster.addLayer(mk);
   });
@@ -1487,6 +1543,7 @@ function supBuildCards(rows) {
           ? 'assessed on ' + escH(c.scrl.c.split('; ').slice(0, 3).join(', ')) +
             (c.scrl.r ? ' &middot; ' + escH(c.scrl.r) : '')
           : 'via ' + escH(c.via)) + '</div>' +
+      '<button class="sup-card-open" data-id="' + escH(c.id) + '">Company card</button>' +
     '</div>';
   }).join('');
   [].forEach.call(el.querySelectorAll('.sup-card'), card => {
@@ -1501,6 +1558,98 @@ function supBuildCards(rows) {
       }
     });
   });
+  // stopPropagation keeps the card's own click (select + zoom) from also firing.
+  [].forEach.call(el.querySelectorAll('.sup-card-open'), btn => {
+    btn.addEventListener('click', ev => {
+      ev.stopPropagation();
+      supOpenCoCard(btn.getAttribute('data-id'));
+    });
+  });
+}
+
+/* Pin -> card. Selects the company on the left and scrolls it into view.
+   If the search box has filtered that company out, the search is cleared and
+   the list rebuilt first, so a pin always has a card to select. */
+function supSelectCard(id, scroll) {
+  _supSel = id;
+  const el = document.getElementById('supMapCards');
+  if (!el) return;
+  let card = el.querySelector('.sup-card[data-id="' + String(id).replace(/"/g, '\\"') + '"]');
+  if (!card) {
+    const box = document.getElementById('supMapSearch');
+    if (box && box.value) { box.value = ''; supBuildCards(_supRows); }
+    card = el.querySelector('.sup-card[data-id="' + String(id).replace(/"/g, '\\"') + '"]');
+  }
+  [].forEach.call(el.querySelectorAll('.sup-card'), c => c.classList.remove('selected'));
+  if (!card) return;
+  card.classList.add('selected');
+  if (scroll && card.scrollIntoView) card.scrollIntoView({ block: 'nearest' });
+}
+
+/* ── THE COMPANY CARD ──────────────────────────────────────────────────────
+   Built from what the panel already holds: the vault's Companies row fetched
+   at sign-in, plus v5's baked-in SCRL links. No extra round trip, so it opens
+   instantly and works from the sessionStorage cache. The full vault record is
+   one click away on the deep link, which the vault resolves on either
+   CompanyID (field_1) or its own item ID — c.id here is the CompanyID.
+   ───────────────────────────────────────────────────────────────────────── */
+const SUP_VAULT_URL = 'https://renrenrenx10.github.io/Frankie/datavault.html';
+
+function supOpenCoCard(id) {
+  const c = (_supRows || []).filter(function (r) { return String(r.id) === String(id); })[0];
+  if (!c) return;
+  const wrap = document.getElementById('supCoWrap');
+  if (!wrap) return;
+
+  document.getElementById('supCoName').textContent = c.name || '—';
+  document.getElementById('supCoSub').textContent =
+    (c.town || 'Location not recorded') + ' · CompanyID ' + c.id;
+
+  const nopin = isNaN(c.lat) || isNaN(c.lng);
+  const field = function (k, v) {
+    return '<div><div class="sup-co-k">' + k + '</div><div class="sup-co-v">' + v + '</div></div>';
+  };
+  const fields = [
+    field('Basis', c.scrl
+      ? 'Assessed in a supply chain readiness review'
+      : 'Capability match in the vault'),
+    field('Matched via', escH(c.via || '—')),
+    field('Town', escH(c.town || '—')),
+    field('Website', c.url
+      ? '<a href="' + escH(c.url) + '" target="_blank" rel="noopener">' + escH(c.url) + '</a>'
+      : '—'),
+    field('Map pin', nopin
+      ? 'None — no usable coordinates in the vault'
+      : escH(Number(c.lat).toFixed(4) + ', ' + Number(c.lng).toFixed(4)))
+  ];
+  if (SHOW_F4N) fields.push(field('F4N', c.f4n ? 'Yes' : '—'));
+
+  let h = '<div class="sup-co-grid">' + fields.join('') + '</div>';
+
+  if (c.scrl) {
+    const comps = String(c.scrl.c || '').split('; ').filter(Boolean);
+    h += '<div class="sup-co-block">' +
+         '<div class="sup-co-sec">Assessed against' +
+         (c.scrl.r ? ' &middot; RAG ' + escH(c.scrl.r) : '') + '</div>' +
+         (comps.length
+           ? comps.map(function (x) { return '<span class="sup-co-comp">' + escH(x) + '</span>'; }).join('')
+           : '<div class="sup-co-v">—</div>') +
+         '</div>';
+  }
+
+  h += '<a class="sup-co-vault" href="' + SUP_VAULT_URL + '?companyId=' + encodeURIComponent(c.id) +
+       '" target="_blank" rel="noopener">Open full record in the data vault &#8599;</a>';
+  h += '<div class="sup-co-note">The vault record carries the fields this panel does not fetch — ' +
+       'postcode, registered number, description, turnover and employees. ' +
+       'Neither basis above is a quotation or a commitment to supply.</div>';
+
+  document.getElementById('supCoBody').innerHTML = h;
+  wrap.classList.add('open');
+}
+
+function supCloseCoCard() {
+  const w = document.getElementById('supCoWrap');
+  if (w) w.classList.remove('open');
 }
 function supFilterList() {
   const q = (document.getElementById('supMapSearch').value || '').toLowerCase().trim();
@@ -1534,5 +1683,30 @@ function supCloseMap() { document.getElementById('supMapWrap').classList.remove(
       <div id="supMapFoot"></div>
     </div>
   </div>
+
+  <!-- [2026-11-23] The company card opened from a result's "Company card" button. -->
+  <div id="supCoWrap" onclick="if(event.target===this)supCloseCoCard()">
+    <div id="supCoCard">
+      <div id="supCoHead">
+        <div>
+          <div id="supCoName"></div>
+          <div id="supCoSub"></div>
+        </div>
+        <button id="supCoClose" onclick="supCloseCoCard()">Close</button>
+      </div>
+      <div id="supCoBody"></div>
+    </div>
+  </div>
+  <script>
+    /* Escape closes the company card first, then the map, so one key does not
+       dismiss both at once. */
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      var co = document.getElementById('supCoWrap');
+      if (co && co.classList.contains('open')) { supCloseCoCard(); return; }
+      var mp = document.getElementById('supMapWrap');
+      if (mp && mp.classList.contains('open')) supCloseMap();
+    });
+  </script>
 </body>
 </html>
