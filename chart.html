@@ -179,9 +179,14 @@
     #supMapFilter { font-size: 11.5px; color: #8fb6d4; margin-top: 2px; }
     #supMapLegend { margin-left: auto; display: flex; gap: 14px; font-size: 11.5px; color: #c6d9e8; }
     #supMapLegend span { display: flex; align-items: center; gap: 5px; }
-    .sup-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-    .sup-dot.acc { background: #26a9d8; }
-    .sup-dot.gen { background: #b9c6d3; }
+    /* [2026-11-23] Legend dots mirror the pins exactly: solid vs hollow, so the
+       distinction survives any colour vision deficiency and greyscale. */
+    .sup-dot {
+      width: 12px; height: 12px; border-radius: 50%; display: inline-block; box-sizing: border-box;
+    }
+    .sup-dot.acc { background: #0b5c86; border: 2px solid #fff; }
+    .sup-dot.gen { background: #fff; border: 2px solid #1f3c56; }
+    .sup-dot.sel { background: #e8710a; border: 2px solid #fff; }
     #supMapClose {
       cursor: pointer; background: rgba(255,255,255,.12); color: #fff;
       border: 1px solid rgba(255,255,255,.3); border-radius: 5px;
@@ -1273,7 +1278,12 @@ const SUP = {
   mcCss2: 'https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css'
 };
 let SUP_BY_CAP = null;   // capability name -> [companyID]
-let SUP_CO     = null;   // companyID -> {name, town, lat, lng, url, f4n}
+let SUP_CO     = null;   // companyID -> {name, town, county, lat, lng, url, f4n}
+// [2026-11-23] The reverse index, plus accreditations, for the company card.
+// Both are keyed on the NuCCoL CompanyID (Companies.field_1), which is what
+// CompanyID_Ref holds on every Company_* junction list.
+let SUP_CAPS_BY_CO = null;   // companyID -> [capability name]
+let SUP_ACC_BY_CO  = null;   // companyID -> [accreditation name]
 let SUP_STATE  = 'idle'; // idle | loading | ready | error
 /* F4NCandidate in the vault is stale, so it is not shown. Set true once refreshed. */
 const SHOW_F4N = false;
@@ -1316,10 +1326,14 @@ async function supSignInAndLoad() {
   if (SUP_STATE === 'loading') return;
   SUP_STATE = 'loading'; SUP_ERR = ''; supRender(selectedItem);
   try {
-    const cached = sessionStorage.getItem('dm5_sup');
+    // Key bumped to _v2 on 2026-11-23: the payload gained county, the
+    // capability reverse index and accreditations. A _v1 payload would restore
+    // a card with empty tag blocks, so it is deliberately ignored, not migrated.
+    const cached = sessionStorage.getItem('dm5_sup_v2');
     if (cached) {
       const p = JSON.parse(cached);
       SUP_BY_CAP = p.byCap; SUP_CO = p.co;
+      SUP_CAPS_BY_CO = p.capsByCo || {}; SUP_ACC_BY_CO = p.accByCo || {};
       SUP_STATE = 'ready'; supRender(selectedItem); return;
     }
   } catch (e) { /* cache unreadable, fall through to a live fetch */ }
@@ -1339,19 +1353,24 @@ async function supSignInAndLoad() {
     }
     if (!res) res = await app.loginPopup({ scopes });
     const token = res.accessToken;
-    const [cos, caps] = await Promise.all([
-      supFetchAll(token, 'Companies', 'Title,field_1,field_2,field_6,field_19,lat,lng'),
-      supFetchAll(token, 'Company_Capabilities', 'CompanyID_Ref,CapabilityName_Ref')
+    // field_2 City and field_3 County are the Companies list's verified internal
+    // names (same remap scc.html uses). Company_Accreditations is the third call
+    // and the same shape as Company_Capabilities.
+    const [cos, caps, accs] = await Promise.all([
+      supFetchAll(token, 'Companies', 'Title,field_1,field_2,field_3,field_6,field_19,lat,lng'),
+      supFetchAll(token, 'Company_Capabilities', 'CompanyID_Ref,CapabilityName_Ref'),
+      supFetchAll(token, 'Company_Accreditations', 'CompanyID_Ref,AccreditationName_Ref')
     ]);
     SUP_CO = {};
     cos.forEach(c => {
       const id = String(c.field_1 || '').trim();
       if (!id) return;
       SUP_CO[id] = { name: c.Title || '', town: (c.field_2 || '').trim(),
+                     county: (c.field_3 || '').trim(),
                      url: c.field_6 || '', f4n: String(c.field_19 || '').toLowerCase() === 'yes',
                      lat: parseFloat(c.lat), lng: parseFloat(c.lng) };
     });
-    SUP_BY_CAP = {};
+    SUP_BY_CAP = {}; SUP_CAPS_BY_CO = {}; SUP_ACC_BY_CO = {};
     const seen = {};
     caps.forEach(r => {
       const n = (r.CapabilityName_Ref || '').trim();
@@ -1361,9 +1380,27 @@ async function supSignInAndLoad() {
       if (seen[k]) return;           /* collapses the duplicate ID bands */
       seen[k] = 1;
       (SUP_BY_CAP[n] = SUP_BY_CAP[n] || []).push(id);
+      (SUP_CAPS_BY_CO[id] = SUP_CAPS_BY_CO[id] || []).push(n);
     });
-    try { sessionStorage.setItem('dm5_sup', JSON.stringify({ byCap: SUP_BY_CAP, co: SUP_CO })); } catch (e) { /* too big for the quota — in-memory only */ }
-    SUP_FETCH = cos.length + ' companies, ' + caps.length + ' capability tags';
+    const seenA = {};
+    accs.forEach(r => {
+      const n = (r.AccreditationName_Ref || '').trim();
+      const id = String(r.CompanyID_Ref || '').trim();
+      if (!n || !id) return;
+      const k = n + '|' + id;
+      if (seenA[k]) return;          /* the junction lists carry duplicate rows */
+      seenA[k] = 1;
+      (SUP_ACC_BY_CO[id] = SUP_ACC_BY_CO[id] || []).push(n);
+    });
+    Object.keys(SUP_CAPS_BY_CO).forEach(k => SUP_CAPS_BY_CO[k].sort());
+    Object.keys(SUP_ACC_BY_CO).forEach(k => SUP_ACC_BY_CO[k].sort());
+    try {
+      sessionStorage.setItem('dm5_sup_v2', JSON.stringify({
+        byCap: SUP_BY_CAP, co: SUP_CO, capsByCo: SUP_CAPS_BY_CO, accByCo: SUP_ACC_BY_CO
+      }));
+    } catch (e) { /* too big for the quota — in-memory only */ }
+    SUP_FETCH = cos.length + ' companies, ' + caps.length + ' capability tags, ' +
+                accs.length + ' accreditation tags';
     console.log('[DM] vault fetch:', SUP_FETCH);
     SUP_STATE = 'ready';
   } catch (e) {
@@ -1467,6 +1504,37 @@ function supExport(item) {
   a.click();
 }
 let _supRows = [], _supSel = null, _supMarkers = {};
+
+/* [2026-11-23] Pin styling deliberately does NOT carry its meaning in hue.
+   Assessed vs Capability match reads as SOLID vs HOLLOW, which survives every
+   colour vision deficiency and greyscale printing; the colours only reinforce
+   what the fill already says. The previous pale grey (#cdd5de filled, #9aa6b4
+   ringed, radius 6) vanished into the OSM basemap — and on a commodity where
+   nothing is assessed, every pin on the map was that grey. Selection is a
+   thick orange ring, orange against blue being safe under red/green CVD. */
+const SUP_PIN = {
+  assessed: { radius: 9, weight: 2.5, color: '#ffffff', fillColor: '#0b5c86', fillOpacity: 1 },
+  capable:  { radius: 7, weight: 2.5, color: '#1f3c56', fillColor: '#ffffff', fillOpacity: 1 },
+  selRadius: 11, selWeight: 4, selColor: '#e8710a'
+};
+
+/* Mirrors the card selection onto the map, so the chosen company is obvious in
+   both views whichever side the click came from. */
+function supHighlightPin(id) {
+  Object.keys(_supMarkers || {}).forEach(function (k) {
+    const mk = _supMarkers[k];
+    if (!mk || !mk.setStyle || !mk._supBase) return;
+    if (String(k) === String(id)) {
+      mk.setStyle({
+        radius: SUP_PIN.selRadius, weight: SUP_PIN.selWeight, color: SUP_PIN.selColor,
+        fillColor: mk._supBase.fillColor, fillOpacity: 1
+      });
+      if (mk.bringToFront) mk.bringToFront();
+    } else {
+      mk.setStyle(mk._supBase);
+    }
+  });
+}
 async function supOpenMap(item) {
   const r = supFor(item);
   _supRows = r.all.map(c => Object.assign({ assessed: !!c.scrl }, c));
@@ -1496,14 +1564,29 @@ async function supOpenMap(item) {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(_supMap);
   }
   if (_supCluster) _supMap.removeLayer(_supCluster);
-  _supCluster = L.markerClusterGroup();
+  _supCluster = L.markerClusterGroup({
+    // Stock markercluster bubbles run green -> amber -> red by size, which is
+    // the one ramp to avoid. One hue, sized by count, same as the Supplier Map.
+    iconCreateFunction: function (cluster) {
+      const n = cluster.getChildCount();
+      const sz = n > 100 ? 46 : n > 30 ? 40 : 34;
+      return L.divIcon({
+        html: '<div style="width:' + sz + 'px;height:' + sz + 'px;border-radius:50%;' +
+              'background:#1a5fa8;border:2.5px solid #fff;display:flex;align-items:center;' +
+              'justify-content:center;color:#fff;font-family:Barlow,sans-serif;font-weight:700;' +
+              'font-size:' + (sz > 38 ? 14 : 12) + 'px;box-shadow:0 2px 8px rgba(8,20,36,.45)">' +
+              n + '</div>',
+        className: '', iconSize: [sz, sz], iconAnchor: [sz / 2, sz / 2]
+      });
+    },
+    // The hover coverage polygon and the spider legs are green by default too.
+    polygonOptions: { color: '#1a5fa8', weight: 2, opacity: .6, fillColor: '#1a5fa8', fillOpacity: .12 },
+    spiderLegPolylineOptions: { weight: 2, color: '#1f3c56', opacity: .7 }
+  });
   _supMarkers = {};
   pins.forEach(c => {
-    const mk = L.circleMarker([c.lat, c.lng], {
-      radius: c.assessed ? 8 : 6, weight: 2,
-      color: c.assessed ? '#26a9d8' : '#9aa6b4',
-      fillColor: c.assessed ? '#26a9d8' : '#cdd5de', fillOpacity: .9
-    }).bindPopup('<div style="font-family:Barlow,sans-serif;min-width:200px">' +
+    const base = c.assessed ? SUP_PIN.assessed : SUP_PIN.capable;
+    const mk = L.circleMarker([c.lat, c.lng], base).bindPopup('<div style="font-family:Barlow,sans-serif;min-width:200px">' +
       '<strong style="font-size:14px">' + escH(c.name) + '</strong><br>' +
       '<span style="color:#65758a;font-size:12px">' + escH(c.town || '') + '</span>' +
       (c.url ? '<br><a href="' + escH(c.url) + '" target="_blank" rel="noopener">website</a>' : '') +
@@ -1514,6 +1597,7 @@ async function supOpenMap(item) {
       '</span></div>');
     // [2026-11-23] Pin -> card. Card -> pin already worked; this is the other
     // direction: clicking a pin selects and scrolls to its card on the left.
+    mk._supBase = base;
     mk.on('click', () => supSelectCard(c.id, true));
     _supMarkers[c.id] = mk;
     _supCluster.addLayer(mk);
@@ -1549,9 +1633,9 @@ function supBuildCards(rows) {
   [].forEach.call(el.querySelectorAll('.sup-card'), card => {
     card.addEventListener('click', () => {
       const id = card.getAttribute('data-id');
-      _supSel = id;
-      [].forEach.call(el.querySelectorAll('.sup-card'), c => c.classList.remove('selected'));
-      card.classList.add('selected');
+      // Routed through supSelectCard so card->pin and pin->card share one
+      // selection path and cannot drift apart.
+      supSelectCard(id, false);
       const mk = _supMarkers[id];
       if (mk && _supCluster && _supCluster.zoomToShowLayer) {
         _supCluster.zoomToShowLayer(mk, () => mk.openPopup());
@@ -1581,6 +1665,7 @@ function supSelectCard(id, scroll) {
     card = el.querySelector('.sup-card[data-id="' + String(id).replace(/"/g, '\\"') + '"]');
   }
   [].forEach.call(el.querySelectorAll('.sup-card'), c => c.classList.remove('selected'));
+  supHighlightPin(id);
   if (!card) return;
   card.classList.add('selected');
   if (scroll && card.scrollIntoView) card.scrollIntoView({ block: 'nearest' });
@@ -1601,9 +1686,10 @@ function supOpenCoCard(id) {
   const wrap = document.getElementById('supCoWrap');
   if (!wrap) return;
 
+  const place = [c.town, c.county].filter(Boolean).join(', ');
   document.getElementById('supCoName').textContent = c.name || '—';
   document.getElementById('supCoSub').textContent =
-    (c.town || 'Location not recorded') + ' · CompanyID ' + c.id;
+    (place || 'Location not recorded') + ' · CompanyID ' + c.id;
 
   const nopin = isNaN(c.lat) || isNaN(c.lng);
   const field = function (k, v) {
@@ -1614,7 +1700,8 @@ function supOpenCoCard(id) {
       ? 'Assessed in a supply chain readiness review'
       : 'Capability match in the vault'),
     field('Matched via', escH(c.via || '—')),
-    field('Town', escH(c.town || '—')),
+    field('Town / city', escH(c.town || '—')),
+    field('County', escH(c.county || '—')),
     field('Website', c.url
       ? '<a href="' + escH(c.url) + '" target="_blank" rel="noopener">' + escH(c.url) + '</a>'
       : '—'),
@@ -1636,6 +1723,21 @@ function supOpenCoCard(id) {
            : '<div class="sup-co-v">—</div>') +
          '</div>';
   }
+
+  // Capabilities and accreditations as the vault holds them, deduped and sorted
+  // at load. "None recorded" is stated rather than left blank: a blank block
+  // reads as a rendering fault, an empty one reads as a gap in the vault.
+  const tagBlock = function (label, items) {
+    return '<div class="sup-co-block">' +
+      '<div class="sup-co-sec">' + label +
+      (items.length ? ' &middot; ' + items.length : '') + '</div>' +
+      (items.length
+        ? items.map(function (x) { return '<span class="sup-co-comp">' + escH(x) + '</span>'; }).join('')
+        : '<div class="sup-co-v" style="color:#8a97a6">None recorded in the vault</div>') +
+      '</div>';
+  };
+  h += tagBlock('Capabilities', (SUP_CAPS_BY_CO || {})[c.id] || []);
+  h += tagBlock('Accreditations', (SUP_ACC_BY_CO || {})[c.id] || []);
 
   h += '<a class="sup-co-vault" href="' + SUP_VAULT_URL + '?companyId=' + encodeURIComponent(c.id) +
        '" target="_blank" rel="noopener">Open full record in the data vault &#8599;</a>';
@@ -1669,6 +1771,7 @@ function supCloseMap() { document.getElementById('supMapWrap').classList.remove(
         <div id="supMapLegend">
           <span><i class="sup-dot acc"></i>Assessed (SCRL)</span>
           <span><i class="sup-dot gen"></i>Capability match</span>
+          <span><i class="sup-dot sel"></i>Selected</span>
         </div>
         <button id="supMapClose" onclick="supCloseMap()">Close</button>
       </div>
