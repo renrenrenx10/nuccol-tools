@@ -230,6 +230,10 @@
     .sup-chip.acc { background: #e5f4fa; color: #1a86b0; }
     .sup-chip.gen { background: #eef2f6; color: #65758a; }
     .sup-chip.f4n { background: #d7f5ea; color: #087f5b; }
+    /* [2026-11-25] Lapsed and on-journey read from their LABELS first — the
+       colours only reinforce, so the three never rely on hue to be told apart. */
+    .sup-chip.f4nlapsed { background: #f3eee6; color: #8a5a07; }
+    .sup-chip.f4njourney { background: #ece9fa; color: #5b45b8; }
     .sup-chip.nopin { background: #fff0ee; color: #c0392b; }
     .sup-card-via { font-size: 10px; color: #8a97a6; margin-top: 4px; font-style: italic; }
     /* [2026-11-23] "Company card" button on each result, and the card it opens. */
@@ -1285,8 +1289,49 @@ let SUP_CO     = null;   // companyID -> {name, town, county, lat, lng, url, f4n
 let SUP_CAPS_BY_CO = null;   // companyID -> [capability name]
 let SUP_ACC_BY_CO  = null;   // companyID -> [accreditation name]
 let SUP_STATE  = 'idle'; // idle | loading | ready | error
-/* F4NCandidate in the vault is stale, so it is not shown. Set true once refreshed. */
-const SHOW_F4N = false;
+/* [2026-11-25] Back on, and off the stale F4NCandidate (field_19) it used to
+   read. Source is now the F4NStatus column added to the vault, with
+   F4NExpiryDate deciding whether a grant still stands. Note both are REAL
+   column names, not field_N — they were added after the CSV import, like
+   lat/lng and the CH_* columns, so they keep their own names in $select. */
+const SHOW_F4N = true;
+
+/* 'granted' | 'lapsed' | 'journey' | '' — computed at render, not at load, so
+   a session left open overnight cannot show a lapsed grant as current.
+   Granted with no expiry date (11 rows as at 25 Nov) counts as current: an
+   absent date is a gap in the vault, not evidence that it expired.
+   The list's third choice, the untouched SharePoint default "Choice 3",
+   falls through to '' and shows nothing. */
+function supF4nState(status, expiry) {
+  const s = String(status || '').trim().toLowerCase();
+  if (s === 'on journey') return 'journey';
+  if (s !== 'granted') return '';
+  if (!expiry) return 'granted';
+  const d = new Date(expiry);
+  if (isNaN(d.getTime())) return 'granted';
+  return d.getTime() < Date.now() ? 'lapsed' : 'granted';
+}
+
+function supF4n(c) {
+  const st = supF4nState(c.f4nStatus, c.f4nExpiry);
+  if (st === 'granted') return { state: st, label: 'F4N', cls: 'f4n' };
+  if (st === 'lapsed')  return { state: st, label: 'F4N lapsed', cls: 'f4nlapsed' };
+  if (st === 'journey') return { state: st, label: 'F4N journey', cls: 'f4njourney' };
+  return { state: '', label: '', cls: '' };
+}
+
+/* The long form, for the company card and the CSV export. */
+function supF4nDetail(c) {
+  const st = supF4nState(c.f4nStatus, c.f4nExpiry);
+  if (!st) return '—';
+  if (st === 'journey') return 'On journey';
+  const d = c.f4nExpiry ? new Date(c.f4nExpiry) : null;
+  const ds = d && !isNaN(d.getTime())
+    ? d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+    : null;
+  if (st === 'lapsed') return 'Granted, expired ' + ds;
+  return ds ? 'Granted, expires ' + ds : 'Granted, no expiry date recorded';
+}
 let SUP_FETCH  = '';
 let SUP_ERR    = '';
 let _supMap = null, _supCluster = null;
@@ -1326,10 +1371,13 @@ async function supSignInAndLoad() {
   if (SUP_STATE === 'loading') return;
   SUP_STATE = 'loading'; SUP_ERR = ''; supRender(selectedItem);
   try {
-    // Key bumped to _v2 on 2026-11-23: the payload gained county, the
+    // Key bumped to _v3 on 2026-11-25: the payload now carries F4NStatus and
+    // F4NExpiryDate in place of the old field_19 boolean. A _v2 payload would
+    // restore companies with no F4N data at all and silently hide every pill.
+    // _v2 on 2026-11-23 had added county, the
     // capability reverse index and accreditations. A _v1 payload would restore
     // a card with empty tag blocks, so it is deliberately ignored, not migrated.
-    const cached = sessionStorage.getItem('dm5_sup_v2');
+    const cached = sessionStorage.getItem('dm5_sup_v3');
     if (cached) {
       const p = JSON.parse(cached);
       SUP_BY_CAP = p.byCap; SUP_CO = p.co;
@@ -1357,7 +1405,7 @@ async function supSignInAndLoad() {
     // names (same remap scc.html uses). Company_Accreditations is the third call
     // and the same shape as Company_Capabilities.
     const [cos, caps, accs] = await Promise.all([
-      supFetchAll(token, 'Companies', 'Title,field_1,field_2,field_3,field_6,field_19,lat,lng'),
+      supFetchAll(token, 'Companies', 'Title,field_1,field_2,field_3,field_6,F4NStatus,F4NExpiryDate,lat,lng'),
       supFetchAll(token, 'Company_Capabilities', 'CompanyID_Ref,CapabilityName_Ref'),
       supFetchAll(token, 'Company_Accreditations', 'CompanyID_Ref,AccreditationName_Ref')
     ]);
@@ -1367,7 +1415,8 @@ async function supSignInAndLoad() {
       if (!id) return;
       SUP_CO[id] = { name: c.Title || '', town: (c.field_2 || '').trim(),
                      county: (c.field_3 || '').trim(),
-                     url: c.field_6 || '', f4n: String(c.field_19 || '').toLowerCase() === 'yes',
+                     url: c.field_6 || '',
+                     f4nStatus: (c.F4NStatus || '').trim(), f4nExpiry: c.F4NExpiryDate || '',
                      lat: parseFloat(c.lat), lng: parseFloat(c.lng) };
     });
     SUP_BY_CAP = {}; SUP_CAPS_BY_CO = {}; SUP_ACC_BY_CO = {};
@@ -1395,7 +1444,7 @@ async function supSignInAndLoad() {
     Object.keys(SUP_CAPS_BY_CO).forEach(k => SUP_CAPS_BY_CO[k].sort());
     Object.keys(SUP_ACC_BY_CO).forEach(k => SUP_ACC_BY_CO[k].sort());
     try {
-      sessionStorage.setItem('dm5_sup_v2', JSON.stringify({
+      sessionStorage.setItem('dm5_sup_v3', JSON.stringify({
         byCap: SUP_BY_CAP, co: SUP_CO, capsByCo: SUP_CAPS_BY_CO, accByCo: SUP_ACC_BY_CO
       }));
     } catch (e) { /* too big for the quota — in-memory only */ }
@@ -1494,7 +1543,7 @@ function supExport(item) {
     const row = [item, c.name, c.id, c.town, c.url,
       c.scrl ? 'Assessed (SCRL)' : 'Capability match', c.via,
       c.scrl ? c.scrl.c : '', c.scrl ? c.scrl.r : ''];
-    if (SHOW_F4N) row.splice(5, 0, c.f4n ? 'Yes' : '');
+    if (SHOW_F4N) row.splice(5, 0, supF4nDetail(c) === '—' ? '' : supF4nDetail(c));
     rows.push(row);
   });
   const csv = rows.map(r2 => r2.map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(',')).join('\r\n');
@@ -1620,7 +1669,8 @@ function supBuildCards(rows) {
       '<div class="sup-card-sub">' + escH(c.town || 'Location not recorded') + '</div>' +
       '<div class="sup-card-tags">' +
         '<span class="sup-chip ' + (c.assessed ? 'acc">Assessed &middot; SCRL' : 'gen">Capability match') + '</span>' +
-        (SHOW_F4N && c.f4n ? '<span class="sup-chip f4n">F4N</span>' : '') +
+        (SHOW_F4N && supF4n(c).state
+          ? '<span class="sup-chip ' + supF4n(c).cls + '">' + supF4n(c).label + '</span>' : '') +
         (nopin ? '<span class="sup-chip nopin">No map pin</span>' : '') +
       '</div>' +
       '<div class="sup-card-via">' + (c.scrl
@@ -1709,7 +1759,7 @@ function supOpenCoCard(id) {
       ? 'None — no usable coordinates in the vault'
       : escH(Number(c.lat).toFixed(4) + ', ' + Number(c.lng).toFixed(4)))
   ];
-  if (SHOW_F4N) fields.push(field('F4N', c.f4n ? 'Yes' : '—'));
+  if (SHOW_F4N) fields.push(field('F4N', escH(supF4nDetail(c))));
 
   let h = '<div class="sup-co-grid">' + fields.join('') + '</div>';
 
