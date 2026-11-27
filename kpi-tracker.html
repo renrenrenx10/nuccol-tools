@@ -1,0 +1,3012 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KPI Tracker — NucCol</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- ═══════════════════════════════════════════════════════════
+     NucCol KPI Tracker — PROTOTYPE
+     Brand tokens and component classes copied verbatim from
+     nuclearready/nr-brand.css so this can be switched to a
+     <link rel="stylesheet" href="nr-brand.css"> once it lives
+     alongside the other pages. Nothing here overrides a token.
+
+     Prototype only: no auth, no backend, no persistence. State
+     lasts the session. Data is synthetic — one demo company and
+     a cohort of 12 generated from a fixed seed so the figures
+     are stable between reloads.
+     ═══════════════════════════════════════════════════════════ -->
+<style>
+:root {
+  --navy:      #0a1628;
+  --navy2:     #0e2040;
+  --cyan:      #29b6e8;
+  --cyan2:     #1a96c8;
+  --light:     #e8eef6;
+  --white:     #fff;
+  --grey:      #8a9bb0;
+  --border:    rgba(41,182,232,0.18);
+  --border-strong: rgba(41,182,232,0.35);
+  --wash:      #f4f7fb;
+  --wash2:     #f8fafd;
+  --ink:       #1a1a2e;
+  --ink-mute:  #5c6f85;
+  --ink-soft:  #2b3b4f;
+  --rule:      #eef3f8;
+  --rule2:     #dfe7f0;
+  --line:      #c8d6e4;
+  --chip-bg:   #eaf5fc;
+  --chip-ink:  #15314d;
+  --on-navy:   rgba(232,238,246,0.78);
+  --r:         4px;
+  --pill:      999px;
+  --gut:       56px;
+  --maxw:      1360px;
+
+  /* Chart roles. Emphasis form: one hue for the company, a dark
+     neutral for the cohort. Validated for separation — ΔE 29.9
+     normal vision, 28.6 deutan. */
+  --series-you:   #1a96c8;
+  --series-bench: #2b3b4f;
+  --series-mute:  #8a9bb0;
+  --good:  #1b8a4b;
+  --warn:  #b26a00;
+  --bad:   #b3261e;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  font-family: 'Barlow', system-ui, -apple-system, sans-serif;
+  font-size: 15px; background: var(--wash); color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--cyan2); }
+a:hover { color: var(--navy); }
+:focus-visible { outline: 3px solid var(--cyan); outline-offset: 2px; }
+.sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+
+.band       { padding: 46px var(--gut); }
+.band-dark  { background: var(--navy); color: var(--white); }
+.band-light { background: var(--wash); color: var(--ink); }
+.band-white { background: var(--white); color: var(--ink); }
+.band-tight { padding: 26px var(--gut); }
+.band-grid {
+  background-image:
+    linear-gradient(rgba(41,182,232,0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(41,182,232,0.055) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+.inner { max-width: var(--maxw); margin: 0 auto; }
+
+.topbar {
+  display:flex; flex-wrap:wrap; align-items:center; gap:15px;
+  padding:11px var(--gut); background:var(--navy);
+  border-bottom:1px solid var(--border);
+}
+.topbar-logo { display:flex; align-items:center; gap:9px; text-decoration:none; }
+.topbar-mark {
+  width:27px; height:27px; border-radius:var(--r);
+  background:var(--cyan); color:var(--navy);
+  font-family:'Barlow Condensed',sans-serif; font-size:15px; font-weight:800;
+  display:flex; align-items:center; justify-content:center;
+}
+.topbar-title {
+  font-family:'Barlow Condensed',sans-serif; font-size:12px; font-weight:600;
+  letter-spacing:0.08em; text-transform:uppercase; color:rgba(232,238,246,0.7);
+}
+.topbar-pipe { width:1px; height:22px; background:var(--border-strong); }
+.topbar-spacer { flex:1 1 auto; }
+.nav-link {
+  font-size:13.5px; font-weight:500; text-decoration:none;
+  color:var(--light); padding:9px 2px; background:none; border:0;
+  cursor:pointer; font-family:inherit;
+}
+.nav-link:hover { color:var(--white); }
+.nav-link.is-current { color:var(--cyan); }
+.topbar-co {
+  font-size:13px; color:var(--grey);
+  display:flex; align-items:center; gap:8px;
+}
+.topbar-co strong { color:var(--light); font-weight:600; }
+
+.btn {
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  font-family:'Barlow',sans-serif; font-size:14.5px; font-weight:600;
+  padding:11px 20px; min-height:40px; border-radius:var(--r);
+  border:1px solid transparent; text-decoration:none; cursor:pointer; white-space:nowrap;
+}
+.btn-sm { font-size:13.5px; padding:9px 15px; min-height:36px; }
+.btn-xs { font-size:12.5px; padding:6px 11px; min-height:30px; }
+.btn-primary { background:var(--cyan); color:var(--navy); }
+.btn-primary:hover { background:#4fc4ef; }
+.btn-ghost { background:transparent; color:var(--light); border-color:var(--border-strong); }
+.btn-ghost:hover { color:var(--white); border-color:var(--cyan); }
+.btn-outline { background:var(--white); color:var(--navy); border-color:var(--navy); }
+.btn-outline:hover { background:var(--navy); color:var(--white); }
+.btn[disabled] { opacity:.45; cursor:not-allowed; }
+
+.eyebrow { display:flex; flex-wrap:wrap; align-items:center; gap:11px; margin-bottom:12px; }
+.eyebrow::before { content:""; width:24px; height:2px; background:var(--cyan); flex-shrink:0; }
+.eyebrow-text {
+  font-size:11.5px; font-weight:600; letter-spacing:0.16em;
+  text-transform:uppercase; color:var(--cyan);
+}
+.band-light .eyebrow::before, .band-white .eyebrow::before { background:var(--cyan2); }
+.band-light .eyebrow-text, .band-white .eyebrow-text { color:var(--cyan2); }
+
+h1,h2,h3,.h1,.h2,.h3 {
+  font-family:'Barlow Condensed',sans-serif; font-weight:800;
+  text-transform:uppercase; letter-spacing:-0.015em; line-height:1; margin:0;
+}
+h1,.h1 { font-size:clamp(34px,4.2vw,58px); line-height:0.98; letter-spacing:-0.02em; }
+h2,.h2 { font-size:clamp(25px,2.6vw,36px); }
+h3,.h3 { font-size:clamp(18px,1.6vw,22px); letter-spacing:0.005em; line-height:1.12; }
+.accent { color:var(--cyan); }
+.band-light .accent, .band-white .accent { color:var(--cyan2); }
+.lede { font-size:15.5px; line-height:1.6; max-width:66ch; margin:14px 0 0; }
+.band-dark .lede { color:var(--on-navy); }
+.band-light .lede, .band-white .lede { color:var(--ink-mute); }
+
+.card { background:var(--white); border:1px solid var(--border); border-radius:var(--r); }
+.card-accent { border-top:3px solid var(--cyan); }
+.note {
+  background:var(--white); border:1px solid var(--border-strong);
+  border-left:4px solid var(--cyan); border-radius:var(--r); padding:16px 20px;
+}
+.pill {
+  display:inline-block; font-size:12px; line-height:1.3; font-weight:500;
+  padding:4px 10px; border-radius:var(--pill);
+  background:var(--chip-bg); border:1px solid var(--border-strong); color:var(--chip-ink);
+}
+.pill-core { background:var(--cyan); border-color:var(--cyan); color:var(--navy); font-weight:600; }
+.pill-row { display:flex; flex-wrap:wrap; gap:5px; }
+
+.field {
+  width:100%; font-family:'Barlow',sans-serif; font-size:15px;
+  padding:11px 14px; min-height:40px; border-radius:var(--r);
+  border:1px solid var(--line); background:var(--white); color:var(--ink);
+}
+.field-num { font-variant-numeric:tabular-nums; text-align:right; }
+.check { display:flex; gap:8px; align-items:flex-start; padding:3px 0; }
+.check input { width:14px; height:14px; margin:2px 0 0; accent-color:var(--cyan); flex-shrink:0; }
+.check label { font-size:13px; line-height:1.35; color:var(--ink-soft); cursor:pointer; }
+.rail-title {
+  font-family:'Barlow Condensed',sans-serif; font-size:12.5px; font-weight:700;
+  letter-spacing:0.08em; text-transform:uppercase; color:var(--navy);
+}
+.cap-label {
+  font-family:'Barlow Condensed',sans-serif; font-size:12.5px; font-weight:700;
+  letter-spacing:0.08em; text-transform:uppercase; color:var(--ink-mute); margin-bottom:9px;
+}
+.footer { background:var(--navy); color:var(--light); padding:34px var(--gut) 24px; }
+.footer-bottom { border-top:1px solid var(--border); padding-top:16px; }
+.disclaimer { font-size:12px; line-height:1.6; color:var(--grey); max-width:112ch; }
+.disclaimer strong { color:var(--light); }
+
+/* ── Views ───────────────────────────────────────────────── */
+.view { display:none; }
+.view.is-active { display:block; }
+
+/* ── Onboarding ──────────────────────────────────────────── */
+.ob-grid { display:flex; flex-wrap:wrap; gap:22px; align-items:flex-start; margin-top:24px; }
+.ob-main { flex:999 1 560px; min-width:0; }
+.ob-side { flex:1 1 300px; min-width:0; align-self:stretch; }
+.ob-side-inner { }
+.fam { padding:18px 20px; margin-bottom:14px; }
+.fam-head { display:flex; flex-wrap:wrap; align-items:baseline; gap:10px; margin-bottom:4px; }
+.fam-cad { font-size:12px; color:var(--ink-mute); }
+.mrow {
+  display:flex; gap:11px; align-items:flex-start;
+  padding:10px 0; border-top:1px solid var(--rule);
+}
+.mrow:first-of-type { border-top:0; }
+.mrow input[type=checkbox] { width:15px; height:15px; margin:3px 0 0; accent-color:var(--cyan); flex-shrink:0; }
+.mrow-body { flex:1 1 auto; min-width:0; }
+.mrow-name { font-size:14.5px; font-weight:600; color:var(--navy); cursor:pointer; }
+.mrow-def { font-size:12.5px; line-height:1.5; color:var(--ink-mute); margin-top:2px; }
+.mrow-def code {
+  font-family:'Barlow',sans-serif; font-weight:600;
+  color:var(--ink-soft); background:var(--wash2);
+  padding:1px 5px; border-radius:3px; border:1px solid var(--rule2);
+}
+.sum-line {
+  display:flex; justify-content:space-between; gap:12px;
+  padding:8px 0; border-top:1px solid var(--rule); font-size:13.5px;
+}
+.sum-line:first-of-type { border-top:0; }
+.sum-line dt { color:var(--ink-mute); }
+.sum-line dd { margin:0; font-weight:600; color:var(--navy); font-variant-numeric:tabular-nums; }
+.sum-warn { font-size:12.5px; line-height:1.5; color:var(--warn); margin-top:10px; }
+
+/* ── Entry form ──────────────────────────────────────────── */
+.entry-wrap { display:flex; flex-wrap:wrap; gap:22px; align-items:flex-start; margin-top:22px; }
+.entry-main { flex:999 1 520px; min-width:0; }
+.entry-side { flex:1 1 320px; min-width:0; align-self:stretch; }
+.inp-group { padding:16px 20px; margin-bottom:14px; }
+.inp-row {
+  display:flex; flex-wrap:wrap; gap:12px; align-items:center;
+  padding:9px 0; border-top:1px solid var(--rule);
+}
+.inp-row:first-of-type { border-top:0; }
+.inp-label { flex:999 1 240px; min-width:0; font-size:14px; color:var(--ink-soft); }
+.inp-label small { display:block; font-size:12px; color:var(--ink-mute); margin-top:1px; }
+.inp-cell { flex:0 0 118px; }
+.inp-prev {
+  flex:0 0 86px; font-size:12.5px; color:var(--ink-mute);
+  text-align:right; font-variant-numeric:tabular-nums;
+}
+.live { padding:16px 20px; }
+.live-row {
+  display:flex; justify-content:space-between; align-items:baseline; gap:12px;
+  padding:11px 0; border-top:1px solid var(--rule);
+}
+.live-row:first-of-type { border-top:0; }
+.live-k { font-size:13.5px; color:var(--ink-mute); }
+.live-k small { display:block; font-size:12px; color:var(--line); }
+.live-v {
+  font-family:'Barlow Condensed',sans-serif; font-size:26px; font-weight:800;
+  line-height:1; color:var(--cyan2); white-space:nowrap;
+}
+.live-v.is-empty { color:var(--line); }
+.live-alt { font-size:12px; color:var(--ink-mute); text-align:right; margin-top:3px; }
+
+/* ── Dashboard ───────────────────────────────────────────── */
+.dash-bar {
+  display:flex; flex-wrap:wrap; gap:14px; align-items:center;
+  padding:14px var(--gut); background:var(--white);
+  border-bottom:1px solid var(--rule2);
+}
+.dash-bar-inner {
+  max-width:var(--maxw); margin:0 auto; width:100%;
+  display:flex; flex-wrap:wrap; gap:14px; align-items:center;
+}
+.seg { display:flex; border:1px solid var(--line); border-radius:var(--r); overflow:hidden; }
+.seg button {
+  font-family:'Barlow',sans-serif; font-size:13px; font-weight:600;
+  padding:8px 13px; min-height:34px; border:0; background:var(--white);
+  color:var(--ink-mute); cursor:pointer; border-left:1px solid var(--line);
+}
+.seg button:first-child { border-left:0; }
+.seg button:hover { background:var(--wash2); color:var(--navy); }
+.seg button.is-on { background:var(--navy); color:var(--white); }
+.seg-label {
+  font-family:'Barlow Condensed',sans-serif; font-size:12px; font-weight:700;
+  letter-spacing:0.08em; text-transform:uppercase; color:var(--ink-mute);
+  align-self:center; margin-right:-6px;
+}
+
+.tiles { display:grid; grid-template-columns:repeat(auto-fill,minmax(310px,1fr)); gap:16px; }
+.tile { padding:16px 18px 14px; display:flex; flex-direction:column; }
+.tile-wide { grid-column:span 2; }
+@media (max-width:760px) { .tile-wide { grid-column:span 1; } }
+.tile-head { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+.tile-name {
+  font-family:'Barlow Condensed',sans-serif; font-size:15px; font-weight:800;
+  text-transform:uppercase; letter-spacing:0.01em; color:var(--navy); line-height:1.1;
+}
+.tile-cad { font-size:11.5px; color:var(--ink-mute); margin-top:2px; }
+.tile-fig { display:flex; align-items:flex-end; gap:12px; margin:12px 0 2px; }
+.tile-v {
+  font-family:'Barlow Condensed',sans-serif; font-size:42px; font-weight:800;
+  line-height:0.9; color:var(--cyan2); letter-spacing:-0.01em;
+}
+.tile-unit { font-size:13px; color:var(--ink-mute); padding-bottom:5px; }
+.tile-delta { font-size:13px; font-weight:600; padding-bottom:6px; white-space:nowrap; }
+.tile-delta.up-good, .tile-delta.down-good { color:var(--good); }
+.tile-delta.up-bad, .tile-delta.down-bad { color:var(--bad); }
+.tile-delta.flat { color:var(--ink-mute); }
+.tile-alt { font-size:12.5px; color:var(--ink-mute); margin-bottom:10px; }
+.tile-plot { margin:4px 0 10px; }
+.tile-plot svg { display:block; width:100%; height:auto; overflow:visible; }
+.d-card svg { display:block; width:100%; height:auto; overflow:visible; }
+.tile-foot { margin-top:auto; padding-top:10px; border-top:1px solid var(--rule); }
+.tile-tools { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+.tbtn {
+  font-family:'Barlow',sans-serif; font-size:11.5px; font-weight:600;
+  padding:4px 9px; min-height:26px; border:1px solid var(--line);
+  background:var(--white); color:var(--ink-mute); border-radius:var(--r); cursor:pointer;
+}
+.tbtn:hover { border-color:var(--cyan2); color:var(--navy); }
+.tbtn.is-on { background:var(--navy); border-color:var(--navy); color:var(--white); }
+.tbtn-icon { margin-left:auto; }
+
+.bench { font-size:12.5px; line-height:1.5; color:var(--ink-mute); }
+.bench strong { color:var(--navy); font-weight:600; }
+.bench-none { color:var(--warn); }
+.bench-bar { margin:7px 0 2px; height:22px; position:relative; }
+.legend { display:flex; gap:14px; flex-wrap:wrap; font-size:12px; color:var(--ink-mute); margin-top:2px; }
+.legend span { display:inline-flex; align-items:center; gap:6px; }
+.legend i { width:14px; height:3px; border-radius:2px; display:inline-block; }
+
+.tip {
+  position:fixed; z-index:50; pointer-events:none; opacity:0;
+  background:var(--navy); color:var(--light); border:1px solid var(--border-strong);
+  border-radius:var(--r); padding:7px 10px; font-size:12.5px; line-height:1.45;
+  box-shadow:0 4px 14px rgba(10,22,40,.22); max-width:230px; transition:opacity .08s;
+}
+.tip.is-on { opacity:1; }
+.tip b { color:var(--white); font-weight:600; }
+.tip-num { font-variant-numeric:tabular-nums; }
+
+.toast {
+  position:fixed; z-index:200; left:50%; bottom:26px; transform:translate(-50%,14px);
+  background:var(--navy); color:var(--light); border:1px solid var(--border-strong);
+  border-left:4px solid var(--cyan); border-radius:var(--r);
+  padding:12px 18px; font-size:14px; line-height:1.45; max-width:min(460px,88vw);
+  box-shadow:0 8px 26px rgba(10,22,40,.3);
+  opacity:0; pointer-events:none; transition:opacity .16s, transform .16s;
+}
+.toast.is-on { opacity:1; transform:translate(-50%,0); }
+
+/* ── Targets ─────────────────────────────────────────────── */
+.tile-tgt {
+  display:flex; align-items:center; gap:7px;
+  font-size:12.5px; color:var(--ink-soft); margin:0 0 10px;
+}
+.tgt-pip { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.tgt-pip.is-ok  { background:var(--good); }
+.tgt-pip.is-off { background:var(--bad); }
+/* Unit under the box, not beside it — "per 100k hrs" beside a
+   number box squeezes it until the target itself is clipped. */
+.mrow-tgt { flex:0 0 96px; display:flex; flex-direction:column; gap:3px; }
+.mrow-tgt .tgt-in { padding:7px 9px; min-height:32px; font-size:13.5px; width:100%; }
+.tgt-unit {
+  font-size:10.5px; line-height:1.25; color:var(--ink-mute);
+  text-align:right; word-break:break-word;
+}
+.fam-tgt-head {
+  margin-left:auto; font-size:11px; font-weight:600; letter-spacing:0.06em;
+  text-transform:uppercase; color:var(--ink-mute);
+}
+.scard-tgt { font-size:clamp(11px,1vw,14px); margin-top:3px; }
+.scard-tgt.is-ok  { color:#6ee7a8; }
+.scard-tgt.is-off { color:#ff9a90; }
+
+/* ── As-of strip ─────────────────────────────────────────── */
+.asof {
+  display:flex; flex-wrap:wrap; align-items:center; gap:13px;
+  padding:9px var(--gut); background:var(--navy2);
+  border-bottom:1px solid var(--border); font-size:12.5px; color:var(--on-navy);
+}
+.asof strong { color:var(--white); font-weight:600; }
+.asof .dot { width:7px; height:7px; border-radius:50%; display:inline-block; }
+.asof .sep { color:var(--border-strong); }
+
+/* ── Focus and rail ──────────────────────────────────────── */
+.fr { display:flex; flex-wrap:wrap; align-items:flex-start; }
+.fr-rail {
+  flex:1 1 290px; min-width:0; max-width:360px; align-self:stretch;
+  background:var(--white); border-right:1px solid var(--rule2); padding:15px 0 26px;
+}
+.fr-rail-head { padding:0 17px 11px; }
+.fr-rail-note { font-size:12px; color:var(--ink-mute); margin-top:2px; }
+.fr-gh {
+  display:flex; align-items:baseline; gap:8px; padding:10px 17px 4px;
+  border-top:1px solid var(--rule);
+}
+.fr-gh-n {
+  font-family:'Barlow Condensed',sans-serif; font-size:11.5px; font-weight:700;
+  letter-spacing:0.1em; text-transform:uppercase; color:var(--grey);
+}
+.fr-gh-w { margin-left:auto; font-size:11px; color:var(--grey); }
+.fr-it {
+  width:100%; display:flex; align-items:center; gap:9px; padding:7px 17px;
+  border:0; border-left:3px solid transparent; background:transparent;
+  cursor:pointer; font-family:'Barlow',sans-serif; text-align:left;
+}
+.fr-it:hover { background:var(--wash2); }
+.fr-it.is-on { border-left-color:var(--cyan); background:#f4f9fd; }
+.fr-it-n { flex:1 1 auto; min-width:0; font-size:13.5px; color:var(--navy); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.fr-it.is-on .fr-it-n { font-weight:700; }
+.fr-it-v { font-family:'Barlow Condensed',sans-serif; font-size:17px; font-weight:800; color:var(--ink-soft); }
+.fr-it.is-on .fr-it-v { color:var(--cyan2); }
+.fr-it-l { font-size:10.5px; color:var(--warn); white-space:nowrap; }
+.fr-main { flex:999 1 580px; min-width:0; padding:24px var(--gut) 34px; }
+
+.d-head { display:flex; flex-wrap:wrap; align-items:baseline; gap:12px; }
+.d-meta { display:flex; flex-wrap:wrap; align-items:center; gap:9px; margin-top:7px; }
+.d-per {
+  font-family:'Barlow Condensed',sans-serif; font-size:12px; font-weight:700;
+  letter-spacing:0.07em; text-transform:uppercase; color:var(--chip-ink);
+  background:var(--chip-bg); border:1px solid var(--border-strong);
+  border-radius:var(--pill); padding:3px 10px;
+}
+.d-sub { font-size:12.5px; color:var(--ink-mute); }
+.d-def { font-size:14.5px; line-height:1.6; color:var(--ink-soft); margin:11px 0 0; max-width:78ch; }
+.d-fig { display:flex; flex-wrap:wrap; gap:34px; align-items:flex-end; margin:20px 0 2px; }
+.d-v {
+  font-family:'Barlow Condensed',sans-serif; font-size:80px; font-weight:800;
+  line-height:0.84; color:var(--cyan2); letter-spacing:-0.02em;
+}
+.d-unit { font-size:13.5px; color:var(--ink-mute); margin-top:7px; }
+.d-side { display:flex; flex-direction:column; gap:9px; padding-bottom:6px; font-size:14px; }
+.d-card { background:var(--white); border:1px solid var(--border); border-radius:var(--r); padding:17px 19px 13px; margin-top:16px; }
+.d-cols { display:flex; flex-wrap:wrap; gap:15px; margin-top:15px; }
+.d-col { flex:1 1 270px; min-width:0; background:var(--white); border:1px solid var(--border); border-radius:var(--r); padding:15px 17px; }
+.d-kv { display:flex; justify-content:space-between; gap:12px; padding:7px 0; border-top:1px solid var(--rule); font-size:13.5px; }
+.d-kv dt { color:var(--ink-mute); margin:0; }
+.d-kv dd { margin:0; color:var(--navy); font-weight:600; font-variant-numeric:tabular-nums; }
+.d-trail { margin-top:11px; padding-top:10px; border-top:1px solid var(--rule); font-size:12px; line-height:1.6; color:var(--ink-mute); }
+.d-trail strong { color:var(--ink-soft); font-weight:600; }
+.d-warn { color:var(--warn); }
+
+/* ── View builder ────────────────────────────────────────── */
+.b-name {
+  font-family:'Barlow Condensed',sans-serif; font-size:30px; font-weight:800;
+  text-transform:uppercase; color:var(--white); min-height:50px;
+  background:rgba(255,255,255,0.06); border-color:var(--border-strong);
+}
+#bShare { width:100%; }
+#bShare button { flex:1 1 auto; }
+.b-grid { display:flex; flex-wrap:wrap; gap:15px; align-items:flex-start; }
+.b-col { flex:1 1 300px; min-width:0; }
+.b-col:nth-child(2) { flex:999 1 400px; }
+.b-side { flex:1 1 280px; min-width:0; max-width:340px; display:flex; flex-direction:column; gap:13px; }
+.b-col-head { padding:13px 17px 9px; border-bottom:1px solid var(--rule2); }
+.b-sub { font-size:12px; line-height:1.5; color:var(--ink-mute); margin-top:2px; }
+.b-scroll { max-height:520px; overflow-y:auto; }
+.b-fam {
+  padding:9px 17px 4px; font-family:'Barlow Condensed',sans-serif; font-size:11px;
+  font-weight:700; letter-spacing:0.1em; text-transform:uppercase;
+  color:var(--grey); background:var(--wash2); border-top:1px solid var(--rule);
+}
+.b-pk { display:flex; align-items:center; gap:10px; padding:7px 17px; }
+.b-pk:hover { background:var(--wash2); }
+.b-pk input { width:15px; height:15px; accent-color:var(--cyan); flex-shrink:0; margin:0; }
+.b-pk label { flex:1 1 auto; min-width:0; font-size:13.5px; color:var(--ink-soft); cursor:pointer; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.b-pk-v { font-family:'Barlow Condensed',sans-serif; font-size:15px; font-weight:800; color:var(--ink-mute); }
+.b-row { display:flex; flex-wrap:wrap; align-items:center; gap:10px; padding:9px 17px; border-top:1px solid var(--rule); }
+.b-grip { color:var(--line); font-size:15px; cursor:grab; }
+.b-row-n { flex:1 1 150px; min-width:0; font-size:14px; font-weight:600; color:var(--navy); }
+.b-row-f { font-size:11.5px; color:var(--ink-mute); }
+.b-move { display:flex; gap:3px; }
+.b-move button {
+  font-size:12px; width:26px; min-height:26px; border:1px solid var(--line);
+  background:var(--white); color:var(--ink-mute); border-radius:var(--r); cursor:pointer;
+}
+.b-move button:hover { border-color:var(--cyan2); color:var(--navy); }
+.b-empty { padding:22px 17px; font-size:13.5px; color:var(--ink-mute); }
+.b-opts { padding:13px 17px 15px; border-top:1px solid var(--rule2); background:var(--wash2); }
+.b-out { padding:15px 17px 16px; }
+.b-btn { width:100%; justify-content:space-between; margin-bottom:8px; }
+.b-btn:last-child { margin-bottom:0; }
+.b-meta { font-size:12px; font-weight:500; color:var(--ink-mute); }
+.btn-primary .b-meta { color:var(--navy); opacity:0.7; }
+.b-screen {
+  background:var(--navy2); border:1px solid var(--border-strong);
+  border-radius:var(--r); padding:15px 17px 16px;
+}
+.b-screen-p { font-size:12.5px; line-height:1.55; color:var(--on-navy); margin:0 0 11px; }
+.b-link {
+  display:flex; gap:8px; align-items:center; background:rgba(255,255,255,0.06);
+  border:1px solid var(--border-strong); border-radius:var(--r);
+  padding:7px 10px; margin-bottom:10px;
+}
+.b-link span {
+  flex:1 1 auto; min-width:0; font-size:12px; color:var(--grey);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-variant-numeric:tabular-nums;
+}
+.pill-btn {
+  font-family:'Barlow',sans-serif; font-size:12.5px; font-weight:600;
+  padding:6px 12px; min-height:32px; border-radius:var(--pill); cursor:pointer;
+  border:1px solid var(--rule2); background:var(--white); color:var(--ink-mute);
+}
+.pill-btn.is-on { border-color:var(--cyan); background:var(--chip-bg); color:var(--chip-ink); }
+.b-screen .pill-btn { background:transparent; border-color:var(--border-strong); color:var(--grey); }
+.b-screen .pill-btn.is-on { background:var(--cyan); border-color:var(--cyan); color:var(--navy); }
+
+.sheet { display:none; padding:24px var(--gut) 34px; }
+.sheet.is-on { display:block; }
+.sheet .tiles { margin-top:4px; }
+.sheet-note { font-size:12.5px; line-height:1.6; color:var(--ink-mute); margin:18px 0 0; max-width:94ch; }
+
+/* ── Sharing controls ────────────────────────────────────── */
+.share-card { padding:17px 19px 18px; }
+.share-intro { font-size:12px; line-height:1.5; color:var(--ink-mute); margin:0 0 4px; }
+.share-row { display:flex; gap:12px; align-items:flex-start; padding:13px 0 0; border-top:1px solid var(--rule); margin-top:12px; }
+.share-body { flex:1 1 auto; min-width:0; }
+.share-t {
+  display:block; font-family:'Barlow Condensed',sans-serif; font-size:15px; font-weight:800;
+  text-transform:uppercase; color:var(--navy); line-height:1.15; cursor:pointer;
+}
+.share-p { font-size:12.5px; line-height:1.55; color:var(--ink-soft); margin:5px 0 0; }
+.share-state {
+  font-size:11px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase;
+  padding:3px 9px; border-radius:var(--pill); margin-top:9px; display:inline-block;
+}
+.share-on  { background:#e6f4ec; border:1px solid #9ed4b6; color:#14663a; }
+.share-off { background:var(--wash2); border:1px solid var(--line); color:var(--ink-mute); }
+
+/* A switch that is a real checkbox underneath. */
+.sw { position:relative; flex:0 0 42px; height:24px; margin-top:1px; }
+.sw input {
+  position:absolute; inset:0; width:100%; height:100%; margin:0;
+  opacity:0; cursor:pointer; z-index:2;
+}
+.sw-track {
+  position:absolute; inset:0; border-radius:999px; background:var(--line);
+  transition:background .14s;
+}
+.sw-knob {
+  position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%;
+  background:var(--white); transition:transform .14s;
+  box-shadow:0 1px 3px rgba(10,22,40,.3);
+}
+.sw input:checked ~ .sw-track { background:var(--cyan2); }
+.sw input:checked ~ .sw-knob { transform:translateX(18px); }
+.sw input:focus-visible ~ .sw-track { outline:3px solid var(--cyan); outline-offset:2px; }
+
+/* ── How to use ──────────────────────────────────────────── */
+.steps { display:flex; flex-direction:column; gap:14px; margin-top:22px; }
+.step { display:flex; flex-wrap:wrap; gap:20px; padding:20px 24px; align-items:flex-start; }
+.step-n {
+  flex:0 0 52px; font-family:'Barlow Condensed',sans-serif; font-size:46px;
+  font-weight:800; line-height:0.9; color:var(--cyan2); letter-spacing:-0.02em;
+}
+.step-b { flex:999 1 420px; min-width:0; }
+.step-h { display:flex; flex-wrap:wrap; align-items:baseline; gap:11px; }
+.step-t {
+  font-family:'Barlow Condensed',sans-serif; font-size:21px; font-weight:800;
+  text-transform:uppercase; letter-spacing:0.005em; color:var(--navy);
+}
+.step-when {
+  font-size:11.5px; font-weight:600; letter-spacing:0.07em; text-transform:uppercase;
+  color:var(--chip-ink); background:var(--chip-bg);
+  border:1px solid var(--border-strong); border-radius:var(--pill); padding:3px 10px;
+}
+.step-p { font-size:14.5px; line-height:1.65; color:var(--ink-soft); margin:8px 0 0; max-width:74ch; }
+.step-p + .step-p { margin-top:9px; }
+.step-side { flex:0 1 230px; min-width:0; }
+.step-eg {
+  background:var(--wash2); border:1px solid var(--rule2); border-radius:var(--r);
+  padding:11px 13px; font-size:12.5px; line-height:1.55; color:var(--ink-mute);
+}
+.step-eg strong { color:var(--ink-soft); font-weight:600; display:block; margin-bottom:3px; }
+.two-up { display:flex; flex-wrap:wrap; gap:15px; margin-top:16px; }
+.two-up > * { flex:1 1 340px; min-width:0; }
+.yn { padding:18px 22px 20px; }
+.yn h3 { margin:0 0 11px; }
+.yn li { font-size:14px; line-height:1.6; color:var(--ink-soft); margin-bottom:8px; }
+.yn ul { margin:0; padding-left:19px; }
+.yn-no { border-top:3px solid var(--line); }
+.qa { padding:4px 0 0; }
+.qa-i { padding:14px 0; border-top:1px solid var(--rule); }
+.qa-q { font-size:14.5px; font-weight:600; color:var(--navy); }
+.qa-a { font-size:14px; line-height:1.6; color:var(--ink-soft); margin:5px 0 0; max-width:82ch; }
+
+/* ── Screen mode ─────────────────────────────────────────── */
+.screen {
+  position:fixed; inset:0; z-index:100; background:var(--navy);
+  display:none; flex-direction:column; padding:3vh 3vw;
+}
+.screen.is-active { display:flex; }
+.screen-head {
+  display:flex; justify-content:space-between; align-items:center;
+  gap:20px; flex-wrap:wrap; flex:0 0 auto;
+}
+.screen-co {
+  font-family:'Barlow Condensed',sans-serif; font-size:clamp(20px,2.4vw,34px);
+  font-weight:800; text-transform:uppercase; color:var(--white); line-height:1;
+}
+.screen-per { font-size:clamp(12px,1.1vw,16px); color:var(--grey); margin-top:5px; }
+.screen-body { flex:1 1 auto; display:flex; align-items:center; justify-content:center; }
+.screen-grid {
+  display:grid; gap:clamp(14px,2vw,32px); width:100%;
+  grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));
+}
+.scard {
+  border:1px solid var(--border-strong); border-radius:var(--r);
+  background:rgba(255,255,255,0.035); padding:clamp(16px,2vw,30px);
+  display:flex; flex-direction:column; gap:6px;
+}
+.scard-k {
+  font-family:'Barlow Condensed',sans-serif; font-size:clamp(13px,1.2vw,19px);
+  font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--grey);
+}
+.scard-v {
+  font-family:'Barlow Condensed',sans-serif; font-size:clamp(54px,7.5vw,120px);
+  font-weight:800; line-height:0.86; color:var(--cyan); letter-spacing:-0.02em;
+}
+.scard-sub { font-size:clamp(12px,1.1vw,16px); color:var(--on-navy); }
+.scard-spark { margin-top:auto; padding-top:10px; }
+.scard-spark svg { display:block; width:100%; height:auto; }
+.screen-foot {
+  flex:0 0 auto; display:flex; justify-content:space-between;
+  align-items:center; gap:16px; flex-wrap:wrap;
+  font-size:clamp(11px,1vw,14px); color:var(--grey);
+}
+.screen-dots { display:flex; gap:7px; }
+.sdot { width:8px; height:8px; border-radius:50%; background:var(--border-strong); }
+.sdot.is-on { background:var(--cyan); }
+
+/* ── Print ───────────────────────────────────────────────── */
+@media print {
+  @page { size:A4 portrait; margin:12mm; }
+  html, body { background:var(--white); font-size:10.5pt; }
+  .topbar, .dash-bar, .footer, .tile-tools, .no-print, .tip, .screen, .fr { display:none !important; }
+  .sheet { display:block !important; padding:0 !important; }
+  .band { padding:0 !important; }
+  .print-head { display:block !important; margin-bottom:8mm; }
+  .tiles { grid-template-columns:repeat(2,1fr); gap:6mm; }
+  .tile { break-inside:avoid; border:1px solid #c8d6e4 !important; }
+  .tile-wide { grid-column:span 2; }
+  .tile-v { font-size:30pt; color:#1a96c8 !important; }
+  .tgt-pip { border:1px solid #333; print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+  .view:not(.is-active) { display:none !important; }
+  a[href]:after { content:""; }
+}
+.print-head { display:none; }
+.print-head h2 { margin-bottom:4px; }
+.print-head p { font-size:11pt; color:var(--ink-mute); margin:0; }
+
+@media (max-width:900px) {
+  :root { --gut:18px; }
+  .band { padding:34px var(--gut); }
+  .topbar-title, .topbar-pipe { display:none; }
+  .dash-bar { padding:12px var(--gut); }
+}
+@media (prefers-reduced-motion:reduce) {
+  *, *::before, *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar no-print">
+  <a class="topbar-logo" href="#" onclick="return false">
+    <span class="topbar-mark">N</span>
+    <span class="topbar-title">NucCol</span>
+  </a>
+  <span class="topbar-pipe"></span>
+  <span class="topbar-title">KPI Tracker</span>
+  <nav class="topbar-spacer" style="display:flex;gap:18px;justify-content:center">
+    <button class="nav-link" data-go="onboarding">Your metrics</button>
+    <button class="nav-link" data-go="entry">Add this month</button>
+    <button class="nav-link is-current" data-go="dashboard">Dashboard</button>
+    <button class="nav-link" data-go="help">How to use</button>
+  </nav>
+  <span class="topbar-co"><strong id="coName">—</strong> <span class="pill" style="font-size:11px">Prototype</span></span>
+</header>
+
+<!-- ══ ONBOARDING ══════════════════════════════════════════ -->
+<section class="view" id="view-onboarding">
+  <div class="band band-dark band-grid band-tight">
+    <div class="inner">
+      <div class="eyebrow"><span class="eyebrow-text">Step 1 of 2 — one time only</span></div>
+      <h2>Choose what you<br><span class="accent">want to track</span></h2>
+      <p class="lede">Five are already ticked — the ones most companies start with, and the only ones
+        where you will reliably get a comparison against other suppliers. Add anything else you
+        already measure. You enter the raw counts; we do the arithmetic.</p>
+    </div>
+  </div>
+  <div class="band band-light">
+    <div class="inner">
+      <div class="ob-grid">
+        <div class="ob-main">
+          <div id="obFamilies"></div>
+
+        </div>
+        <aside class="ob-side"><div class="ob-side-inner">
+          <div class="note" style="margin-bottom:14px">
+            <div class="rail-title" style="margin-bottom:7px">Your business type</div>
+            <div class="seg" style="margin-bottom:12px">
+              <button data-variant="mfg" class="is-on">Manufacturing</button>
+              <button data-variant="svc">Service</button>
+            </div>
+            <div class="rail-title" style="margin-bottom:7px">You deliver in</div>
+            <div class="seg">
+              <button data-unit="deliveries" class="is-on">Deliveries</button>
+              <button data-unit="orders">Orders</button>
+              <button data-unit="projects">Projects</button>
+            </div>
+            <p style="font-size:12.5px;line-height:1.5;color:var(--ink-mute);margin:12px 0 0">
+              We only compare you against companies that measure the same way.
+            </p>
+          </div>
+          <div class="card card-accent" style="padding:18px 20px;margin-bottom:14px">
+            <div class="rail-title" style="margin-bottom:12px">What this will ask you for</div>
+            <dl id="obSummary" style="margin:0"></dl>
+            <div id="obWarn" class="sum-warn"></div>
+            <button class="btn btn-primary" style="width:100%;margin-top:16px" data-go="entry">
+              Save and continue
+            </button>
+          </div>
+          <div class="card share-card">
+            <div class="rail-title" style="margin-bottom:4px">Who sees your figures</div>
+            <p class="share-intro">Yours to change at any time. Neither affects your own dashboard.</p>
+
+            <div class="share-row">
+              <span class="sw">
+                <input type="checkbox" id="swConsultant" aria-describedby="swcD">
+                <span class="sw-track" aria-hidden="true"></span>
+                <span class="sw-knob" aria-hidden="true"></span>
+              </span>
+              <div class="share-body">
+                <label class="share-t" for="swConsultant">Share with your consultant</label>
+                <p class="share-p" id="swcD"><strong>Byron Bruce</strong> can open your dashboard between
+                  visits, so he arrives knowing what has moved. He never sees your targets.</p>
+                <span class="share-state share-off" id="swcState">Off</span>
+              </div>
+            </div>
+
+            <div class="share-row">
+              <span class="sw">
+                <input type="checkbox" id="swContribute" checked aria-describedby="swbD">
+                <span class="sw-track" aria-hidden="true"></span>
+                <span class="sw-knob" aria-hidden="true"></span>
+              </span>
+              <div class="share-body">
+                <label class="share-t" for="swContribute">Contribute to the comparison</label>
+                <p class="share-p" id="swbD">Adds your figures to the anonymous group median, never traced
+                  back to you. <strong>Turn it off and your own comparisons go too.</strong></p>
+                <span class="share-state share-on" id="swbState">On</span>
+              </div>
+            </div>
+          </div>
+
+        </div></aside>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ ENTRY ═══════════════════════════════════════════════ -->
+<section class="view" id="view-entry">
+  <div class="band band-dark band-grid band-tight">
+    <div class="inner">
+      <div class="eyebrow"><span class="eyebrow-text" id="entryPeriodLabel">—</span></div>
+      <h2>Add this<br><span class="accent">month's numbers</span></h2>
+      <p class="lede">Last month's figure sits beside each box so you can see whether you have typed
+        something odd. The panel on the right fills in as you go — that is what lands on your dashboard.</p>
+    </div>
+  </div>
+  <div class="band band-light">
+    <div class="inner">
+      <div class="entry-wrap">
+        <div class="entry-main" id="entryInputs"></div>
+        <aside class="entry-side">
+          <div class="card card-accent live" style="position:sticky;top:16px">
+            <div class="rail-title" style="margin-bottom:4px">Your figures</div>
+            <p style="font-size:12.5px;line-height:1.5;color:var(--ink-mute);margin:0 0 6px">
+              Calculated from what you have entered.
+            </p>
+            <div id="liveOut"></div>
+            <button class="btn btn-primary" style="width:100%;margin-top:16px" id="entrySave">
+              Save month
+            </button>
+            <button class="btn btn-outline btn-sm" style="width:100%;margin-top:8px" id="entryFill">
+              Fill with example figures
+            </button>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ DASHBOARD ═══════════════════════════════════════════ -->
+<section class="view is-active" id="view-dashboard">
+
+  <div class="asof no-print" id="asofBar"></div>
+
+  <div class="dash-bar no-print">
+    <div class="dash-bar-inner">
+      <span class="seg-label">View</span>
+      <div class="seg" id="viewSeg"></div>
+      <button class="btn btn-outline btn-xs" id="btnNewView" style="border-style:dashed">+ Build a view</button>
+      <span class="seg-label" style="margin-left:6px">Show</span>
+      <div class="seg" id="layoutSeg">
+        <button data-layout="focus" class="is-on">One at a time</button>
+        <button data-layout="grid">All at once</button>
+      </div>
+      <span class="topbar-spacer"></span>
+      <button class="btn btn-outline btn-sm" id="btnEditView">Edit this view</button>
+      <button class="btn btn-outline btn-sm" id="btnScreen">Screen mode</button>
+      <button class="btn btn-outline btn-sm" id="btnPrint">Print / PDF</button>
+      <button class="btn btn-outline btn-sm" id="btnCsv">CSV</button>
+    </div>
+  </div>
+
+  <div class="fr">
+    <aside class="fr-rail no-print">
+      <div class="fr-rail-head">
+        <div class="rail-title" id="railName">—</div>
+        <div class="fr-rail-note" id="railNote">—</div>
+      </div>
+      <div id="rail"></div>
+    </aside>
+    <div class="fr-main" id="detail"></div>
+  </div>
+
+  <div class="sheet" id="printSheet">
+    <div class="print-head">
+      <h2 id="printCo">—</h2>
+      <p id="printPeriod">—</p>
+    </div>
+    <div class="tiles" id="tiles"></div>
+  </div>
+</section>
+
+<!-- ══ VIEW BUILDER ════════════════════════════════════════ -->
+<section class="view" id="view-builder">
+  <div class="band band-dark band-grid band-tight">
+    <div class="inner">
+      <div class="eyebrow"><span class="eyebrow-text">Saved view</span></div>
+      <div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:20px">
+        <div style="flex:1 1 380px;min-width:0">
+          <label for="bName" class="sr-only">View name</label>
+          <input id="bName" class="field b-name" type="text" value="New view">
+        </div>
+        <div style="flex:0 1 300px">
+          <div class="rail-title" style="color:var(--cyan);margin-bottom:6px">Who can see it</div>
+          <div class="seg" id="bShare">
+            <button data-share="me">Just me</button>
+            <button data-share="team">My team</button>
+            <button data-share="consultant">My consultant</button>
+          </div>
+        </div>
+      </div>
+      <p class="lede">One saved view drives the dashboard, the printed pack, the workshop screen and
+        the monthly email — so there is one thing to keep up to date rather than four.</p>
+    </div>
+  </div>
+
+  <div class="band band-light" style="padding-top:22px">
+    <div class="inner">
+      <div class="b-grid">
+        <div class="card b-col">
+          <div class="b-col-head">
+            <div class="rail-title">Metrics you track</div>
+            <div class="b-sub" id="bPoolNote">—</div>
+          </div>
+          <div class="b-scroll" id="bPool"></div>
+        </div>
+
+        <div class="card b-col">
+          <div class="b-col-head">
+            <div class="rail-title">In this view</div>
+            <div class="b-sub">Order them, and pick how each one is drawn.</div>
+          </div>
+          <div id="bChosen"></div>
+          <div class="b-opts">
+            <div class="rail-title" style="margin-bottom:8px">Also show on every tile</div>
+            <div class="pill-row" id="bOpts"></div>
+          </div>
+        </div>
+
+        <div class="b-side">
+          <div class="card card-accent b-out">
+            <div class="rail-title" style="margin-bottom:10px">Send it somewhere</div>
+            <button class="btn btn-primary b-btn" id="bSave">Save view</button>
+            <button class="btn btn-outline b-btn" id="bPdf">Download PDF<span class="b-meta">A4</span></button>
+            <button class="btn btn-outline b-btn" id="bCsv">Download CSV<span class="b-meta">18 months</span></button>
+            <button class="btn btn-outline b-btn" id="bPng">Download images<span class="b-meta">PNG per chart</span></button>
+            <button class="btn btn-outline b-btn" id="bDelete" style="border-color:var(--line);color:var(--ink-mute)">Delete view</button>
+          </div>
+
+          <div class="b-screen">
+            <div class="rail-title" style="color:var(--cyan);margin-bottom:7px">Put it on a screen</div>
+            <p class="b-screen-p">A read-only link for the workshop screen. No login, and it shows only this view.</p>
+            <div class="b-link"><span id="bLink">kpi.nuccol.co.uk/s/—</span>
+              <button class="btn btn-primary btn-xs" id="bCopy">Copy</button></div>
+            <div class="pill-row" id="bRot"></div>
+          </div>
+
+          <div class="card b-out">
+            <div class="rail-title" style="margin-bottom:8px">Send it monthly</div>
+            <div class="check">
+              <input type="checkbox" id="bEmail" checked>
+              <label for="bEmail">Email this view as a PDF on the 5th, once the month's figures are in</label>
+            </div>
+            <p class="b-sub" style="margin-top:9px">Goes to you and anyone the view is shared with. Skipped if the month has not been submitted.</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:18px">
+        <button class="btn btn-outline btn-sm" data-go="dashboard">← Back to dashboard</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ HOW TO USE ══════════════════════════════════════════ -->
+<section class="view" id="view-help">
+  <div class="band band-dark band-grid">
+    <div class="inner">
+      <div class="eyebrow"><span class="eyebrow-text">How to use this</span></div>
+      <h1>Six numbers a month.<br><span class="accent">That is the whole job.</span></h1>
+      <p class="lede">You type the raw counts you already have on a clipboard somewhere. We do the
+        arithmetic, keep the history, and show you how you compare with other suppliers on the
+        programme. Nobody sees your figures unless you decide they should.</p>
+    </div>
+  </div>
+
+  <div class="band band-light">
+    <div class="inner">
+
+      <div class="steps">
+
+        <div class="card card-accent step">
+          <div class="step-n">1</div>
+          <div class="step-b">
+            <div class="step-h"><span class="step-t">Choose what you track</span>
+              <span class="step-when">Once · about 5 minutes</span></div>
+            <p class="step-p">Go to <strong>Your metrics</strong>. Five are already ticked — the ones most
+              companies start with, and the only ones where you are likely to get a comparison straight
+              away. Add anything else you already measure, and leave the rest.</p>
+            <p class="step-p">Set a target beside any metric where you have one. A target is yours alone:
+              it is never shared, never compared, and never seen by NucCol.</p>
+          </div>
+          <div class="step-side"><div class="step-eg"><strong>Do not over-pick</strong>
+            Every metric you tick is more typing every month. The panel on the right tells you how many
+            numbers your choices will ask for.</div></div>
+        </div>
+
+        <div class="card card-accent step">
+          <div class="step-n">2</div>
+          <div class="step-b">
+            <div class="step-h"><span class="step-t">Add your numbers</span>
+              <span class="step-when">Monthly · about 2 minutes</span></div>
+            <p class="step-p">Go to <strong>Add this month</strong>. We only ever ask for raw counts —
+              deliveries due, deliveries on time, units made, units scrapped. Never a percentage. The
+              panel on the right fills in as you type, so you can see the result before you save.</p>
+            <p class="step-p">Last month's figure sits beside each box. If this month looks very different,
+              that is usually a typo rather than a crisis.</p>
+          </div>
+          <div class="step-side"><div class="step-eg"><strong>Why raw counts?</strong>
+            So every company's percentage is worked out the same way. It is also less typing for you.</div></div>
+        </div>
+
+        <div class="card card-accent step">
+          <div class="step-n">3</div>
+          <div class="step-b">
+            <div class="step-h"><span class="step-t">Read your dashboard</span>
+              <span class="step-when">Whenever you like</span></div>
+            <p class="step-p">Each figure is shown three ways at once: against your own target, against
+              your own history, and against the middle of the group. A green dot means you are meeting
+              your target; red means you are not. The dashed line on a chart is your target.</p>
+            <p class="step-p">Use <strong>One at a time</strong> to dig into a single number — you get the
+              chart, where you sit in the group, and the raw figures you entered. Use
+              <strong>All at once</strong> to sweep the lot.</p>
+          </div>
+          <div class="step-side"><div class="step-eg"><strong>No comparison showing?</strong>
+            We only show one when at least five other companies have submitted that same figure. Fewer
+            than that and you could work out who is who.</div></div>
+        </div>
+
+        <div class="card card-accent step">
+          <div class="step-n">4</div>
+          <div class="step-b">
+            <div class="step-h"><span class="step-t">Build a view and send it somewhere</span>
+              <span class="step-when">As needed</span></div>
+            <p class="step-p">A view is a saved set of metrics in the order you want them, drawn how you
+              want them. Build one for your Monday standup, one for the board, one for the workshop
+              screen.</p>
+            <p class="step-p">The same view then produces the dashboard, the printed pack, a read-only
+              link for a screen on the shop floor, and a monthly email — so there is one thing to keep up
+              to date rather than four.</p>
+          </div>
+          <div class="step-side"><div class="step-eg"><strong>Screens</strong>
+            The screen link needs no login and shows only that view, so you can leave it running on a
+            TV without worrying what else is on it.</div></div>
+        </div>
+      </div>
+
+      <h2 style="margin-top:34px">What we do with your numbers</h2>
+      <div class="two-up">
+        <div class="card yn">
+          <h3 class="accent">What NucCol can see</h3>
+          <ul>
+            <li>The group median and spread, worked out across everyone — never traced back to a company.</li>
+            <li>Your individual figures, but only if you switch on sharing with your consultant, and only them.</li>
+            <li>How many companies are submitting each metric, so we know when a comparison can be shown.</li>
+          </ul>
+        </div>
+        <div class="card yn yn-no">
+          <h3 style="color:var(--ink-mute)">What it never sees</h3>
+          <ul>
+            <li>Your targets. They are a statement of intent, not performance, and they stay with you.</li>
+            <li>Your figures in any report, named or identifiable — aggregates only, never below five companies.</li>
+            <li>Anything at all, if you opt out of the comparison. You keep your own dashboard either way.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2 style="margin-top:34px">Questions people ask</h2>
+      <div class="card qa" style="padding:6px 22px 16px;margin-top:14px">
+        <div class="qa-i" style="border-top:0">
+          <div class="qa-q">I missed a month. Have I ruined it?</div>
+          <p class="qa-a">No. The month sits there waiting and you can fill it in late. While it is
+            missing, your dashboard shows the last month you did submit and says so, and you are left
+            out of that month's group comparison rather than counted as a zero.</p>
+        </div>
+        <div class="qa-i">
+          <div class="qa-q">We do not measure one of these. What do I put?</div>
+          <p class="qa-a">Nothing — untick it. You only track what you actually measure. The five core
+            metrics are a starting point, not a requirement, though they are where the comparison is
+            most useful.</p>
+        </div>
+        <div class="qa-i">
+          <div class="qa-q">Can I change my metrics later?</div>
+          <p class="qa-a">Yes, any time, under Your metrics. Anything you add starts its history from
+            that month, so a metric you add in March will not have a trend until the summer.</p>
+        </div>
+        <div class="qa-i">
+          <div class="qa-q">I got a number wrong and already saved it.</div>
+          <p class="qa-a">Correct it and save again. The dashboard shows that the figure was amended and
+            when, and the group comparison is recalculated. Corrections are normal and nobody is
+            marked down for them.</p>
+        </div>
+        <div class="qa-i">
+          <div class="qa-q">Who in the business should be doing this?</div>
+          <p class="qa-a">Whoever already has the numbers — usually an operations or quality manager.
+            It is deliberately small enough that it does not need to be anyone's job.</p>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:26px">
+        <button class="btn btn-primary" data-go="onboarding">Start with your metrics</button>
+        <button class="btn btn-outline" data-go="entry">Add this month's numbers</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SCREEN MODE ═════════════════════════════════════════ -->
+<div class="screen" id="screen">
+  <div class="screen-head">
+    <div>
+      <div class="screen-co" id="scrCo">—</div>
+      <div class="screen-per" id="scrPer">—</div>
+    </div>
+    <button class="btn btn-ghost btn-sm" id="scrExit">Exit</button>
+  </div>
+  <div class="screen-body"><div class="screen-grid" id="scrGrid"></div></div>
+  <div class="screen-foot">
+    <span id="scrHint">Rotates every 12 seconds · press Esc to leave</span>
+    <span class="screen-dots" id="scrDots"></span>
+  </div>
+</div>
+
+<footer class="footer no-print">
+  <div class="inner footer-bottom">
+    <p class="disclaimer">
+      <strong>Prototype.</strong> Figures are synthetic and generated from a fixed seed — one demo
+      company and a comparison group of twelve. No login, no saved data: anything you type is lost
+      when the tab closes. Built to test the shape of the thing, not to hold real numbers.
+    </p>
+  </div>
+</footer>
+
+<div class="tip" id="tip"></div>
+
+<script>
+'use strict';
+
+/* ═══ Metric registry ══════════════════════════════════════
+   Every metric: what we ask for (raw), what we compute, its
+   unit, cadence, whether it benchmarks, and the "their way"
+   figure shown alongside. One source of truth — the forms,
+   the dashboard and the exports are all generated from it. */
+
+const FAM = {
+  safety:     { name:'Safety',     cadence:'monthly'   },
+  quality:    { name:'Quality',    cadence:'monthly'   },
+  delivery:   { name:'Delivery',   cadence:'monthly'   },
+  cost:       { name:'Cost',       cadence:'monthly'   },
+  people:     { name:'People',     cadence:'quarterly' },
+  financial:  { name:'Financial',  cadence:'quarterly' },
+  commercial: { name:'Commercial', cadence:'quarterly' }
+};
+
+const METRICS = [
+  { id:'riddor', fam:'safety', core:true, name:'RIDDOR rate', roll:12,
+    def:'Reportable incidents per 100,000 hours worked, over the last 12 months — the HSE basis. Rolling, because monthly counts are too sparse to mean anything.',
+    inputs:[ {k:'riddor_n', label:'RIDDOR-reportable incidents', hint:'this month', int:true},
+             {k:'hours', home:'safety',    label:'Hours worked', hint:'all staff, this month', int:true, shared:true} ],
+    calc:v => v.hours ? v.riddor_n / v.hours * 1e5 : null,
+    unit:'per 100k hrs', dp:2, good:'low', bench:true,
+    alt:v => v.riddor_n == null ? null
+             : v.riddor_n + (v.riddor_n === 1 ? ' incident' : ' incidents') + ' in 12 months' },
+
+  { id:'lta', fam:'safety', core:false, name:'Lost time accident rate', roll:12,
+    def:'Lost time accidents per 100,000 hours worked, over the last 12 months.',
+    inputs:[ {k:'lta_n', label:'Lost time accidents', hint:'this month', int:true},
+             {k:'hours', home:'safety', label:'Hours worked', hint:'all staff, this month', int:true, shared:true} ],
+    calc:v => v.hours ? v.lta_n / v.hours * 1e5 : null,
+    unit:'per 100k hrs', dp:2, good:'low', bench:true,
+    alt:v => v.lta_n == null ? null
+             : v.lta_n + (v.lta_n === 1 ? ' accident' : ' accidents') + ' in 12 months' },
+
+  { id:'hsaudit', fam:'safety', core:false, name:'H&S audit completion',
+    def:'Audits completed against audits planned.',
+    inputs:[ {k:'hsa_done',    label:'H&S audits completed', int:true},
+             {k:'hsa_planned', label:'H&S audits planned',   int:true} ],
+    calc:v => v.hsa_planned ? v.hsa_done / v.hsa_planned * 100 : null,
+    unit:'%', dp:0, good:'high', bench:true,
+    alt:v => (v.hsa_done == null || v.hsa_planned == null) ? null : v.hsa_done + ' of ' + v.hsa_planned },
+
+  { id:'nearmiss', fam:'safety', core:false, name:'Near-miss reporting rate', roll:12,
+    def:'Near misses reported per 100,000 hours worked, over the last 12 months. The one safety measure here where a higher number is better \u2014 it means people are speaking up before something goes wrong.',
+    inputs:[ {k:'near_miss_n', label:'Near misses reported', hint:'this month', int:true},
+             {k:'hours', home:'safety', label:'Hours worked', hint:'all staff, this month', int:true, shared:true} ],
+    calc:v => v.hours ? v.near_miss_n / v.hours * 1e5 : null,
+    unit:'per 100k hrs', dp:1, good:'high', bench:true,
+    alt:v => v.near_miss_n == null ? null : v.near_miss_n + ' reported in 12 months' },
+
+  { id:'scrap', fam:'quality', core:true, name:'Scrap rate', variant:'mfg',
+    def:'Units scrapped as a share of units produced.',
+    inputs:[ {k:'units_made', home:'quality',   label:'Units produced',  int:true, shared:true},
+             {k:'units_scrap',  label:'Units scrapped',  int:true} ],
+    calc:v => v.units_made ? v.units_scrap / v.units_made * 100 : null,
+    unit:'%', dp:2, good:'low', bench:true,
+    alt:v => v.units_scrap == null ? null : v.units_scrap.toLocaleString('en-GB') + ' units' },
+
+  { id:'errtime', fam:'quality', core:true, name:'Error time rate', variant:'svc',
+    def:'Productive hours lost to error, as a share of total productive hours.',
+    inputs:[ {k:'prod_hours', label:'Productive hours',       int:true},
+             {k:'err_hours',  label:'Hours lost to error',    int:true} ],
+    calc:v => v.prod_hours ? v.err_hours / v.prod_hours * 100 : null,
+    unit:'%', dp:2, good:'low', bench:true,
+    alt:v => v.err_hours == null ? null : v.err_hours.toLocaleString('en-GB') + ' hours' },
+
+  { id:'complaints', fam:'quality', core:false, name:'Customer complaints',
+    def:'Complaints per 100 orders delivered — a raw count is not comparable between companies.',
+    inputs:[ {k:'complaints_n', label:'Complaints received', int:true},
+             {k:'units_due', home:'delivery',    label:'Deliveries due',      int:true, shared:true} ],
+    calc:v => v.units_due ? v.complaints_n / v.units_due * 100 : null,
+    unit:'per 100', dp:2, good:'low', bench:true,
+    alt:v => v.complaints_n == null ? null : v.complaints_n + (v.complaints_n === 1 ? ' complaint' : ' complaints') },
+
+  { id:'coq', fam:'quality', core:false, name:'Cost of quality',
+    def:'Cost of quality as a share of turnover, so it compares across company sizes.',
+    inputs:[ {k:'coq_cost', label:'Cost of quality', prefix:'£', int:true},
+             {k:'turnover', home:'financial', home:'financial', label:'Turnover in period', prefix:'£', int:true, shared:true} ],
+    calc:v => v.turnover ? v.coq_cost / v.turnover * 100 : null,
+    unit:'% of turnover', dp:2, good:'low', bench:true,
+    alt:v => v.coq_cost == null ? null : '£' + v.coq_cost.toLocaleString('en-GB') },
+
+  { id:'calibration', fam:'quality', core:false, name:'Calibration overdue',
+    def:'Instruments past their calibration date, as a share of instruments held. A raw count says nothing without knowing how many you hold.',
+    inputs:[ {k:'cal_overdue', label:'Instruments past calibration', int:true},
+             {k:'cal_total', label:'Instruments held', int:true} ],
+    calc:v => v.cal_total ? v.cal_overdue / v.cal_total * 100 : null,
+    unit:'%', dp:1, good:'low', bench:true,
+    alt:v => (v.cal_overdue == null || v.cal_total == null) ? null
+             : v.cal_overdue + ' of ' + v.cal_total + ' overdue' },
+
+  { id:'cpk', fam:'quality', core:false, name:'Process capability',
+    def:'The lowest Cpk across your critical dimensions. The one figure here entered directly rather than computed \u2014 Cpk already comes out of your own measurement system.',
+    inputs:[ {k:'cpk_min', label:'Lowest Cpk across critical dimensions', hint:'entered directly, e.g. 1.33', dec:true} ],
+    calc:v => (v.cpk_min == null || v.cpk_min === 0) ? null : v.cpk_min,
+    unit:'index', dp:2, good:'high', bench:true,
+    alt:v => v.cpk_min == null ? null
+             : v.cpk_min >= 1.33 ? 'Capable' : v.cpk_min >= 1 ? 'Marginal' : 'Not capable' },
+
+  { id:'otc', fam:'delivery', core:true, name:'On-time completion',
+    def:'Completed on time and in full, against what was due. Your unit — deliveries, orders or projects.',
+    inputs:[ {k:'units_due', home:'delivery',     label:'Due in period',            int:true, shared:true},
+             {k:'units_ontime',  label:'Completed on time and in full', int:true} ],
+    calc:v => v.units_due ? v.units_ontime / v.units_due * 100 : null,
+    unit:'%', dp:1, good:'high', bench:true,
+    alt:v => (v.units_due == null || v.units_ontime == null) ? null
+             : (v.units_due - v.units_ontime) + ' missed' },
+
+  { id:'missed', fam:'delivery', core:false, name:'Number missed',
+    def:'Taken from the on-time completion figures — nothing extra to enter.',
+    inputs:[], derivedFrom:'otc',
+    calc:v => (v.units_due == null || v.units_ontime == null) ? null : v.units_due - v.units_ontime,
+    unit:'missed', dp:0, good:'low', bench:true,
+    alt:v => v.units_due == null ? null : 'of ' + v.units_due.toLocaleString('en-GB') + ' due' },
+
+  { id:'schedule', fam:'delivery', core:false, name:'Schedule achievement',
+    def:'Output achieved against output planned.',
+    inputs:[ {k:'plan_out', label:'Planned output', int:true},
+             {k:'act_out',  label:'Achieved output', int:true} ],
+    calc:v => v.plan_out ? v.act_out / v.plan_out * 100 : null,
+    unit:'%', dp:1, good:'high', bench:true,
+    alt:v => (v.act_out == null || v.plan_out == null) ? null
+             : v.act_out.toLocaleString('en-GB') + ' of ' + v.plan_out.toLocaleString('en-GB') },
+
+  { id:'oee', fam:'delivery', core:false, name:'OEE',
+    def:'Availability \u00d7 performance \u00d7 quality. Planned production time means scheduled hours less planned maintenance and planned non-production \u2014 companies disagree about this, so it is stated on the form.',
+    inputs:[ {k:'planned_hours', home:'delivery', label:'Planned production hours', hint:'less planned maintenance', int:true, shared:true},
+             {k:'run_hours', label:'Hours actually running', int:true} ],
+    calc:v => {
+      if (!v.planned_hours || !v.run_hours || !v.units_made || !v.ideal_rate) return null;
+      const avail = Math.min(1, v.run_hours / v.planned_hours);
+      const perf  = Math.min(1, (v.units_made / v.ideal_rate) / v.run_hours);
+      const qual  = Math.min(1, (v.units_made - (v.units_scrap || 0)) / v.units_made);
+      return avail * perf * qual * 100;
+    },
+    unit:'%', dp:1, good:'high', bench:true,
+    alt:v => {
+      if (!v.planned_hours || !v.run_hours || !v.units_made || !v.ideal_rate) return null;
+      const a = Math.min(100, v.run_hours / v.planned_hours * 100);
+      const pf = Math.min(100, (v.units_made / v.ideal_rate) / v.run_hours * 100);
+      const q = Math.min(100, (v.units_made - (v.units_scrap || 0)) / v.units_made * 100);
+      return 'Avail ' + a.toFixed(0) + '% \u00b7 perf ' + pf.toFixed(0) + '% \u00b7 qual ' + q.toFixed(0) + '%';
+    } },
+
+  { id:'downtime', fam:'delivery', core:false, name:'Unplanned downtime',
+    def:'Hours lost to breakdown as a share of planned production hours.',
+    inputs:[ {k:'down_hours', label:'Hours lost to breakdown', int:true},
+             {k:'planned_hours', home:'delivery', label:'Planned production hours', int:true, shared:true} ],
+    calc:v => v.planned_hours ? v.down_hours / v.planned_hours * 100 : null,
+    unit:'%', dp:2, good:'low', bench:true,
+    alt:v => v.down_hours == null ? null : v.down_hours.toLocaleString('en-GB') + ' hours lost' },
+
+  { id:'leadtime', fam:'delivery', core:false, name:'Manufacturing lead time',
+    def:'Average days from order to dispatch, across the orders you completed.',
+    inputs:[ {k:'lead_days', label:'Order-to-dispatch days, added up', hint:'across completed orders', int:true},
+             {k:'orders_done', label:'Orders completed', int:true} ],
+    calc:v => v.orders_done ? v.lead_days / v.orders_done : null,
+    unit:'days', dp:1, good:'low', bench:true,
+    alt:v => v.orders_done == null ? null : 'across ' + v.orders_done + ' orders' },
+
+  { id:'costperunit', fam:'cost', core:false, name:'Cost per unit',
+    def:'Fully loaded production cost divided by units produced.',
+    inputs:[ {k:'prod_cost', home:'cost', label:'Total production cost', prefix:'\u00a3', int:true},
+             {k:'units_made', home:'quality', label:'Units produced', int:true, shared:true} ],
+    calc:v => v.units_made ? v.prod_cost / v.units_made : null,
+    unit:'\u00a3 per unit', dp:2, good:'low', bench:true,
+    alt:v => v.prod_cost == null ? null : '\u00a3' + v.prod_cost.toLocaleString('en-GB') + ' in total' },
+
+  { id:'productivity', fam:'cost', core:false, name:'Output per labour hour',
+    def:'Units produced per direct labour hour.',
+    inputs:[ {k:'labour_hours', home:'cost', label:'Direct labour hours', int:true},
+             {k:'units_made', home:'quality', label:'Units produced', int:true, shared:true} ],
+    calc:v => v.labour_hours ? v.units_made / v.labour_hours : null,
+    unit:'units per hour', dp:2, good:'high', bench:true,
+    alt:v => v.labour_hours == null ? null : v.labour_hours.toLocaleString('en-GB') + ' labour hours' },
+
+  { id:'matyield', fam:'cost', core:false, name:'Material yield',
+    def:'Finished weight as a share of raw material weight. Matters most where the bar stock is expensive, which in nuclear it is.',
+    inputs:[ {k:'mat_out', label:'Finished weight', hint:'kg', int:true},
+             {k:'mat_in', label:'Raw material weight', hint:'kg', int:true} ],
+    calc:v => v.mat_in ? v.mat_out / v.mat_in * 100 : null,
+    unit:'%', dp:1, good:'high', bench:true,
+    alt:v => (v.mat_out == null || v.mat_in == null) ? null
+             : v.mat_out.toLocaleString('en-GB') + ' of ' + v.mat_in.toLocaleString('en-GB') + ' kg' },
+
+  { id:'overtime', fam:'cost', core:false, name:'Overtime share',
+    def:'Overtime hours as a share of total hours worked. A capacity signal rather than a cost one \u2014 sustained overtime usually means the plan is wrong.',
+    inputs:[ {k:'ot_hours', label:'Overtime hours', int:true},
+             {k:'hours', home:'safety', label:'Hours worked', int:true, shared:true} ],
+    calc:v => v.hours ? v.ot_hours / v.hours * 100 : null,
+    unit:'%', dp:1, good:'low', bench:true,
+    alt:v => v.ot_hours == null ? null : v.ot_hours.toLocaleString('en-GB') + ' overtime hours' },
+
+  { id:'absence', fam:'people', core:true, name:'Absence rate',
+    def:'Days lost against calendar working days available.',
+    inputs:[ {k:'abs_days',  label:'Days lost to absence', int:true},
+             {k:'headcount', home:'people', home:'people', label:'Total employees', int:true, shared:true} ],
+    calc:v => v.headcount ? v.abs_days / (v.headcount * 63) * 100 : null,
+    unit:'%', dp:2, good:'low', bench:true,
+    alt:v => v.abs_days == null ? null : v.abs_days.toLocaleString('en-GB') + ' days lost' },
+
+  { id:'staffturn', fam:'people', core:false, name:'Staff turnover',
+    def:'Leavers against average headcount, annualised.',
+    inputs:[ {k:'leavers',   label:'Leavers in quarter', int:true},
+             {k:'headcount', home:'people', home:'people', label:'Total employees', int:true, shared:true} ],
+    calc:v => v.headcount ? v.leavers / v.headcount * 400 : null,
+    unit:'% a year', dp:1, good:'low', bench:true,
+    alt:v => v.leavers == null ? null : v.leavers + (v.leavers === 1 ? ' leaver' : ' leavers') },
+
+  { id:'skills', fam:'people', core:false, name:'Skills-matrix coverage',
+    def:'Work centres with two or more trained operators, as a share of all work centres. A single-operator work centre is a delivery risk and a single point of failure.',
+    inputs:[ {k:'wc_covered', label:'Work centres with 2+ trained operators', int:true},
+             {k:'wc_total', label:'Work centres in total', int:true} ],
+    calc:v => v.wc_total ? v.wc_covered / v.wc_total * 100 : null,
+    unit:'%', dp:0, good:'high', bench:true,
+    alt:v => (v.wc_covered == null || v.wc_total == null) ? null
+             : v.wc_covered + ' of ' + v.wc_total + ' covered' },
+
+  { id:'turnperemp', fam:'people', core:false, name:'Turnover per employee',
+    def:'Turnover divided by headcount — the productivity measure. Nothing extra to enter.',
+    inputs:[], derivedFrom:'financial',
+    calc:v => v.headcount ? v.turnover / v.headcount : null,
+    unit:'£ per employee', dp:0, money:true, good:'high', bench:true,
+    alt:v => v.headcount == null ? null : v.headcount + ' employees' },
+
+  { id:'ebit', fam:'financial', core:false, name:'EBIT margin',
+    def:'Earnings before interest and tax as a share of turnover. We work out the band for you.',
+    inputs:[ {k:'ebit',     label:'EBIT', prefix:'£', int:true},
+             {k:'turnover', home:'financial', home:'financial', label:'Turnover in period', prefix:'£', int:true, shared:true} ],
+    calc:v => v.turnover ? v.ebit / v.turnover * 100 : null,
+    unit:'%', dp:1, good:'high', bench:true,
+    alt:v => { const m = v.turnover ? v.ebit / v.turnover * 100 : null;
+               if (m == null) return null;
+               return m < 0 ? 'Below zero' : m < 1 ? 'Break even' : m <= 10 ? '5–10% band' : 'Above 10%'; } },
+
+  { id:'exportshare', fam:'financial', core:false, name:'Export share',
+    def:'Export turnover as a share of total turnover.',
+    inputs:[ {k:'export_to', label:'Export turnover', prefix:'£', int:true},
+             {k:'turnover', home:'financial',  label:'Turnover in period', prefix:'£', int:true, shared:true} ],
+    calc:v => v.turnover ? v.export_to / v.turnover * 100 : null,
+    unit:'%', dp:1, good:'high', bench:true,
+    alt:v => v.export_to == null ? null : '£' + v.export_to.toLocaleString('en-GB') },
+
+  { id:'winrate', fam:'commercial', core:true, name:'Win rate',
+    def:'Contracts won against contracts tendered, split nuclear and other — so you can see where you win.',
+    inputs:[ {k:'tend_nuc', label:'Tendered — nuclear',   int:true},
+             {k:'won_nuc',  label:'Won — nuclear',        int:true},
+             {k:'tend_oth', label:'Tendered — other sectors', int:true},
+             {k:'won_oth',  label:'Won — other sectors',  int:true} ],
+    calc:v => { const t = (v.tend_nuc||0) + (v.tend_oth||0);
+                return t ? ((v.won_nuc||0) + (v.won_oth||0)) / t * 100 : null; },
+    unit:'%', dp:1, good:'high', bench:true,
+    alt:v => (v.won_nuc == null) ? null
+             : 'Nuclear ' + (v.tend_nuc ? Math.round(v.won_nuc / v.tend_nuc * 100) : 0)
+               + '% · other ' + (v.tend_oth ? Math.round(v.won_oth / v.tend_oth * 100) : 0) + '%' },
+
+  { id:'sectormix', fam:'commercial', core:false, name:'Nuclear share of wins',
+    def:'Nuclear value won as a share of all value won.',
+    inputs:[ {k:'val_nuc', label:'Value won — nuclear', prefix:'£', int:true},
+             {k:'val_oth', label:'Value won — other sectors', prefix:'£', int:true} ],
+    calc:v => { const t = (v.val_nuc||0) + (v.val_oth||0); return t ? v.val_nuc / t * 100 : null; },
+    unit:'%', dp:1, good:'high', bench:true,
+    alt:v => v.val_nuc == null ? null : '£' + v.val_nuc.toLocaleString('en-GB') + ' nuclear' }
+];
+
+const BY_ID = Object.fromEntries(METRICS.map(m => [m.id, m]));
+
+
+/* ═══ Submissions ══════════════════════════════════════════
+   You submit a whole form, not a metric, so a submission is per
+   period. Monthly figures are complete to October; November is
+   outstanding. Quarterly always lags — Q3 closed in September.
+   One amendment is in there, because corrections happen and a
+   dashboard that hides them lets the benchmark move under
+   people's feet. */
+const TODAY = '27 November 2026';
+const LAST_MONTHLY = '2026-10';
+const LAST_QUARTERLY = '2026-09';
+const DUE_IN_DAYS = 4;
+
+const SUBMISSIONS = {
+  '2026-10': { at:'3 Nov 2026, 09:12', by:'Dave Hollis' },
+  '2026-09': { at:'6 Oct 2026, 08:48', by:'Dave Hollis' },
+  '2026-08': { at:'4 Sep 2026, 15:20', by:'Priya Shah'  },
+  '2026-07': { at:'5 Aug 2026, 10:02', by:'Dave Hollis' }
+};
+/* An amendment belongs to the figure that was corrected, not to the
+   whole month: "running hours corrected" has nothing to do with
+   on-time completion, and showing it there would be a lie. */
+const AMENDMENTS = {
+  oee: { period:'2026-10',
+         text:'Amended 5 Nov \u2014 running hours corrected from 4,210 to 3,985. The group comparison was recalculated.' }
+};
+function amendmentFor(m) {
+  const a = AMENDMENTS[m.id];
+  return (a && a.period === lastPeriodKey(m)) ? a.text : '';
+}
+const BENCH_ASOF = '24 November 2026';
+const BENCH_MISSING = 2;   /* cohort members yet to submit the latest month */
+
+/* The last period a metric actually has, which is not the same for
+   monthly and quarterly families. */
+function lastPeriodKey(m) {
+  return FAM[m.fam].cadence === 'quarterly' ? LAST_QUARTERLY : LAST_MONTHLY;
+}
+function submissionFor(m) {
+  return SUBMISSIONS[lastPeriodKey(m)] || null;
+}
+function periodLabel(m) {
+  const p = PERIODS_ALL.find(x => x.key === lastPeriodKey(m));
+  if (!p) return '';
+  return FAM[m.fam].cadence === 'quarterly' ? p.q + ' (to ' + p.long.split(' ')[0] + ')' : p.long;
+}
+
+/* ═══ Targets ══════════════════════════════════════════════
+   A company's own number, set at onboarding. Two deliberately
+   left blank, so the "no target, no status" case is visible in
+   the demo rather than described. Targets are never benchmarked,
+   never aggregated, and never leave the company. */
+const DEMO_TARGETS = {
+  riddor: 1,      lta: 1,       nearmiss: 25,   hsaudit: 95,
+  scrap: 2,       errtime: 2,   complaints: 2,  coq: 2,
+  calibration: 0, cpk: 1.33,
+  otc: 95,        missed: 2,    schedule: 90,   oee: 75,
+  downtime: 5,    leadtime: 12,
+  costperunit: 140, productivity: null, matyield: 60, overtime: 8,
+  absence: 4,     staffturn: 22, skills: 90,    turnperemp: null,
+  ebit: 8,        exportshare: 25,
+  winrate: 30,    sectormix: 35
+};
+
+/* -> {t, ok, gap} or null when no target is set. Status always reads
+   off the latest period, never a rolling average: on an improving
+   series an average reports failure in the month the target was met. */
+function targetStatus(m, cur) {
+  const t = state.targets[m.id];
+  if (t == null || cur == null) return null;
+  return { t, ok: m.good === 'high' ? cur >= t : cur <= t, gap: cur - t };
+}
+function targetLine(m, cur) {
+  const st = targetStatus(m, cur);
+  if (!st) return '';
+  const mag = Math.abs(st.gap);
+  const word = Math.abs(st.gap) < Math.pow(10, -m.dp) / 2 ? 'on target'
+             : (st.gap > 0 ? 'above' : 'below') + ' target';
+  return '<span class="tgt-pip ' + (st.ok ? 'is-ok' : 'is-off') + '"></span>' +
+    'Target ' + fmt(m, st.t) + ' \u00b7 ' +
+    (word === 'on target' ? 'on target' : fmt(m, mag) + ' ' + word);
+}
+
+/* ═══ Saved views ══════════════════════════════════════════
+   A view is a stored object, not a filter: it holds which metrics,
+   in what order, how each is drawn and how wide. The same view
+   drives the rail, the print layout and the screen. */
+function defaultView(id, name, shared, ids, shapes, sizes) {
+  return { id, name, shared, metrics: ids.slice(),
+    shapes: Object.assign({}, shapes), sizes: Object.assign({}, sizes),
+    opts: { target:true, bench:true, trend:true, entered:false } };
+}
+const SEED_VIEWS = [
+  defaultView('all', 'Everything', 'me', [], {}, {}),
+  defaultView('standup', 'Monday standup', 'team',
+    ['otc','oee','downtime','scrap','riddor','missed'],
+    { otc:'line', oee:'line' }, { otc:'wide', oee:'wide' }),
+  defaultView('board', 'Board pack', 'consultant',
+    ['otc','winrate','oee','turnperemp','costperunit','ebit','riddor'],
+    { otc:'line', winrate:'bar' }, { otc:'wide' }),
+  defaultView('floor', 'Shop floor', 'team',
+    ['otc','oee','scrap','riddor','nearmiss','absence'], {}, {})
+];
+
+/* ═══ Seeded synthetic data ════════════════════════════════ */
+function rng(seed) {
+  return function () {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+/* 30 months are generated; the first 12 are lead-in only, so a
+   rolling 12-month rate is fully populated at every point we
+   actually draw. PERIODS is what the dashboard shows. */
+const LEAD = 12;
+const PERIODS_ALL = (() => {
+  const out = [], now = new Date(2026, 9, 1), n = 18 + LEAD;
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    out.push({
+      key: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'),
+      label: d.toLocaleString('en-GB', { month:'short', year:'2-digit' }),
+      long:  d.toLocaleString('en-GB', { month:'long', year:'numeric' }),
+      q: 'Q' + (Math.floor(d.getMonth() / 3) + 1) + ' ' + d.getFullYear(),
+      quarterEnd: d.getMonth() % 3 === 2
+    });
+  }
+  return out;
+})();
+const PERIODS = PERIODS_ALL.slice(LEAD);
+
+/* Stock inputs are taken from the latest month of a window;
+   everything else is a flow and is summed across it. This is the
+   stock-versus-flow rule from the metric library, applied. */
+const STOCK_KEYS = new Set(['headcount', 'hsa_planned', 'cal_total', 'cal_overdue',
+  'cpk_min', 'ideal_rate', 'wc_total', 'wc_covered']);
+
+/* One company's raw inputs, drifting plausibly, with a dip and
+   a recovery so the trend lines have something to say. */
+/* Mean-reverting around a moving target rather than a biased
+   random walk — a walk drifts into its clamp over 30 periods and
+   every series ends up flat on the floor. `arc` ramps the target
+   steadily so the demo shows an improving company. */
+function makeRaws(seed, profile) {
+  const r = rng(seed), out = {}, n = PERIODS_ALL.length;
+  const pull = (x, target, noise) => x + (target - x) * 0.22 + (r() - 0.5) * noise;
+  let otc = profile.otc, scrap = profile.scrap, abs = profile.abs, hours = profile.hours;
+  let hsaRate = 0.9;
+  let cpk = profile.cpk, myield = profile.myield, dtRate = 0.048;
+  let otRate = profile.ot, skillsRate = profile.skills, cpu = profile.cpu, lead = profile.lead;
+  let idealRate = null;   /* a constant per company, fixed on the first period */
+  let perfRate = profile.perf;
+  PERIODS_ALL.forEach((p, i) => {
+    const arc = (i / (n - 1)) * profile.arc;
+    otc   = clamp(pull(otc,   profile.otc   + arc,        2.2),  62, 97.5);
+    scrap = clamp(pull(scrap, profile.scrap - arc * 0.22, 0.5), 0.3, 9);
+    abs   = clamp(pull(abs,   profile.abs   - arc * 0.08, 0.6), 0.8, 9);
+    hours = Math.round(clamp(hours * (1 + (r() - 0.48) * 0.04), 1200, 260000));
+    hsaRate = clamp(pull(hsaRate, 0.9 + arc * 0.012, 0.1), 0.55, 1);
+    cpk     = clamp(pull(cpk,    profile.cpk    + arc * 0.035, 0.07), 0.7, 2.2);
+    myield  = clamp(pull(myield, profile.myield + arc * 0.5,   2.0),  28, 92);
+    dtRate  = clamp(pull(dtRate, 0.048 - arc * 0.0015, 0.014), 0.004, 0.18);
+    otRate  = clamp(pull(otRate, profile.ot     - arc * 0.004, 0.018), 0.005, 0.3);
+    skillsRate = clamp(pull(skillsRate, profile.skills + arc * 0.015, 0.05), 0.3, 1);
+    cpu     = clamp(pull(cpu,    profile.cpu    * (1 - arc * 0.02), profile.cpu * 0.07), profile.cpu * 0.5, profile.cpu * 1.7);
+    lead    = clamp(pull(lead,   profile.lead   - arc * 0.1, 0.8), 1.5, 60);
+    const due   = Math.max(6, Math.round(profile.due * (0.85 + r() * 0.3)));
+    const made  = Math.round(due * profile.perDue * (0.9 + r() * 0.2));
+    const hc    = profile.headcount;
+    const to    = Math.round(profile.turnover * (0.9 + r() * 0.2));
+    /* Machine hours, not staff hours. Output and running time move
+       together — deriving one from the other keeps OEE's performance
+       term smooth instead of compounding two independent wobbles. */
+    if (idealRate === null) {
+      idealRate = (profile.due * profile.perDue) /
+                  (profile.hours * 0.42 * 0.87 * profile.perf);
+    }
+    perfRate = clamp(pull(perfRate, profile.perf + arc * 0.008, 0.035), 0.45, 0.99);
+    const runH     = Math.max(10, Math.round(made / (idealRate * perfRate)));
+    const plannedH = Math.max(runH + 1, Math.round(runH / (1 - dtRate - 0.085)));
+    const downH    = Math.round(plannedH * dtRate);
+    const matOut   = Math.round(made * profile.kgPerUnit * 10) / 10;
+    out[p.key] = {
+      hours,
+      riddor_n:    r() < profile.riddorP ? 1 : 0,
+      lta_n:       r() < profile.riddorP * 0.75 ? 1 : 0,
+      /* Enough planned audits that completion has some resolution —
+         3-of-4 flips between 75% and 100% and reads as noise. */
+      hsa_done:    Math.min(profile.hsa, Math.round(profile.hsa * hsaRate)),
+      hsa_planned: profile.hsa,
+      units_made:  made,
+      units_scrap: Math.max(0, Math.round(made * scrap / 100)),
+      prod_hours:  hours,
+      err_hours:   Math.max(0, Math.round(hours * scrap / 100)),
+      complaints_n: r() < 0.28 ? 0 : 1 + Math.floor(r() * 3),
+      coq_cost:    Math.round(to * (0.004 + r() * 0.016)),
+      units_due:   due,
+      units_ontime: Math.min(due, Math.floor(due * otc / 100)),
+      plan_out:    made,
+      act_out:     Math.round(made * (0.88 + r() * 0.16)),
+      /* 21 working days in a month — the metric divides a quarter's
+         total by headcount × 63, so this has to be monthly. */
+      abs_days:    Math.max(0, Math.round(hc * 21 * abs / 100)),
+      headcount:   hc,
+      /* Scaled to headcount: a flat coin-flip gives a 58-person firm
+         the same turnover as a 200-person one. */
+      leavers:     Math.floor(hc * 0.0125) + (r() < ((hc * 0.0125) % 1) ? 1 : 0),
+      turnover:    to,
+      ebit:        Math.round(to * (profile.ebit + (r() - 0.5) * 0.04)),
+      export_to:   Math.round(to * (profile.exp + (r() - 0.5) * 0.08)),
+      tend_nuc:    Math.max(1, Math.round(r() * 5 + 1)),
+      won_nuc:     0,
+      tend_oth:    Math.max(1, Math.round(r() * 7 + 2)),
+      won_oth:     0,
+      val_nuc:     Math.round(to * (0.08 + r() * 0.3)),
+      val_oth:     Math.round(to * (0.2 + r() * 0.5)),
+
+      /* Added November — the nine from the SQDCP catalogue, plus the
+         two that make Cost a real family. */
+      near_miss_n: Math.max(0, Math.round(profile.nearMiss * (0.5 + r()))),
+      cal_total:   profile.instruments,
+      cal_overdue: r() < 0.74 ? 0 : 1 + Math.floor(r() * 2),
+      cpk_min:     Math.round(cpk * 100) / 100,
+      planned_hours: plannedH,
+      run_hours:   runH,
+      down_hours:  downH,
+      ideal_rate:  idealRate,
+      orders_done: due,
+      lead_days:   Math.round(due * lead),
+      prod_cost:   Math.round(made * cpu),
+      labour_hours: Math.max(1, Math.round(hours * 0.62)),
+      mat_out:     Math.round(matOut),
+      mat_in:      Math.round(matOut / (myield / 100)),
+      ot_hours:    Math.round(hours * otRate),
+      wc_total:    profile.workCentres,
+      wc_covered:  Math.min(profile.workCentres, Math.round(profile.workCentres * skillsRate))
+    };
+    const v = out[p.key];
+    v.won_nuc = Math.round(v.tend_nuc * clamp(profile.win + arc * 0.01 + (r() - 0.5) * 0.2, 0.05, 0.85));
+    v.won_oth = Math.round(v.tend_oth * clamp(profile.win - 0.04 + (r() - 0.5) * 0.2, 0.05, 0.85));
+  });
+  return out;
+}
+function clamp(n, lo, hi) { return n < lo ? lo : n > hi ? hi : n; }
+
+const DEMO = {
+  name: 'Pennine Precision Ltd',
+  raws: makeRaws(20261109, {
+    otc:88.5, scrap:3.1, abs:3.4, hours:9400, due:46, perDue:12,
+    headcount:58, turnover:1240000, ebit:0.072, exp:0.18,
+    riddorP:0.14, hsa:12, win:0.34, arc:4.2,
+    cpk:1.18, myield:54, nearMiss:3, instruments:140, workCentres:14,
+    ot:0.11, skills:0.72, cpu:168, lead:11, kgPerUnit:1.9, perf:0.86
+  })
+};
+
+/* Comparison group. Deliberately uneven: a few metrics are held
+   by only three companies so the suppression tiers can be seen. */
+const COHORT = (() => {
+  const out = [];
+  for (let i = 0; i < 12; i++) {
+    const r = rng(5000 + i * 37);
+    out.push({
+      id: i,
+      variant: i % 5 === 0 ? 'svc' : 'mfg',
+      unit: i % 7 === 0 ? 'projects' : (i % 3 === 0 ? 'orders' : 'deliveries'),
+      /* which optional metrics this company tracks */
+      tracks: new Set(METRICS.filter(m => m.core || r() < (m.id === 'coq' ? 0.18 : 0.62)).map(m => m.id)),
+      raws: makeRaws(9100 + i * 131, {
+        otc: 78 + r() * 18, scrap: 1.1 + r() * 4, abs: 1.6 + r() * 4,
+        hours: 3200 + r() * 34000, due: 16 + r() * 90, perDue: 4 + r() * 22,
+        headcount: Math.round(14 + r() * 180), turnover: Math.round(330000 + r() * 4600000),
+        ebit: 0.015 + r() * 0.13, exp: r() * 0.4,
+        riddorP: r() * 0.3, hsa: Math.round(8 + r() * 8),
+        win: 0.14 + r() * 0.42, arc: r() * 5,
+        cpk: 0.95 + r() * 0.6, myield: 38 + r() * 42,
+        nearMiss: Math.round(1 + r() * 7), instruments: Math.round(40 + r() * 400),
+        workCentres: Math.round(5 + r() * 40), ot: 0.03 + r() * 0.16,
+        skills: 0.45 + r() * 0.45, cpu: 40 + r() * 340,
+        lead: 4 + r() * 26, kgPerUnit: 0.3 + r() * 5, perf: 0.7 + r() * 0.2
+      })
+    });
+  }
+  return out;
+})();
+
+/* ═══ State ════════════════════════════════════════════════ */
+const state = {
+  view: 'dashboard',
+  variant: 'mfg',
+  shareConsultant: false,   /* off until the company turns it on */
+  contribute: true,         /* on, and the benchmark depends on it */
+  unit: 'deliveries',
+  /* The demo company is one that has been using it a while, so it
+     has added some optional metrics on top of the core five —
+     otherwise the preset views come out nearly empty. A brand new
+     company starts with the core five alone. */
+  selected: new Set(METRICS.filter(m =>
+    m.core || ['missed','schedule','complaints','hsaudit','nearmiss','cpk','oee','downtime',
+               'leadtime','costperunit','productivity','matyield','overtime','skills',
+               'ebit','turnperemp','staffturn'].includes(m.id)
+  ).map(m => m.id)),
+  preset: 'all',
+  display: {},           /* metricId -> 'number'|'spark'|'line'|'bar' */
+  targets: Object.assign({}, DEMO_TARGETS),
+  views: SEED_VIEWS.map(v => JSON.parse(JSON.stringify(v))),
+  activeView: 'all',
+  layout: 'focus',       /* 'focus' = one metric at a time, 'grid' = all at once */
+  focus: 'otc',          /* the metric the detail panel is showing */
+  editing: null,         /* the view open in the builder */
+  armDelete: false,
+  globalDisplay: 'spark',
+  entry: {},
+  scrPage: 0,
+  scrTimer: null
+};
+METRICS.forEach(m => { state.display[m.id] = null; });
+
+function variantOk(m) { return !m.variant || m.variant === state.variant; }
+function sharedInputs() {
+  const seen = new Map();
+  activeMetrics().forEach(m => (m.inputs || []).forEach(i => { if (!seen.has(i.k)) seen.set(i.k, i); }));
+  /* derived metrics still need their parents' inputs */
+  activeMetrics().filter(m => m.derivedFrom).forEach(m => {
+    const src = m.derivedFrom === 'otc' ? BY_ID.otc : null;
+    if (src) src.inputs.forEach(i => { if (!seen.has(i.k)) seen.set(i.k, i); });
+    if (m.id === 'turnperemp') {
+      [{k:'turnover', home:'financial',label:'Turnover in period',prefix:'£',int:true},
+       {k:'headcount', home:'people',label:'Total employees',int:true}]
+        .forEach(i => { if (!seen.has(i.k)) seen.set(i.k, i); });
+    }
+  });
+  return [...seen.values()];
+}
+
+/* ═══ Series + benchmark ═══════════════════════════════════ */
+/* Sum the flows and take the latest stock across a window of
+   months ending at endIdx. One helper serves three jobs: a single
+   month, a rolling 12-month safety rate, and a quarter. */
+function windowRaws(raws, endIdx, n) {
+  const lastKey = PERIODS_ALL[endIdx].key;
+  if (!raws[lastKey]) return null;
+  if (n === 1) return raws[lastKey];
+  const acc = {}, from = Math.max(0, endIdx - n + 1);
+  Object.keys(raws[lastKey]).forEach(k => {
+    if (STOCK_KEYS.has(k)) { acc[k] = raws[lastKey][k]; return; }
+    let s = 0;
+    for (let j = from; j <= endIdx; j++) s += raws[PERIODS_ALL[j].key][k] || 0;
+    acc[k] = s;
+  });
+  return acc;
+}
+/* Which periods a metric is drawn at, and how wide its window is.
+   Quarterly metrics land on quarter ends only — they should not
+   draw eighteen monthly points while the label says quarterly. */
+function planFor(m) {
+  const quarterly = FAM[m.fam].cadence === 'quarterly';
+  const win = m.roll ? m.roll : quarterly ? 3 : 1;
+  const idxs = [];
+  PERIODS_ALL.forEach((p, i) => {
+    if (i < LEAD) return;
+    if (quarterly && !p.quarterEnd) return;
+    idxs.push(i);
+  });
+  return { idxs, win };
+}
+function seriesFor(m, raws) {
+  const { idxs, win } = planFor(m);
+  return idxs.map(i => {
+    const w = windowRaws(raws, i, win);
+    const val = w ? m.calc(w) : null;
+    return { p: PERIODS_ALL[i], v: (val == null || !isFinite(val)) ? null : val };
+  });
+}
+/* The raw figures behind the latest point, for the "their way"
+   line — the same window the headline figure was computed over. */
+function latestRaws(m, raws) {
+  const { idxs, win } = planFor(m);
+  return windowRaws(raws, idxs[idxs.length - 1], win);
+}
+function median(a) {
+  const s = [...a].sort((x, y) => x - y), n = s.length;
+  if (!n) return null;
+  return n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2;
+}
+function quantile(a, q) {
+  const s = [...a].sort((x, y) => x - y);
+  if (!s.length) return null;
+  const i = (s.length - 1) * q, lo = Math.floor(i), hi = Math.ceil(i);
+  return lo === hi ? s[lo] : s[lo] + (s[hi] - s[lo]) * (i - lo);
+}
+
+/* Cohort for one metric: same variant, same declared unit where
+   the metric depends on it, and only companies that track it. */
+function cohortFor(m) {
+  return COHORT.filter(c => {
+    if (!c.tracks.has(m.id)) return false;
+    if (m.variant && m.variant !== c.variant) return false;
+    if ((m.id === 'otc' || m.id === 'missed') && c.unit !== state.unit) return false;
+    return true;
+  });
+}
+/* Suppression: nothing under 5, median only to 7, quartiles from
+   8, percentile position from 12. Plus a dominance check on any
+   metric that is a level in pounds. */
+function benchFor(m) {
+  /* Reciprocity, enforced rather than promised: a company that does
+     not contribute to the group does not get to see it. */
+  if (!state.contribute) return { n:0, tier:'optedout' };
+  const co = cohortFor(m);
+  const vals = co.map(c => { const s = seriesFor(m, c.raws); const last = s[s.length - 1]; return last.v; })
+                 .filter(v => v != null);
+  const n = vals.length;
+  if (n < 5) return { n, tier:'none' };
+  if (m.money) {
+    const sorted = [...vals].sort((a, b) => b - a), total = sorted.reduce((a, b) => a + b, 0);
+    if (total > 0 && (sorted[0] / total > 0.9 || (sorted[0] + (sorted[1] || 0)) / total > 0.8))
+      return { n, tier:'dominated' };
+  }
+  const med = median(vals);
+  if (n < 8)  return { n, tier:'median', med };
+  if (n < 12) return { n, tier:'quartile', med, q1:quantile(vals, 0.25), q3:quantile(vals, 0.75) };
+  return { n, tier:'full', med, q1:quantile(vals, 0.25), q3:quantile(vals, 0.75), vals };
+}
+/* Benchmark median over time, fixed cohort: only companies with a
+   figure in every period, so the line moves on performance only. */
+function benchSeries(m) {
+  if (!state.contribute) return null;
+  const co = cohortFor(m).map(c => seriesFor(m, c.raws))
+    .filter(s => s.every(pt => pt.v != null));
+  if (co.length < 5) return null;
+  /* Walk the metric's own periods, not the calendar — a quarterly
+     metric has six points, not eighteen. */
+  return co[0].map((pt, i) => ({ p: pt.p, v: median(co.map(s => s[i].v)) }));
+}
+
+/* ═══ Formatting ═══════════════════════════════════════════ */
+function fmt(m, v) {
+  if (v == null) return '—';
+  if (m.money) return v >= 1e6 ? '£' + (v / 1e6).toFixed(2) + 'M'
+              : v >= 1e3 ? '£' + Math.round(v / 1e3) + 'K' : '£' + Math.round(v);
+  return v.toLocaleString('en-GB', { minimumFractionDigits:m.dp, maximumFractionDigits:m.dp });
+}
+function deltaClass(m, d) {
+  if (d == null || Math.abs(d) < 1e-9) return 'flat';
+  const up = d > 0, wantHigh = m.good === 'high';
+  return (up === wantHigh) ? (up ? 'up-good' : 'down-good') : (up ? 'up-bad' : 'down-bad');
+}
+function deltaText(m, cur, prev) {
+  if (cur == null || prev == null) return '';
+  const d = cur - prev;
+  const mag = m.money ? fmt(m, Math.abs(d)) : Math.abs(d).toFixed(m.dp);
+  /* A change that rounds to nothing at this metric's precision is
+     level. "▼ 0.00" is not a movement. */
+  if (Math.abs(d) < 1e-9 || !/[1-9]/.test(mag)) return 'level';
+  return (d > 0 ? '▲' : '▼') + ' ' + mag;
+}
+
+/* ═══ Charts — hand-rolled SVG ═════════════════════════════
+   2px lines, round caps. Markers ≥8px with a 2px surface ring.
+   Bars capped at 24px with a 4px rounded top, square at the
+   baseline. Gridlines hairline and recessive. Single series gets
+   no legend; two series always do. */
+const NS = 'http://www.w3.org/2000/svg';
+function el(n, a) { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); return e; }
+
+function extent(arrs) {
+  let lo = Infinity, hi = -Infinity;
+  arrs.forEach(a => a.forEach(p => { if (p.v != null) { if (p.v < lo) lo = p.v; if (p.v > hi) hi = p.v; } }));
+  if (!isFinite(lo)) return [0, 1];
+  if (lo === hi) { lo -= Math.abs(lo || 1) * 0.1; hi += Math.abs(hi || 1) * 0.1; }
+  const pad = (hi - lo) * 0.14;
+  return [lo - pad, hi + pad];
+}
+function ticks(lo, hi, n) {
+  const span = hi - lo, raw = span / n, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(s => s * mag).find(s => s >= raw) || mag * 10;
+  const out = [];
+  for (let t = Math.ceil(lo / step) * step; t <= hi + 1e-9; t += step) out.push(t);
+  return out;
+}
+function tickLabel(m, v) {
+  if (m.money) return v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? Math.round(v / 1e3) + 'K' : Math.round(v);
+  const d = Math.abs(v) < 1 ? Math.min(2, m.dp) : 0;
+  return v.toLocaleString('en-GB', { minimumFractionDigits:d, maximumFractionDigits:d });
+}
+
+function sparkline(m, s) {
+  const W = 268, H = 46, pts = s.filter(p => p.v != null);
+  const svg = el('svg', { viewBox:'0 0 ' + W + ' ' + H, role:'img',
+    'aria-label':m.name + ' trend over ' + pts.length + ' periods' });
+  if (pts.length < 2) return svg;
+  const [lo, hi] = extent([s]);
+  const x = i => i / (s.length - 1) * (W - 6) + 3;
+  const y = v => H - 6 - (v - lo) / (hi - lo) * (H - 12);
+  let d = '';
+  s.forEach((p, i) => { if (p.v != null) d += (d ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(p.v).toFixed(1); });
+  svg.appendChild(el('path', { d, fill:'none', stroke:'var(--series-mute)',
+    'stroke-width':2, 'stroke-linecap':'round', 'stroke-linejoin':'round' }));
+  const last = s[s.length - 1];
+  if (last.v != null) {
+    svg.appendChild(el('circle', { cx:x(s.length - 1), cy:y(last.v), r:5.5,
+      fill:'var(--series-you)', stroke:'var(--white)', 'stroke-width':2 }));
+  }
+  return svg;
+}
+
+/* A target drawn on the plot: a thin neutral rule with a small end
+   label. Deliberately not one of the two series colours — it is an
+   annotation, not a third series. */
+function targetRule(svg, m, y, x1, x2) {
+  const t = state.targets[m.id];
+  if (t == null) return;
+  const yy = y(t);
+  if (!isFinite(yy) || yy < 2 || yy > 1e4) return;
+  svg.appendChild(el('line', { x1:x1, x2:x2, y1:yy, y2:yy,
+    stroke:'var(--ink-mute)', 'stroke-width':1.5, 'stroke-dasharray':'5 4',
+    'stroke-linecap':'round', opacity:0.75 }));
+  const lb = el('text', { x:x2, y:yy - 4, 'text-anchor':'end',
+    'font-size':9, fill:'var(--ink-mute)', 'font-family':'Barlow, sans-serif' });
+  lb.textContent = 'Target';
+  svg.appendChild(lb);
+}
+
+/* `big` draws the same chart at detail-panel proportions. Forcing a
+   height onto the tile viewBox just letterboxes it. */
+function lineChart(m, s, bs, size) {
+  const big = size === 'detail', grid = size === 'grid';
+  const W = big ? 900 : grid ? 580 : 300,
+        H = big ? 250 : grid ? 186 : 158,
+        L = big ? 56 : grid ? 50 : 44,
+        R = big ? 14 : 12, T = 10, B = big ? 30 : 26;
+  const svg = el('svg', { viewBox:'0 0 ' + W + ' ' + H, role:'img',
+    'aria-label':m.name + ' over time' + (bs ? ', with the comparison group median' : '') });
+  const tgt = state.targets[m.id];
+  const sets = bs ? [s, bs] : [s];
+  if (tgt != null) sets.push([{ v: tgt }]);
+  const [lo, hi] = extent(sets);
+  const x = i => L + i / (s.length - 1) * (W - L - R);
+  const y = v => H - B - (v - lo) / (hi - lo) * (H - T - B);
+
+  ticks(lo, hi, 4).forEach(t => {
+    svg.appendChild(el('line', { x1:L, x2:W - R, y1:y(t), y2:y(t), stroke:'var(--rule2)', 'stroke-width':1 }));
+    const lb = el('text', { x:L - 7, y:y(t) + 4, 'text-anchor':'end',
+      'font-size':big ? 12 : grid ? 11 : 9.5, fill:'var(--ink-mute)', 'font-family':'Barlow, sans-serif' });
+    lb.setAttribute('style', 'font-variant-numeric:tabular-nums');
+    lb.textContent = tickLabel(m, t);
+    svg.appendChild(lb);
+  });
+  [0, Math.floor((s.length - 1) / 2), s.length - 1].forEach(i => {
+    const lb = el('text', { x:x(i), y:H - 9, 'text-anchor':i === 0 ? 'start' : i === s.length - 1 ? 'end' : 'middle',
+      'font-size':big ? 12 : grid ? 11 : 9.5, fill:'var(--ink-mute)', 'font-family':'Barlow, sans-serif' });
+    lb.textContent = s[i].p.label;
+    svg.appendChild(lb);
+  });
+
+  targetRule(svg, m, y, L, W - R);
+
+  if (bs) {
+    let bd = '';
+    bs.forEach((p, i) => { if (p.v != null) bd += (bd ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(p.v).toFixed(1); });
+    svg.appendChild(el('path', { d:bd, fill:'none', stroke:'var(--series-bench)',
+      'stroke-width':2, 'stroke-linecap':'round', 'stroke-linejoin':'round', opacity:0.75 }));
+  }
+  let d = '';
+  s.forEach((p, i) => { if (p.v != null) d += (d ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(p.v).toFixed(1); });
+  svg.appendChild(el('path', { d, fill:'none', stroke:'var(--series-you)',
+    'stroke-width':2, 'stroke-linecap':'round', 'stroke-linejoin':'round' }));
+
+  const last = s[s.length - 1];
+  if (last.v != null) {
+    svg.appendChild(el('circle', { cx:x(s.length - 1), cy:y(last.v), r:4.5,
+      fill:'var(--series-you)', stroke:'var(--white)', 'stroke-width':2 }));
+  }
+  s.forEach((p, i) => {
+    if (p.v == null) return;
+    const hit = el('circle', { cx:x(i), cy:y(p.v), r:9, fill:'transparent', style:'cursor:crosshair' });
+    hit.addEventListener('mouseenter', ev => showTip(ev,
+      '<b>' + p.p.long + '</b><br><span class="tip-num">' + fmt(m, p.v) + ' ' + m.unit + '</span>' +
+      (bs && bs[i].v != null ? '<br>Group median <span class="tip-num">' + fmt(m, bs[i].v) + '</span>' : '')));
+    hit.addEventListener('mouseleave', hideTip);
+    svg.appendChild(hit);
+  });
+  return svg;
+}
+
+function barChart(m, s, size) {
+  const grid = size === 'grid';
+  const W = grid ? 580 : 300, H = grid ? 186 : 158,
+        L = grid ? 50 : 44, R = 12, T = 10, B = 26;
+  const svg = el('svg', { viewBox:'0 0 ' + W + ' ' + H, role:'img', 'aria-label':m.name + ' by month' });
+  const vals = s.filter(p => p.v != null).map(p => p.v);
+  const tgtB = state.targets[m.id];
+  const hi = Math.max(...vals, tgtB == null ? 0 : tgtB, 0) * 1.14 || 1;
+  const lo = 0;
+  const band = (W - L - R) / s.length;
+  const bw = Math.min(24, band - 4);
+  const y = v => H - B - (v - lo) / (hi - lo) * (H - T - B);
+
+  ticks(lo, hi, 4).forEach(t => {
+    svg.appendChild(el('line', { x1:L, x2:W - R, y1:y(t), y2:y(t), stroke:'var(--rule2)', 'stroke-width':1 }));
+    const lb = el('text', { x:L - 6, y:y(t) + 3.5, 'text-anchor':'end',
+      'font-size':grid ? 11 : 9.5, fill:'var(--ink-mute)', 'font-family':'Barlow, sans-serif' });
+    lb.setAttribute('style', 'font-variant-numeric:tabular-nums');
+    lb.textContent = tickLabel(m, t);
+    svg.appendChild(lb);
+  });
+
+  s.forEach((p, i) => {
+    if (p.v == null) return;
+    const cx = L + band * i + band / 2, top = y(p.v), h = Math.max(1.5, H - B - top);
+    const rr = Math.min(4, bw / 2, h);
+    const d = 'M' + (cx - bw / 2) + ' ' + (H - B) +
+              'V' + (top + rr) + 'a' + rr + ' ' + rr + ' 0 0 1 ' + rr + ' ' + (-rr) +
+              'h' + (bw - rr * 2) + 'a' + rr + ' ' + rr + ' 0 0 1 ' + rr + ' ' + rr +
+              'V' + (H - B) + 'Z';
+    const bar = el('path', { d, fill:'var(--series-you)', style:'cursor:crosshair' });
+    bar.addEventListener('mouseenter', ev => showTip(ev,
+      '<b>' + p.p.long + '</b><br><span class="tip-num">' + fmt(m, p.v) + ' ' + m.unit + '</span>'));
+    bar.addEventListener('mouseleave', hideTip);
+    svg.appendChild(bar);
+  });
+  targetRule(svg, m, y, L, W - R);
+  svg.appendChild(el('line', { x1:L, x2:W - R, y1:H - B, y2:H - B, stroke:'var(--line)', 'stroke-width':1 }));
+  [0, s.length - 1].forEach(i => {
+    const lb = el('text', { x:L + band * i + band / 2, y:H - 8,
+      'text-anchor':i === 0 ? 'start' : 'end', 'font-size':grid ? 11 : 9.5,
+      fill:'var(--ink-mute)', 'font-family':'Barlow, sans-serif' });
+    lb.textContent = s[i].p.label;
+    svg.appendChild(lb);
+  });
+  return svg;
+}
+
+/* Where the company sits in the group's spread. */
+function benchBar(m, you, b) {
+  const W = 268, H = 22;
+  const svg = el('svg', { viewBox:'0 0 ' + W + ' ' + H, role:'img',
+    'aria-label':'Your position against the comparison group' });
+  const lo = Math.min(b.q1, you, b.med) * 0.94, hi = Math.max(b.q3, you, b.med) * 1.06;
+  const x = v => 4 + (v - lo) / (hi - lo) * (W - 8);
+  svg.appendChild(el('line', { x1:4, x2:W - 4, y1:11, y2:11, stroke:'var(--rule2)', 'stroke-width':3,
+    'stroke-linecap':'round' }));
+  svg.appendChild(el('line', { x1:x(b.q1), x2:x(b.q3), y1:11, y2:11,
+    stroke:'var(--series-bench)', 'stroke-width':3, 'stroke-linecap':'round', opacity:0.35 }));
+  svg.appendChild(el('line', { x1:x(b.med), x2:x(b.med), y1:4, y2:18,
+    stroke:'var(--series-bench)', 'stroke-width':2, 'stroke-linecap':'round' }));
+  if (you != null) {
+    svg.appendChild(el('circle', { cx:x(you), cy:11, r:5.5,
+      fill:'var(--series-you)', stroke:'var(--white)', 'stroke-width':2 }));
+  }
+  return svg;
+}
+
+/* ═══ Tooltip ══════════════════════════════════════════════ */
+const tipEl = document.getElementById('tip');
+function showTip(ev, html) {
+  tipEl.innerHTML = html;
+  tipEl.classList.add('is-on');
+  const r = tipEl.getBoundingClientRect();
+  let x = ev.clientX + 14, y = ev.clientY - r.height - 10;
+  if (x + r.width > innerWidth - 8) x = ev.clientX - r.width - 14;
+  if (y < 8) y = ev.clientY + 16;
+  tipEl.style.left = x + 'px'; tipEl.style.top = y + 'px';
+}
+function hideTip() { tipEl.classList.remove('is-on'); }
+
+/* ═══ Printed sheet ════════════════════════════════════════
+   The tile grid survives as the print and screen layout. The
+   interactive dashboard is focus-and-rail below. */
+function renderPrintGrid() {
+  const host = document.getElementById('tiles');
+  host.innerHTML = '';
+  const metrics = activeMetrics();
+  if (!metrics.length) {
+    host.innerHTML = '<p style="color:var(--ink-mute)">Nothing selected for this view.</p>';
+    return;
+  }
+  metrics.forEach(m => {
+    const s = seriesFor(m, DEMO.raws);
+    const cur = s[s.length - 1].v, prev = s[s.length - 2] ? s[s.length - 2].v : null;
+    const vw = currentView();
+    const disp = vw.shapes[m.id] || 'spark';
+    const b = m.bench ? benchFor(m) : { tier:'none', n:0 };
+    const lastRaw = latestRaws(m, DEMO.raws) || {};
+
+    const tile = document.createElement('div');
+    /* Width is the view's, not a guess from the chart type. */
+    const wide = (currentView().sizes[m.id] || (disp === 'line' || disp === 'bar' ? 'wide' : 'small')) === 'wide';
+    tile.className = 'card tile' + (wide ? ' tile-wide' : '');
+
+    const head = document.createElement('div');
+    head.className = 'tile-head';
+    head.innerHTML =
+      '<div><div class="tile-name">' + m.name + '</div>' +
+      '<div class="tile-cad">' + FAM[m.fam].name + ' · ' + FAM[m.fam].cadence + '</div></div>' +
+      (m.core ? '<span class="pill pill-core">Core</span>' : '');
+    tile.appendChild(head);
+
+    const fig = document.createElement('div');
+    fig.className = 'tile-fig';
+    fig.innerHTML =
+      '<span class="tile-v">' + fmt(m, cur) + '</span>' +
+      '<span class="tile-unit">' + m.unit + '</span>' +
+      '<span class="tile-delta ' + deltaClass(m, cur != null && prev != null ? cur - prev : null) + '">' +
+        deltaText(m, cur, prev) + '</span>';
+    tile.appendChild(fig);
+
+    /* "Their way" — the familiar figure beside the computed one. */
+    const altTxt = m.alt ? m.alt(lastRaw) : null;
+    if (altTxt) {
+      const alt = document.createElement('div');
+      alt.className = 'tile-alt';
+      alt.textContent = altTxt;
+      tile.appendChild(alt);
+    }
+
+    /* The company's own target. No target set means no status shown —
+       it never falls back to the group median, because a borrowed
+       target is not a commitment. */
+    const tgtHtml = targetLine(m, cur);
+    if (tgtHtml) {
+      const tg = document.createElement('div');
+      tg.className = 'tile-tgt';
+      tg.innerHTML = tgtHtml;
+      tile.appendChild(tg);
+    }
+
+    if (disp !== 'number') {
+      const plot = document.createElement('div');
+      plot.className = 'tile-plot';
+      const bs = (disp === 'line' && m.bench) ? benchSeries(m) : null;
+      const wideChart = wide ? 'grid' : null;
+      plot.appendChild(disp === 'spark' ? sparkline(m, s)
+        : disp === 'bar' ? barChart(m, s, wideChart)
+        : lineChart(m, s, bs, wideChart));
+      tile.appendChild(plot);
+      if (bs) {
+        const lg = document.createElement('div');
+        lg.className = 'legend';
+        lg.innerHTML =
+          '<span><i style="background:var(--series-you)"></i>' + DEMO.name + '</span>' +
+          '<span><i style="background:var(--series-bench)"></i>Group median</span>';
+        tile.appendChild(lg);
+      }
+    }
+
+    const foot = document.createElement('div');
+    foot.className = 'tile-foot';
+    const bench = document.createElement('div');
+    bench.className = 'bench';
+    if (!m.bench) {
+      bench.innerHTML = 'Not compared — this one is not meaningful between companies.';
+    } else if (b.tier === 'optedout') {
+      bench.innerHTML = '<span class="bench-none">Opted out of the comparison.</span> ' +
+        'Your own figures are unaffected.';
+    } else if (b.tier === 'none') {
+      bench.innerHTML = '<span class="bench-none">No comparison yet</span> — ' + b.n +
+        ' other ' + (b.n === 1 ? 'company has' : 'companies have') + ' submitted this. We need five.';
+    } else if (b.tier === 'dominated') {
+      bench.innerHTML = '<span class="bench-none">Comparison withheld</span> — one or two companies make up ' +
+        'most of the group total, so a median would really just be their figure.';
+    } else if (b.tier === 'median') {
+      bench.innerHTML = 'Group median <strong>' + fmt(m, b.med) + '</strong> across ' + b.n +
+        ' companies. Too few for a spread.';
+    } else {
+      const better = m.good === 'high' ? cur > b.med : cur < b.med;
+      bench.innerHTML = 'Group median <strong>' + fmt(m, b.med) + '</strong> · middle half ' +
+        fmt(m, b.q1) + '–' + fmt(m, b.q3) + ' · ' + b.n + ' companies<br>' +
+        'You are <strong>' + (cur == null ? '—' : better ? 'better than' : 'worse than') + '</strong> the median.';
+      const bbWrap = document.createElement('div');
+      bbWrap.className = 'bench-bar';
+      bbWrap.appendChild(benchBar(m, cur, b));
+      bench.appendChild(bbWrap);
+    }
+    foot.appendChild(bench);
+
+    tile.appendChild(foot);
+    host.appendChild(tile);
+  });
+
+  const v = currentView();
+  const mp = PERIODS_ALL.find(x => x.key === LAST_MONTHLY);
+  document.getElementById('printCo').textContent = DEMO.name;
+  document.getElementById('printPeriod').textContent =
+    v.name + ' · monthly figures to ' + mp.long + ', quarterly to ' +
+    PERIODS_ALL.find(x => x.key === LAST_QUARTERLY).q + ' · produced ' + TODAY;
+}
+
+/* ═══ The active view ══════════════════════════════════════ */
+function currentView() {
+  return state.views.find(v => v.id === state.activeView) || state.views[0];
+}
+/* A view with no metrics listed means everything the company tracks. */
+function viewMetrics(v) {
+  const sel = METRICS.filter(m => state.selected.has(m.id) && variantOk(m));
+  if (!v || !v.metrics.length) return sel;
+  const byId = Object.fromEntries(sel.map(m => [m.id, m]));
+  return v.metrics.map(id => byId[id]).filter(Boolean);
+}
+function activeMetrics() { return viewMetrics(currentView()); }
+
+/* ═══ Focus and rail ═══════════════════════════════════════ */
+function renderAsOf() {
+  const el = document.getElementById('asofBar');
+  const mp = PERIODS_ALL.find(x => x.key === LAST_MONTHLY);
+  const qp = PERIODS_ALL.find(x => x.key === LAST_QUARTERLY);
+  const sub = SUBMISSIONS[LAST_MONTHLY];
+  el.innerHTML =
+    '<span><span class="dot" style="background:var(--good)"></span> Monthly figures complete to <strong>' +
+      mp.long.split(' ')[0] + '</strong></span>' +
+    '<span class="sep">·</span>' +
+    '<span><span class="dot" style="background:var(--warn)"></span> Next month due in <strong>' +
+      DUE_IN_DAYS + ' days</strong></span>' +
+    '<span class="sep">·</span>' +
+    '<span>Quarterly complete to <strong>' + qp.q + '</strong></span>' +
+    '<span class="topbar-spacer" style="flex:1 1 auto"></span>' +
+    '<span style="color:var(--grey)">Last submission ' + sub.at + ' by ' + sub.by + '</span>';
+}
+
+function renderRail() {
+  const v = currentView();
+  document.getElementById('railName').textContent = v.name;
+  const ms = activeMetrics();
+  document.getElementById('railNote').textContent =
+    ms.length + (ms.length === 1 ? ' metric' : ' metrics') +
+    (v.shared === 'me' ? '' : v.shared === 'team' ? ' · shared with your team' : ' · shared with your consultant');
+
+  const host = document.getElementById('rail');
+  host.innerHTML = '';
+  if (!ms.find(m => m.id === state.focus)) state.focus = ms.length ? ms[0].id : null;
+
+  Object.keys(FAM).forEach(fid => {
+    const inFam = ms.filter(m => m.fam === fid);
+    if (!inFam.length) return;
+    const quarterly = FAM[fid].cadence === 'quarterly';
+    const qp = PERIODS_ALL.find(x => x.key === LAST_QUARTERLY);
+    const mp = PERIODS_ALL.find(x => x.key === LAST_MONTHLY);
+
+    const gh = document.createElement('div');
+    gh.className = 'fr-gh';
+    gh.innerHTML = '<span class="fr-gh-n">' + FAM[fid].name + '</span>' +
+      '<span class="fr-gh-w">' + (quarterly ? qp.q + ' · to ' + qp.long.split(' ')[0] : mp.long.split(' ')[0]) + '</span>';
+    host.appendChild(gh);
+
+    inFam.forEach(m => {
+      const s = seriesFor(m, DEMO.raws);
+      const cur = s[s.length - 1].v;
+      const st = targetStatus(m, cur);
+      const b = document.createElement('button');
+      b.className = 'fr-it' + (m.id === state.focus ? ' is-on' : '');
+      b.innerHTML =
+        '<span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:' +
+          (!st ? 'var(--line)' : st.ok ? 'var(--good)' : 'var(--bad)') + '"></span>' +
+        '<span class="fr-it-n">' + m.name + '</span>' +
+        '<span class="fr-it-v">' + fmt(m, cur) + '</span>';
+      b.onclick = () => { state.focus = m.id; render(); };
+      host.appendChild(b);
+    });
+  });
+}
+
+function renderDetail() {
+  const host = document.getElementById('detail');
+  host.innerHTML = '';
+  const m = BY_ID[state.focus];
+  if (!m) { host.innerHTML = '<p style="color:var(--ink-mute)">Nothing selected in this view.</p>'; return; }
+
+  const s = seriesFor(m, DEMO.raws);
+  const cur = s[s.length - 1].v, prev = s[s.length - 2] ? s[s.length - 2].v : null;
+  const raw = latestRaws(m, DEMO.raws) || {};
+  const st = targetStatus(m, cur);
+  const b = m.bench ? benchFor(m) : { tier:'none', n:0 };
+  const bs = m.bench ? benchSeries(m) : null;
+  const sub = submissionFor(m);
+  const quarterly = FAM[m.fam].cadence === 'quarterly';
+  const v = currentView();
+
+  const head = document.createElement('div');
+  head.innerHTML =
+    '<div class="d-head"><h2 style="margin:0">' + m.name + '</h2>' +
+      '<span class="d-sub">' + FAM[m.fam].name + ' · ' + FAM[m.fam].cadence + '</span></div>' +
+    '<div class="d-meta"><span class="d-per">' + periodLabel(m) + '</span>' +
+      '<span class="d-sub">' + (sub ? 'Submitted ' + sub.at + (sub.amended ? ' · amended' : '') : 'Not submitted') + '</span></div>' +
+    '<p class="d-def">' + m.def + '</p>';
+  host.appendChild(head);
+
+  const altTxt = m.alt ? m.alt(raw) : null;
+  const fig = document.createElement('div');
+  fig.className = 'd-fig';
+  fig.innerHTML =
+    '<div><div class="d-v">' + fmt(m, cur) + '</div>' +
+      '<div class="d-unit">' + m.unit + (altTxt ? ' · ' + altTxt : '') + '</div></div>' +
+    '<div class="d-side">' +
+      (st && v.opts.target
+        ? '<div style="display:flex;align-items:center;gap:8px"><span class="tgt-pip ' +
+          (st.ok ? 'is-ok' : 'is-off') + '"></span><span style="color:var(--ink-soft)">' +
+          targetLine(m, cur).replace(/<[^>]+>/g, '') + '</span></div>'
+        : '<div class="d-sub">No target set</div>') +
+      (cur != null && prev != null
+        ? '<div style="font-weight:600;color:' + (deltaClass(m, cur - prev) === 'flat' ? 'var(--ink-mute)'
+            : deltaClass(m, cur - prev).indexOf('good') > -1 ? 'var(--good)' : 'var(--bad)') + '">' +
+          deltaText(m, cur, prev) + ' on last ' + (quarterly ? 'quarter' : 'month') + '</div>'
+        : '') +
+    '</div>';
+  host.appendChild(fig);
+
+  if (v.opts.trend) {
+    const card = document.createElement('div');
+    card.className = 'd-card';
+    const plot = document.createElement('div');
+    plot.appendChild(lineChart(m, s, bs, 'detail'));
+    card.appendChild(plot);
+    const lg = document.createElement('div');
+    lg.className = 'legend';
+    lg.style.paddingTop = '8px';
+    lg.innerHTML =
+      '<span><i style="background:var(--series-you)"></i>' + DEMO.name + '</span>' +
+      (bs ? '<span><i style="background:var(--series-bench)"></i>Group median</span>' : '') +
+      (state.targets[m.id] != null
+        ? '<span><i style="background:transparent;border-top:2px dashed var(--ink-mute);height:0"></i>Your target</span>' : '');
+    card.appendChild(lg);
+    host.appendChild(card);
+  }
+
+  const cols = document.createElement('div');
+  cols.className = 'd-cols';
+
+  if (v.opts.bench) {
+    const bc = document.createElement('div');
+    bc.className = 'd-col';
+    let inner = '<div class="rail-title" style="margin-bottom:9px">Where you sit</div>';
+    if (!m.bench) {
+      inner += '<p class="bench">Not compared — this one is not meaningful between companies.</p>';
+    } else if (b.tier === 'optedout') {
+      inner += '<p class="bench"><span class="bench-none">You have opted out of the comparison.</span> ' +
+        'Your own figures and trends are unaffected. Turn it back on under Your metrics.</p>';
+    } else if (b.tier === 'none') {
+      inner += '<p class="bench"><span class="bench-none">No comparison yet</span> — ' + b.n +
+        ' other ' + (b.n === 1 ? 'company has' : 'companies have') + ' submitted this. We need five.</p>';
+    } else if (b.tier === 'dominated') {
+      inner += '<p class="bench"><span class="bench-none">Comparison withheld</span> — one or two companies ' +
+        'make up most of the group total.</p>';
+    } else if (b.tier === 'median') {
+      inner += '<p class="bench">Group median <strong>' + fmt(m, b.med) + '</strong> across ' + b.n +
+        ' companies. Too few for a spread.</p>';
+    } else {
+      const better = m.good === 'high' ? cur > b.med : cur < b.med;
+      inner += '<p class="bench">Group median <strong>' + fmt(m, b.med) + '</strong> · middle half ' +
+        fmt(m, b.q1) + '–' + fmt(m, b.q3) + ' · ' + b.n + ' companies<br>You are <strong>' +
+        (cur == null ? '—' : better ? 'better than' : 'worse than') + '</strong> the median.</p>';
+    }
+    bc.innerHTML = inner;
+    if (b.tier === 'quartile' || b.tier === 'full') {
+      const w = document.createElement('div');
+      w.className = 'bench-bar';
+      w.appendChild(benchBar(m, cur, b));
+      bc.appendChild(w);
+    }
+    const note = document.createElement('p');
+    note.className = 'b-sub';
+    note.innerHTML = !state.contribute ? '' : 'Group figures as at ' + BENCH_ASOF + '.' +
+      (quarterly ? ' Quarterly group figures settle about six weeks after the quarter ends.'
+                 : ' ' + BENCH_MISSING + ' companies have not yet submitted ' +
+                   PERIODS_ALL.find(x => x.key === LAST_MONTHLY).long.split(' ')[0] +
+                   ' and are left out of this period.');
+    bc.appendChild(note);
+    cols.appendChild(bc);
+  }
+
+  const ic = document.createElement('div');
+  ic.className = 'd-col';
+  let kv = '<div class="rail-title" style="margin-bottom:4px">What you entered</div>';
+  const ins = (m.inputs || []).length ? m.inputs : [];
+  if (ins.length) {
+    ins.forEach(i => {
+      const val = raw[i.k];
+      kv += '<div class="d-kv"><dt>' + i.label + '</dt><dd>' +
+        (val == null ? '—' : (i.prefix || '') + val.toLocaleString('en-GB')) + '</dd></div>';
+    });
+  } else {
+    kv += '<p class="b-sub" style="margin-top:6px">Nothing extra — taken from figures you already give us.</p>';
+  }
+  ic.innerHTML = kv;
+  const trail = document.createElement('div');
+  trail.className = 'd-trail';
+  const amend = amendmentFor(m);
+  trail.innerHTML = sub
+    ? 'Entered <strong>' + sub.at + '</strong> by ' + sub.by +
+      (amend ? '<div class="d-warn" style="margin-top:5px">' + amend + '</div>'
+             : '<div style="margin-top:5px">Not amended since.</div>')
+    : '<span class="d-warn">This period has not been submitted.</span>';
+  ic.appendChild(trail);
+  cols.appendChild(ic);
+
+  host.appendChild(cols);
+}
+
+function render() {
+  renderAsOf();
+  renderViewChips();
+  const grid = state.layout === 'grid';
+  document.querySelector('.fr').style.display = grid ? 'none' : '';
+  document.getElementById('printSheet').classList.toggle('is-on', grid);
+  document.querySelectorAll('[data-layout]').forEach(b =>
+    b.classList.toggle('is-on', b.dataset.layout === state.layout));
+  if (!grid) { renderRail(); renderDetail(); }
+  renderPrintGrid();
+}
+
+function renderViewChips() {
+  const host = document.getElementById('viewSeg');
+  host.innerHTML = '';
+  state.views.forEach(v => {
+    const b = document.createElement('button');
+    b.textContent = v.name;
+    if (v.id === state.activeView) b.className = 'is-on';
+    b.onclick = () => { state.activeView = v.id; render(); };
+    host.appendChild(b);
+  });
+}
+
+/* ═══ Onboarding render ════════════════════════════════════ */
+function renderOnboarding() {
+  const host = document.getElementById('obFamilies');
+  host.innerHTML = '';
+  Object.entries(FAM).forEach(([fid, f]) => {
+    const list = METRICS.filter(m => m.fam === fid && variantOk(m));
+    if (!list.length) return;
+    const card = document.createElement('div');
+    card.className = 'card fam';
+    card.innerHTML = '<div class="fam-head"><div class="rail-title">' + f.name +
+      '</div><div class="fam-cad">asked ' + f.cadence + '</div>' +
+      '<div class="fam-tgt-head">Your target</div></div>';
+    list.forEach(m => {
+      const row = document.createElement('div');
+      row.className = 'mrow';
+      const id = 'ob-' + m.id;
+      const asks = (m.inputs || []).length
+        ? 'You enter: ' + m.inputs.map(i => '<code>' + i.label + '</code>').join(' ')
+        : 'Nothing extra to enter.';
+      const tv = state.targets[m.id];
+      row.innerHTML =
+        '<input type="checkbox" id="' + id + '"' + (state.selected.has(m.id) ? ' checked' : '') + '>' +
+        '<div class="mrow-body"><label class="mrow-name" for="' + id + '">' + m.name +
+        (m.core ? ' <span class="pill pill-core" style="font-size:10.5px;padding:2px 7px">Core</span>' : '') +
+        '</label><div class="mrow-def">' + m.def + '<br>' + asks + '</div></div>' +
+        '<div class="mrow-tgt"><input class="field field-num tgt-in" type="number" step="any" ' +
+          'placeholder="\u2014" value="' + (tv == null ? '' : tv) + '" ' +
+          'aria-label="Target for ' + m.name + '"><span class="tgt-unit">' + m.unit + '</span></div>';
+      row.querySelector('input[type=checkbox]').onchange = e => {
+        e.target.checked ? state.selected.add(m.id) : state.selected.delete(m.id);
+        renderObSummary(); render();
+      };
+      row.querySelector('.tgt-in').addEventListener('input', e => {
+        const val = e.target.value === '' ? null : Number(e.target.value);
+        state.targets[m.id] = (val == null || isNaN(val)) ? null : val;
+        render();
+      });
+      card.appendChild(row);
+    });
+    host.appendChild(card);
+  });
+  renderObSummary();
+}
+function renderObSummary() {
+  const sel = METRICS.filter(m => state.selected.has(m.id) && variantOk(m));
+  const monthly = new Set(), quarterly = new Set();
+  sel.forEach(m => {
+    const target = FAM[m.fam].cadence === 'monthly' ? monthly : quarterly;
+    (m.inputs || []).forEach(i => target.add(i.k));
+  });
+  sel.filter(m => m.derivedFrom).forEach(m => {
+    if (m.id === 'missed') BY_ID.otc.inputs.forEach(i => monthly.add(i.k));
+    if (m.id === 'turnperemp') { quarterly.add('turnover'); quarterly.add('headcount'); }
+  });
+  const mins = Math.max(1, Math.round(monthly.size * 0.35));
+  document.getElementById('obSummary').innerHTML =
+    '<div class="sum-line"><dt>Metrics chosen</dt><dd>' + sel.length + '</dd></div>' +
+    '<div class="sum-line"><dt>Monthly, numbers to type</dt><dd>' + monthly.size + '</dd></div>' +
+    '<div class="sum-line"><dt>Quarterly, numbers to type</dt><dd>' + quarterly.size + '</dd></div>' +
+    '<div class="sum-line"><dt>Monthly, time it should take</dt><dd>about ' + mins +
+      (mins === 1 ? ' minute' : ' minutes') + '</dd></div>';
+  const noBench = state.contribute
+    ? sel.filter(m => m.bench && benchFor(m).tier === 'none') : [];
+  document.getElementById('obWarn').innerHTML = noBench.length
+    ? noBench.length + ' of these ' + (noBench.length === 1 ? 'has' : 'have') +
+      ' too few other companies for a comparison yet: ' + noBench.map(m => m.name).join(', ') + '.'
+    : '';
+}
+
+/* ═══ Entry render ═════════════════════════════════════════ */
+function renderEntry() {
+  const host = document.getElementById('entryInputs');
+  host.innerHTML = '';
+  const last = PERIODS[PERIODS.length - 1];
+  const prevRaw = DEMO.raws[last.key];
+  document.getElementById('entryPeriodLabel').textContent =
+    'Entry for ' + new Date(2026, 10, 1).toLocaleString('en-GB', { month:'long', year:'numeric' });
+
+  const groups = {};
+  const act = activeMetrics();
+  sharedInputs().forEach(i => {
+    /* A shared denominator has a named home. Anything else goes to
+       the family of the active metric that asks for it — not the
+       first metric in the registry, selected or not. */
+    const fam = i.home
+      || (act.find(m => (m.inputs || []).some(x => x.k === i.k)) || {}).fam
+      || 'financial';
+    (groups[fam] = groups[fam] || []).push(i);
+  });
+  Object.keys(FAM).filter(f => groups[f]).forEach(fid => {
+    const list = groups[fid];
+    const card = document.createElement('div');
+    card.className = 'card inp-group';
+    card.innerHTML = '<div class="rail-title" style="margin-bottom:6px">' + FAM[fid].name + '</div>';
+    list.forEach(i => {
+      const row = document.createElement('div');
+      row.className = 'inp-row';
+      row.innerHTML =
+        '<div class="inp-label">' + i.label + (i.hint ? '<small>' + i.hint + '</small>' : '') + '</div>' +
+        '<div class="inp-cell"><input class="field field-num" type="number" inputmode="numeric" ' +
+          'id="in-' + i.k + '" placeholder="' + (i.prefix || '') + '0"></div>' +
+        '<div class="inp-prev">was ' + (prevRaw[i.k] != null ? prevRaw[i.k].toLocaleString('en-GB') : '—') + '</div>';
+      row.querySelector('input').addEventListener('input', e => {
+        const v = e.target.value === '' ? null : Number(e.target.value);
+        state.entry[i.k] = (v == null || isNaN(v)) ? null : v;
+        renderLive();
+      });
+      card.appendChild(row);
+    });
+    host.appendChild(card);
+  });
+  renderLive();
+}
+function renderLive() {
+  const out = document.getElementById('liveOut');
+  out.innerHTML = '';
+  activeMetrics().forEach(m => {
+    let v = null;
+    try { v = m.calc(state.entry); } catch (e) { v = null; }
+    if (v != null && !isFinite(v)) v = null;
+    const altTxt = m.alt ? m.alt(state.entry) : null;
+    const row = document.createElement('div');
+    row.className = 'live-row';
+    row.innerHTML =
+      '<div class="live-k">' + m.name + '<small>' + m.unit + '</small></div>' +
+      '<div><div class="live-v' + (v == null ? ' is-empty' : '') + '">' + fmt(m, v) + '</div>' +
+      (altTxt && v != null ? '<div class="live-alt">' + altTxt + '</div>' : '') + '</div>';
+    out.appendChild(row);
+  });
+}
+
+/* ═══ View builder ═════════════════════════════════════════
+   Edits a draft copy, so nothing changes on the dashboard until
+   Save. A view with no metrics listed means "everything". */
+const SHAPES = [['number','123'], ['spark','Spark'], ['line','Line'], ['bar','Bar']];
+const SIZES  = [['small','1×'], ['wide','2×']];
+const OPTS   = [['target','Target'], ['bench','Group comparison'],
+                ['trend','Trend'], ['entered','When it was entered']];
+
+function openBuilder(id) {
+  state.armDelete = false;
+  const src = id ? state.views.find(v => v.id === id) : null;
+  state.editing = src
+    ? JSON.parse(JSON.stringify(src))
+    : { id: 'v' + Date.now(), name: 'New view', shared: 'me', metrics: [],
+        shapes: {}, sizes: {}, opts: { target:true, bench:true, trend:true, entered:false } };
+  /* "Everything" has no explicit list; opening it for editing makes
+     the list concrete so there is something to reorder. */
+  if (!state.editing.metrics.length) {
+    state.editing.metrics = METRICS.filter(m => state.selected.has(m.id) && variantOk(m)).map(m => m.id);
+  }
+  go('builder');
+}
+
+function renderBuilder() {
+  const d = state.editing;
+  if (!d) return;
+  /* Only write the field when it actually differs: setting .value on a
+     focused input moves the caret to the end. */
+  const nameEl = document.getElementById('bName');
+  if (nameEl.value !== d.name) nameEl.value = d.name;
+  document.getElementById('bLink').textContent =
+    'kpi.nuccol.co.uk/s/' + d.id.slice(-6).toLowerCase();
+  document.querySelectorAll('[data-share]').forEach(b =>
+    b.classList.toggle('is-on', b.dataset.share === d.shared));
+
+  const pool = METRICS.filter(m => state.selected.has(m.id) && variantOk(m));
+  document.getElementById('bPoolNote').textContent =
+    d.metrics.length + ' of ' + pool.length + ' in this view.';
+
+  const ph = document.getElementById('bPool');
+  ph.innerHTML = '';
+  Object.keys(FAM).forEach(fid => {
+    const inFam = pool.filter(m => m.fam === fid);
+    if (!inFam.length) return;
+    const h = document.createElement('div');
+    h.className = 'b-fam';
+    h.textContent = FAM[fid].name;
+    ph.appendChild(h);
+    inFam.forEach(m => {
+      const s2 = seriesFor(m, DEMO.raws);
+      const row = document.createElement('div');
+      row.className = 'b-pk';
+      const on = d.metrics.includes(m.id);
+      row.innerHTML =
+        '<input type="checkbox" id="bp-' + m.id + '"' + (on ? ' checked' : '') + '>' +
+        '<label for="bp-' + m.id + '">' + m.name + '</label>' +
+        '<span class="b-pk-v">' + fmt(m, s2[s2.length - 1].v) + '</span>';
+      row.querySelector('input').onchange = e => {
+        if (e.target.checked) { if (!d.metrics.includes(m.id)) d.metrics.push(m.id); }
+        else d.metrics = d.metrics.filter(x => x !== m.id);
+        renderBuilder();
+      };
+      ph.appendChild(row);
+    });
+  });
+
+  const ch = document.getElementById('bChosen');
+  ch.innerHTML = '';
+  if (!d.metrics.length) {
+    ch.innerHTML = '<p class="b-empty">Nothing picked yet. Tick a metric on the left.</p>';
+  }
+  d.metrics.forEach((id, idx) => {
+    const m = BY_ID[id];
+    if (!m) return;
+    const row = document.createElement('div');
+    row.className = 'b-row';
+    row.innerHTML =
+      '<span class="b-grip" aria-hidden="true">⠿</span>' +
+      '<span class="b-row-n">' + m.name + '</span>' +
+      '<span class="b-row-f">' + FAM[m.fam].name + '</span>';
+
+    const mv = document.createElement('div');
+    mv.className = 'b-move';
+    [['↑', -1], ['↓', 1]].forEach(([g, dir]) => {
+      const bt = document.createElement('button');
+      bt.textContent = g;
+      bt.setAttribute('aria-label', (dir < 0 ? 'Move up: ' : 'Move down: ') + m.name);
+      bt.disabled = dir < 0 ? idx === 0 : idx === d.metrics.length - 1;
+      bt.onclick = () => {
+        const j = idx + dir;
+        if (j < 0 || j >= d.metrics.length) return;
+        const t = d.metrics[idx]; d.metrics[idx] = d.metrics[j]; d.metrics[j] = t;
+        renderBuilder();
+      };
+      mv.appendChild(bt);
+    });
+    row.appendChild(mv);
+
+    const seg1 = document.createElement('div');
+    seg1.className = 'seg';
+    SHAPES.forEach(([v, label]) => {
+      const bt = document.createElement('button');
+      bt.textContent = label;
+      if ((d.shapes[id] || 'spark') === v) bt.className = 'is-on';
+      bt.onclick = () => { d.shapes[id] = v; renderBuilder(); };
+      seg1.appendChild(bt);
+    });
+    row.appendChild(seg1);
+
+    const seg2 = document.createElement('div');
+    seg2.className = 'seg';
+    SIZES.forEach(([v, label]) => {
+      const bt = document.createElement('button');
+      bt.textContent = label;
+      if ((d.sizes[id] || 'small') === v) bt.className = 'is-on';
+      bt.onclick = () => { d.sizes[id] = v; renderBuilder(); };
+      seg2.appendChild(bt);
+    });
+    row.appendChild(seg2);
+    ch.appendChild(row);
+  });
+
+  const oh = document.getElementById('bOpts');
+  oh.innerHTML = '';
+  OPTS.forEach(([k, label]) => {
+    const bt = document.createElement('button');
+    bt.className = 'pill-btn' + (d.opts[k] ? ' is-on' : '');
+    bt.textContent = label;
+    bt.onclick = () => { d.opts[k] = !d.opts[k]; renderBuilder(); };
+    oh.appendChild(bt);
+  });
+
+  const rh = document.getElementById('bRot');
+  rh.innerHTML = '';
+  ['10s', '20s', '60s'].forEach((lab, i) => {
+    const bt = document.createElement('button');
+    bt.className = 'pill-btn' + (i === (d.rot == null ? 1 : d.rot) ? ' is-on' : '');
+    bt.textContent = 'Rotate ' + lab;
+    bt.onclick = () => { d.rot = i; renderBuilder(); };
+    rh.appendChild(bt);
+  });
+
+  /* A saved view can be deleted; an unsaved one is discarded. Either
+     way there is always a way out of this screen. */
+  const saved = !!state.views.find(v => v.id === d.id);
+  const del = document.getElementById('bDelete');
+  del.textContent = state.armDelete
+    ? (saved ? 'Click again to delete' : 'Click again to discard')
+    : (saved ? 'Delete view' : 'Discard this view');
+  del.style.borderColor = state.armDelete ? 'var(--bad)' : 'var(--line)';
+  del.style.color = state.armDelete ? 'var(--bad)' : 'var(--ink-mute)';
+}
+
+function saveBuilder() {
+  const d = state.editing;
+  if (!d) return;
+  d.name = (d.name || '').trim() || 'Untitled view';
+  if (!d.metrics.length) { toast('Pick at least one metric first.'); return; }
+  const i = state.views.findIndex(v => v.id === d.id);
+  if (i > -1) state.views[i] = d; else state.views.push(d);
+  state.activeView = d.id;
+  state.editing = null;
+  toast('Saved “' + d.name + '”. It now drives the dashboard, the print pack and the screen link.', 4600);
+  go('dashboard');
+}
+
+/* ═══ Screen mode ══════════════════════════════════════════ */
+const SCR_PER_PAGE = 4;
+function openScreen() {
+  document.getElementById('screen').classList.add('is-active');
+  document.getElementById('scrCo').textContent = DEMO.name;
+  const last = PERIODS[PERIODS.length - 1];
+  document.getElementById('scrPer').textContent = last.long + ' · updated monthly';
+  state.scrPage = 0;
+  renderScreen();
+  state.scrTimer = setInterval(() => {
+    const pages = Math.max(1, Math.ceil(activeMetrics().length / SCR_PER_PAGE));
+    state.scrPage = (state.scrPage + 1) % pages;
+    renderScreen();
+  }, 12000);
+}
+function closeScreen() {
+  document.getElementById('screen').classList.remove('is-active');
+  if (state.scrTimer) { clearInterval(state.scrTimer); state.scrTimer = null; }
+}
+function renderScreen() {
+  const all = activeMetrics();
+  const pages = Math.max(1, Math.ceil(all.length / SCR_PER_PAGE));
+  const page = all.slice(state.scrPage * SCR_PER_PAGE, state.scrPage * SCR_PER_PAGE + SCR_PER_PAGE);
+  const grid = document.getElementById('scrGrid');
+  grid.innerHTML = '';
+  page.forEach(m => {
+    const s = seriesFor(m, DEMO.raws);
+    const cur = s[s.length - 1].v, prev = s[s.length - 2] ? s[s.length - 2].v : null;
+    const card = document.createElement('div');
+    card.className = 'scard';
+    const alt = m.alt ? m.alt(latestRaws(m, DEMO.raws) || {}) : null;
+    card.innerHTML =
+      '<div class="scard-k">' + m.name + '</div>' +
+      '<div class="scard-v">' + fmt(m, cur) + '</div>' +
+      '<div class="scard-sub">' + m.unit +
+        (cur != null && prev != null ? ' · ' + deltaText(m, cur, prev) +
+          (FAM[m.fam].cadence === 'quarterly' ? ' on last quarter' : ' on last month') : '') +
+        (alt ? ' \u00b7 ' + alt : '') + '</div>' +
+      (targetStatus(m, cur)
+        ? '<div class="scard-tgt ' + (targetStatus(m, cur).ok ? 'is-ok' : 'is-off') + '">Target '
+          + fmt(m, state.targets[m.id]) + '</div>'
+        : '');
+    const sp = document.createElement('div');
+    sp.className = 'scard-spark';
+    sp.appendChild(screenSpark(s));
+    card.appendChild(sp);
+    grid.appendChild(card);
+  });
+  const dots = document.getElementById('scrDots');
+  dots.innerHTML = '';
+  for (let i = 0; i < pages; i++) {
+    const d = document.createElement('span');
+    d.className = 'sdot' + (i === state.scrPage ? ' is-on' : '');
+    dots.appendChild(d);
+  }
+  document.getElementById('scrHint').textContent = pages > 1
+    ? 'Page ' + (state.scrPage + 1) + ' of ' + pages + ' · rotates every 12 seconds · Esc to leave'
+    : 'Esc to leave';
+}
+/* Navy surface, single series only — a two-series comparison is
+   not readable at ten feet, and cyan against grey on navy fails
+   the separation check anyway. */
+function screenSpark(s) {
+  const W = 300, H = 52, svg = el('svg', { viewBox:'0 0 ' + W + ' ' + H, 'aria-hidden':'true' });
+  const pts = s.filter(p => p.v != null);
+  if (pts.length < 2) return svg;
+  const [lo, hi] = extent([s]);
+  const x = i => i / (s.length - 1) * (W - 6) + 3;
+  const y = v => H - 6 - (v - lo) / (hi - lo) * (H - 12);
+  let d = '';
+  s.forEach((p, i) => { if (p.v != null) d += (d ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(p.v).toFixed(1); });
+  svg.appendChild(el('path', { d, fill:'none', stroke:'rgba(232,238,246,0.45)',
+    'stroke-width':2, 'stroke-linecap':'round', 'stroke-linejoin':'round' }));
+  const last = s[s.length - 1];
+  if (last.v != null) {
+    svg.appendChild(el('circle', { cx:x(s.length - 1), cy:y(last.v), r:6,
+      fill:'#29b6e8', stroke:'#0a1628', 'stroke-width':2 }));
+  }
+  return svg;
+}
+
+/* ═══ Exports ══════════════════════════════════════════════
+   Run from the local file, an anchor download works. Hosted in a
+   sandboxed frame it does not, and fails silently — so there the
+   page asks the host to save the file, and falls back to the
+   clipboard if even that is unavailable. print() is blocked in a
+   frame either way. Nothing is offered that cannot happen. */
+const SANDBOXED = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
+
+/* Resolves later than first paint, or null when unavailable — so
+   the page renders without it and the save buttons settle after. */
+let DL = null;
+(async () => {
+  try { DL = (window.claude && window.claude.use) ? await window.claude.use('downloads') : null; }
+  catch (e) { DL = null; }
+  const b = document.getElementById('btnCsv');
+  if (b) b.textContent = canSave() ? 'CSV' : 'Copy CSV';
+  if (state.view === 'dashboard') render();
+})();
+function canSave() { return !!DL || !SANDBOXED; }
+
+/* -> 'saved' | 'declined' | 'failed' | 'nopath' */
+async function saveFile(filename, data) {
+  if (DL) {
+    try { await DL.save({ filename, data }); toast('Saved ' + filename); return 'saved'; }
+    catch (err) {
+      const c = err && err.code;
+      if (c === 'declined')     { toast('Save cancelled.'); return 'declined'; }
+      if (c === 'too_large')    { toast('That file is too big to save from here.'); return 'failed'; }
+      if (c === 'rate_limited') { toast('One save at a time — try again in a moment.'); return 'failed'; }
+      return 'nopath';
+    }
+  }
+  if (!SANDBOXED) { download(filename, new Blob([data])); toast('Saved ' + filename); return 'saved'; }
+  return 'nopath';
+}
+
+let toastTimer = null;
+function toast(msg, ms) {
+  let t = document.getElementById('toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'toast';
+    t.className = 'toast';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.classList.add('is-on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('is-on'), ms || 3800);
+}
+
+function download(name, blob) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+/* One row per month. A quarterly metric fills only its quarter-end
+   rows, so the two cadences sit in one sheet without inventing
+   monthly figures that were never submitted. */
+function csvText() {
+  const metrics = activeMetrics();
+  const byMetric = metrics.map(m => {
+    const map = new Map();
+    seriesFor(m, DEMO.raws).forEach(pt => map.set(pt.p.key, pt.v));
+    return map;
+  });
+  const rows = [['Period', ...metrics.map(m =>
+    m.name + ' (' + m.unit + ', ' + FAM[m.fam].cadence + ')')]];
+  PERIODS.forEach(p => {
+    rows.push([p.long, ...byMetric.map((map, j) => {
+      const v = map.get(p.key);
+      return (v == null) ? '' : v.toFixed(metrics[j].dp);
+    })]);
+  });
+  return rows.map(r => r.map(c =>
+    /[",\n]/.test(String(c)) ? '"' + String(c).replace(/"/g, '""') + '"' : c).join(',')).join('\r\n');
+}
+async function exportCsv() {
+  const csv = csvText();
+  const name = 'kpi-' + DEMO.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.csv';
+  const r = await saveFile(name, '﻿' + csv);
+  if (r !== 'nopath') return;
+  /* No save route at all — hand it over through the clipboard. */
+  try {
+    await navigator.clipboard.writeText(csv);
+    toast('Copied ' + PERIODS.length + ' months to the clipboard — paste straight into Excel.', 4600);
+  } catch (e) {
+    toast('Saving and the clipboard are both blocked here. Open the local file for exports.', 5200);
+  }
+}
+/* SVG uses var() for colour, which canvas will not resolve — so
+   inline the computed values onto a clone before rasterising. */
+function savePng(svg, name) {
+  if (!svg) return;
+  const clone = svg.cloneNode(true);
+  const cs = getComputedStyle(document.body);
+  const resolve = v => v.replace(/var\((--[a-z-]+)\)/g, (_, t) => cs.getPropertyValue(t).trim() || '#000');
+  clone.querySelectorAll('*').forEach(n => {
+    ['fill', 'stroke'].forEach(a => {
+      const val = n.getAttribute(a);
+      if (val && val.includes('var(')) n.setAttribute(a, resolve(val));
+    });
+  });
+  const vb = (clone.getAttribute('viewBox') || '0 0 300 160').split(/\s+/).map(Number);
+  const scale = 3, W = vb[2] * scale, H = vb[3] * scale;
+  clone.setAttribute('width', W); clone.setAttribute('height', H);
+  const svgText = new XMLSerializer().serializeToString(clone);
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H);
+    ctx.drawImage(img, 0, 0, W, H);
+    const file = name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.png';
+    c.toBlob(async b => {
+      const r = await saveFile(file, b);
+      if (r === 'nopath') toast('Saving images is not available here — open the local file.');
+    }, 'image/png');
+  };
+  img.onerror = () => toast('That chart could not be rendered to PNG in this browser.');
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgText);
+}
+
+/* ═══ Wiring ═══════════════════════════════════════════════ */
+function go(view) {
+  state.view = view;
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('is-active', v.id === 'view-' + view));
+  document.querySelectorAll('[data-go]').forEach(b => b.classList.toggle('is-current', b.dataset.go === view));
+  if (view === 'onboarding') { renderOnboarding(); renderShare(); }
+  if (view === 'entry') renderEntry();
+  if (view === 'dashboard') render();
+  if (view === 'builder') renderBuilder();
+  scrollTo({ top:0, behavior:'instant' });
+}
+document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => go(b.dataset.go));
+
+document.querySelectorAll('[data-variant]').forEach(b => b.onclick = e => {
+  state.variant = b.dataset.variant;
+  document.querySelectorAll('[data-variant]').forEach(c => c.classList.toggle('is-on', c === b));
+  renderOnboarding(); render();
+});
+document.querySelectorAll('[data-unit]').forEach(b => b.onclick = e => {
+  state.unit = b.dataset.unit;
+  document.querySelectorAll('[data-unit]').forEach(c => c.classList.toggle('is-on', c === b));
+  renderObSummary(); render();
+});
+document.getElementById('layoutSeg').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  state.layout = b.dataset.layout;
+  render();
+};
+document.getElementById('btnNewView').onclick = () => openBuilder(null);
+document.getElementById('btnEditView').onclick = () => openBuilder(state.activeView);
+document.getElementById('bSave').onclick = saveBuilder;
+document.getElementById('bPdf').onclick = () => { go('dashboard'); setTimeout(() => print(), 60); };
+document.getElementById('bCsv').onclick = exportCsv;
+document.getElementById('bPng').onclick = () => toast('Saves one PNG per chart in this view.');
+document.getElementById('bCopy').onclick = () => {
+  const t = document.getElementById('bLink').textContent;
+  navigator.clipboard.writeText('https://' + t).then(() => toast('Screen link copied.')).catch(() => toast('Could not copy here.'));
+};
+document.getElementById('bDelete').onclick = () => {
+  const d = state.editing;
+  const saved = !!state.views.find(v => v.id === d.id);
+  /* Two clicks rather than a dialog: cheap to undo a slip, no modal. */
+  if (!state.armDelete) { state.armDelete = true; renderBuilder(); return; }
+  state.armDelete = false;
+  if (saved) {
+    state.views = state.views.filter(v => v.id !== d.id);
+    /* Never leave someone with no views at all. */
+    if (!state.views.length) state.views = [defaultView('all', 'Everything', 'me', [], {}, {})];
+    if (!state.views.find(v => v.id === state.activeView)) state.activeView = state.views[0].id;
+    toast('\u201c' + d.name + '\u201d deleted.');
+  } else {
+    toast('Discarded.');
+  }
+  state.editing = null;
+  go('dashboard');
+};
+document.getElementById('bName').addEventListener('input', e => {
+  if (state.editing) state.editing.name = e.target.value;
+});
+document.querySelectorAll('[data-share]').forEach(b => b.onclick = () => {
+  if (state.editing) { state.editing.shared = b.dataset.share; renderBuilder(); }
+});
+
+document.getElementById('btnPrint').onclick = () => {
+  if (SANDBOXED) {
+    toast('Printing is blocked inside this frame — use your browser’s own print, or open the local file.', 5200);
+    return;
+  }
+  print();
+};
+document.getElementById('btnCsv').onclick = exportCsv;
+document.getElementById('btnCsv').textContent = canSave() ? 'CSV' : 'Copy CSV';
+document.getElementById('btnScreen').onclick = openScreen;
+document.getElementById('scrExit').onclick = closeScreen;
+addEventListener('keydown', e => { if (e.key === 'Escape') closeScreen(); });
+
+function renderShare() {
+  const c = document.getElementById('swConsultant'), b = document.getElementById('swContribute');
+  c.checked = state.shareConsultant;
+  b.checked = state.contribute;
+  const cs = document.getElementById('swcState'), bs = document.getElementById('swbState');
+  cs.textContent = state.shareConsultant ? 'On \u2014 Byron can see your dashboard' : 'Off';
+  cs.className = 'share-state ' + (state.shareConsultant ? 'share-on' : 'share-off');
+  bs.textContent = state.contribute ? 'On' : 'Off \u2014 you cannot see the group either';
+  bs.className = 'share-state ' + (state.contribute ? 'share-on' : 'share-off');
+}
+document.getElementById('swConsultant').onchange = e => {
+  state.shareConsultant = e.target.checked;
+  renderShare();
+  toast(state.shareConsultant
+    ? 'Byron Bruce can now open your dashboard. Your targets stay private.'
+    : 'Sharing turned off. Nobody at NucCol can open your dashboard.', 4200);
+};
+document.getElementById('swContribute').onchange = e => {
+  state.contribute = e.target.checked;
+  renderShare(); renderObSummary(); render();
+  toast(state.contribute
+    ? 'You are back in the group comparison.'
+    : 'Out of the comparison \u2014 and the group figures are now hidden on your dashboard too.', 5000);
+};
+
+document.getElementById('entryFill').onclick = () => {
+  const r = rng(77), last = DEMO.raws[PERIODS[PERIODS.length - 1].key];
+  sharedInputs().forEach(i => {
+    const base = last[i.k];
+    const v = base == null ? Math.round(r() * 40)
+            : Math.max(0, Math.round(base * (0.92 + r() * 0.16)));
+    state.entry[i.k] = v;
+    const inp = document.getElementById('in-' + i.k);
+    if (inp) inp.value = v;
+  });
+  renderLive();
+};
+document.getElementById('entrySave').onclick = () => {
+  const total = sharedInputs().length;
+  const filled = sharedInputs().filter(i => state.entry[i.k] != null).length;
+  if (!filled) { toast('Nothing entered yet.'); return; }
+  toast('Saved ' + filled + ' of ' + total + ' numbers. In the real thing this would be kept.', 4600);
+  go('dashboard');
+};
+
+document.getElementById('coName').textContent = DEMO.name;
+render();
+</script>
+</body>
+</html>
